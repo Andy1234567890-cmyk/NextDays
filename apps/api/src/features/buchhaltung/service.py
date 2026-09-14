@@ -12,7 +12,8 @@ ROUND_HALF_UP, 2 Nachkommastellen) — der Client kann sie nicht fälschen.
 # Refactor geplant, nicht in einer Bugfix-Änderung — daher hier explizit erlaubt.
 # pylint: disable=too-many-lines
 import secrets
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from typing import TYPE_CHECKING
 
@@ -23,9 +24,16 @@ from supabase import Client
 from src.core.countries import dial_code
 from src.core.logging import get_logger
 from src.core.security import AuthContext
-from src.core.supabase import public_storage_url
+from src.core.supabase import load_scoped, public_storage_url
 
+from .positionen_kontext import (
+    aufenthalt_aus_bestand,
+    eltern_positionen,
+    eltern_verknuepfen,
+    objekte_pruefen,
+)
 from .schemas import (
+    POSITIONS_BASEN,
     CustomerCreate,
     CustomerResponse,
     CustomerUpdate,
@@ -149,12 +157,32 @@ def _row_to_invoicedata(row: dict, customer_name: str | None) -> dict:
         "createdAt": row.get("created_at"),
         "year": row.get("invoice_year") or 0,
         "companyId": row.get("tenant_id"),
-        "currency": row.get("currency") or "EUR",
+        # Kein "EUR"-Ersatz (Wurzel 4): leer rendert das Frontend symbollos.
+        "currency": row.get("currency") or "",
         "notes": row.get("notes"),
         "footerText": row.get("footer_text"),
         # Buchungs-Brücke (0092): gesetzt bei Zimmerrechnungen aus Buchungen.
         "reservationId": row.get("reservation_id"),
     }
+
+
+def _iso_datum(value: object) -> str | None:
+    """ISO-Datum (auch aus Zeitstempel) oder None — nie ein erfundenes Datum."""
+    if value in (None, ""):
+        return None
+    text = str(value)[:10]
+    try:
+        return date.fromisoformat(text).isoformat()
+    except ValueError:
+        return None
+
+
+def _ganzzahl(value: object) -> int | None:
+    try:
+        n = int(str(value))
+    except (TypeError, ValueError):
+        return None
+    return n if n >= 0 else None
 
 
 def _normalize_document_language(value: object) -> str | None:
@@ -166,6 +194,26 @@ def _normalize_document_language(value: object) -> str | None:
     from . import doc_i18n  # noqa: PLC0415 — lokaler Import vermeidet Zyklus
 
     return doc_i18n.resolve_language(value)
+
+
+def _like_muster(wert: str, *, roh: bool = False, teiltreffer: bool = True) -> str:
+    """Nutzereingabe zu einem sicheren `ilike`-Muster machen.
+
+    `%` und `_` sind in LIKE Platzhalter, `\\` das Fluchtzeichen — aus der
+    Eingabe kommend werden sie maskiert, sonst trifft die Suche nach `100%`
+    jeden Kunden. Für den `or_`-Filter von PostgREST (`roh=False`) wird der Wert
+    zusätzlich in Anführungszeichen gesetzt, weil Komma, Punkt und Klammern dort
+    die Filter-Syntax selbst sind — ein Kunde „Müller, Hans" zerlegte den Ausdruck
+    sonst in zwei kaputte Bedingungen.
+    """
+    maskiert = (
+        wert.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    )
+    muster = f"%{maskiert}%" if teiltreffer else maskiert
+    if roh:
+        return muster
+    in_anfuehrung = muster.replace('"', '\\"')
+    return f'"{in_anfuehrung}"'
 
 
 class BuchhaltungError(Exception):
@@ -227,16 +275,138 @@ class BuchhaltungService:
         """Reines Array (vom übernommenen Buchhaltungs-Bestand erwartet)."""
         return self._customers_rows(ctx)
 
+    # Harte Obergrenze für `limit` (Wurzel 8: kein unbegrenzter Bereich).
+    _KUNDEN_LIMIT_MAX = 200
+
+    def search_customers(
+        self,
+        ctx: AuthContext,
+        *,
+        search: str | None = None,
+        name: str | None = None,
+        email: str | None = None,
+        is_supplier: bool | None = None,
+        limit: int | None = None,
+    ) -> list[dict]:
+        """Kunden serverseitig filtern.
+
+        Bis zum 11.09.2026 nahm `GET /customers` keine Parameter an und lieferte
+        IMMER alle Kunden. Zwei Aufrufer im Bestand (`InvoiceListView`,
+        `LivePreviewModal`) hängten `?email=…&limit=1` bzw. `?name=…&limit=1` an
+        und nahmen den ERSTEN Treffer als den gesuchten Kunden — bei mehr als
+        einem Kunden war das schlicht der alphabetisch erste, ohne Fehler und
+        ohne dass es jemandem auffiel (die Telefonnummer ging dann an den
+        falschen Kunden). Deshalb hier: die Filter wirken in der Datenbank.
+
+        `search` sucht in Name, E-Mail und Kundennummer (Teiltreffer, ohne
+        Groß/Klein); `name` Teiltreffer im Namen; `email` exakt, ohne Groß/Klein.
+        """
+        tenant_id = self._require_tenant(ctx)
+        if limit is not None and not 1 <= limit <= self._KUNDEN_LIMIT_MAX:
+            raise BuchhaltungError(
+                f"limit muss zwischen 1 und {self._KUNDEN_LIMIT_MAX} liegen.",
+                status_code=422,
+            )
+        q = (
+            self._db.table("customers")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+        )
+        if search:
+            muster = _like_muster(search)
+            q = q.or_(
+                f"name.ilike.{muster},email.ilike.{muster},customer_number.ilike.{muster}"
+            )
+        if name:
+            q = q.ilike("name", _like_muster(name, roh=True))
+        if email:
+            q = q.ilike("email", _like_muster(email, roh=True, teiltreffer=False))
+        if is_supplier is not None:
+            q = q.eq("is_supplier", is_supplier)
+        q = q.order("name")
+        if limit:
+            q = q.limit(limit)
+        return q.execute().data or []
+
+    def get_customer(self, ctx: AuthContext, customer_id: str) -> dict:
+        """EIN Kunde per ID — Load und Tenant-Scope untrennbar (Wurzel 3)."""
+        tenant_id = self._require_tenant(ctx)
+        row = load_scoped(
+            self._db,
+            "customers",
+            customer_id,
+            tenant_id,
+            not_found=BuchhaltungError("Kunde nicht gefunden.", status_code=404),
+        )
+        # Soft-gelöscht = für die Buchhaltung nicht mehr vorhanden; dieselbe
+        # Meldung wie „gibt es nicht", damit die Löschung nichts verrät.
+        if row.get("deleted_at"):
+            raise BuchhaltungError("Kunde nicht gefunden.", status_code=404)
+        return row
+
     def create_customer(
         self, ctx: AuthContext, req: CustomerCreate
     ) -> CustomerResponse:
+        """Kunde anlegen — die Kundennummer vergibt der SERVER.
+
+        Der Bestand zeigte eine Vorschau (`KD-0007`) und schickte sie als
+        `customerNumber` mit; das Backend hätte sie ungeprüft übernommen. Zwei
+        Nutzer, die gleichzeitig anlegen, bekämen dieselbe Nummer. Deshalb:
+        Ist keine Nummer da ODER ist es genau die Vorschau, wird hier atomar
+        gezogen (`next_document_number`, Row-Lock). Hat der Nutzer die Nummer
+        von Hand geändert, bleibt sie — und muss im Tenant frei sein (409).
+        """
         tenant_id = self._require_tenant(ctx)
         payload = req.model_dump(mode="json")
+        label = self._kundentyp_label(req)
+        nummer = (req.customer_number or "").strip()
+        if not nummer or nummer == self._nummer_vorschau(tenant_id, label)["formattedNumber"]:
+            nummer = self.next_number(ctx, label)["formattedNumber"]
+        else:
+            self._kundennummer_frei(tenant_id, nummer)
+        payload["customer_number"] = nummer
         payload["tenant_id"] = tenant_id
-        res = self._db.table("customers").insert(payload).execute()
+        try:
+            res = self._db.table("customers").insert(payload).execute()
+        except APIError as exc:
+            # 23505 = der Unique-Index (0631) hat eine Kollision gefangen, die
+            # zwischen Prüfung und Insert entstanden ist (Wurzel 2).
+            if getattr(exc, "code", None) == "23505":
+                raise BuchhaltungError(
+                    f"Die Kundennummer {nummer} ist bereits vergeben.", status_code=409
+                ) from exc
+            raise
         if not res.data:
             raise BuchhaltungError("Kunde konnte nicht angelegt werden.", status_code=500)
         return CustomerResponse(**res.data[0])
+
+    def _kundentyp_label(self, req: CustomerCreate) -> str:
+        if req.organization_type in self._DOC_TYPE_MAP:
+            return req.organization_type
+        return "Lieferant" if req.is_supplier else "Kunde"
+
+    def _kundennummer_frei(self, tenant_id: str, nummer: str) -> None:
+        res = (
+            self._db.table("customers")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("customer_number", nummer)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        )
+        if res.data:
+            raise BuchhaltungError(
+                f"Die Kundennummer {nummer} ist bereits vergeben.", status_code=409
+            )
+
+    def next_customer_number_preview(self, ctx: AuthContext) -> dict:
+        """Nächste Kundennummer NUR ANZEIGEN (`GET /customers/next-number/…`).
+        Die Route fehlte bis zum 11.09.2026; der Bestand fiel dann auf einen
+        Zeitstempel zurück (`KD-` + vier Ziffern der Uhrzeit)."""
+        tenant_id = self._require_tenant(ctx)
+        return {"customerNumber": self._nummer_vorschau(tenant_id, "Kunde")["formattedNumber"]}
 
     def update_customer(
         self, ctx: AuthContext, customer_id: str, req: CustomerUpdate
@@ -500,6 +670,13 @@ class BuchhaltungService:
                 if p.get("lodging_tax_rate") is not None
                 else None
             ),
+            # Regelsatz des Betriebs (Frühstück, Reinigung, Parkplatz …) — die
+            # zweite Vorbelegung für Positionen (0698). None = nicht gesetzt.
+            "defaultTaxRate": (
+                _num(p.get("default_tax_rate"))
+                if p.get("default_tax_rate") is not None
+                else None
+            ),
         }
 
     def list_transaction_links(self, ctx: AuthContext) -> list[dict]:
@@ -520,36 +697,78 @@ class BuchhaltungService:
         self._require_tenant(ctx)
         return []
 
+    # Stellenzahl, mit der `next_document_number` einen NEUEN Kreis anlegt
+    # (Spaltenvorgabe in 0025). Die Vorschau muss dieselbe Zahl nutzen, sonst
+    # zeigt sie `KD-007` und der Server vergibt `KD-0007`.
+    _PADDING_VORGABE = 4
+
     def list_number_sequences(self, ctx: AuthContext) -> list[dict]:
-        """Vorhandene Nummernkreise des Tenants (nur Lesen, ohne Hochzählen)."""
+        """Alle Nummernkreise in der Form, die der Bestand liest.
+
+        Der Bestand erwartet `{type: 'Kunde', format, nextNumber, …}` und sucht
+        mit `.find(seq => seq.type === 'Kunde')`. Bis zum 11.09.2026 kamen hier
+        die rohen Zeilen (`doc_type`, `next_value`) — der `find` fand nie etwas,
+        und `NewCustomerModal` fiel in seinen Zeitstempel-Ersatz: Kundennummern
+        wie `KD-091119` (= 09.11., 19 Uhr). Für Typen ohne Zeile steht hier der
+        Kreis, den `next_document_number` beim ersten Ziehen anlegen WIRD
+        (`id: null`) — so ist die Vorschau für jeden Typ verlässlich.
+        """
         tenant_id = self._require_tenant(ctx)
         res = (
             self._db.table("number_sequences")
             .select("*")
             .eq("tenant_id", tenant_id)
+            .is_("year", "null")
             .execute()
         )
-        return res.data or []
+        zeilen = {r["doc_type"]: r for r in (res.data or [])}
+        return [
+            self._kreis_als_bestand(tenant_id, label, zeilen.get(doc_type))
+            for label, (doc_type, _prefix) in self._DOC_TYPE_MAP.items()
+        ]
 
-    def next_number_preview(self, ctx: AuthContext) -> dict:
-        """Nächste Rechnungsnummer NUR ANZEIGEN (ohne den Zähler zu erhöhen)."""
-        tenant_id = self._require_tenant(ctx)
+    def _kreis_als_bestand(self, tenant_id: str, label: str, row: dict | None) -> dict:
+        _doc_type, prefix_vorgabe = self._DOC_TYPE_MAP[label]
+        row = row or {}
+        prefix = row.get("prefix") or prefix_vorgabe
+        padding = row.get("padding") or self._PADDING_VORGABE
+        suffix = row.get("suffix") or ""
+        nxt = row.get("next_value") or 1
+        return {
+            "id": row.get("id"),
+            "companyId": tenant_id,
+            "type": label,
+            "prefix": prefix,
+            # `{number:N}` versteht `NumberSequenceService.formatNumber` im Bestand.
+            "format": f"{prefix}{{number:{padding}}}{suffix}",
+            "nextNumber": nxt,
+            "nextFormatted": f"{prefix}{str(nxt).zfill(padding)}{suffix}",
+            "canEdit": True,  # PATCH /number-sequences/{kreis} seit bereiche/kontenplan (0674)
+            "canDelete": False,
+            "createdAt": row.get("created_at"),
+            "updatedAt": row.get("updated_at"),
+        }
+
+    def _nummer_vorschau(self, tenant_id: str, label: str) -> dict:
+        doc_type, _prefix = self._DOC_TYPE_MAP[label]
         res = (
             self._db.table("number_sequences")
-            .select("prefix, next_value, padding, suffix")
+            .select("*")
             .eq("tenant_id", tenant_id)
-            .eq("doc_type", "invoice")
+            .eq("doc_type", doc_type)
             .is_("year", "null")
             .limit(1)
             .execute()
         )
-        row = (res.data or [{}])[0]
-        prefix = row.get("prefix") or "RE-"
-        nxt = row.get("next_value") or 1
-        padding = row.get("padding") or 4
-        suffix = row.get("suffix") or ""
-        formatted = f"{prefix}{str(nxt).zfill(padding)}{suffix}"
-        return {"formattedNumber": formatted, "sequentialNumber": nxt}
+        kreis = self._kreis_als_bestand(tenant_id, label, (res.data or [None])[0])
+        return {"formattedNumber": kreis["nextFormatted"], "sequentialNumber": kreis["nextNumber"]}
+
+    def next_number_preview(self, ctx: AuthContext, label: str = "Rechnung") -> dict:
+        """Nächste Nummer eines Typs NUR ANZEIGEN (ohne den Zähler zu erhöhen)."""
+        tenant_id = self._require_tenant(ctx)
+        if label not in self._DOC_TYPE_MAP:
+            raise BuchhaltungError(f"Unbekannter Nummernkreis '{label}'.", status_code=422)
+        return self._nummer_vorschau(tenant_id, label)
 
     def get_user_preferences(self, ctx: AuthContext) -> dict:
         """Nutzer-Präferenzen (Buchhaltung). Eigenes Modul folgt → leeres Objekt."""
@@ -557,11 +776,25 @@ class BuchhaltungService:
         return {}
 
     # --- Nummernkreis + Rechnung speichern (Buchhaltungs-Bestand) ------------
+    # Bestands-Label → (doc_type in number_sequences, Präfix beim Anlegen).
+    # Die vier Kontakt-Typen kamen am 11.09.2026 dazu: Kundennummern wurden
+    # bis dahin im Browser aus der Uhrzeit gebaut.
     _DOC_TYPE_MAP = {
         "Rechnung": ("invoice", "RE-"),
         "Angebot": ("quote", "AN-"),
         "Gutschrift": ("credit_note", "GU-"),
         "Storno": ("storno", "ST-"),
+        # Belegkette (bereiche/belege, 0660) und Artikelstamm (bereiche/artikel,
+        # 0668) ziehen ihre Nummern über dieselben Kreise; hier stehen sie, damit
+        # GET /number-sequences sie listet und die Vorschau sie kennt.
+        "Auftragsbestätigung": ("order_confirmation", "AB-"),
+        "Lieferschein": ("delivery_note", "LS-"),
+        "Mahnung": ("reminder", "MA-"),
+        "Artikel": ("item", "ART-"),
+        "Kunde": ("customer", "KD-"),
+        "Lieferant": ("supplier", "LF-"),
+        "Partner": ("partner", "PA-"),
+        "Interessenten": ("prospect", "IN-"),
     }
 
     def next_number(self, ctx: AuthContext, doc_type_label: str) -> dict:
@@ -714,6 +947,15 @@ class BuchhaltungService:
             if not cust_rows:
                 raise BuchhaltungError("Kunde nicht gefunden.", status_code=404)
 
+        # Objektbindung der Positionen (0702) — VOR der GoBD-Nummer und vor dem
+        # Kopf-Insert: ein fremdes Objekt darf keine Nummer verbrennen.
+        objekte_pruefen(
+            self._db,
+            tenant_id,
+            [it.get("propertyId") or it.get("property_id") for it in items],
+            not_found=BuchhaltungError("Objekt nicht gefunden.", status_code=404),
+        )
+
         # Buchungs-Brücke: „Rechnung aus Buchung" aus dem Formular. Regeln wie
         # beim Check-out: Buchung muss dem Tenant gehören, eingecheckt und
         # nicht storniert sein; nur EINE aktive Rechnung je Buchung (0092).
@@ -774,6 +1016,11 @@ class BuchhaltungService:
                 payload.get("eInvoiceType") if payload.get("isEInvoice") else None
             ),
             "reservation_id": reservation_id,
+            # Aufenthalt + Personen (0698): Kopfdaten, aus denen die Mengen der
+            # Positionen (je Nacht / je Person) im Editor gerechnet wurden.
+            "stay_from": _iso_datum(payload.get("stayFrom") or payload.get("stay_from")),
+            "stay_to": _iso_datum(payload.get("stayTo") or payload.get("stay_to")),
+            "guest_count": _ganzzahl(payload.get("guestCount") or payload.get("guest_count")),
             # Dokumentsprache (0099): auf eine unterstützte Sprache normalisieren
             # (de-AT→de, unbekannt→de), damit kein ungültiger Code in die Spalte
             # gelangt und die PDF-Sprachvorbelegung steuert.
@@ -832,12 +1079,25 @@ class BuchhaltungService:
             gross_unit = qty * price
             net = _q(gross_unit - gross_unit * (disc / Decimal(100)))
             tax = _q(net * (rate / Decimal(100)))
+            basis = it.get("basis")
+            if basis is not None and basis not in POSITIONS_BASEN:
+                raise BuchhaltungError(
+                    f"Position {pos}: unbekannte Abrechnungsbasis „{basis}“.", status_code=422
+                )
+            try:
+                aufenthalt = aufenthalt_aus_bestand(it)
+            except ValueError as exc:
+                raise BuchhaltungError(
+                    f"Position {pos}: {exc}", status_code=422
+                ) from exc
             line_rows.append({
                 "invoice_id": invoice_id,
                 "position": pos,
                 "description": it.get("description") or "",
                 "quantity": str(qty),
                 "unit": it.get("unit") or "Stk",
+                "basis": basis,
+                **aufenthalt,
                 "unit_price": str(price),
                 "tax_rate": str(rate),
                 "discount_percent": str(disc),
@@ -860,6 +1120,21 @@ class BuchhaltungService:
                     "Rechnungspositionen konnten nicht gespeichert werden.",
                     status_code=500,
                 ) from exc
+            # Zusatzleistung → Übernachtung (0702): die Client-IDs des Editors
+            # sind keine DB-IDs, die Verknüpfung entsteht über die Position.
+            eltern_verknuepfen(
+                self._db,
+                "invoice_line_items",
+                "invoice_id",
+                invoice_id,
+                eltern_positionen([
+                    (
+                        str(it.get("id") or "") or None,
+                        str(it.get("parentItemId") or it.get("parent_line_id") or "") or None,
+                    )
+                    for it in items
+                ]),
+            )
 
         return {"id": invoice_id, "invoice_number": invoice_number}
 
@@ -967,8 +1242,9 @@ class BuchhaltungService:
             "is_kleinunternehmer": g("isSmallBusiness"),
             "e_invoice_format": g("eInvoiceFormat") or g("e_invoice_format"),
             "leitweg_id": g("leitwegId") or g("leitweg_id"),
-            # USt-Satz Übernachtung (0092)
+            # USt-Satz Übernachtung (0092) und Regelsatz (0698)
             "lodging_tax_rate": g("lodgingTaxRate"),
+            "default_tax_rate": g("defaultTaxRate") or g("default_tax_rate"),
         }
         row = {k: v for k, v in row.items() if v is not None}
         row["tenant_id"] = tenant_id
@@ -1404,10 +1680,31 @@ class BuchhaltungService:
             "tax_rate": str(rate),
             "discount_percent": str(item.discount_percent),
             "sku": item.sku,
+            "basis": item.basis,
+            # Aufenthalt der Zeile (0702); `parent_line_id` folgt NACH dem
+            # Insert (positionen_kontext), die Client-ID ist keine DB-ID.
+            "property_id": item.property_id,
+            "check_in": item.check_in.isoformat() if item.check_in else None,
+            "check_out": item.check_out.isoformat() if item.check_out else None,
             "net_amount": str(net),
             "tax_amount": str(tax),
             "gross_amount": str(_q(net + tax)),
         }
+
+    def _zeilen_kontext(
+        self, tenant_id: str, items: Sequence[LineItemInput]
+    ) -> list[tuple[int, int]]:
+        """Objektbindung der Positionen prüfen (Wurzel 3) und die Eltern-Paare
+        für `parent_line_id` bestimmen (aufgelöst erst nach dem Insert)."""
+        objekte_pruefen(
+            self._db,
+            tenant_id,
+            [it.property_id for it in items],
+            not_found=BuchhaltungError("Objekt nicht gefunden.", status_code=404),
+        )
+        return eltern_positionen(
+            [(it.client_line_id, it.parent_line_id) for it in items]
+        )
 
     def create_invoice(self, ctx: AuthContext, req: InvoiceCreate) -> InvoiceResponse:
         tenant_id = self._require_tenant(ctx)
@@ -1421,6 +1718,7 @@ class BuchhaltungService:
         )
         is_klein = bool(profile.data and profile.data[0].get("is_kleinunternehmer"))
 
+        eltern = self._zeilen_kontext(tenant_id, req.items)
         lines = [
             self._compute_line(it, i + 1, is_klein=is_klein)
             for i, it in enumerate(req.items)
@@ -1458,6 +1756,9 @@ class BuchhaltungService:
             for line_var in lines:
                 line_var["invoice_id"] = invoice_id
             self._db.table("invoice_line_items").insert(lines).execute()
+            eltern_verknuepfen(
+                self._db, "invoice_line_items", "invoice_id", invoice_id, eltern
+            )
         return self.get_invoice(ctx, invoice_id)
 
     # Festgeschriebene Belege (GoBD): sobald eine Rechnung eine Nummer trägt oder
@@ -1505,7 +1806,8 @@ class BuchhaltungService:
             self._db.table("quotes")
             .select(
                 "id, quote_number, customer_id, status, issue_date, valid_until, "
-                "gross_amount, currency, converted_invoice_id, created_at"
+                "gross_amount, currency, converted_invoice_id, created_at, "
+                "property_id, stay_from, stay_to, guest_count, properties(title)"
             )
             .eq("tenant_id", tenant_id)
             .is_("deleted_at", "null")
@@ -1514,7 +1816,11 @@ class BuchhaltungService:
         )
         from .schemas import QuoteListItem
 
-        items = [QuoteListItem(**row) for row in (res.data or [])]
+        items = []
+        for row in res.data or []:
+            # Eingebettetes Objekt (FK quotes.property_id, 0701) → flacher Titel.
+            objekt = row.pop("properties", None) or {}
+            items.append(QuoteListItem(**row, property_title=objekt.get("title")))
         return QuoteListResponse(items=items, total=len(items))
 
     def get_quote(self, ctx: AuthContext, quote_id: str) -> QuoteResponse:
@@ -1557,6 +1863,7 @@ class BuchhaltungService:
         tenant_id = self._require_tenant(ctx)
         # §19: Angebote weisen für Kleinunternehmer KEINE USt aus (wie Rechnungen).
         is_klein = self._is_kleinunternehmer(tenant_id)
+        eltern = self._zeilen_kontext(tenant_id, req.items)
         lines = [
             self._compute_line(it, i + 1, is_klein=is_klein)
             for i, it in enumerate(req.items)
@@ -1564,9 +1871,16 @@ class BuchhaltungService:
         net_total = _q(sum((Decimal(ln["net_amount"]) for ln in lines), Decimal(0)))
         tax_total = _q(sum((Decimal(ln["tax_amount"]) for ln in lines), Decimal(0)))
         gross_total = _q(net_total + tax_total)
+        # Die Angebotsnummer wurde bis zum 11.09.2026 NIE gesetzt — Angebote
+        # entstanden ohne Nummer (`quote_number` blieb null). Hier atomar ziehen,
+        # nach aller Validierung, damit kein Fehler eine Nummer verbrennt.
+        num = self.next_number(ctx, "Angebot")
         payload = {
             "tenant_id": tenant_id,
             "customer_id": req.customer_id,
+            "quote_number": num["formattedNumber"],
+            "quote_prefix": self._DOC_TYPE_MAP["Angebot"][1],
+            "quote_sequence": num["sequentialNumber"],
             "status": req.status,
             "issue_date": req.issue_date.isoformat() if req.issue_date else None,
             "valid_until": req.valid_until.isoformat() if req.valid_until else None,
@@ -1577,6 +1891,8 @@ class BuchhaltungService:
             "head_text": req.head_text,
             "footer_text": req.footer_text,
             "notes": req.notes,
+            # Dokumentsprache (0700) — None = Bestand/manuell → de bei der Anzeige.
+            "language": _normalize_document_language(req.language),
             "net_amount": str(net_total),
             "tax_amount": str(tax_total),
             "gross_amount": str(gross_total),
@@ -1589,6 +1905,9 @@ class BuchhaltungService:
             for ln in lines:
                 ln["quote_id"] = quote_id
             self._db.table("quote_line_items").insert(lines).execute()
+            eltern_verknuepfen(
+                self._db, "quote_line_items", "quote_id", quote_id, eltern
+            )
         return self.get_quote(ctx, quote_id)
 
     def update_quote(
@@ -1611,6 +1930,9 @@ class BuchhaltungService:
             )
         patch = req.model_dump(mode="json", exclude_unset=True, exclude={"items"})
         if req.items is not None:
+            # Objektbindung VOR dem Löschen prüfen — ein 404 auf ein fremdes
+            # Objekt darf die bestehenden Positionen nicht schon gelöscht haben.
+            eltern = self._zeilen_kontext(tenant_id, req.items)
             self._db.table("quote_line_items").delete().eq(
                 "quote_id", quote_id
             ).execute()
@@ -1629,6 +1951,9 @@ class BuchhaltungService:
                 for ln in lines:
                     ln["quote_id"] = quote_id
                 self._db.table("quote_line_items").insert(lines).execute()
+                eltern_verknuepfen(
+                    self._db, "quote_line_items", "quote_id", quote_id, eltern
+                )
         if patch:
             self._db.table("quotes").update(patch).eq("id", quote_id).eq(
                 "tenant_id", tenant_id

@@ -78,7 +78,9 @@ def automation_payload(req: AutomationUpsert) -> dict:
         "message": req.message,
         "subject": req.subject,
         "is_active": req.is_active,
-        "use_property_timezone": req.use_property_timezone,
+        # Immer Ortszeit (14.09.2026): die Spalte bleibt für den Bestand, hat
+        # aber keine zweite Bedeutung mehr — UTC war ein von uns gesetzter Wert.
+        "use_property_timezone": True,
         "only_first_message": req.only_first_message,
         # Leeres Array als NULL = „alle Tage" (analog property_ids/channels).
         "window_days": req.window_days or None,

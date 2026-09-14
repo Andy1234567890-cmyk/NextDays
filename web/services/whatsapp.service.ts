@@ -1,6 +1,7 @@
 'use client';
 
 import { api } from '@/lib/api-client';
+import { formatCurrency } from '@/lib/currency';
 import { createClickToChatLink } from '@/lib/whatsapp';
 
 /**
@@ -378,6 +379,14 @@ export class WhatsAppService {
 
 /**
  * Vordefinierte Nachrichten-Templates
+ *
+ * Diese Texte gehen an GAESTE bzw. Kunden. Der Betrag wird deshalb ueber
+ * `formatCurrency` mit der BELEGWAEHRUNG gesetzt und nicht mehr mit einem
+ * festen Eurozeichen: bei einem daenischen Betrieb stand vorher ein „€" an
+ * einem DKK-Betrag — Faktor rund 7,5 und damit eine falsche Zahlungsaufforderung
+ * beim Kunden (Wurzel 4). Fehlt die Waehrung am Beleg, rendert `formatCurrency`
+ * die reine Zahl ohne Symbol; das ist unvollstaendig, aber nicht falsch, und
+ * bleibt einem erfundenen Euro vorzuziehen.
  */
 export const WhatsAppTemplates = {
   INVOICE_PAID: (
@@ -385,8 +394,9 @@ export const WhatsAppTemplates = {
     invoiceNumber: string,
     amount: number,
     companyName: string,
+    currency: string | null | undefined,
   ) =>
-    `Hallo ${customerName},\n\nvielen Dank! Ihre Zahlung für Rechnung ${invoiceNumber} über ${amount.toFixed(2)} € ist eingegangen.\n\nMit freundlichen Grüßen\n${companyName}`,
+    `Hallo ${customerName},\n\nvielen Dank! Ihre Zahlung für Rechnung ${invoiceNumber} über ${formatCurrency(amount, currency)} ist eingegangen.\n\nMit freundlichen Grüßen\n${companyName}`,
 
   INVOICE_REMINDER: (
     customerName: string,
@@ -394,8 +404,9 @@ export const WhatsAppTemplates = {
     amount: number,
     daysOverdue: number,
     companyName: string,
+    currency: string | null | undefined,
   ) =>
-    `Hallo ${customerName},\n\ndie Rechnung ${invoiceNumber} über ${amount.toFixed(2)} € ist seit ${daysOverdue} Tagen fällig.\n\nBitte überweisen Sie den Betrag zeitnah.\n\nMit freundlichen Grüßen\n${companyName}`,
+    `Hallo ${customerName},\n\ndie Rechnung ${invoiceNumber} über ${formatCurrency(amount, currency)} ist seit ${daysOverdue} Tagen fällig.\n\nBitte überweisen Sie den Betrag zeitnah.\n\nMit freundlichen Grüßen\n${companyName}`,
 
   INVOICE_SENT: (
     customerName: string,
@@ -403,8 +414,9 @@ export const WhatsAppTemplates = {
     amount: number,
     dueDate: string,
     companyName: string,
+    currency: string | null | undefined,
   ) =>
-    `Hallo ${customerName},\n\nIhre Rechnung ${invoiceNumber} über ${amount.toFixed(2)} € wurde erstellt.\n\nZahlbar bis: ${dueDate}\n\nMit freundlichen Grüßen\n${companyName}`,
+    `Hallo ${customerName},\n\nIhre Rechnung ${invoiceNumber} über ${formatCurrency(amount, currency)} wurde erstellt.\n\nZahlbar bis: ${dueDate}\n\nMit freundlichen Grüßen\n${companyName}`,
 
   APPOINTMENT_REMINDER: (
     customerName: string,

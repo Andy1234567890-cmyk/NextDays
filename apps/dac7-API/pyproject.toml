@@ -33,6 +33,8 @@ dependencies = [
     "structlog>=24.4",
     "httpx>=0.27",               # der Aufruf zur Behörde
     "python-multipart>=0.0.18",  # Datei-Entgegennahme; <0.0.18 = GHSA-2jv5-9r88-3w3p
+    # Der verschluesselte Umschlag (core/umschlag.py): RSA-OAEP + AES-GCM.
+    "cryptography>=43",
 ]
 
 [project.optional-dependencies]

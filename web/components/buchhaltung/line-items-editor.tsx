@@ -5,13 +5,14 @@
 // Eine Quelle statt Kopien pro Anlage-Button.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
 import type { LineItemInput } from "@/lib/buchhaltung";
 import { currencySymbol, formatCurrency } from "@/lib/currency";
+import { steuersatz } from "@/lib/steuer-waehrung";
 
 export type LineItemRow = {
   description: string;
@@ -20,12 +21,28 @@ export type LineItemRow = {
   tax_rate: string;
 };
 
+// Leere Zeile OHNE Steuersatz: hier stand eine feste "19". Das ist eine
+// steuerliche Behauptung ueber einen Betrieb, den diese Komponente gar nicht
+// kennt — ein daenischer Angebotsposten waere still mit 19 statt 25 % in den
+// Beleg gelaufen (Wurzel 4). Der Satz kommt jetzt vom Aufrufer aus den
+// Stammdaten; fehlt er dort, bleibt das Feld leer und der Nutzer traegt ihn
+// selbst ein, statt einen fremden Satz zu erben.
 const EMPTY_ROW: LineItemRow = {
   description: "",
   quantity: "1",
   unit_price: "0",
-  tax_rate: "19",
+  tax_rate: "",
 };
+
+// Leere Zeile mit dem Standardsatz des Betriebs, sofern bekannt. `steuersatz`
+// liefert null, wenn nichts Gueltiges hinterlegt ist — dann bleibt es bei der
+// leeren Vorbelegung. Die 0 eines steuerbefreiten Betriebs ist ein gueltiger
+// Satz und wird als "0" uebernommen (deshalb `!== null`, nicht `||`).
+function leereZeile(betriebsSatz: number | null): LineItemRow {
+  return betriebsSatz !== null
+    ? { ...EMPTY_ROW, tax_rate: String(betriebsSatz) }
+    : { ...EMPTY_ROW };
+}
 
 // Netto einer Zeile (nur Vorschau).
 export function lineNet(r: LineItemRow): number {
@@ -42,15 +59,34 @@ export function formatEur(n: number, currency?: string): string {
 }
 
 // Zeilen-State: Mutatoren, Summen und Mapping auf LineItemInput fürs Backend.
-export function useLineItemRows() {
-  const [rows, setRows] = useState<LineItemRow[]>([{ ...EMPTY_ROW }]);
+// `standardSatz` ist der Steuersatz aus den Stammdaten des Betriebs (beliebige
+// Quelle — Zahl, String aus der API, null). Er wird ueber `steuersatz` geprueft
+// statt uebernommen, damit weder ein Unsinnswert noch ein erfundener Ersatz in
+// die Positionen laeuft.
+export function useLineItemRows(standardSatz?: unknown) {
+  const betriebsSatz = steuersatz(standardSatz);
+  const [rows, setRows] = useState<LineItemRow[]>(() => [leereZeile(betriebsSatz)]);
+
+  // Die Stammdaten kommen asynchron: beim ersten Rendern ist `betriebsSatz`
+  // noch null, die Startzeile also ohne Satz. Sobald er eintrifft, wird er in
+  // noch unberuehrte Zeilen nachgetragen — nur in leere, damit eine bewusst
+  // gesetzte 0 (Steuerbefreiung) oder ein abweichender Satz nicht ueberschrieben
+  // wird.
+  useEffect(() => {
+    if (betriebsSatz === null) return;
+    setRows((prev) =>
+      prev.some((r) => r.tax_rate === "")
+        ? prev.map((r) => (r.tax_rate === "" ? { ...r, tax_rate: String(betriebsSatz) } : r))
+        : prev,
+    );
+  }, [betriebsSatz]);
 
   const setRow = (i: number, patch: Partial<LineItemRow>) =>
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
-  const addRow = () => setRows((prev) => [...prev, { ...EMPTY_ROW }]);
+  const addRow = () => setRows((prev) => [...prev, leereZeile(betriebsSatz)]);
   const removeRow = (i: number) =>
     setRows((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev));
-  const reset = () => setRows([{ ...EMPTY_ROW }]);
+  const reset = () => setRows([leereZeile(betriebsSatz)]);
 
   const netTotal = rows.reduce((sum, r) => sum + lineNet(r), 0);
   const taxTotal = rows.reduce(

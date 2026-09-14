@@ -251,6 +251,22 @@ export function getVATFormat(countryName: string): string {
 }
 
 /**
+ * Deutscher Klarname zu einem ISO-3166-1-alpha-2-Code ("DK" → "Dänemark").
+ *
+ * Warum das exportiert wird statt in den Masken nachgebaut zu werden: Der
+ * BESTAND speichert das Kundenland als deutschen Klarnamen, und `getVATFormat`
+ * (unten) ist auf genau diese Namen verschluesselt. Wer eine Laenderauswahl aus
+ * `lib/laender.LAENDER` (ISO-Codes) aufbaut, braucht deshalb die Ruecksetzung
+ * auf den gespeicherten Namen — aus DIESER Tabelle, nicht aus einer elften
+ * Kopie. Ist der Code unbekannt, kommt er unveraendert zurueck: kein
+ * erfundener Ersatzname (Wurzel 4).
+ */
+export function laendernameDeutsch(countryCode: string): string {
+  const code = (countryCode || '').trim().toUpperCase();
+  return COUNTRY_NAMES[code] || code;
+}
+
+/**
  * Detects the country based on VAT number
  */
 export function detectCountryFromVAT(vatNumber: string): string | null {

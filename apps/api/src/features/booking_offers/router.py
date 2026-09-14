@@ -28,6 +28,7 @@ from .schemas import (
     BookingOfferCreate,
     BookingOfferList,
     BookingOfferOut,
+    BookingOfferUpdate,
     PublicOfferAcceptResponse,
     PublicOfferOut,
     SliceHealth,
@@ -102,6 +103,20 @@ def detail(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.patch("/{offer_id}", response_model=BookingOfferOut)
+def aendern(
+    req: BookingOfferUpdate,
+    service: BookingOffersServiceDep,
+    ctx: Leitung,
+    offer_id: Annotated[str, Path()],
+) -> BookingOfferOut:
+    """Offenes Angebot ändern — Preis rechnet der Server neu."""
+    try:
+        return service.aendern(ctx, offer_id, req)
+    except BookingOfferError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/{offer_id}/send", response_model=BookingOfferOut)
 def senden(
     service: BookingOffersServiceDep,
@@ -111,6 +126,19 @@ def senden(
     """Angebotsmail an den Gast schicken (auch erneut)."""
     try:
         return service.senden(ctx, offer_id)
+    except BookingOfferError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{offer_id}/buchhaltung", response_model=BookingOfferOut)
+def buchhaltung(
+    service: BookingOffersServiceDep,
+    ctx: Leitung,
+    offer_id: Annotated[str, Path()],
+) -> BookingOfferOut:
+    """Spiegel in der Buchhaltung sicherstellen (0699) — liefert `quote_id`."""
+    try:
+        return service.buchhaltung_sicherstellen(ctx, offer_id)
     except BookingOfferError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

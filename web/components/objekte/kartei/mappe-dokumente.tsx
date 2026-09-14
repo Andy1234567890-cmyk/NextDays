@@ -539,7 +539,7 @@ function Vorschlagsliste({
           <select
             value={sprache}
             onChange={(e) => setSprache(e.target.value)}
-            className="rounded-lg border border-border bg-background px-2 py-1 text-sm"
+            className="rounded-lg border border-border bg-background py-1 pl-2 pr-7 text-sm"
           >
             {SPRACHEN.map((s) => (
               <option key={s} value={s}>

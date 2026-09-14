@@ -2,34 +2,46 @@
 
 // Der Reiter „Steuerdokumente": die DAC7-Jahresmeldung.
 //
-// Der Ablauf in drei Schritten, bewusst getrennt:
+// Der Ablauf, bewusst in getrennten Schritten:
 //   1. BERECHNEN  — zeigt, was gemeldet würde, und was noch fehlt
-//   2. HERUNTERLADEN — die Datei für das Portal der Behörde
-//   3. ABGEBEN bestätigen — kennzeichnet den Lauf als abgegeben
+//   2. HERUNTERLADEN — die Datei für das Portal der Behörde (CSV oder XML)
+//   3. ÜBERMITTELN — an die Empfangsstelle senden, sofern eingerichtet
+//   4. ABGEBEN bestätigen — kennzeichnet den Lauf als abgegeben
 //
-// Warum drei Schritte und kein Knopf: Wir laden nichts selbst bei der
-// Behörde hoch. Der Nutzer prüft, lädt herunter, reicht ein und bestätigt.
-// Ein „Melden"-Knopf, der nur eine Datei erzeugt, wäre eine Lüge über das,
-// was passiert ist.
+// Warum Schritt 3 und 4 GETRENNT bleiben: Eine Annahme durch die Teststufe
+// ist keine Zusage der Behörde. „Abgegeben" ist die Aussage des Betriebs,
+// dass die Meldung bei der Behörde liegt — sie automatisch zu setzen, weil
+// eine simulierte Stelle „angenommen" sagte, wäre eine Falschaussage im
+// eigenen Datenbestand.
+//
+// Schritt 3 erscheint nur, wenn die Übermittlung eingerichtet ist. Sonst
+// bleibt es beim bisherigen Weg: herunterladen und selbst hochladen. Ein
+// Knopf, der nur fehlschlagen kann, ist schlimmer als keiner.
 //
 // Der Prüfbericht ist gleichrangig mit der Datei, nicht Beiwerk: Bei
 // unvollständigen Daten ist die Mängelliste das eigentliche Ergebnis.
 import { Icon } from "@iconify/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
 
 import type {
   Befund,
   Dateipruefung,
+  Meldeformat,
   Meldelauf,
   MeldungVorschau,
+  Uebermittlungsergebnis,
 } from "@/lib/dac7";
 import { abgabefrist, meldejahre, objektartName } from "@/lib/dac7";
+
+import { CsvRaster } from "./csv-raster";
 import {
   erzeugeMeldung,
   holeMeldedatei,
   meldungAbgeben,
+  uebermittleMeldung,
+  uebermittlungEingerichtet,
 } from "@/lib/dac7-actions";
 
 function datumKurz(wert: string | Date): string {
@@ -338,23 +350,43 @@ function LaufAktionen({
   abgegeben,
   laeuft,
   bestaetigen,
+  kannUebermitteln,
   onHerunterladen,
+  onUebermitteln,
   onBestaetigen,
   onAbgeben,
 }: {
   abgegeben: boolean;
   laeuft: boolean;
   bestaetigen: boolean;
-  onHerunterladen: () => void;
+  /** Nur dann erscheint der Übermitteln-Knopf. Ist die Strecke nicht
+   *  eingerichtet, bleibt es beim Herunterladen — ein Knopf, der nur
+   *  fehlschlagen kann, ist schlimmer als keiner. */
+  kannUebermitteln: boolean;
+  onHerunterladen: (format: Meldeformat) => void;
+  onUebermitteln: () => void;
   onBestaetigen: (wert: boolean) => void;
   onAbgeben: () => void;
 }) {
   return (
     <div className="mt-4 flex flex-wrap gap-3">
-      <Button variant="outline" onClick={onHerunterladen}>
+      <Button variant="outline" onClick={() => onHerunterladen("csv")}>
         <Icon icon="solar:download-minimalistic-bold" className="size-4" />
         CSV herunterladen
       </Button>
+      {/* Dieselbe Meldung, das andere Zielformat. Dänemark nimmt ab dem
+          Meldejahr 2026 DPI-XML entgegen; beide entstehen aus demselben
+          gerechneten Baum. */}
+      <Button variant="outline" onClick={() => onHerunterladen("xml")}>
+        <Icon icon="solar:code-file-bold" className="size-4" />
+        XML herunterladen
+      </Button>
+      {kannUebermitteln && !abgegeben && (
+        <Button onClick={onUebermitteln} disabled={laeuft}>
+          <Icon icon="solar:upload-minimalistic-bold" className="size-4" />
+          {laeuft ? "Wird übermittelt …" : "An die Behörde übermitteln"}
+        </Button>
+      )}
       {abgegeben ? null : bestaetigen ? (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm">
@@ -372,6 +404,127 @@ function LaufAktionen({
           Als abgegeben kennzeichnen
         </Button>
       )}
+    </div>
+  );
+}
+
+/**
+ * Was die Empfangsstelle geantwortet hat.
+ *
+ * DREI Zustände, nicht zwei. `angenommen: null` heißt UNBEKANNT — die
+ * Antwort kam nicht an, die Datei kann die Behörde erreicht haben. Diesen
+ * Fall als „nicht gesendet" zu zeigen wäre der teuerste Fehler des Moduls:
+ * Der nächste Klick erzeugte eine Doppelmeldung, und der Vermieter würde
+ * doppelt veranlagt. Deshalb steht bei unbekanntem Ausgang auch kein
+ * „Erneut senden" da.
+ */
+function Quittung({
+  ergebnis,
+  onErneut,
+}: {
+  ergebnis: Uebermittlungsergebnis;
+  onErneut: () => void;
+}) {
+  const unbekannt = ergebnis.angenommen === null;
+  const angenommen = ergebnis.angenommen === true;
+  const farbe = unbekannt
+    ? "border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950"
+    : angenommen
+      ? "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
+      : "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950";
+  const symbol = unbekannt
+    ? "solar:question-circle-bold"
+    : angenommen
+      ? "solar:check-circle-bold"
+      : "solar:close-circle-bold";
+  const symbolfarbe = unbekannt
+    ? "text-amber-600"
+    : angenommen
+      ? "text-green-600"
+      : "text-red-600";
+
+  return (
+    <div className={`mt-4 rounded-lg border p-4 text-sm ${farbe}`}>
+      <div className="flex items-start gap-3">
+        <Icon
+          icon={symbol}
+          className={`mt-0.5 size-5 shrink-0 ${symbolfarbe}`}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">
+            {unbekannt
+              ? "Ausgang unbekannt"
+              : angenommen
+                ? "Von der Empfangsstelle angenommen"
+                : "Von der Empfangsstelle zurückgewiesen"}
+          </p>
+          <p className="mt-1 text-neutral-700 dark:text-neutral-300">
+            {ergebnis.meldung}
+          </p>
+
+          <dl className="mt-3 grid gap-x-6 gap-y-1 sm:grid-cols-2">
+            {ergebnis.quittungsnummer && (
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground">Quittung</dt>
+                <dd className="font-mono">{ergebnis.quittungsnummer}</dd>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">Übertragung</dt>
+              <dd>
+                {ergebnis.verschluesselt ? (
+                  <span className="inline-flex items-center gap-1">
+                    <Icon icon="solar:lock-keyhole-bold" className="size-3.5" />
+                    verschlüsselt
+                  </span>
+                ) : (
+                  "unverschlüsselt"
+                )}
+              </dd>
+            </div>
+            {ergebnis.pruefsumme && (
+              <div className="flex gap-2">
+                <dt className="text-muted-foreground">Prüfsumme</dt>
+                {/* Die des KLARTEXTS — sie belegt, WAS eingereicht wurde,
+                    unabhängig von der Verschlüsselung. */}
+                <dd className="truncate font-mono text-xs">
+                  {ergebnis.pruefsumme.slice(0, 24)}…
+                </dd>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <dt className="text-muted-foreground">Ziel</dt>
+              <dd className="truncate text-xs">{ergebnis.ziel}</dd>
+            </div>
+          </dl>
+
+          {ergebnis.ist_teststufe && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Das war die <strong>Teststufe</strong>, nicht die Behörde. Eine
+              Annahme hier ist keine Zusage von Skattestyrelsen — die Meldung
+              gilt erst als abgegeben, wenn sie dort eingereicht wurde.
+            </p>
+          )}
+
+          {ergebnis.wiederholbar && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={onErneut}
+            >
+              Erneut übermitteln
+            </Button>
+          )}
+          {unbekannt && (
+            <p className="mt-3 text-xs font-medium">
+              Bitte im Portal der Behörde nachsehen, bevor erneut gesendet
+              wird — eine zweite Einreichung derselben Meldung wäre eine
+              Doppelmeldung.
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -562,6 +715,39 @@ function Regelpruefung({ pruefung }: { pruefung: Dateipruefung }) {
   );
 }
 
+/** Eine Datei im Browser zum Speichern anbieten.
+ *
+ *  Die Datei entsteht aus dem Text — sie war nie eine URL, die jemand
+ *  ohne Anmeldung hätte abrufen können.
+ *
+ *  DIE BOM BEI CSV: Sie kommt bereits aus dem Serialisierer
+ *  (`csv_dk.schreiben`, so wie das Export-Makro der amtlichen Vorlage mit
+ *  `xlCSVUTF8`) und übersteht den Weg durch die Antwort. Hier steht sie
+ *  als BACKSTOP — fehlt sie einmal, erkennt Excel auf einem deutschen oder
+ *  dänischen System das `;` nicht als Trennzeichen und legt die ganze
+ *  Zeile in EINE Spalte. Die Datei sieht dann hochkant aus, obwohl ihr
+ *  Inhalt stimmt (live gemeldet am 11.09.2026). Doppelt darf sie nicht
+ *  hinein, deshalb die Prüfung. */
+function speichern(inhalt: string, name: string, format: Meldeformat): void {
+  const text =
+    format === "csv" && !inhalt.startsWith("\ufeff")
+      ? `\ufeff${inhalt}`
+      : inhalt;
+  const ziel = URL.createObjectURL(
+    new Blob([text], {
+      type:
+        format === "xml"
+          ? "application/xml;charset=utf-8"
+          : "text/csv;charset=utf-8",
+    }),
+  );
+  const link = document.createElement("a");
+  link.href = ziel;
+  link.download = name;
+  link.click();
+  URL.revokeObjectURL(ziel);
+}
+
 function ProbelaufErgebnis({ vorschau }: { vorschau: MeldungVorschau }) {
   const [dateiOffen, setDateiOffen] = useState(false);
   const geht = vorschau.datei_verfuegbar;
@@ -634,7 +820,10 @@ function VorschauBereich({
   abgegeben,
   laeuft,
   bestaetigen,
+  kannUebermitteln,
+  quittung,
   onHerunterladen,
+  onUebermitteln,
   onBestaetigen,
   onAbgeben,
 }: {
@@ -642,7 +831,11 @@ function VorschauBereich({
   abgegeben: boolean;
   laeuft: boolean;
   bestaetigen: boolean;
-  onHerunterladen: (laufId: string) => void;
+  kannUebermitteln: boolean;
+  /** Die Antwort der Empfangsstelle, sobald übermittelt wurde. */
+  quittung: Uebermittlungsergebnis | null;
+  onHerunterladen: (laufId: string, format: Meldeformat) => void;
+  onUebermitteln: (laufId: string) => void;
   onBestaetigen: (wert: boolean) => void;
   onAbgeben: (laufId: string) => void;
 }) {
@@ -670,14 +863,24 @@ function VorschauBereich({
         {/* Beim Probelauf gibt es keine Kennung — herunterladen und
             abgeben wären dort tote Knöpfe. */}
         {vorschau.datei_verfuegbar && laufId ? (
-          <LaufAktionen
-            abgegeben={abgegeben}
-            laeuft={laeuft}
-            bestaetigen={bestaetigen}
-            onHerunterladen={() => onHerunterladen(laufId)}
-            onBestaetigen={onBestaetigen}
-            onAbgeben={() => onAbgeben(laufId)}
-          />
+          <>
+            <LaufAktionen
+              abgegeben={abgegeben}
+              laeuft={laeuft}
+              bestaetigen={bestaetigen}
+              kannUebermitteln={kannUebermitteln}
+              onHerunterladen={(format) => onHerunterladen(laufId, format)}
+              onUebermitteln={() => onUebermitteln(laufId)}
+              onBestaetigen={onBestaetigen}
+              onAbgeben={() => onAbgeben(laufId)}
+            />
+            {quittung && (
+              <Quittung
+                ergebnis={quittung}
+                onErneut={() => onUebermitteln(laufId)}
+              />
+            )}
+          </>
         ) : vorschau.probelauf ? (
           <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
             Probelauf — zum Herunterladen und Abgeben die Meldung erstellen.
@@ -689,6 +892,10 @@ function VorschauBereich({
           </p>
         )}
       </div>
+
+      {/* Die Datei selbst — vor den Anbieterkarten. Die Karten legen sie
+          aus, das Raster IST sie. */}
+      {vorschau.datei_inhalt && <CsvRaster datei={vorschau.datei_inhalt} />}
 
       {vorschau.bericht.fehler.length > 0 && (
         <div>
@@ -733,6 +940,21 @@ export function Dac7Meldung({ laeufe }: { laeufe: Meldelauf[] | null }) {
   const [fehler, setFehler] = useState<string | null>(null);
   const [bestaetigen, setBestaetigen] = useState(false);
   const [gespeicherte, setGespeicherte] = useState(laeufe ?? []);
+  const [quittung, setQuittung] = useState<Uebermittlungsergebnis | null>(null);
+  // Ob überhaupt übermittelt werden kann. Erst false: Ein Knopf, der kurz
+  // erscheint und dann verschwindet, ist schlimmer als einer, der nach dem
+  // Laden dazukommt.
+  const [kannUebermitteln, setKannUebermitteln] = useState(false);
+
+  useEffect(() => {
+    let abgebrochen = false;
+    void uebermittlungEingerichtet().then((wert) => {
+      if (!abgebrochen) setKannUebermitteln(wert);
+    });
+    return () => {
+      abgebrochen = true;
+    };
+  }, []);
 
   const frist = abgabefrist(jahr);
   const abgegeben = gespeicherte.find(
@@ -748,26 +970,33 @@ export function Dac7Meldung({ laeufe }: { laeufe: Meldelauf[] | null }) {
       setFehler(ergebnis.error);
       return;
     }
+    setQuittung(null);
     setVorschau(ergebnis.vorschau);
   }
 
-  async function herunterladen(laufId: string) {
+  async function herunterladen(laufId: string, format: Meldeformat = "csv") {
     setFehler(null);
-    const ergebnis = await holeMeldedatei(laufId);
+    const ergebnis = await holeMeldedatei(laufId, format);
     if (!ergebnis.ok) {
       setFehler(ergebnis.error);
       return;
     }
-    // Die Datei entsteht im Browser aus dem Text — sie war nie eine URL,
-    // die jemand ohne Anmeldung hätte abrufen können.
-    const ziel = URL.createObjectURL(
-      new Blob([ergebnis.inhalt], { type: "text/csv;charset=utf-8" }),
-    );
-    const link = document.createElement("a");
-    link.href = ziel;
-    link.download = ergebnis.name;
-    link.click();
-    URL.revokeObjectURL(ziel);
+    speichern(ergebnis.inhalt, ergebnis.name, format);
+  }
+
+  async function uebermitteln(laufId: string) {
+    setLaeuft(true);
+    setFehler(null);
+    setQuittung(null);
+    const ergebnis = await uebermittleMeldung(laufId);
+    setLaeuft(false);
+    if (!ergebnis.ok) {
+      setFehler(ergebnis.error);
+      return;
+    }
+    // Auch eine Zurückweisung und ein unbekannter Ausgang sind ERGEBNISSE,
+    // keine Fehler: Sie gehören in die Quittung, nicht in die Fehlerzeile.
+    setQuittung(ergebnis.ergebnis);
   }
 
   async function abgeben(laufId: string) {
@@ -838,7 +1067,10 @@ export function Dac7Meldung({ laeufe }: { laeufe: Meldelauf[] | null }) {
           abgegeben={Boolean(abgegeben)}
           laeuft={laeuft}
           bestaetigen={bestaetigen}
+          kannUebermitteln={kannUebermitteln}
+          quittung={quittung}
           onHerunterladen={herunterladen}
+          onUebermitteln={uebermitteln}
           onBestaetigen={setBestaetigen}
           onAbgeben={abgeben}
         />

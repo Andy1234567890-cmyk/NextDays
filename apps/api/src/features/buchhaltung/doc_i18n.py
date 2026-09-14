@@ -219,6 +219,12 @@ def fmt_date(lang: str, iso: str) -> str:
         return iso
 
 
+def night_unit(lang: str) -> str:
+    """Einheit „Nacht" (Singular) in der Dokumentsprache — für Positionen mit
+    Basis je Nacht (0698), z. B. „3 Nacht × 120,00"."""
+    return _NIGHT.get(lang, _NIGHT[_DEFAULT])[0]
+
+
 def nights_label(lang: str, nights: int) -> str:
     """„3 Nächte" in der Dokumentsprache, inkl. zählabhängiger Pluralformen
     (slawische/baltische Sprachen, Rumänisch ≥20 mit „de")."""

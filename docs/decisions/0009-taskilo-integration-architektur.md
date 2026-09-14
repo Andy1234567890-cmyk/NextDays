@@ -1,6 +1,6 @@
 # ADR-0009: Architektur der Taskilo-Integration (Buchhaltung, Marktplatz, HR, Jobs)
 
-- Status: **akzeptiert**
+- Status: **akzeptiert — Abschnitt 1 (Frontend) revidiert am 2026-09-12**, siehe Nachtrag unten
 - Datum: 2026-06-18
 
 ## Kontext
@@ -114,3 +114,44 @@ Pro Modul der immer gleiche Vier-Schritt: **(1) DB-Migration** (tenant-vereinhei
 → **(2) Backend-Slice** → **(3) Server Actions** → **(4) UI im NextDays-Design** →
 Doku/Diagramme nachziehen. Start: Buchhaltung (Rechnungen-Basis steht), dann
 Kunden, Angebote, Ausgaben, … anschließend HR, Jobs, Marktplatz.
+
+## Nachtrag (2026-09-12): Frontend-Paradigma für die Buchhaltung revidiert
+
+Abschnitt 1 („NextDays-Paradigma erzwingen … nicht 1:1 kopiert, kein
+`@tasko/ui`") gilt für die **Buchhaltung nicht mehr**. Der Stand ist eine
+1:1-Übernahme des Taskilo-Finanzwerkzeugs mit `@tasko/ui` als Vendor-Alias
+(`web/vendor/tasko-ui/`), festgestellt in
+[TASKILO-FINANZ-BESTAND-2026-09-11.md](../buchhaltung/TASKILO-FINANZ-BESTAND-2026-09-11.md)
+und bereits am 18.06.2026 in [INTEGRATION-TASKILO-BUCHHALTUNG.md](../INTEGRATION-TASKILO-BUCHHALTUNG.md)
+§7 als „Strategie REVIDIERT" beschlossen — nur dieser ADR wurde nie
+nachgezogen, sodass drei Monate lang zwei gültige, sich widersprechende
+Entscheidungen nebeneinander standen.
+
+**Warum revidiert:** Der Neuaufbau „im NextDays-Design" lieferte dünne
+Attrappen ohne die GoBD-Logik, Steuerregeln, E-Rechnung und PDF-Vorlagen des
+Originals (Beispiel: `buchhaltung/angebote` als 152-Zeilen-Neuentwicklung neben
+einem 4 552-Zeilen-Editor mit vollständiger Fachlogik). Fachlich richtig ist
+das Original; neu geschrieben wird nur, was dort Attrappe war (DATEV-API,
+finAPI ohne Zugang, Validierung „immer true").
+
+**Was weiterhin gilt (und beim Ausbau am 12.09.2026 durchgesetzt wurde):**
+
+- Abschnitte 2–5 unverändert: ein Backend (Slice `buchhaltung`, seit dem
+  12.09.2026 in dreizehn Bereiche unter `bereiche/` gegliedert), ins
+  NextDays-Supabase gemergt (`tenant_id`, RLS, Finanztabellen server-only nach
+  Wurzel 6), eine Sidebar, eine App unter `/buchhaltung/…`.
+- Die Übernahme ist 1:1 in Fachlogik und Bedienung, **nicht** in den
+  Verstößen des Originals: kein `EUR`-/`19`-Hardcode (Wurzel 4), keine
+  `USING (true)`-Policies, kein Zeitstempel als Belegnummer, Nummern vergibt
+  der Server (`next_document_number`), Mail nur über `core/mail.py`.
+- Die acht Beleg-Editoren des Originals (40 371 Zeilen, Kopien EINES Editors)
+  werden als **ein** parametrisierter Editor geführt
+  (`web/components/finance/create-invoice/`, Belegart als Konfiguration) —
+  das ist die eine Stelle, an der bewusst NICHT 1:1 kopiert wird.
+- Alte Pfade (`/api/v1/expenses` …) bleiben im Frontend und werden zentral
+  in `web/lib/api-client.ts` (`BUCHHALTUNG_SEGMENTE`) auf
+  `/api/v1/buchhaltung/…` abgebildet; dort greift der Modul-Riegel
+  (`enabled_modules`, 0572/0633).
+- Die Komplexität des Altbestands ist in `web/eslint-suppressions.json`
+  eingefroren, nicht geheilt; neue und umgebaute Dateien unterliegen den
+  ESLint-Grenzen (complexity 15, max-depth 4, max-lines-per-function 150).

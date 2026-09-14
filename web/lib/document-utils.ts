@@ -11,7 +11,7 @@
   },okumenttypen
  */
 
-import type { DocumentTranslations } from '@/hooks/pdf/useDocumentTranslation';
+import type { DocumentTextKey } from '@/hooks/pdf/useDocumentTranslation';
 
 export type DocumentType =
   | 'invoice'
@@ -36,11 +36,11 @@ export interface DocumentTypeConfig {
 }
 
 export interface DocumentTypeMapping {
-  titleKey: keyof DocumentTranslations;
-  numberLabelKey: keyof DocumentTranslations;
-  dateLabelKey: keyof DocumentTranslations;
-  dueDateLabelKey: keyof DocumentTranslations;
-  recipientLabelKey: keyof DocumentTranslations;
+  titleKey: DocumentTextKey;
+  numberLabelKey: DocumentTextKey;
+  dateLabelKey: DocumentTextKey;
+  dueDateLabelKey: DocumentTextKey;
+  recipientLabelKey: DocumentTextKey;
   showPaymentTerms: boolean;
   showDueDate: boolean;
 }
@@ -332,7 +332,7 @@ export function getDocumentTypeConfig(
  */
 export function getTranslatedDocumentTypeConfig(
   documentType: DocumentType,
-  t: (key: keyof DocumentTranslations) => string,
+  t: (key: DocumentTextKey) => string,
   customColor?: string,
 ): DocumentTypeConfig {
   const mapping = DOCUMENT_TYPE_MAPPINGS[documentType];

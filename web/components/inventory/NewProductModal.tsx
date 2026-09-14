@@ -24,6 +24,8 @@ import {
 } from '@tasko/ui';
 import { useEffect, useMemo, useState } from 'react';
 
+import { useCompanySettings } from '@/hooks/useCompanySettings';
+import { steuersatz } from '@/lib/steuer-waehrung';
 import { InventoryService } from '@/services/inventoryService';
 
 export type NewProductValues = {
@@ -61,7 +63,12 @@ const DEFAULT_VALUES: NewProductValues = {
   category: 'Artikel',
   unit: 'Stk',
   stock: 0,
-  taxRate: 19,
+  // 0 statt 19: Der deutsche Regelsatz als Modulkonstante pflanzte sich über
+  // jedes neu angelegte Produkt in alle Belege fort — auch bei einem Betrieb
+  // in DK (25 %) oder LU (17 %). Der echte Satz kommt beim Öffnen aus den
+  // Stammdaten (siehe useEffect unten); 0 ist der einzige Wert, der ohne
+  // Kenntnis des Betriebs nichts Falsches behauptet.
+  taxRate: 0,
   purchaseNet: 0,
   purchaseGross: 0,
   sellingNet: 0,
@@ -88,14 +95,28 @@ export default function NewProductModal({
   const [partUnities, setPartUnities] = useState<PartUnity[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<string[]>(['Artikel', 'Dienstleistung']);
 
+  // Standardsatz des Betriebs (DK 25 %, LU 17 %, DE 19 % …). `null`, solange
+  // er nicht geladen oder nicht konfiguriert ist — dann bleibt es bei 0 und
+  // der Nutzer setzt den Satz selbst, statt einen fremden zu erben.
+  const { settings } = useCompanySettings();
+  const betriebsSatz = steuersatz(settings?.defaultTaxRate);
+
   useEffect(() => {
     if (open) {
-      setValues({ ...DEFAULT_VALUES, ...(defaultValues || {}) } as NewProductValues);
+      setValues({
+        ...DEFAULT_VALUES,
+        ...(betriebsSatz !== null ? { taxRate: betriebsSatz } : {}),
+        ...(defaultValues || {}),
+      } as NewProductValues);
       setStockEnabled(false);
       setReorderEnabled(false);
       setPartUnities([]);
     }
-  }, [open, defaultValues]);
+    // `betriebsSatz` gehoert in die Abhaengigkeiten: die Stammdaten kommen
+    // asynchron. Ohne ihn lief der Effekt genau einmal beim Oeffnen, bekam
+    // `null` und liess den Satz bei 0 stehen — der Standardsatz des Betriebs
+    // traf danach nie mehr ein.
+  }, [open, defaultValues, betriebsSatz]);
 
   // Kategorien laden (sofern companyId verfügbar), mit sinnvollen Defaults (ohne "Allgemein")
   useEffect(() => {

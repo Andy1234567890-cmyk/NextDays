@@ -27,7 +27,7 @@ from src.features.auth.granular_permissions import default_permissions_for
 from src.features.auth.schemas import UserRole
 from src.features.booking_offers.common import BookingOfferError, token_hash
 from src.features.booking_offers.dependencies import get_booking_offers_service
-from src.features.booking_offers.schemas import BookingOfferCreate
+from src.features.booking_offers.schemas import BookingOfferCreate, BookingOfferUpdate
 from src.features.booking_offers.service import BookingOffersService
 from src.main import create_app
 
@@ -202,9 +202,39 @@ def _req(**kw: Any) -> BookingOfferCreate:
         "adults": 2,
         "guest_name": "Ida Jensen",
         "guest_email": "ida@example.com",
+        "guest_street": "Strandvej 1",
+        "guest_postal_code": "6857",
+        "guest_city": "Blåvand",
+        "guest_country": "Dänemark",
     }
     daten.update(kw)
     return BookingOfferCreate(**daten)
+
+
+def test_anschrift_ist_pflicht() -> None:
+    """0703: ohne Anschrift kein Angebot — der Debitor der Brücke braucht sie."""
+    with pytest.raises(ValueError):
+        _req(guest_street="  ")
+
+
+def test_ohne_ust_nur_organisation_und_reverse_charge_braucht_ustid() -> None:
+    """0704: steuerfrei nur für Organisationen; Reverse Charge nur mit USt-IdNr."""
+    with pytest.raises(ValueError):
+        _req(tax_rule="EU_REVERSE_18B")
+    with pytest.raises(ValueError):
+        _req(guest_type="business", guest_company="Firma", tax_rule="EU_REVERSE_18B")
+    req = _req(
+        guest_type="business", guest_company="Firma",
+        tax_rule="EU_REVERSE_18B", guest_vat_id=" DK12345678 ",
+    )
+    assert req.guest_vat_id == "DK12345678"
+
+
+def test_organisation_braucht_firmenname() -> None:
+    with pytest.raises(ValueError):
+        _req(guest_type="business")
+    req = _req(guest_type="business", guest_company=" Nordsee Reisen ApS ")
+    assert req.guest_company == "Nordsee Reisen ApS"
 
 
 @pytest.fixture
@@ -231,6 +261,61 @@ def quote(monkeypatch: pytest.MonkeyPatch) -> dict:
 
     monkeypatch.setattr(BookingOffersService, "_quote", fake_quote)
     return antwort
+
+
+# --- Ändern -----------------------------------------------------------------
+
+
+def test_aendern_rechnet_preis_neu_und_behaelt_rest(quote: dict) -> None:
+    """Geänderte Felder übernehmen, Rest bleibt, Preis-Snapshot neu (Wurzel 3)."""
+    store = _store()
+    svc, _ = _service(store)
+    out = svc.anlegen(_ctx(), _req(internal_note="alt"))
+    quote["total"] = 4000.0
+    quote["lines"] = [{"label": "3 Nächte", "amount": 4000.0, "kind": "nightly"}]
+    neu = svc.aendern(
+        _ctx(), out.id, BookingOfferUpdate(guest_name="Neu Name", adults=3, gueltig_tage=3)
+    )
+    assert neu.guest_name == "Neu Name"
+    assert neu.adults == 3
+    assert neu.internal_note == "alt"
+    assert neu.total_amount == 4000.0
+    assert [z.label for z in neu.lines] == ["3 Nächte"]
+    assert neu.expires_at < datetime.now(UTC) + timedelta(days=4)
+    assert neu.status == "draft"
+    zeile = store["booking_offers"][0]
+    assert zeile["guest_name"] == "Neu Name"
+    assert zeile["quote_snapshot"]["total"] == 4000.0
+
+
+def test_aendern_anzahlung_streichen_und_pruefen(quote: dict) -> None:
+    store = _store()
+    svc, _ = _service(store)
+    out = svc.anlegen(_ctx(), _req(deposit_amount=500.0))
+    neu = svc.aendern(_ctx(), out.id, BookingOfferUpdate(deposit_entfernen=True))
+    assert neu.deposit_amount is None
+    with pytest.raises(BookingOfferError) as exc:
+        svc.aendern(_ctx(), out.id, BookingOfferUpdate(deposit_amount=quote["total"] + 1))
+    assert exc.value.status_code == 422
+
+
+def test_aendern_nur_offene_angebote(quote: dict) -> None:
+    store = _store()
+    svc, _ = _service(store)
+    out = svc.anlegen(_ctx(), _req())
+    store["booking_offers"][0]["status"] = "paid"
+    with pytest.raises(BookingOfferError) as exc:
+        svc.aendern(_ctx(), out.id, BookingOfferUpdate(guest_name="x"))
+    assert exc.value.status_code == 409
+
+
+def test_aendern_fremder_tenant_ist_404(quote: dict) -> None:
+    store = _store()
+    svc, _ = _service(store)
+    out = svc.anlegen(_ctx(), _req())
+    with pytest.raises(BookingOfferError) as exc:
+        svc.aendern(_ctx("t2"), out.id, BookingOfferUpdate(guest_name="x"))
+    assert exc.value.status_code == 404
 
 
 # --- Anlegen ----------------------------------------------------------------
@@ -881,3 +966,12 @@ def test_oeffentliche_route_prueft_das_tokenmuster() -> None:
     with TestClient(app) as c:
         assert c.get("/api/v1/public/offers/kurz").status_code == 422
         assert c.post("/api/v1/public/offers/kurz/accept").status_code == 422
+
+
+def test_buchhaltung_sicherstellen_ohne_modul_409(quote: dict) -> None:
+    store = _store()
+    svc, _ = _service(store)
+    out = svc.anlegen(_ctx(), _req())
+    with pytest.raises(BookingOfferError) as exc:
+        svc.buchhaltung_sicherstellen(_ctx(), out.id)
+    assert exc.value.status_code == 409

@@ -1125,17 +1125,18 @@ def test_nachzuegler_wird_nicht_mehr_versendet() -> None:
     # Gerade eben fällig geworden → geht raus.
     assert (
         InboxService._versandstatus(datetime(2026, 8, 7, 11, 0, tzinfo=UTC), jetzt)
-        == "pending"
+        == ("pending", None)
     )
-    # Zwei Tage überfällig → wird festgehalten, nicht verschickt.
-    assert (
-        InboxService._versandstatus(datetime(2026, 8, 5, 9, 0, tzinfo=UTC), jetzt)
-        == "skipped"
-    )
+    # Zwei Tage überfällig → wird festgehalten, nicht verschickt. Der GRUND
+    # gehört dazu: ohne ihn stand in `last_error` NULL, und „skipped" war eine
+    # Aussage ohne Inhalt.
+    assert InboxService._versandstatus(
+        datetime(2026, 8, 5, 9, 0, tzinfo=UTC), jetzt
+    ) == ("skipped", "nachzuegler")
     # Künftig → geht raus.
     assert (
         InboxService._versandstatus(datetime(2026, 8, 20, 9, 0, tzinfo=UTC), jetzt)
-        == "pending"
+        == ("pending", None)
     )
 
 
@@ -1150,28 +1151,29 @@ def test_lastminute_anker_vor_der_buchung_geht_nicht_raus() -> None:
     jetzt = datetime(2026, 8, 24, 6, 4, tzinfo=UTC)
     vor_der_buchung = datetime(2026, 8, 23, 18, 0, tzinfo=UTC)
     # Ohne den Buchungszeitpunkt sieht die Zeile frisch aus — das war der Fehler.
-    assert InboxService._versandstatus(vor_der_buchung, jetzt) == "pending"
-    # Mit ihm: die Regel hat für diese Buchung nie gegolten.
-    assert (
-        InboxService._versandstatus(vor_der_buchung, jetzt, gebucht_am=gebucht)
-        == "skipped"
-    )
+    assert InboxService._versandstatus(vor_der_buchung, jetzt) == ("pending", None)
+    # Mit ihm: die Regel hat für diese Buchung nie gegolten — und genau das
+    # steht als Grund an der Zeile, nicht „zu spät".
+    assert InboxService._versandstatus(
+        vor_der_buchung, jetzt, gebucht_am=gebucht
+    ) == ("skipped", "anker_vor_buchung")
     # Die Buchungsbestätigung selbst hängt am Buchungszeitpunkt und bleibt
     # unberührt — sonst hätte der Fix den Hauptfall mitgenommen.
     assert (
         InboxService._versandstatus(
             gebucht + timedelta(minutes=5), jetzt, gebucht_am=gebucht
         )
-        == "pending"
+        == ("pending", None)
     )
     # Genau auf dem Buchungszeitpunkt (Versatz 0) ist gültig, nicht „davor".
     assert (
-        InboxService._versandstatus(gebucht, jetzt, gebucht_am=gebucht) == "pending"
+        InboxService._versandstatus(gebucht, jetzt, gebucht_am=gebucht)
+        == ("pending", None)
     )
     # Fehlt `booked_at`, wird nichts geraten (Wurzel 4): nur die 24-h-Grenze.
     assert (
         InboxService._versandstatus(vor_der_buchung, jetzt, gebucht_am=None)
-        == "pending"
+        == ("pending", None)
     )
 
 

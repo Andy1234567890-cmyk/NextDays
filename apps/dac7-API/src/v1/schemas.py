@@ -28,5 +28,9 @@ class VersandAusgabe(BaseModel):
     # ging, ist wertlos.
     ziel: str
     ist_teststufe: bool
+    # Ob die Nutzdaten verschluesselt hinausgingen. Der Betrieb muss
+    # belegen koennen, WIE uebermittelt wurde — nicht nur, dass es
+    # geschah.
+    verschluesselt: bool = False
     # Die unveraenderte Antwort der Gegenstelle — im Streitfall der Beleg.
     antwort: dict[str, Any] = Field(default_factory=dict)

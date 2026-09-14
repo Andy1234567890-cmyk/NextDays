@@ -61,6 +61,29 @@ from __future__ import annotations
 GEBIETE = {
     "personal": ("des Personalbereichs", "0541"),
     "angebote": ("der Buchungsangebote", "0586"),
+    # Objekt-Zuweisung der Nachrichten-Automatisierungen (inbox/objekt_zuweisung,
+    # 14.09.2026) — keine Migration, der Text speist die Glocke.
+    "automationen": ("der Nachrichten-Automatisierungen", "ohne Migration"),
+    # Der Standard-Regelsatz, den ein NEUER Betrieb bei der Anlage bekommt
+    # (inbox/standard_regeln.py, 14.09.2026). Keine Migration — die Regeln
+    # entstehen als Datenzeilen bei der Registrierung, nicht per DDL.
+    #
+    # Sonderfall dieses Gebiets: die Texte gehen nicht an einen Empfaenger,
+    # sondern IN eine Automail-Regel des Betriebs. Sie tragen deshalb
+    # Vorlagen-Platzhalter in doppelten geschweiften Klammern
+    # (`{{guest_first_name}}`, Katalog: inbox/felder.py) statt der
+    # `str.format`-Platzhalter der uebrigen Gebiete. `text()` formatiert sie
+    # nicht (Aufruf ohne `**werte`), und `uebersetzen.py` laesst geschweifte
+    # Klammern unveraendert stehen — beides ist Voraussetzung dafuer.
+    #
+    # ACHTUNG beim Neu-Uebersetzen dieses Gebiets: Gemini hat am 14.09.2026 in
+    # vier Sprachen (hr, hu, lt, sl) `{{feld}}` zu `{feld}` zusammengezogen —
+    # der NAME blieb, die zweite Klammer fiel weg. `felder.MUSTER` erkennt das
+    # nicht mehr als Platzhalter; der Gast haette woertlich „{property_name}"
+    # gelesen, ohne dass irgendein Gate anschlaegt. Nach jedem Lauf deshalb
+    # pruefen, dass jede Sprachfassung dieselben `{{…}}` traegt wie die
+    # deutsche, und einfache Klammern zurueckverdoppeln.
+    "standardregeln": ("des Standard-Regelsatzes neuer Betriebe", "ohne Migration"),
 }
 
 

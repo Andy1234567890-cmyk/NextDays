@@ -44,15 +44,29 @@ class Anschrift:
     plz: str | None = None
     ort: str | None = None
     art: str | None = None
+    freitext: str | None = None
+    """Die Anschrift in einer Zeile — `ADDR_FREE` der Vorlage.
+
+    Der amtliche Ausweg für Anschriften, die strukturiert nicht abbildbar
+    sind: Zellkommentar zu `ADDR_FREE` „Obligatorisk hvis de strukturerede
+    adressefelter ikke kan udfyldes." Das Blatt `Eksempel 2.1 Initiel`
+    führt ihn fünfmal vor (S6–S10), etwa „Budapest, Hős u. 8-10, 1087
+    Ungarn" — eine ungarische Anschrift, die in Straße/PLZ/Ort nicht
+    aufgeht.
+
+    In allen fünf Beispielblättern steht er NIE allein: `ADDR_CITY` ist
+    dort auch dann gesetzt, wenn `ADDR_FREE` gefüllt ist. Er ergänzt die
+    strukturierte Fassung also, er ersetzt sie nicht.
+    """
 
     @property
     def vollstaendig(self) -> bool:
         """Ob die Anschrift gemeldet werden kann.
 
         Die Vorlage verlangt Land und entweder Ort oder eine Freitextfassung.
-        Eine Anschrift ohne Ort wäre für die Behörde nicht zuordenbar.
+        Eine Anschrift ohne beides wäre für die Behörde nicht zuordenbar.
         """
-        return bool(self.land) and bool(self.ort)
+        return bool(self.land) and bool(self.ort or self.freitext)
 
 
 @dataclass(frozen=True, slots=True)

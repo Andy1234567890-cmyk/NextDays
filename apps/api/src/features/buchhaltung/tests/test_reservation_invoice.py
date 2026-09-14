@@ -627,7 +627,12 @@ def test_collective_position_in_guest_language() -> None:
     res = _reservation(guest_language="it", quote_items=[])
     pos = build_positions(res, [], [], Decimal("7"), False, "Villa", "it")
     assert pos[0]["description"] == "Soggiorno Villa 01/07/2026 – 04/07/2026 (3 notti)"
-    assert pos[0]["unit"] == "forfettario"
+    # Seit 0698: Übernachtung als „Nächte × Preis je Nacht" — Einheit „notte",
+    # Menge 3, Basis je Nacht (statt pauschal, Menge 1).
+    assert pos[0]["unit"] == "notte"
+    assert pos[0]["quantity"] == Decimal("3")
+    assert pos[0]["basis"] == "per_night"
+    assert pos[0]["unit_price"] * 3 == pos[0]["net_amount"]
 
 
 def test_addon_label_prefers_guest_language() -> None:

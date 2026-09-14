@@ -36,6 +36,7 @@ import type { BookingAccount } from '@/services/bookingAccountService';
 import { InvoiceStatusService } from '@/services/invoice-status.service';
 import { TransactionLinkService } from '@/services/transaction-link.service';
 import { WhatsAppNotificationService } from '@/services/whatsapp-notifications.service';
+import type { ModalTransaction } from '@/types/banking';
 import type { InvoiceData } from '@/types/invoiceTypes';
 import { EmailDialog } from './EmailDialog';
 import SelectBankingTransactionModal from './SelectBankingTransactionModal';
@@ -224,7 +225,7 @@ export function InvoiceListView({
   };
 
   const handleBankingTransactionSelected = async (
-    bankingTransaction: any,
+    bankingTransaction: ModalTransaction,
     bookingAccount?: BookingAccount,
   ) => {
     try {
@@ -233,14 +234,15 @@ export function InvoiceListView({
         return;
       }
 
-      // ECHTE Banking Transaction Daten verwenden!
+      // Das Auswahl-Modal liefert bereits die normalisierte Transaktion
+      // (ModalTransaction); die alten finAPI-Rohfeld-Fallbacks waren tot.
       const transactionData = {
         id: bankingTransaction.id,
-        name: bankingTransaction.counterpartName || bankingTransaction.name || '',
-        verwendungszweck: bankingTransaction.purpose || bankingTransaction.verwendungszweck || '',
-        buchungstag: bankingTransaction.bookingDate || bankingTransaction.buchungstag || '',
-        betrag: bankingTransaction.amount || bankingTransaction.betrag || 0,
-        accountId: bankingTransaction.accountId || '',
+        name: bankingTransaction.name,
+        verwendungszweck: bankingTransaction.verwendungszweck,
+        buchungstag: bankingTransaction.buchungstag,
+        betrag: bankingTransaction.betrag,
+        accountId: bankingTransaction.accountId,
       };
 
       const documentData = {
@@ -302,10 +304,13 @@ export function InvoiceListView({
 
         if (!customerPhone && selectedInvoiceForLink.customerEmail) {
           try {
-            const customersResult = await api.get<{ items: Array<{ id: string; phone?: string }> }>(
+            // Das Backend liefert ein Array und filtert seit dem 11.09.2026
+            // serverseitig nach E-Mail — vorher kamen ALLE Kunden zurück und
+            // `[0]` war der alphabetisch erste, nicht der gesuchte.
+            const customersResult = await api.get<Array<{ id: string; phone?: string }>>(
               `/api/v1/customers?company_id=${companyId}&email=${encodeURIComponent(selectedInvoiceForLink.customerEmail)}&limit=1`,
             );
-            const firstCustomer = customersResult?.items?.[0];
+            const firstCustomer = customersResult?.[0];
             if (firstCustomer) {
               customerPhone = firstCustomer.phone || '';
               customerId = firstCustomer.id;
@@ -336,6 +341,9 @@ export function InvoiceListView({
             customerPhone,
             selectedInvoiceForLink.invoiceNumber || selectedInvoiceForLink.number || '',
             selectedInvoiceForLink.total || 0,
+            // Belegwaehrung der Rechnung, nicht die Waehrung des Betrachters:
+            // die Nachricht nennt den Betrag, den der Kunde ueberwiesen hat.
+            selectedInvoiceForLink.currency,
             selectedInvoiceForLink.id,
           );
         }
@@ -352,9 +360,10 @@ export function InvoiceListView({
       if (onRefresh) {
         onRefresh();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Fehler beim Verknüpfen:', error);
-      toast.error(t('InvoiceListView.linkError', { message: error.message }));
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error(t('InvoiceListView.linkError', { message }));
     }
   };
 

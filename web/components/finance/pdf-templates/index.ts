@@ -17,4 +17,5 @@ export { ElegantTemplate } from './ElegantTemplate';
 export { GeometricTemplate } from './GeometricTemplate';
 export { NeutralTemplate } from './NeutralTemplate';
 export { StandardTemplate } from './StandardTemplate';
+export { StayTemplate } from './StayTemplate';
 export { TechnicalTemplate } from './TechnicalTemplate';

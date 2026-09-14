@@ -490,20 +490,8 @@ class AbsichtMixin:
                 error=str(exc),
             )
 
-        kontakt = daten.get("contact") or {}
         self._posteingang_thread_anlegen(
-            tenant_id=tenant_id,
-            reservation=reservation,
-            property_id=property_id,
-            check_in=check_in,
-            check_out=check_out,
-            guest_id=str(guest_id) if guest_id else None,
-            status="confirmed",
-            name=" ".join(
-                t
-                for t in (kontakt.get("first_name"), kontakt.get("last_name"))
-                if t
-            ).strip(),
+            tenant_id=tenant_id, reservation_id=reservation_id
         )
 
     def _absicht_starten(

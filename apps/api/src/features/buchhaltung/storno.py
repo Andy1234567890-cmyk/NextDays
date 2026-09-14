@@ -14,6 +14,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 
+from .positionen_kontext import eltern_verknuepfen
 from .service import BuchhaltungError, _num, _q, _row_to_invoicedata
 
 log = get_logger("nextdays.buchhaltung.storno")
@@ -178,6 +179,15 @@ def create_storno_invoice(
                         "unit_price": neg(li.get("unit_price")),
                         "tax_rate": li.get("tax_rate"),
                         "discount_percent": li.get("discount_percent"),
+                        # Aufenthalt der Zeile (0702) mitkopieren: das Storno
+                        # muss dieselbe Leistung benennen wie das Original.
+                        # `parent_line_id` zeigt auf eine Zeile des ORIGINALS
+                        # und wird darum nicht kopiert, sondern nach dem Insert
+                        # auf die neue Zeile umgehängt.
+                        "basis": li.get("basis"),
+                        "property_id": li.get("property_id"),
+                        "check_in": li.get("check_in"),
+                        "check_out": li.get("check_out"),
                         "net_amount": neg(li.get("net_amount")),
                         "tax_amount": neg(li.get("tax_amount")),
                         "gross_amount": neg(li.get("gross_amount")),
@@ -198,6 +208,24 @@ def create_storno_invoice(
                 "Storno-Positionen konnten nicht gespeichert werden.",
                 status_code=500,
             ) from exc
+        # Zusatzleistung → Übernachtung (0702) auf die NEUEN Zeilen umhängen:
+        # die kopierte parent_line_id zeigte sonst auf eine Zeile des Originals.
+        # Gearbeitet wird über die Positionsnummer, die der Storno unverändert
+        # übernimmt.
+        position_je_id = {str(li.get("id")): li.get("position") for li in lines}
+        eltern_verknuepfen(
+            db,
+            "invoice_line_items",
+            "invoice_id",
+            storno["id"],
+            [
+                (li["position"], position_je_id[str(li["parent_line_id"])])
+                for li in lines
+                if li.get("parent_line_id")
+                and li.get("position")
+                and str(li["parent_line_id"]) in position_je_id
+            ],
+        )
 
     # Original als storniert markieren — gibt den Unique-Index frei.
     db.table("invoices").update(

@@ -17,6 +17,25 @@ class BefundAusgabe(BaseModel):
     wert: str = ""
 
 
+class SchrittAusgabe(BaseModel):
+    """Eine Station auf dem Weg der Meldung durch die Stelle.
+
+    WOZU IN DER QUITTUNG: Die Behoerde will nicht nur wissen, DASS die
+    Meldung angekommen ist, sondern WIE — wo entschluesselt wurde, woran
+    eine Verfaelschung auffaellt, was die einzelnen Schritte kosten. Eine
+    Quittung, die nur „angenommen" sagt, beantwortet das nicht.
+
+    `belegt` traegt einen NACHWEIS (Pruefsumme, Schluesselkennung, Zahl),
+    nie einen Feldwert der Meldung.
+    """
+
+    name: str
+    geschafft: bool
+    dauer_ms: float
+    beschreibung: str
+    belegt: str = ""
+
+
 class QuittungAusgabe(BaseModel):
     """Die Kvittering — was die Behoerde nach einer Einreichung zurueckmeldet."""
 
@@ -37,6 +56,15 @@ class QuittungAusgabe(BaseModel):
     # Quittung ohne sie beantwortet nicht, WAS uebermittelt wurde —
     # Pruefsumme und Zeilenzahl allein reichen dafuer nicht.
     saetze: list[dict[str, str]] = Field(default_factory=list)
+    # Der Weg dieser Meldung durch die Stelle, Station fuer Station.
+    schritte: list[SchrittAusgabe] = Field(default_factory=list)
+    # Kam die Meldung als verschluesselter Umschlag?
+    verschluesselt: bool = False
+    # Der Kopf des Umschlags: Verfahren, Zeitpunkt, Schluesselkennung,
+    # Pruefsumme des Klartexts. Keine Feldwerte — er ist auch im Umschlag
+    # unverschluesselt, weil die Gegenstelle wissen muss, WOMIT sie
+    # oeffnen soll.
+    umschlag_kopf: dict = Field(default_factory=dict)
 
 
 class ProtokollZeile(BaseModel):

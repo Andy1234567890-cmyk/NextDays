@@ -7,7 +7,6 @@
 // komponiert die vier JSX-Module. Guard bewusst NACH allen Hooks.
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import Script from 'next/script';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -28,50 +27,69 @@ import InvoiceModals, {
   CompanySettingsBanner,
   ComplianceSheetInline,
 } from '@/components/finance/create-invoice/invoice-modals';
-import {
-  computeItemTotalNet,
-  computeTotals,
-} from '@/components/finance/create-invoice/calc';
+import { computeItemTotalNet, computeTotals } from '@/components/finance/create-invoice/calc';
 import {
   buildInvoiceDataForPreview as buildInvoiceDataForPreviewPure,
   type PreviewDataArgs,
 } from '@/components/finance/create-invoice/preview-data';
 import { useInvoiceActions } from '@/components/finance/create-invoice/use-invoice-actions';
 import { useInvoiceLoaders } from '@/components/finance/create-invoice/use-invoice-loaders';
+import { mengeAusBasis, naechteAus } from '@/lib/positions-basis';
+import { naechteJeZeile } from '@/components/finance/create-invoice/aufenthalt-zeilen';
 import { useItemPopovers } from '@/components/finance/create-invoice/use-item-popovers';
-import {
-  type InvoicePreview,
-  getInvoicePreview,
-} from '@/lib/buchhaltung-bookings';
+import { type InvoicePreview, getInvoicePreview } from '@/lib/buchhaltung-bookings';
 import type { NewProductValues } from '@/components/inventory/NewProductModal';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useNextInvoiceNumber } from '@/hooks/useNextInvoiceNumber';
 import { InventoryService } from '@/services/inventoryService';
+import { type Quote, QuoteService } from '@/services/quoteService';
 
-export default function CreateQuotePage() {
+// Belegart des EINEN Editors: Rechnung (Standard) oder Angebot. Der alte
+// Angebots-Editor war eine 4 552-Zeilen-Kopie dieses Formulars; hier schaltet
+// die Art nur Titel, Nummernkreis, „Gültig bis", Speicherpfad und Versand-Dialog.
+export type Belegart = 'invoice' | 'quote';
+
+export default function CreateQuotePage({
+  belegart: belegartProp,
+  editQuoteId = null,
+}: {
+  belegart?: Belegart;
+  /** Bestehendes Angebot bearbeiten: Formular aus dem Beleg befüllen, Speichern = PATCH. */
+  editQuoteId?: string | null;
+} = {}) {
   const t = useTranslations('finance');
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const belegart: Belegart =
+    belegartProp ?? (searchParams?.get('belegart') === 'quote' ? 'quote' : 'invoice');
   const { user } = useNewAuth();
   // NextDays: kein [uid]-Routenparameter — Tenant kommt aus der Session (user.uid).
   // Fallback auf params.uid erhält Kompatibilität, falls doch als Param übergeben.
-  const uid =
-    (typeof params?.uid === 'string' ? params.uid : '') || user?.uid || '';
+  const uid = (typeof params?.uid === 'string' ? params.uid : '') || user?.uid || '';
   const prefillCustomerId = searchParams?.get('customerId');
   // „Rechnung aus Buchung" (0092): ?reservation=<id> (Deeplink aus dem
   // Kalender-Slider) ODER Auswahl im Buchungs-Picker.
   const prefillReservationId = searchParams?.get('reservation');
+  // „Als Vorlage verwenden": bestehendes Angebot als Startpunkt eines NEUEN
+  // (Positionen/Texte/Kunde übernehmen, Nummer und Datum neu).
+  const vorlageQuoteId = searchParams?.get('vorlage');
   const {
-    nextNumber: nextInvoiceNumber,
+    nextNumber: naechsteNummer,
     isLoading: nextNumberLoading,
     error: nextNumberError,
-  } = useNextInvoiceNumber(uid);
+  } = useNextInvoiceNumber(uid, belegart);
+  // Beim Bearbeiten trägt der Beleg seine Nummer schon — die wird angezeigt,
+  // nicht die nächste freie (die gehört dem nächsten NEUEN Angebot).
+  const [bearbeiteNummer, setBearbeiteNummer] = useState<string | null>(null);
+  const nextInvoiceNumber = bearbeiteNummer ?? naechsteNummer;
 
   const [showLivePreview, setShowLivePreview] = useState(false);
 
   // Erweiterte States für Dienstleistungen
-  const [serviceModalOpen, setServiceModalOpen] = useState(false);
+  // Der Dialog „Neue Leistung" lebt seit 0698 in der Preisliste; der Actions-Hook
+  // verlangt die Setter noch in seiner Signatur.
+  const [_serviceModalOpen, setServiceModalOpen] = useState(false);
   const [serviceDraft, setServiceDraft] = useState({
     name: '',
     description: '',
@@ -87,13 +105,19 @@ export default function CreateQuotePage() {
   // UI state
   const [loading, setLoading] = useState(false);
   const [showNet, setShowNet] = useState(true);
-  const [paymentDays, setPaymentDays] = useState(14); // Standard 14 Tage
+  const [paymentDays, setPaymentDays] = useState(belegart === 'quote' ? 30 : 14);
 
   // Produkt-anlegen Prompt/Modal State
   const [dismissedCreatePromptIds, setDismissedCreatePromptIds] = useState<Set<string>>(new Set());
   const [createProductOpen, setCreateProductOpen] = useState(false);
   const [createProductForIndex, setCreateProductForIndex] = useState<number | null>(null);
   const [creatingProduct, setCreatingProduct] = useState(false);
+  // Startwert 0 statt eines Regelsatzes: ein Formular, das noch keinen Betrieb
+  // kennt, darf keinen Steuersatz behaupten (Wurzel 4 — bisher stand hier eine
+  // feste 19, die ein daenischer Betrieb mit 25 % still geerbt haette). Den
+  // echten Satz setzt items-card beim Oeffnen der Anlage aus Position bzw.
+  // Belegsatz, und der Belegsatz stammt seinerseits aus den Stammdaten
+  // (use-invoice-loaders, settings.defaultTaxRate).
   const [newProduct, setNewProduct] = useState<NewProductValues>({
     name: '',
     imageUrl: '',
@@ -101,7 +125,7 @@ export default function CreateQuotePage() {
     category: 'Artikel',
     unit: 'Stk',
     stock: 0,
-    taxRate: 19,
+    taxRate: 0,
     purchaseNet: 0,
     purchaseGross: 0,
     sellingNet: 0,
@@ -119,8 +143,22 @@ export default function CreateQuotePage() {
   const [contactType, setContactType] = useState<'organisation' | 'person'>('organisation');
 
   // Lieferdatum State (Einzeldatum vs. Zeitraum)
-  const [deliveryDateType, setDeliveryDateType] = useState<'single' | 'range'>('single');
-  const [deliveryDateRange, setDeliveryDateRange] = useState<{ from?: Date; to?: Date }>({});
+  // Angebot = Aufenthalt (Anreise–Abreise) als Vorgabe; Rechnung = Leistungstag.
+  const [deliveryDateType, setDeliveryDateType] = useState<'single' | 'range'>(
+    belegart === 'quote' ? 'range' : 'single',
+  );
+  const [deliveryDateRange, setDeliveryDateRange] = useState<{
+    from?: Date;
+    to?: Date;
+  }>({});
+  // Personen im Belegkopf (0698) — Menge für Positionen „je Person" / „je Person × Nacht".
+  const [guestCount, setGuestCount] = useState<number>(0);
+  // Objekt für „Aus Preisliste" (Gebühren/Zusatzleistungen/Abgaben des Objekts) —
+  // aus der Buchung vorbelegt, im Dialog wechselbar.
+  const [preislisteObjektId, setPreislisteObjektId] = useState<string | null>(null);
+  // Anzahlung des Aufenthaltsangebots (0701) als Formularwert; leer = keine.
+  const [depositAmount, setDepositAmount] = useState<string>('');
+  const naechte = naechteAus(deliveryDateRange.from, deliveryDateRange.to);
 
   // Buchungs-Brücke (0092): verknüpfte Reservierung + deren Debitor. Gesetzt
   // durch den ?reservation=-Deeplink aus dem Kalender („Rechnung erstellen");
@@ -167,9 +205,9 @@ export default function CreateQuotePage() {
     title: '',
     customerOrderNumber: '',
     validUntil: (() => {
-      // Berechne Fälligkeitsdatum (heute + 14 Tage)
+      // Fälligkeit (Rechnung: heute + 14 Tage) bzw. Gültigkeit (Angebot: 30 Tage)
       const dueDate = new Date();
-      dueDate.setDate(dueDate.getDate() + 14);
+      dueDate.setDate(dueDate.getDate() + (belegart === 'quote' ? 30 : 14));
       return dueDate.toISOString().split('T')[0];
     })(),
     invoiceDate: new Date().toISOString().split('T')[0],
@@ -203,6 +241,11 @@ export default function CreateQuotePage() {
       quantity: 1,
       unitPrice: 0,
       total: 0,
+      // Erste Zeile ist die Übernachtung (0698): je Nacht; Steuersatz kommt
+      // per Effekt aus dem Firmenprofil, sobald es geladen ist.
+      basis: 'per_night',
+      unit: t('itemsCard.basis.per_night'),
+      category: 'Aufenthalt',
     },
   ]);
 
@@ -214,6 +257,7 @@ export default function CreateQuotePage() {
   const applyReservationPreview = (p: InvoicePreview) => {
     setReservationId(p.reservationId);
     setReservationCustomerId(p.customerId);
+    if (p.propertyId) setPreislisteObjektId(p.propertyId);
     setDocumentLanguage(p.guestLanguage || 'de');
     // Firmengast (Gästemappe „Firma") → Empfänger ist die Organisation,
     // sonst Privatperson mit Vor-/Nachname aus der Gästemappe.
@@ -245,6 +289,7 @@ export default function CreateQuotePage() {
       from: new Date(`${p.stay.from}T00:00:00`),
       to: new Date(`${p.stay.to}T00:00:00`),
     });
+    if (typeof p.guestCount === 'number' && p.guestCount > 0) setGuestCount(p.guestCount);
     setItems(
       p.items.map(it => ({
         id:
@@ -257,7 +302,11 @@ export default function CreateQuotePage() {
         total: it.quantity * it.unitPrice,
         taxRate: it.taxRate,
         unit: it.unit,
+        basis: it.basis,
         category: 'Aufenthalt',
+        propertyId: it.propertyId || undefined,
+        checkIn: it.checkIn || undefined,
+        checkOut: it.checkOut || undefined,
       })),
     );
   };
@@ -280,14 +329,117 @@ export default function CreateQuotePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- nur beim Mount/Param-Wechsel
   }, [prefillReservationId]);
 
+  // Bestehendes Angebot in den Editor laden — zum Bearbeiten (editQuoteId,
+  // Nummer/Datum bleiben) oder als Vorlage (?vorlage=, Nummer und Datum neu).
+  const applyQuote = (q: Quote, alsVorlage: boolean) => {
+    const adresse =
+      typeof q.customerAddress === 'string'
+        ? q.customerAddress
+        : q.customerAddress
+          ? [
+              q.customerAddress.street,
+              `${q.customerAddress.postalCode} ${q.customerAddress.city}`.trim(),
+              q.customerAddress.country,
+            ]
+              .filter(Boolean)
+              .join('\n')
+          : '';
+    if (!alsVorlage) setBearbeiteNummer(q.number || null);
+    setDocumentLanguage(q.language || 'de');
+    // Person/Organisation aus dem Debitor — ohne diese Zeile stand jeder
+    // geladene Beleg auf dem Vorgabewert „Organisation", auch der eines
+    // Privatgastes aus dem Kalender-Angebot (14.09.2026).
+    if (q.customerType) setContactType(q.customerType === 'business' ? 'organisation' : 'person');
+    setFormData(prev => ({
+      ...prev,
+      customerName: q.customerName,
+      customerEmail: q.customerEmail || '',
+      customerNumber: q.customerNumber || '',
+      customerAddress: adresse || prev.customerAddress,
+      title: q.title || '',
+      customerOrderNumber: q.customerOrderNumber || '',
+      invoiceDate: alsVorlage ? prev.invoiceDate : q.date.toISOString().split('T')[0],
+      validUntil: alsVorlage ? prev.validUntil : q.validUntil.toISOString().split('T')[0],
+      headTextHtml: q.headTextHtml || prev.headTextHtml,
+      footerText: q.footerText || prev.footerText,
+      notes: q.notes || '',
+      currency: q.currency || prev.currency,
+      taxRule: (q.taxRule as TaxRuleType) || prev.taxRule,
+    }));
+    if (q.stayFrom && q.stayTo) {
+      setDeliveryDateType('range');
+      setDeliveryDateRange({
+        from: new Date(`${q.stayFrom}T00:00:00`),
+        to: new Date(`${q.stayTo}T00:00:00`),
+      });
+    }
+    if (typeof q.guestCount === 'number' && q.guestCount > 0) setGuestCount(q.guestCount);
+    if (q.propertyId) setPreislisteObjektId(q.propertyId);
+    setDepositAmount(q.depositAmount != null ? String(q.depositAmount) : '');
+    if (q.items.length > 0) {
+      setItems(
+        q.items.map(it => ({
+          // Zeilen-ID des Belegs beibehalten: `parentItemId` einer Zusatz-
+          // leistung zeigt auf die ID ihrer Übernachtungszeile (0702) — eine
+          // neu gewürfelte ID hätte die Zuordnung beim Laden zerrissen.
+          id:
+            it.id ||
+            (typeof crypto !== 'undefined' && 'randomUUID' in crypto
+              ? crypto.randomUUID()
+              : Math.random().toString(36).slice(2)),
+          description: it.description,
+          quantity: it.quantity,
+          unitPrice: it.unitPrice,
+          total: it.quantity * it.unitPrice,
+          taxRate: it.taxRate,
+          unit: it.unit,
+          basis: it.basis,
+          // Positionen liegen ohne Kategorie in der DB; die Übernachtung ist die
+          // Zeile „je Nacht" (so schreibt sie die Kalender-Brücke 0699). Sie
+          // trägt Objekt und Zeitraum selbst (0702) — Bestand vor 0702 erbt
+          // beides aus dem Belegkopf, statt leer zu stehen.
+          category: it.category || (it.basis === 'per_night' ? 'Aufenthalt' : 'Leistung'),
+          discountPercent: it.discountPercent,
+          extendedDescription: it.extendedDescription,
+          propertyId: it.propertyId ?? (it.basis === 'per_night' ? q.propertyId : undefined),
+          propertyTitle: it.propertyTitle,
+          checkIn: it.checkIn ?? (it.basis === 'per_night' ? q.stayFrom : undefined),
+          checkOut: it.checkOut ?? (it.basis === 'per_night' ? q.stayTo : undefined),
+          parentItemId: it.parentItemId,
+        })),
+      );
+    }
+  };
+
+  useEffect(() => {
+    const id = editQuoteId || vorlageQuoteId;
+    if (!id) return;
+    let aktuell = true;
+    QuoteService.getQuote(id)
+      .then(q => {
+        if (!aktuell) return;
+        if (!q) {
+          toast.error(t('container.quoteNotFound'));
+          return;
+        }
+        applyQuote(q, !editQuoteId);
+      })
+      .catch(err => {
+        console.error('angebot_laden_fehlgeschlagen', err);
+        toast.error(t('container.quoteNotFound'));
+      });
+    return () => {
+      aktuell = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- nur beim Mount/Param-Wechsel
+  }, [editQuoteId, vorlageQuoteId]);
+
   // Lade-Effekte (Kunden, Firma, Dienstleistungen, Vorlagen, Nummernkreis, E-Rechnung, Defaults)
   const {
     customers,
     setCustomers,
     company,
     setCompany,
-    savedServices,
-    loadingSavedServices,
     showCompanySettingsBanner,
     setShowCompanySettingsBanner,
     companySettingsFormData,
@@ -297,6 +449,7 @@ export default function CreateQuotePage() {
   } = useInvoiceLoaders({
     uid,
     user,
+    belegart,
     prefillCustomerId,
     settings,
     formData,
@@ -320,7 +473,6 @@ export default function CreateQuotePage() {
   // und liefert handleItemChange, das unten an useItemPopovers durchgereicht wird.
   const {
     selectCustomer,
-    saveServiceToSubcollection,
     removeItem,
     handleItemChange,
     handleValidUntilChange,
@@ -353,6 +505,7 @@ export default function CreateQuotePage() {
     skontoText,
     deliveryDateType,
     deliveryDateRange,
+    guestCount,
     selectedTemplate,
     eInvoiceEnabled,
     setEInvoiceEnabled,
@@ -380,8 +533,56 @@ export default function CreateQuotePage() {
     reservationId,
     reservationCustomerId,
     documentLanguage,
+    belegart,
+    editQuoteId,
+    propertyId: preislisteObjektId,
+    depositAmount,
   });
 
+  // Übernachtungssatz des Betriebs aus dem Firmenprofil (String im Formular) —
+  // null = nicht hinterlegt; die Positionskarte lässt das Feld dann leer (Wurzel 4).
+  const lodgingTaxRateZahl = (() => {
+    const r = parseFloat(companySettingsFormData.lodgingTaxRate);
+    return Number.isFinite(r) ? r : null;
+  })();
+
+  // Kopfdaten → Mengen (0698): ändern sich Nächte oder Personen, folgen die
+  // Positionen mit Basis je Nacht / je Person / je Person × Nacht. Stück und
+  // pauschal bleiben unberührt.
+  // Zeilen mit EIGENEM Zeitraum (0702) folgen ihrem eigenen, nicht dem Kopf.
+  useEffect(() => {
+    setItems(prev => {
+      let geaendert = false;
+      const karte = naechteJeZeile(prev, naechte);
+      const next = prev.map(it => {
+        if (!it.basis || it.basis === 'per_unit' || it.basis === 'per_stay') return it;
+        const menge = mengeAusBasis(it.basis, karte.get(it.id) ?? naechte, guestCount);
+        if (menge === null || menge === it.quantity) return it;
+        geaendert = true;
+        return {
+          ...it,
+          quantity: menge,
+          total: computeItemTotalNet(menge, it.unitPrice),
+        };
+      });
+      return geaendert ? next : prev;
+    });
+  }, [naechte, guestCount]);
+
+  // Übernachtungssatz nachtragen, sobald das Firmenprofil geladen ist — nur auf
+  // Übernachtungszeilen, die noch keinen Satz tragen (kein Überschreiben).
+  useEffect(() => {
+    if (lodgingTaxRateZahl === null) return;
+    setItems(prev => {
+      let geaendert = false;
+      const next = prev.map(it => {
+        if (it.category !== 'Aufenthalt' || it.taxRate !== undefined) return it;
+        geaendert = true;
+        return { ...it, taxRate: lodgingTaxRateZahl };
+      });
+      return geaendert ? next : prev;
+    });
+  }, [lodgingTaxRateZahl]);
 
   // Popover-Cluster (Debounce, Produkt-Prompt, Inventar-Auto-Mapping)
   const { popoverOpenIds, handleDescriptionChange } = useItemPopovers({
@@ -454,10 +655,26 @@ export default function CreateQuotePage() {
     // zeigte die Vorschau einen veralteten Stand.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      uid, company, settings, user, formData, customers, items, taxRate,
-      showNet, paymentDays, subtotal, vat, grandTotal, skontoEnabled,
-      skontoDays, skontoPercentage, skontoText, deliveryDateType,
-      deliveryDateRange, selectedTemplate,
+      uid,
+      company,
+      settings,
+      user,
+      formData,
+      customers,
+      items,
+      taxRate,
+      showNet,
+      paymentDays,
+      subtotal,
+      vat,
+      grandTotal,
+      skontoEnabled,
+      skontoDays,
+      skontoPercentage,
+      skontoText,
+      deliveryDateType,
+      deliveryDateRange,
+      selectedTemplate,
     ],
   );
 
@@ -469,7 +686,9 @@ export default function CreateQuotePage() {
     return (
       <div className="flex min-h-100 items-center justify-center">
         <div className="text-center">
-          <h2 className="mb-2 font-semibold text-gray-900 text-xl">{t('container.accessDeniedTitle')}</h2>
+          <h2 className="mb-2 font-semibold text-gray-900 text-xl">
+            {t('container.accessDeniedTitle')}
+          </h2>
           <p className="text-gray-600">{t('container.accessDeniedBody')}</p>
         </div>
       </div>
@@ -478,18 +697,14 @@ export default function CreateQuotePage() {
 
   return (
     <>
-      {/* ✅ Preload html2pdf.js global - wird sofort beim Seitenaufruf geladen */}
-      <Script
-        src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
-        strategy="afterInteractive"
-        onError={e => {
-          console.error('❌ Fehler beim Laden von html2pdf.js via Next.js Script:', e);
-        }}
-      />
-
+      {/* Kein html2pdf.js-Preload mehr: seit dem Umzug auf die PDF-API
+          (/api/v1/generate-pdf-single, SendDocumentModal) liest keine Stelle
+          `window.html2pdf`; das CDN-Skript warf nur noch einen Ladefehler in
+          die Konsole (13.09.2026). */}
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         {/* Header - SevDesk Style */}
         <InvoiceHeaderBar
+          belegart={belegart}
           eInvoiceEnabled={eInvoiceEnabled}
           handleEInvoiceToggle={handleEInvoiceToggle}
           loading={loading}
@@ -514,6 +729,7 @@ export default function CreateQuotePage() {
 
         {/* Allgemeine Angaben + Kopf-Text */}
         <GeneralInfoCard
+          belegart={belegart}
           uid={uid}
           userUid={user?.uid || ''}
           formData={formData}
@@ -537,6 +753,8 @@ export default function CreateQuotePage() {
           setDeliveryDateType={setDeliveryDateType}
           deliveryDateRange={deliveryDateRange}
           setDeliveryDateRange={setDeliveryDateRange}
+          guestCount={guestCount}
+          setGuestCount={setGuestCount}
         />
 
         {/* Produkte / Positionen */}
@@ -549,13 +767,29 @@ export default function CreateQuotePage() {
           setShowNet={setShowNet}
           formatCurrency={formatCurrency}
           currency={formData.currency}
-          savedServices={savedServices}
-          loadingSavedServices={loadingSavedServices}
-          serviceModalOpen={serviceModalOpen}
-          setServiceModalOpen={setServiceModalOpen}
-          serviceDraft={serviceDraft}
-          setServiceDraft={setServiceDraft}
-          saveServiceToSubcollection={saveServiceToSubcollection}
+          documentLanguage={documentLanguage}
+          lodgingTaxRate={lodgingTaxRateZahl}
+          naechte={naechte}
+          personen={guestCount}
+          onPersonen={setGuestCount}
+          objektId={preislisteObjektId}
+          setObjektId={setPreislisteObjektId}
+          aufenthaltVon={deliveryDateRange.from?.toISOString().split('T')[0] ?? ''}
+          aufenthaltBis={deliveryDateRange.to?.toISOString().split('T')[0] ?? ''}
+          onAufenthalt={e => {
+            // Kopf folgt dem bepreisten Aufenthalt: Objekt, Zeitraum, Personen, Währung.
+            setPreislisteObjektId(e.propertyId);
+            setDeliveryDateType('range');
+            setDeliveryDateRange({
+              from: new Date(`${e.checkIn}T00:00:00`),
+              to: new Date(`${e.checkOut}T00:00:00`),
+            });
+            setGuestCount(e.guests);
+            setFormData(prev => ({
+              ...prev,
+              currency: e.currency || prev.currency,
+            }));
+          }}
           popoverOpenIds={popoverOpenIds}
           handleDescriptionChange={handleDescriptionChange}
           handleItemChange={handleItemChange}
@@ -569,6 +803,8 @@ export default function CreateQuotePage() {
         {/* Fuß-Text, Mehr Optionen, Summen, Interne Notizen */}
         <SecondaryCards
           uid={uid}
+          userUid={user?.uid || ''}
+          belegart={belegart}
           formData={formData}
           setFormData={setFormData}
           showNet={showNet}
@@ -586,12 +822,15 @@ export default function CreateQuotePage() {
           skontoText={skontoText}
           setSkontoText={setSkontoText}
           formatCurrency={formatCurrency}
+          depositAmount={depositAmount}
+          setDepositAmount={setDepositAmount}
         />
       </div>
 
       {/* === MODALS - Außerhalb des Hauptcontainers === */}
       {/* Inline-Logik (Produkt anlegen, Kundenliste neu laden, Versand) bleibt hier als Props-Callbacks */}
       <InvoiceModals
+        belegart={belegart}
         uid={uid}
         formData={formData}
         setFormData={setFormData}
@@ -631,20 +870,20 @@ export default function CreateQuotePage() {
                 prev.map((it, i) =>
                   i === createProductForIndex
                     ? {
-                      ...it,
-                      inventoryItemId: itemId,
-                      unit: vals.unit,
-                      unitPrice:
-                        Number.isFinite(it.unitPrice) && it.unitPrice > 0
-                          ? it.unitPrice
-                          : vals.sellingNet || 0,
-                      total: computeItemTotalNet(
-                        it.quantity,
-                        Number.isFinite(it.unitPrice) && it.unitPrice > 0
-                          ? it.unitPrice
-                          : vals.sellingNet || 0,
-                      ),
-                    }
+                        ...it,
+                        inventoryItemId: itemId,
+                        unit: vals.unit,
+                        unitPrice:
+                          Number.isFinite(it.unitPrice) && it.unitPrice > 0
+                            ? it.unitPrice
+                            : vals.sellingNet || 0,
+                        total: computeItemTotalNet(
+                          it.quantity,
+                          Number.isFinite(it.unitPrice) && it.unitPrice > 0
+                            ? it.unitPrice
+                            : vals.sellingNet || 0,
+                        ),
+                      }
                     : it,
                 ),
               );
@@ -737,7 +976,7 @@ export default function CreateQuotePage() {
 
             // Zur Rechnungsliste (die Alt-Route /dashboard/company/… existiert
             // in NextDays nicht — Rechnungen leben unter /buchhaltung).
-            router.push('/buchhaltung');
+            router.push(belegart === 'quote' ? '/buchhaltung/angebote' : '/buchhaltung');
           } catch (error) {
             console.error('Error sending document:', error);
             toast.error(t('container.sendFailed'));

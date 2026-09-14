@@ -44,6 +44,29 @@ export type OeffentlichesAngebot = {
   acceptable: boolean;
   blocked_reason?: string | null;
   company_name?: string | null;
+  /** Aufenthaltskontext (0701): Bild, Adresse, Zeiten, Zahlungsplan, Storno,
+   *  Hausregeln — null, wenn das Objekt nichts davon gepflegt hat. */
+  stay?: AngebotAufenthalt | null;
+};
+
+export type AngebotAufenthalt = {
+  title: string;
+  city?: string | null;
+  address?: string | null;
+  postal_code?: string | null;
+  cover_url?: string | null;
+  check_in_time?: string | null;
+  check_out_time?: string | null;
+  house_rules?: string | null;
+  payment_plan?: {
+    due_now: number;
+    due_later: number;
+    balance_due_date?: string | null;
+  } | null;
+  cancellation?: {
+    mode?: string | null;
+    rules: { days_before_arrival: number; refund_percent: number }[];
+  } | null;
 };
 
 /** Das Angebot zum Token laden. `null` = es gibt keins (404) oder der Link ist

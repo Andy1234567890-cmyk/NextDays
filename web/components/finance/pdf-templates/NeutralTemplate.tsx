@@ -293,8 +293,8 @@ export const NeutralTemplate: React.FC<NeutralTemplateProps> = ({
             </div>
           </div>
 
-          {/* Betreff - Nur bei Stornorechnungen */}
-          {detectedType === 'cancellation' && data.title && (
+          {/* Betreff: Stornorechnungen und Angebote (dort steht Objekt und Zeitraum) */}
+          {(detectedType === 'cancellation' || detectedType === 'quote') && data.title && (
             <div className="mb-6">
               <div className="mb-1 font-semibold text-gray-600 text-sm">Betreff:</div>
               <div className="font-medium text-base text-gray-900">{data.title}</div>

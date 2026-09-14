@@ -244,6 +244,11 @@ export function buildPreviewData(args: PreviewDataArgs): PreviewTemplateData {
         category: it.category,
         discountPercent: it.discountPercent || 0,
         unit: it.unit,
+        // Aufenthalt der Zeile (0702) für „Objekt · Anreise – Abreise" in der Vorschau.
+        propertyTitle: it.propertyTitle,
+        checkIn: it.checkIn,
+        checkOut: it.checkOut,
+        parentItemId: it.parentItemId,
       };
     }),
     subtotal,

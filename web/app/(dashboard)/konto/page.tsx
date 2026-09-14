@@ -7,8 +7,8 @@
 // und Ziel ist durchgehend das Firmenprofil (tenant_billing_profile); ein
 // Speichern schreibt alles und löst den Stripe-Auto-Connect aus.
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AddressPlacesSearch } from "@/components/address-places-search";
@@ -21,18 +21,26 @@ import { Label } from "@nextdays/ui/label";
 import { LabelHint } from "@nextdays/ui/label-hint";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import {
+  befreiungFuerLand,
+  hatRegistergericht,
+  hatSeparateSteuernummer,
+  regionLabelKeyFuerLand,
+  vatBeispielFuerLand,
+  vatIdLabel,
+} from "@/lib/laender";
+import {
   accountTypeForLegalForm,
   legalFormsForCountry,
 } from "@/lib/legal-forms";
 import { PhoneInput } from "@nextdays/ui/phone-input";
 import { RichTextEditor } from "@nextdays/ui/rich-text-editor";
 import { Separator } from "@nextdays/ui/separator";
-import {
-  COUNTRIES,
-  hasSmallBusinessScheme,
-  smallBusinessLabel,
-  vatIdLabel,
-} from "@nextdays/ui/countries";
+// Nur noch die reine Liste kommt aus dem UI-Paket. Das länderFACHLICHE Wissen
+// (Befreiungsregime, USt-IdNr.-Bezeichnung) steht in `lib/laender.ts`: das Paket
+// `@nextdays/ui` ist als „i18n-frei, props-rein" dokumentiert, trug in
+// `countries.ts` aber deutsche Namen und deutsche Steuer-Labels — genau das,
+// was es laut eigenem Vertrag nicht enthalten darf.
+import { COUNTRIES } from "@nextdays/ui/countries";
 import {
   checkVatId,
   getFirmenProfil,
@@ -48,7 +56,27 @@ function logoIstPdf(url: string): boolean {
 
 export default function ProfilPage() {
   const t = useTranslations("account");
+  const locale = useLocale();
   const tCountry = useTranslations("countries");
+  // Die Bezeichnung der Verwaltungsebene wählt das LAND (`regionLabelKeyFuerLand`),
+  // übersetzt wird sie in der Sprache des Nutzers — zwei verschiedene Fragen,
+  // siehe `lib/laender-funktionen.ts`.
+  const tRegion = useTranslations("regionLabel");
+  const tExempt = useTranslations("exemption");
+
+  // Die Länderliste steht in `COUNTRIES` alphabetisch nach den DEUTSCHEN Namen.
+  // Übersetzt wurde bisher nur der angezeigte Text, nicht die Reihenfolge —
+  // ein dänischer Nutzer las deshalb „Danmark, Tyskland, Estland": sortiert
+  // nach Dänemark/Deutschland/Estland, also nach einer Sprache, die er nicht
+  // sieht. Sortiert wird in der Sprache des NUTZERS (`localeCompare` mit
+  // seiner Locale, damit å/ø/ä an ihrer landesüblichen Stelle stehen).
+  const laenderSortiert = useMemo(
+    () =>
+      [...COUNTRIES].sort((a, b) =>
+        tCountry(a.code).localeCompare(tCountry(b.code), locale),
+      ),
+    [locale, tCountry],
+  );
   // --- Stammdaten / Person ---
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -96,6 +124,9 @@ export default function ProfilPage() {
   // USt-Satz Übernachtung (0092) als String (Input); "" = nicht konfiguriert.
   // Pflicht für die automatische Rechnung beim Check-out (kein Default).
   const [lodgingTaxRate, setLodgingTaxRate] = useState("");
+  // Regelsatz (0698) für Leistungen wie Frühstück, Reinigung, Parkplatz — die
+  // zweite Vorbelegung des Beleg-Editors. "" = nicht konfiguriert, kein Default.
+  const [defaultTaxRate, setDefaultTaxRate] = useState("");
   const [iban, setIban] = useState("");
   // Kontoinhaber (VoP-Pflicht seit Okt 2025: Name MUSS exakt zur IBAN passen,
   // sonst scheitert die Auszahlung). Wird automatisch vorbefüllt (Firma →
@@ -181,6 +212,7 @@ export default function ProfilPage() {
       if (s("districtCourt")) setDistrictCourt(s("districtCourt"));
       setIsSmallBusiness(Boolean(d.isSmallBusiness));
       if (d.lodgingTaxRate != null) setLodgingTaxRate(String(d.lodgingTaxRate));
+      if (d.defaultTaxRate != null) setDefaultTaxRate(String(d.defaultTaxRate));
       if (s("iban")) setIban(s("iban"));
       // Ein bereits gespeicherter Kontoinhaber war eine bewusste Eingabe → als
       // „touched" markieren, damit die Auto-Vorbefüllung ihn nicht überschreibt.
@@ -251,6 +283,10 @@ export default function ProfilPage() {
         lodgingTaxRate.trim() !== "" && Number.isFinite(Number(lodgingTaxRate))
           ? Number(lodgingTaxRate)
           : undefined,
+      defaultTaxRate:
+        defaultTaxRate.trim() !== "" && Number.isFinite(Number(defaultTaxRate))
+          ? Number(defaultTaxRate)
+          : undefined,
       iban: iban ? iban.replace(/\s+/g, "") : undefined,
       // Kontoinhaber exakt wie eingegeben/vorbefüllt — muss für VoP zur IBAN
       // passen. Leer lassen wir das Backend ableiten (_account_holder_from).
@@ -297,6 +333,30 @@ export default function ProfilPage() {
     }
   }
 
+  // ── Was diese Maske zeigt, entscheidet der FIRMENSITZ, nicht die UI-Sprache ──
+  //
+  // Anlass (10.09.2026): Ein dänischer Betrieb, der die Oberfläche auf Deutsch
+  // gestellt hat, sah hier „Bundesland / Region" (Platzhalter „z. B. Bayern"),
+  // „Steuernummer" und „Amtsgericht". In Dänemark gibt es keine Bundesländer,
+  // kein gerichtliches Handelsregister (die Erhvervsstyrelsen führt das
+  // CVR-Register) und keine Steuernummer neben der CVR-Nummer: CVR = SE = TIN,
+  // die USt-IdNr. ist dieselbe Zahl mit „DK" davor. Die Beschriftungen waren in
+  // den Sprachdateien sachlich gepflegt (da = „CVR-nummer") — sie hingen nur an
+  // der falschen Achse. Dasselbe Prinzip steht in `lib/laender-funktionen.ts`
+  // (DATEV nach Firmensitz, nicht nach Sprache).
+  //
+  // Ein Feld, das der Betrieb in seinem Land gar nicht befüllen KANN, gehört
+  // nicht in die Maske — es sieht sonst aus wie eine Lücke in seinen Stammdaten
+  // und er sucht den Fehler bei sich.
+  const regionKey = regionLabelKeyFuerLand(country);
+  const zeigeSteuernummer = hatSeparateSteuernummer(country);
+  // Registergericht nur, wo ein GERICHT das Register führt (Allowlist in
+  // lib/laender.ts) — und weiterhin nur bei Gesellschaften, denn Stripe
+  // verlangt `company.registration_number` nur dort.
+  const zeigeRegistergericht =
+    accountType === "company" && hatRegistergericht(country);
+  const befreiung = befreiungFuerLand(country);
+
   return (
     <>
       {/* Kopf-Bereich: Profil/Logo + Zahlungs-Status + Betriebsart als Karten
@@ -320,7 +380,7 @@ export default function ProfilPage() {
       <form className="flex flex-col gap-8" onSubmit={onSave}>
         {/* Logo-Upload */}
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-xl font-extrabold">Profil</h2>
+          <h2 className="font-display text-xl font-extrabold">{t("company.profile")}</h2>
           <p className="text-sm text-muted-foreground">
             Diese Angaben erscheinen auf Dokumenten und im Gäste-Portal.
           </p>
@@ -382,7 +442,7 @@ export default function ProfilPage() {
             Kontakt → Steuer → Bank. Jede Gruppe mit eigener Überschrift. */}
         <section className="flex flex-col gap-5">
           <div className="flex flex-col gap-1">
-            <h3 className="font-display text-lg font-extrabold">Kontaktdaten</h3>
+            <h3 className="font-display text-lg font-extrabold">{t("company.contactData")}</h3>
             <p className="text-sm text-muted-foreground">
               Deine Firmen-, Kontakt- und Bankdaten. Sie erscheinen auf
               Abrechnungen und werden für Steuer und Auszahlungen genutzt.
@@ -393,7 +453,7 @@ export default function ProfilPage() {
               (Einzelunternehmer=individual, GmbH/SARL/…=company, Verein=non_profit).
               Das Land gehört zur Adresse (Gruppe C). */}
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Unternehmen
+            {t("company.sectionCompany")}
           </p>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
@@ -502,7 +562,7 @@ export default function ProfilPage() {
 
           {/* Gruppe C — Adresse (Straße vor PLZ/Stadt, Baymard). */}
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Adresse
+            {t("company.sectionAddress")}
           </p>
           <div className="grid gap-5 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
@@ -527,7 +587,7 @@ export default function ProfilPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="house">Nr.</Label>
+              <Label htmlFor="house">{t("company.houseNumber")}</Label>
               <Input
                 id="house"
                 value={houseNumber}
@@ -538,7 +598,7 @@ export default function ProfilPage() {
 
           <div className="grid gap-5 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="zip">PLZ</Label>
+              <Label htmlFor="zip">{t("company.postalCode")}</Label>
               <Input
                 id="zip"
                 value={postalCode}
@@ -546,7 +606,7 @@ export default function ProfilPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label htmlFor="city">Stadt</Label>
+              <Label htmlFor="city">{t("company.city")}</Label>
               <Input
                 id="city"
                 value={city}
@@ -555,15 +615,20 @@ export default function ProfilPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5 sm:max-w-sm">
-            <Label htmlFor="companyState">{t("company.state")}</Label>
-            <Input
-              id="companyState"
-              value={companyState}
-              onChange={(e) => setCompanyState(e.target.value)}
-              placeholder={t("company.statePlaceholder")}
-            />
-          </div>
+          {/* Verwaltungsebene unterhalb des Staates — nur wo es sie gibt, und
+              mit dem Begriff DIESES Landes (Bundesland/Kanton/Provinz/
+              Grafschaft/Region). Kein Platzhalter mehr: „z. B. Bayern" stand
+              in allen 24 Sprachen als deutsches Beispiel. */}
+          {regionKey && (
+            <div className="flex flex-col gap-1.5 sm:max-w-sm">
+              <Label htmlFor="companyState">{tRegion(regionKey)}</Label>
+              <Input
+                id="companyState"
+                value={companyState}
+                onChange={(e) => setCompanyState(e.target.value)}
+              />
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5 sm:max-w-sm">
             <Label htmlFor="country">
@@ -575,11 +640,19 @@ export default function ProfilPage() {
               onChange={(e) => {
                 const next = e.target.value;
                 setCountry(next);
-                // Land ohne Befreiungsregelung → Haken zurücksetzen.
-                if (!hasSmallBusinessScheme(next)) setIsSmallBusiness(false);
+                // Wurzel 1 — jede Aktion hat einen Gegenzustand: Felder, die es
+                // im NEUEN Land nicht gibt, verschwinden aus der Maske. Ihr
+                // alter Wert darf nicht unsichtbar weitergespeichert werden,
+                // sonst trägt ein dänisches Profil weiter ein „Amtsgericht
+                // Charlottenburg", das niemand mehr sieht und keiner löschen
+                // kann.
+                if (!befreiungFuerLand(next).exists) setIsSmallBusiness(false);
+                if (!regionLabelKeyFuerLand(next)) setCompanyState("");
+                if (!hatSeparateSteuernummer(next)) setTaxNumber("");
+                if (!hatRegistergericht(next)) setDistrictCourt("");
               }}
             >
-              {COUNTRIES.map((c) => (
+              {laenderSortiert.map((c) => (
                 <option key={c.code} value={c.code}>
                   {tCountry(c.code)}
                 </option>
@@ -591,10 +664,10 @@ export default function ProfilPage() {
 
           {/* Gruppe D — Kontakt. */}
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Kontakt
+            {t("company.sectionContact")}
           </p>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email">E-Mail</Label>
+            <Label htmlFor="email">{t("company.email")}</Label>
             <Input
               id="email"
               type="email"
@@ -617,7 +690,7 @@ export default function ProfilPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="website">Website</Label>
+            <Label htmlFor="website">{t("company.website")}</Label>
             <Input
               id="website"
               type="url"
@@ -631,7 +704,7 @@ export default function ProfilPage() {
 
           {/* Gruppe E — Steuer (Kleinunternehmer-Kennzeichen steuert USt-Satz). */}
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Steuer
+            {t("company.sectionTax")}
           </p>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
@@ -639,7 +712,10 @@ export default function ProfilPage() {
               <Input
                 id="vatId"
                 value={vatId}
-                placeholder="DE123456789"
+                // Das Beispiel zieht mit der Länderauswahl mit; fest
+                // „DE123456789" stand hier auch für einen dänischen Betrieb,
+                // dessen Nummer „DK" + acht Ziffern lautet.
+                placeholder={vatBeispielFuerLand(country)}
                 onChange={(e) => {
                   setVatId(e.target.value);
                   setVatCheck(null);
@@ -685,47 +761,66 @@ export default function ProfilPage() {
                 <p className="text-xs text-muted-foreground">{vatCheck.message}</p>
               )}
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="taxNumber">Steuernummer</Label>
-              <Input
-                id="taxNumber"
-                value={taxNumber}
-                onChange={(e) => setTaxNumber(e.target.value)}
-              />
-            </div>
-            {accountType === "company" && (
-              <>
-                <div className="flex flex-col gap-1.5">
-                  <LabelHint
-                    htmlFor="companyRegister"
-                    hint="Handelsregisternummer (z. B. HRB 12345). Für Gesellschaften Pflicht, damit das Zahlungskonto freigeschaltet wird."
-                  >
-                    Handelsregisternummer
-                  </LabelHint>
-                  <Input
-                    id="companyRegister"
-                    value={companyRegister}
-                    placeholder={t("company.hrbPlaceholder")}
-                    onChange={(e) => setCompanyRegister(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="districtCourt">Amtsgericht</Label>
-                  <Input
-                    id="districtCourt"
-                    value={districtCourt}
-                    placeholder={t("company.courtPlaceholder")}
-                    onChange={(e) => setDistrictCourt(e.target.value)}
-                  />
-                </div>
-              </>
+            {/* Steuernummer NEBEN der USt-IdNr. gibt es nicht überall: in DK
+                ist CVR = SE = TIN und die USt-IdNr. dieselbe Zahl mit „DK"
+                davor, in FI/GR ebenso (Denylist in lib/laender.ts). Dort wäre
+                das Feld dauerhaft leer und sähe aus wie eine Lücke. */}
+            {zeigeSteuernummer && (
+              <div className="flex flex-col gap-1.5">
+                <LabelHint
+                  htmlFor="taxNumber"
+                  hint={t("company.taxNumberHint")}
+                >
+                  {t("company.taxNumber")}
+                </LabelHint>
+                <Input
+                  id="taxNumber"
+                  value={taxNumber}
+                  onChange={(e) => setTaxNumber(e.target.value)}
+                />
+              </div>
             )}
+            {accountType === "company" && (
+              <div className="flex flex-col gap-1.5">
+                <LabelHint
+                  htmlFor="companyRegister"
+                  hint={t("company.companyRegisterHint")}
+                >
+                  {t("company.companyRegister")}
+                </LabelHint>
+                <Input
+                  id="companyRegister"
+                  value={companyRegister}
+                  onChange={(e) => setCompanyRegister(e.target.value)}
+                />
+              </div>
+            )}
+            {/* Registergericht nur, wo ein GERICHT das Register führt. In DK
+                führt es die Erhvervsstyrelsen (nur CVR), in SE/NL/… eine
+                Behörde bzw. Handelskammer — dort ist das Feld eine Frage ohne
+                Antwort. Dieselbe Allowlist nutzt der Onboarding-Assistent. */}
+            {zeigeRegistergericht && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="districtCourt">
+                  {t("company.districtCourt")}
+                </Label>
+                <Input
+                  id="districtCourt"
+                  value={districtCourt}
+                  onChange={(e) => setDistrictCourt(e.target.value)}
+                />
+              </div>
+            )}
+            {/* Das FELD ist länderneutral richtig gebaut (freies Zahlenfeld
+                0–100, kein Default) — nur Beschriftung und Hinweis nannten
+                „7 % in Deutschland" und standen fest auf Deutsch. Der
+                Prozentsatz selbst bleibt Eingabe des Betriebs (Wurzel 4). */}
             <div className="flex flex-col gap-1.5">
               <LabelHint
                 htmlFor="lodgingTaxRate"
-                hint="Steuersatz für Übernachtungs-Positionen bei Rechnungen aus Buchungen (z. B. 7 % in Deutschland). Ohne Angabe kann beim Check-out keine automatische Rechnung erstellt werden."
+                hint={t("company.lodgingTaxRateHint")}
               >
-                USt-Satz Übernachtung (%)
+                {t("company.lodgingTaxRate")}
               </LabelHint>
               <Input
                 id="lodgingTaxRate"
@@ -735,23 +830,47 @@ export default function ProfilPage() {
                 step="0.1"
                 value={lodgingTaxRate}
                 onChange={(e) => setLodgingTaxRate(e.target.value)}
-                placeholder={t("company.employeesPlaceholder")}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <LabelHint
+                htmlFor="defaultTaxRate"
+                hint={t("company.defaultTaxRateHint")}
+              >
+                {t("company.defaultTaxRate")}
+              </LabelHint>
+              <Input
+                id="defaultTaxRate"
+                type="number"
+                min={0}
+                max={100}
+                step="0.1"
+                value={defaultTaxRate}
+                onChange={(e) => setDefaultTaxRate(e.target.value)}
               />
             </div>
           </div>
 
-          {hasSmallBusinessScheme(country) ? (
+          {/* Befreiungsregelung: die FAKTEN kommen aus `befreiungFuerLand`
+              (gibt es das Regime, und wie heisst es national), der SATZ aus den
+              Sprachdateien. Vorher stand hier `smallBusinessLabel` aus
+              `@nextdays/ui/countries` — eine feste deutsche Zeichenkette, die
+              ein dänischer Betrieb auch auf Dänisch auf Deutsch gelesen
+              hätte. Denselben Weg geht der Onboarding-Assistent bereits. */}
+          {befreiung.exists ? (
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={isSmallBusiness}
                 onChange={(e) => setIsSmallBusiness(e.target.checked)}
               />
-              {smallBusinessLabel(country)}
+              {befreiung.scheme
+                ? tExempt("labelNamed", { scheme: befreiung.scheme })
+                : tExempt("labelGeneric")}
             </label>
           ) : (
             <p className="text-sm text-muted-foreground">
-              {smallBusinessLabel(country)}
+              {tExempt("noneInCountry")}
             </p>
           )}
 
@@ -762,7 +881,7 @@ export default function ProfilPage() {
               → Vor+Nachname), aber editierbar: seit Okt 2025 gleicht die Bank bei
               jeder SEPA-Überweisung Name ↔ IBAN ab (Verification of Payee). */}
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Bankverbindung
+            {t("company.sectionBank")}
           </p>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
@@ -782,7 +901,7 @@ export default function ProfilPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="iban">IBAN</Label>
+              <Label htmlFor="iban">{t("company.iban")}</Label>
               <Input
                 id="iban"
                 placeholder={t("company.ibanPlaceholder")}
@@ -821,7 +940,7 @@ export default function ProfilPage() {
           />
 
           <div className="flex flex-col gap-1.5">
-            <Label>Beschreibung</Label>
+            <Label>{t("company.description")}</Label>
             <RichTextEditor
               value={description}
               onChange={setDescription}

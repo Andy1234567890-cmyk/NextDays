@@ -97,6 +97,10 @@ export class WhatsAppNotificationService {
     customerPhone: string,
     invoiceNumber: string,
     amount: number,
+    // Belegwaehrung: die Nachricht geht an den Kunden, ein festes € waere bei
+    // einem daenischen Betrieb schlicht der falsche Betrag (Wurzel 4). Fehlt
+    // sie am Beleg, wird der Betrag symbollos gerendert statt geraten.
+    currency: string | null | undefined,
     invoiceId?: string,
   ): Promise<void> {
     try {
@@ -122,6 +126,7 @@ export class WhatsAppNotificationService {
           invoiceNumber,
           amount,
           companyName,
+          currency,
         );
 
         await WhatsAppService.sendMessage(
@@ -160,6 +165,8 @@ export class WhatsAppNotificationService {
     invoiceNumber: string,
     amount: number,
     daysOverdue: number,
+    // Belegwaehrung — siehe notifyInvoicePaid: kein hartes € an einen Kunden.
+    currency: string | null | undefined,
     invoiceId?: string,
   ): Promise<void> {
     try {
@@ -183,6 +190,7 @@ export class WhatsAppNotificationService {
           amount,
           daysOverdue,
           companyName,
+          currency,
         );
 
         await WhatsAppService.sendMessage(
@@ -221,6 +229,8 @@ export class WhatsAppNotificationService {
     invoiceNumber: string,
     amount: number,
     dueDate: string,
+    // Belegwaehrung — siehe notifyInvoicePaid: kein hartes € an einen Kunden.
+    currency: string | null | undefined,
     invoiceId?: string,
   ): Promise<void> {
     try {
@@ -244,6 +254,7 @@ export class WhatsAppNotificationService {
           amount,
           dueDate,
           companyName,
+          currency,
         );
 
         await WhatsAppService.sendMessage(

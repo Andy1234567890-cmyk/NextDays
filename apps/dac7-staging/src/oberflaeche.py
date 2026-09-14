@@ -221,6 +221,42 @@ _STIL = """<!doctype html>
   table.schutz { max-width:52rem; }
   table.schutz th { width:9rem; white-space:nowrap; vertical-align:top; }
   table.schutz td { font-size:.86rem; opacity:.85; }
+  /* Der Weg der Meldung durch die Stelle. Waagerecht, weil er eine
+     Abfolge ist — eine Liste liest sich wie eine Aufzaehlung, eine Kette
+     wie ein Weg. Unter 60rem bricht sie auf eine Spalte um, sonst werden
+     die Stationen unlesbar schmal. */
+  .weg { display:flex; gap:0; flex-wrap:wrap; margin:.25rem 0 1.5rem;
+         align-items:stretch; }
+  .weg .station { flex:1 1 9rem; min-width:9rem; border:1px solid #dfe3e8;
+                  border-radius:.6rem; padding:.7rem .8rem; position:relative; }
+  .weg .station + .station { margin-left:1.15rem; }
+  /* Der Pfeil zwischen zwei Stationen. Als ::before am FOLGENDEN Element,
+     damit die letzte Station keinen Pfeil ins Leere traegt. */
+  .weg .station + .station::before { content:"→"; position:absolute;
+      left:-1.05rem; top:50%; transform:translateY(-50%); opacity:.4;
+      font-size:.9rem; }
+  .weg .station.misslungen { border-color:#c0392b; }
+  .weg .nr { font-size:.7rem; opacity:.45; font-variant-numeric:tabular-nums; }
+  .weg .was { font-weight:600; font-size:.88rem; margin:.15rem 0 .3rem; }
+  .weg .wie { font-size:.78rem; opacity:.8; line-height:1.35; }
+  .weg .nachweis { font-size:.72rem; opacity:.55; margin-top:.35rem;
+                   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+                   overflow-wrap:anywhere; }
+  .weg .zeit { font-size:.72rem; opacity:.5; margin-top:.3rem;
+               font-variant-numeric:tabular-nums; }
+  @media (prefers-color-scheme: dark) {
+    .weg .station { border-color:#2e343c; }
+    .weg .station.misslungen { border-color:#e74c3c; }
+  }
+  @media (max-width:60rem) {
+    .weg { flex-direction:column; }
+    .weg .station + .station { margin-left:0; margin-top:1.15rem; }
+    .weg .station + .station::before { content:"↓"; left:50%; top:-1.05rem;
+        transform:translateX(-50%); }
+  }
+  .huelle { display:inline-block; font-size:.72rem; padding:.1rem .45rem;
+            border:1px solid currentColor; border-radius:.3rem; opacity:.75;
+            vertical-align:.1em; }
   .fuss { font-size:.82rem; opacity:.65; margin-top:2rem; }
   .fuss a { color:inherit; }
 </style>
@@ -519,6 +555,93 @@ def _zellklasse(spalte: str) -> str:
     return "zahl" if spalte.startswith("RS_ACT_") and not spalte.endswith("_CCY") else ""
 
 
+def _weg(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
+    """Der Weg der Meldung durch die Stelle, Station fuer Station.
+
+    WOZU DIESE ANSICHT: Skattestyrelsen hat nicht gefragt, OB eine Datei
+    ankommt, sondern WIE sie ankommt — wo entschluesselt wird, woran eine
+    Verfaelschung auffaellt, was zwischen Empfang und Quittung passiert.
+    Der Posteingang beantwortet das nicht: Er zeigt Pruefsumme und
+    Zeilenzahl, also das Ergebnis.
+
+    Jede Station traegt ihre eigene Dauer. Damit ist sichtbar, was die
+    Verschluesselung kostet — statt es behaupten zu muessen.
+
+    Leer bei Eintraegen aus der Zeit vor dem Schrittprotokoll: Ein
+    erfundener Weg waere schlimmer als keiner.
+    """
+    if not eintrag.schritte:
+        return ""
+    stationen = []
+    for nr, schritt in enumerate(eintrag.schritte, start=1):
+        klasse = "station" if schritt.geschafft else "station misslungen"
+        nachweis = (
+            f'<div class="nachweis">{html.escape(schritt.belegt)}</div>'
+            if schritt.belegt
+            else ""
+        )
+        stationen.append(
+            f'<div class="{klasse}">'
+            f'<div class="nr">{nr}</div>'
+            f'<div class="was">{html.escape(schritt.name)}</div>'
+            f'<div class="wie">{html.escape(schritt.beschreibung)}</div>'
+            f"{nachweis}"
+            f'<div class="zeit">{schritt.dauer_ms:.1f} ms</div>'
+            f"</div>"
+        )
+    return (
+        '<div class="blockkopf">Weg der Meldung'
+        "<span>vom Empfang bis zur Quittung — jede Station mit ihrer "
+        "eigenen Dauer</span></div>"
+        f'<div class="weg">{"".join(stationen)}</div>'
+    )
+
+
+def _umschlagfeld(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
+    """Der Kopf des Umschlags, sofern die Meldung verschluesselt ankam.
+
+    Er ist auch im Umschlag unverschluesselt — die Gegenstelle muss
+    wissen, WOMIT sie oeffnen soll, bevor sie oeffnen kann. Er traegt
+    keinen Feldwert der Meldung, nur Verfahren, Zeitpunkt,
+    Schluesselkennung und die Pruefsumme des Klartexts.
+
+    Die Pruefsumme ist die des KLARTEXTS, nicht des Geheimtexts: Damit
+    laesst sich nach dem Entschluesseln belegen, dass genau die Datei
+    ankam, die losgeschickt wurde. Ueber den Geheimtext ginge das nicht,
+    weil jede Verschluesselung derselben Datei anders aussieht.
+    """
+    if not eintrag.umschlag_kopf:
+        return ""
+    benannt = {
+        "verfahren": "Verfahren",
+        "erstellt_am": "Verschlossen am",
+        "schluessel_kennung": "Schlüssel",
+        "klartext_sha256": "Prüfsumme des Klartexts",
+        "klartext_bytes": "Klartext",
+        "meldung_ref": "Meldungskennung",
+        "format": "Umschlagformat",
+    }
+    zeilen = []
+    for schluessel, titel in benannt.items():
+        wert = eintrag.umschlag_kopf.get(schluessel)
+        if wert in (None, ""):
+            continue
+        if schluessel == "klartext_bytes":
+            wert = f"{wert} Byte"
+        zeilen.append(
+            f"<tr><th>{titel}</th>"
+            f"<td><code>{html.escape(str(wert))}</code></td></tr>"
+        )
+    if not zeilen:
+        return ""
+    return (
+        '<div class="blockkopf">Umschlag'
+        "<span>der lesbare Kopf — er nennt das Verfahren, nie einen "
+        "Feldwert</span></div>"
+        f'<table class="schutz">{"".join(zeilen)}</table>'
+    )
+
+
 def _rohansicht(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zirkulaer
     """Die eingereichte Datei im Original, Zeile fuer Zeile.
 
@@ -556,12 +679,20 @@ def meldungsseite(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zir
         if eintrag.angenommen
         else '<span class="fehler">abgewiesen</span>'
     )
+    # Ob die Meldung verschluesselt ankam, gehoert in den Kopf: Es ist
+    # eine Eigenschaft DIESER Einreichung, nicht der Stelle.
+    huelle = (
+        '<span class="huelle">verschlüsselt</span>'
+        if eintrag.verschluesselt
+        else '<span class="huelle">Klartext</span>'
+    )
     kopf = f"""
 <div class="seitenkopf">
   <a href="/" class="zurueck">← Posteingang</a>
   <h1>{html.escape(eintrag.quittungsnummer)}</h1>
   <div class="kopfzahlen">
     {stand}
+    {huelle}
     <span>{eintrag.zeilen} Sätze</span>
     <span>{len(eintrag.fehler)} Fehler</span>
     <span>{eintrag.empfangen_am:%d-%m-%Y %H:%M} UTC</span>
@@ -577,6 +708,8 @@ def meldungsseite(eintrag) -> str:  # noqa: ANN001 — Eintrag, Import waere zir
     return (
         _KOPF_WEIT
         + kopf
+        + _weg(eintrag)
+        + _umschlagfeld(eintrag)
         + _befundtabelle(
             "Fehler — so nimmt die Behörde die Datei nicht an",
             eintrag.fehler,

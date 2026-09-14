@@ -1,16 +1,7 @@
 'use client';
 
 import { Icon } from '@iconify/react';
-import {
-  Button,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  Separator,
-} from '@tasko/ui';
+import { Button, Separator } from '@tasko/ui';
 import { Color } from '@tiptap/extension-color';
 import { Link } from '@tiptap/extension-link';
 import { Table } from '@tiptap/extension-table';
@@ -25,7 +16,15 @@ import StarterKit from '@tiptap/starter-kit';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import TextTemplateModal from '@/components/settings/TextTemplateModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@nextdays/ui/dropdown-menu';
+import TextvorlageDialog from '@/components/finance/textvorlage-dialog';
 import PlaceholderModal from '@/components/texteditor/PlaceholderModal';
 
 import { TextTemplateService } from '@/services/TextTemplateService';
@@ -111,6 +110,10 @@ export default function FooterTextEditor({
     // neue Funktion — als Dependency würde sie eine Render-Endlosschleife auslösen.
     if (mounted) {
       loadTextTemplates();
+      // Wer im Nebentab eine Vorlage anlegt und zurückwechselt, sieht sie sofort.
+      const beiFokus = () => void loadTextTemplates();
+      window.addEventListener('focus', beiFokus);
+      return () => window.removeEventListener('focus', beiFokus);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, companyId, objectType, textType]);
@@ -297,7 +300,7 @@ export default function FooterTextEditor({
           type="button"
           variant={editor.isActive('bold') ? 'default' : 'ghost'}
           size="sm"
-          className={`h-8 px-2 ${editor.isActive('bold') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
+          className={`h-8 px-2 ${editor.isActive('bold') ? 'bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
           onClick={() => editor.chain().focus().toggleBold().run()}
           title={t('FooterTextEditor.bold')}
         >
@@ -307,7 +310,7 @@ export default function FooterTextEditor({
           type="button"
           variant={editor.isActive('italic') ? 'default' : 'ghost'}
           size="sm"
-          className={`h-8 px-2 ${editor.isActive('italic') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
+          className={`h-8 px-2 ${editor.isActive('italic') ? 'bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
           onClick={() => editor.chain().focus().toggleItalic().run()}
           title={t('FooterTextEditor.italic')}
         >
@@ -317,7 +320,7 @@ export default function FooterTextEditor({
           type="button"
           variant={editor.isActive('underline') ? 'default' : 'ghost'}
           size="sm"
-          className={`h-8 px-2 ${editor.isActive('underline') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
+          className={`h-8 px-2 ${editor.isActive('underline') ? 'bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
           title={t('FooterTextEditor.underline')}
         >
@@ -331,7 +334,7 @@ export default function FooterTextEditor({
           type="button"
           variant={editor.isActive('strike') ? 'default' : 'ghost'}
           size="sm"
-          className={`h-8 px-2 ${editor.isActive('strike') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
+          className={`h-8 px-2 ${editor.isActive('strike') ? 'bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
           onClick={() => editor.chain().focus().toggleStrike().run()}
           title={t('FooterTextEditor.strikethrough')}
         >
@@ -380,7 +383,7 @@ export default function FooterTextEditor({
           type="button"
           variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
           size="sm"
-          className={`h-8 px-2 ${editor.isActive('orderedList') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
+          className={`h-8 px-2 ${editor.isActive('orderedList') ? 'bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           title={t('FooterTextEditor.orderedList')}
         >
@@ -390,7 +393,7 @@ export default function FooterTextEditor({
           type="button"
           variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
           size="sm"
-          className={`h-8 px-2 ${editor.isActive('bulletList') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
+          className={`h-8 px-2 ${editor.isActive('bulletList') ? 'bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           title={t('FooterTextEditor.bulletList')}
         >
@@ -472,7 +475,7 @@ export default function FooterTextEditor({
           type="button"
           variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
           size="sm"
-          className={`h-8 px-2 ${editor.isActive({ textAlign: 'left' }) ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
+          className={`h-8 px-2 ${editor.isActive({ textAlign: 'left' }) ? 'bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
           title={t('FooterTextEditor.alignLeft')}
         >
@@ -482,7 +485,7 @@ export default function FooterTextEditor({
           type="button"
           variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
           size="sm"
-          className={`h-8 px-2 ${editor.isActive({ textAlign: 'center' }) ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
+          className={`h-8 px-2 ${editor.isActive({ textAlign: 'center' }) ? 'bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
           title={t('FooterTextEditor.alignCenter')}
         >
@@ -492,7 +495,7 @@ export default function FooterTextEditor({
           type="button"
           variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
           size="sm"
-          className={`h-8 px-2 ${editor.isActive({ textAlign: 'right' }) ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
+          className={`h-8 px-2 ${editor.isActive({ textAlign: 'right' }) ? 'bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
           title={t('FooterTextEditor.alignRight')}
         >
@@ -530,7 +533,7 @@ export default function FooterTextEditor({
               type="button"
               variant="ghost"
               size="sm"
-              className={`h-8 px-3 ${selectedTemplate ? 'selected bg-accent text-white' : 'hover:bg-accent/10'}`}
+              className={`h-8 px-3 ${selectedTemplate ? 'selected bg-accent text-white' : 'hover:bg-accent/10 hover:text-foreground'}`}
               title={t('FooterTextEditor.textTemplate')}
             >
               <span className="select-none">{t('FooterTextEditor.textTemplate')}</span>
@@ -542,36 +545,31 @@ export default function FooterTextEditor({
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>{t('FooterTextEditor.textTemplates')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {companyId && objectType && textTemplates.length > 0 ? (
-              <>
-                {textTemplates.map(template => (
-                  <DropdownMenuItem
-                    key={template.id}
-                    onClick={() => insertTemplate(template)}
-                    className="flex items-center justify-between"
-                  >
-                    <span>{template.name}</span>
-                    {template.isDefault && (
-                      <span className="text-accent text-xs">
-                        {t('FooterTextEditor.defaultBadge')}
-                      </span>
-                    )}
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
+            {textTemplates.length > 0 ? (
+              textTemplates.map(template => (
                 <DropdownMenuItem
-                  className="text-accent"
-                  onClick={() => setTemplateModalOpen(true)}
+                  key={template.id}
+                  onClick={() => insertTemplate(template)}
+                  className="flex items-center justify-between"
                 >
-                  <Icon icon="lucide:plus" className="mr-2 h-4 w-4" />
-                  {t('FooterTextEditor.createTextTemplate')}
+                  <span>{template.name}</span>
+                  {template.isDefault && (
+                    <span className="text-accent text-xs">
+                      {t('FooterTextEditor.defaultBadge')}
+                    </span>
+                  )}
                 </DropdownMenuItem>
-              </>
+              ))
             ) : (
               <DropdownMenuItem disabled className="text-gray-500">
                 {t('FooterTextEditor.noTextTemplates')}
               </DropdownMenuItem>
             )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-accent" onSelect={() => setTemplateModalOpen(true)}>
+              <Icon icon="lucide:plus" className="mr-2 h-4 w-4" />
+              {t('FooterTextEditor.createTextTemplate')}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -608,7 +606,9 @@ export default function FooterTextEditor({
 
       {/* Textvorlage Erstellen Modal */}
       {companyId && userId && (
-        <TextTemplateModal
+        <TextvorlageDialog
+          objectType={objectType}
+          textType={textType}
           isOpen={templateModalOpen}
           onClose={() => setTemplateModalOpen(false)}
           onSave={handleSaveTemplate}

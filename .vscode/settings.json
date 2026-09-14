@@ -12,6 +12,11 @@
     "*.css": "tailwindcss"
   },
 
+  "// ESLint": "Jede App hat ihre eigene eslint-suppressions.json (Komplexitaets-Ratchet, CLAUDE.md). Die CLI ('bun run lint') wendet sie von selbst an, die Klassen-API der Erweiterung NICHT: dort ist applySuppressions=false Vorgabe, und die Erweiterung schaltet es nur mit bulkSuppression.enable ein. Ohne den Schalter zeigte der Editor 340 eingefrorene Altbestand-Dateien in web als Fehler, waehrend das Gate 0 meldete (11.09.2026). 'auto' laesst ESLint je App laufen, damit es DEREN Datei findet; 'hint' zeigt Eingefrorenes als dezente Punkte statt als rote Marker — sichtbar, aber nicht als offener Fehler.",
+  "eslint.workingDirectories": [{ "mode": "auto" }],
+  "eslint.bulkSuppression.enable": true,
+  "eslint.bulkSuppression.severity": "hint",
+
   "// Python (FastAPI)": "Interpreter = apps/api/.venv; Pylint nutzt die Projekt-Konfig in apps/api/pyproject.toml (10/10).",
   "python.defaultInterpreterPath": "${workspaceFolder}/apps/api/.venv/bin/python",
   "pylint.interpreter": ["${workspaceFolder}/apps/api/.venv/bin/python"],

@@ -6,12 +6,17 @@ admin/co_admin den vollen Slice, auch ohne gekauftes Modul.
 
 Drei Ebenen bleiben getrennt: Rolle (403) → Entitlement (402) → Daten.
 """
+
 import pytest
 from fastapi import HTTPException
 
 from src.core.security import AuthContext
+
+# Die Guards leben seit dem 12.09.2026 in `guards.py` (Bereiche importieren sie
+# ohne Zirkel); gepatcht wird deshalb dort, nicht im Router.
+from src.features.buchhaltung import guards as buchhaltung_guards
 from src.features.buchhaltung import router as buchhaltung_router
-from src.features.buchhaltung.router import (
+from src.features.buchhaltung.guards import (
     BUCHHALTUNG_MODULE_KEY,
     _require_buchhaltung_modul,
 )
@@ -48,13 +53,11 @@ class _FakeDb:
 
 @pytest.fixture(name="db_setzen")
 def _db_setzen(monkeypatch: pytest.MonkeyPatch):  # noqa: ANN202
-    """Ersetzt den Service-Client im Router durch den Doppelgänger."""
+    """Ersetzt den Service-Client in den Guards durch den Doppelgänger."""
 
     def _setzen(rows: list[dict]) -> _FakeDb:
         fake = _FakeDb(rows)
-        monkeypatch.setattr(
-            buchhaltung_router, "get_service_client", lambda: fake
-        )
+        monkeypatch.setattr(buchhaltung_guards, "get_service_client", lambda: fake)
         return fake
 
     return _setzen
@@ -106,7 +109,8 @@ def _guard_kette(pfad: str, methode: str = "GET") -> set[str]:
     prueft, wuerde gruen bleiben, auch wenn die Kette gar nicht haengt.
     """
     routen = [
-        r for r in buchhaltung_router.router.routes
+        r
+        for r in buchhaltung_router.router.routes
         if getattr(r, "path", "") == pfad and methode in getattr(r, "methods", set())
     ]
     assert len(routen) == 1, pfad
@@ -166,14 +170,10 @@ def test_firmenprofil_ohne_entitlement_erreichbar() -> None:
     darf NICHT hinter Modul 3 liegen, sonst kommt kein Neukunde durch das
     Onboarding. Der Rollen-Guard bleibt aber bestehen."""
     for pfad, methode, rollen_guard in (
-        ("/buchhaltung/companies/{company_id}", "GET",
-         "_require_company_profile_read"),
-        ("/buchhaltung/companies/{company_id}", "PATCH",
-         "_require_agency_finance"),
-        ("/buchhaltung/companies/{company_id}/stripe-sync", "POST",
-         "_require_agency_finance"),
-        ("/buchhaltung/companies/{company_id}/logo", "POST",
-         "_require_agency_finance"),
+        ("/buchhaltung/companies/{company_id}", "GET", "_require_company_profile_read"),
+        ("/buchhaltung/companies/{company_id}", "PATCH", "_require_agency_finance"),
+        ("/buchhaltung/companies/{company_id}/stripe-sync", "POST", "_require_agency_finance"),
+        ("/buchhaltung/companies/{company_id}/logo", "POST", "_require_agency_finance"),
     ):
         kette = _guard_kette(pfad, methode)
         assert "_require_agency_finance_with_modul" not in kette, (pfad, methode)

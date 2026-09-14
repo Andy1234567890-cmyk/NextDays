@@ -47,6 +47,10 @@ interface DocumentData {
   customerPhone?: string;
   companyName?: string;
   total?: number;
+  // Belegwaehrung. SendDocumentModal reicht sie am Dokument schon durch; hier
+  // fehlte sie nur im Typ, weshalb die WhatsApp-Nachricht den Betrag ohne
+  // Waehrung bekam und die Vorlage ein festes € anhaengte (Wurzel 4).
+  currency?: string;
   dueDate?: string;
   gobdStatus?: {
     isLocked?: boolean;
@@ -736,6 +740,9 @@ export function EmailSendModal({
                 document?.invoiceNumber || documentNumber,
                 document?.total || 0,
                 document?.dueDate || '',
+                // Waehrung des Belegs; fehlt sie, rendert formatCurrency den
+                // Betrag symbollos statt ein falsches € zu behaupten.
+                document?.currency,
                 document?.id,
               );
             }

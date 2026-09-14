@@ -598,7 +598,10 @@ export function DashboardRaster({
           <SortableContext items={ids} strategy={rectSortingStrategy}>
             <div className="flex flex-col gap-8">
               {bereichsFolge.map(({ bereich, eintraege }) => (
-                <section key={bereich} className="flex flex-col gap-3">
+                // Schlüssel = Bereich + erste Kachel: derselbe Bereich kann
+                // mehrfach vorkommen, wenn der Nutzer eine Kachel zwischen
+                // fremde gezogen hat (React warnte „same key reservierungen").
+                <section key={`${bereich}-${eintraege[0]?.id}`} className="flex flex-col gap-3">
                   {/* Die Kopfzeile ist ein eigener Kasten mit Rahmen — so sah
                       das starre Dashboard aus, und so bleibt der Abschnitt
                       auch dann als Einheit erkennbar, wenn darunter nur eine

@@ -12,7 +12,12 @@ import { revalidatePath } from "next/cache";
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
-import type { Meldelauf, MeldungVorschau } from "./dac7";
+import type {
+  Meldeformat,
+  Meldelauf,
+  MeldungVorschau,
+  Uebermittlungsergebnis,
+} from "./dac7";
 
 type VorschauErgebnis =
   | { ok: true; vorschau: MeldungVorschau }
@@ -95,6 +100,7 @@ export async function meldungAbgeben(laufId: string): Promise<LaufErgebnis> {
  *  selbst — mit demselben Bearer. */
 export async function holeMeldedatei(
   laufId: string,
+  format: Meldeformat = "csv",
 ): Promise<
   { ok: true; inhalt: string; name: string } | { ok: false; error: string }
 > {
@@ -106,7 +112,7 @@ export async function holeMeldedatei(
   let antwort: Response;
   try {
     antwort = await fetch(
-      `${backend}/api/v1/taxpayer/dac7/laeufe/${encodeURIComponent(laufId)}/datei`,
+      `${backend}/api/v1/taxpayer/dac7/laeufe/${encodeURIComponent(laufId)}/datei?format=${format}`,
       { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
     );
   } catch {
@@ -127,5 +133,58 @@ export async function holeMeldedatei(
     return { ok: false, error: meldung };
   }
 
-  return { ok: true, inhalt, name: `dac7-${laufId}.csv` };
+  return { ok: true, inhalt, name: `dac7-${laufId}.${format}` };
+}
+
+/** Ob die Übermittlung eingerichtet ist.
+ *
+ *  Gefragt wird, um keinen Knopf anzubieten, der nur fehlschlagen kann. Ist
+ *  sie es nicht, bleibt der bisherige Weg: Datei herunterladen und bei der
+ *  Behörde hochladen. */
+export async function uebermittlungEingerichtet(): Promise<boolean> {
+  try {
+    const stand = await api<{ eingerichtet: boolean }>(
+      "/taxpayer/dac7/uebermittlung",
+      { token: (await currentToken()) ?? undefined },
+    );
+    return stand.eingerichtet;
+  } catch {
+    // Ein Fehler heißt „nicht verfügbar" — nicht „verfügbar". Ein Knopf,
+    // der nur fehlschlagen kann, ist schlimmer als keiner.
+    return false;
+  }
+}
+
+/** Die Meldung an die Empfangsstelle übermitteln.
+ *
+ *  ACHTUNG, der wichtigste Fall: `angenommen: null` heißt UNBEKANNT — die
+ *  Antwort kam nicht an, die Datei kann die Behörde erreicht haben. Das
+ *  darf die Oberfläche NIE zu „nicht gesendet" verkürzen: Der nächste Klick
+ *  erzeugte dann eine Doppelmeldung, und der Vermieter würde doppelt
+ *  veranlagt.
+ *
+ *  Deshalb ist auch `ok: true` kein „angenommen" — es heißt nur, dass der
+ *  Aufruf zustande kam. Was die Gegenstelle gesagt hat, steht im Ergebnis. */
+export async function uebermittleMeldung(
+  laufId: string,
+): Promise<
+  | { ok: true; ergebnis: Uebermittlungsergebnis }
+  | { ok: false; error: string }
+> {
+  try {
+    const ergebnis = await api<Uebermittlungsergebnis>(
+      `/taxpayer/dac7/laeufe/${encodeURIComponent(laufId)}/uebermitteln`,
+      { method: "POST", token: (await currentToken()) ?? undefined },
+    );
+    revalidatePath("/dac7");
+    return { ok: true, ergebnis };
+  } catch (exc) {
+    return {
+      ok: false,
+      error:
+        exc instanceof ApiError
+          ? exc.message
+          : "Die Übermittlung war nicht möglich.",
+    };
+  }
 }

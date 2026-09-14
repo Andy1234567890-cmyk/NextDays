@@ -54,6 +54,8 @@ export type CompanySettingsFormData = {
 
 type UseInvoiceLoadersArgs = {
   uid: string;
+  /** Belegart — Standard-Textvorlagen werden je Art (INVOICE/QUOTE) gewählt. */
+  belegart?: 'invoice' | 'quote';
   user: AuthUser | null;
   prefillCustomerId: string | null | undefined;
   settings: CompanySettings | null;
@@ -72,6 +74,7 @@ type UseInvoiceLoadersArgs = {
 
 export function useInvoiceLoaders({
   uid,
+  belegart = 'invoice',
   user,
   prefillCustomerId,
   settings,
@@ -96,7 +99,12 @@ export function useInvoiceLoaders({
 
   const [customers, setCustomers] = useState<CustomerType[]>([]);
   const [_loadingCustomers, setLoadingCustomers] = useState(false);
-  const [taxRate, setTaxRate] = useState(19);
+  // Steuersatz der Rechnung. Startwert 0, NICHT 19: das PMS laeuft in allen
+  // 27 EU-Staaten (DK 25 %, LU 17 %, SE 12/6 %) - ein deutscher Startwert
+  // haette den falschen Satz in die gespeicherte Summe gerechnet, sobald der
+  // Betrieb keinen Standardsatz hinterlegt hat (Wurzel 4: kein erfundener
+  // Ersatzwert). Der echte Satz kommt unten aus den Stammdaten.
+  const [taxRate, setTaxRate] = useState(0);
   const [company, setCompany] = useState<CompanyDocument | null>(null);
 
   // Textvorlagen State
@@ -290,29 +298,33 @@ export function useInvoiceLoaders({
           // Zeige Banner wenn wichtige Felder fehlen
           if (missingRequiredFields || missingOptionalFields) {
             setShowCompanySettingsBanner(true);
-
-            // Vorausfüllen der Formulardaten für das Modal
-            setCompanySettingsFormData({
-              companyOwner:
-                companyData.firstName && companyData.lastName
-                  ? `${companyData.firstName} ${companyData.lastName}`
-                  : '',
-              companyName: companyData.companyName || '',
-              street: companyData.companyStreet || '',
-              zip: companyData.companyPostalCode || '',
-              city: companyData.companyCity || '',
-              taxNumber: companyData.taxNumber || companyData.step3?.taxNumber || '',
-              vatNumber: companyData.vatId || companyData.step3?.vatId || '',
-              email: companyData.email || '',
-              phone: companyData.phoneNumber || companyData.companyPhoneNumber || '',
-              iban: companyData.iban || companyData.step4?.iban || '',
-              bic: companyData.bic || companyData.step4?.bic || '',
-              lodgingTaxRate:
-                companyData.lodgingTaxRate != null
-                  ? String(companyData.lodgingTaxRate)
-                  : '',
-            });
           }
+
+          // Formulardaten IMMER aus dem Konto übernehmen — nicht nur, wenn der
+          // Banner greift. Bis zum 14.09.2026 stand das im if-Block darüber:
+          // ein VOLLSTÄNDIGES Konto lieferte deshalb nie seinen Übernachtungs-
+          // Steuersatz in den Editor, jede Übernachtungszeile stand auf „USt.
+          // fehlt", obwohl der Satz im Konto gepflegt war.
+          setCompanySettingsFormData({
+            companyOwner:
+              companyData.firstName && companyData.lastName
+                ? `${companyData.firstName} ${companyData.lastName}`
+                : '',
+            companyName: companyData.companyName || '',
+            street: companyData.companyStreet || '',
+            zip: companyData.companyPostalCode || '',
+            city: companyData.companyCity || '',
+            taxNumber: companyData.taxNumber || companyData.step3?.taxNumber || '',
+            vatNumber: companyData.vatId || companyData.step3?.vatId || '',
+            email: companyData.email || '',
+            phone: companyData.phoneNumber || companyData.companyPhoneNumber || '',
+            iban: companyData.iban || companyData.step4?.iban || '',
+            bic: companyData.bic || companyData.step4?.bic || '',
+            lodgingTaxRate:
+              companyData.lodgingTaxRate != null
+                ? String(companyData.lodgingTaxRate)
+                : '',
+          });
         }
       } catch {
         // still render, but without company info
@@ -369,8 +381,12 @@ export function useInvoiceLoaders({
   // Steuerlogik aus der Auswahl ableiten (berücksichtigt Standard-Steuersatz aus Einstellungen)
   useEffect(() => {
     if (formData.taxRule === TaxRuleType.DE_TAXABLE) {
-      const rate = settings?.defaultTaxRate ? parseInt(settings.defaultTaxRate, 10) : 19;
-      setTaxRate(Number.isFinite(rate) ? rate : 19);
+      // Standardsatz aus den Stammdaten des Betriebs. Fehlt er, bleibt der Satz
+      // 0 statt eines erfundenen deutschen 19 % (Wurzel 4) - der Betrieb setzt
+      // ihn je Position selbst; ein falscher Satz waere ein falscher Betrag im
+      // Beleg. parseFloat statt parseInt: es gibt Nachkommasaetze (z. B. 5,5 %).
+      const rate = parseFloat(settings?.defaultTaxRate ?? '');
+      setTaxRate(Number.isFinite(rate) ? rate : 0);
     } else {
       setTaxRate(0);
     }
@@ -412,12 +428,14 @@ export function useInvoiceLoaders({
         const templates = await TextTemplateService.getTextTemplates(uid);
         setTextTemplates(templates);
 
-        // Standard-Templates automatisch auswählen
+        // Standard-Templates der BELEGART automatisch auswählen — ein Angebot
+        // bekam bis zum 14.09.2026 die Rechnungs-Vorlagen vorgesetzt.
+        const objectType = belegart === 'quote' ? 'QUOTE' : 'INVOICE';
         const headTemplate = templates.find(
-          t => t.objectType === 'INVOICE' && t.textType === 'HEAD' && t.isDefault,
+          t => t.objectType === objectType && t.textType === 'HEAD' && t.isDefault,
         );
         const footerTemplate = templates.find(
-          t => t.objectType === 'INVOICE' && t.textType === 'FOOT' && t.isDefault,
+          t => t.objectType === objectType && t.textType === 'FOOT' && t.isDefault,
         );
 
         if (headTemplate && !formData.headTextHtml) {
@@ -437,7 +455,7 @@ export function useInvoiceLoaders({
     };
 
     loadTextTemplates();
-  }, [uid, formData.headTextHtml, formData.footerText, setFormData]);
+  }, [uid, belegart, formData.headTextHtml, formData.footerText, setFormData]);
 
   useEffect(() => {
     if (!settings) return;

@@ -84,7 +84,8 @@ _OBJEKTART: dict[str, str] = {
 
 _OBJEKT_SPALTEN = (
     "id, title, street, postal_code, city, country, property_type, "
-    "land_registration_number, land_registration_unavailable, bfe_number"
+    "land_registration_number, land_registration_unavailable, bfe_number, "
+    "currency"
 )
 
 _BUCHUNG_SPALTEN = (
@@ -111,6 +112,10 @@ class _Objektzeile:
     # RS_ACT_DK_REAL_PROP_REG_NUM — BFE-Nummer (Integer). Eigenes Feld:
     # die Anleitung fuehrt beide getrennt.
     bfe_nummer: str | None
+    # Die Waehrung, in der dieses Objekt gefuehrt wird. Sie geht NICHT in
+    # die Datei — gemeldet wird die Waehrung der BUCHUNG. Sie dient dem
+    # Abgleich: Weichen beide ab, stimmt etwas in den Daten nicht.
+    waehrung: str | None = None
 
 
 def _als_datum(wert: object) -> date | None:
@@ -548,6 +553,7 @@ class MeldungsAufbau:
                 objektart=_OBJEKTART.get(objekt.get("property_type") or ""),
                 grundbuchnummer=objekt.get("land_registration_number"),
                 bfe_nummer=objekt.get("bfe_number"),
+                waehrung=objekt.get("currency"),
             )
         return zeilen
 
@@ -737,6 +743,35 @@ class MeldungsAufbau:
                     "keine Waehrung an den Buchungen",
                 )
                 continue
+
+            # Objektwaehrung gegen Buchungswaehrung. HINWEIS, nicht Fehler:
+            # Gemeldet wird, worin tatsaechlich abgerechnet wurde, und das
+            # steht an der Buchung — ein Gast, der in EUR gezahlt hat, hat
+            # in EUR gezahlt, auch wenn das Objekt spaeter auf DKK umgestellt
+            # wurde. Die Datei ist also richtig; die DATEN widersprechen
+            # sich, und das soll jemand ansehen.
+            #
+            # Warum das auffallen muss: In Daenemark haengt der ganze
+            # nationale Anhang an DKK — Bruttomieteinnahme UND BFE-Nummer
+            # (`_daenischer_anhang`). Ein daenisches Objekt mit
+            # EUR-Buchungen meldet beides stillschweigend nicht, und in der
+            # Vorschau steht dann "BFE-Nummer fehlt", obwohl sie erfasst
+            # ist. Genau so live aufgefallen (11.09.2026).
+            if zeile.waehrung and zeile.waehrung != werte.waehrung:
+                bericht.hinweis_melden(
+                    f"{betrifft} / {zeile.anschrift.ort or '?'}",
+                    "RS_ACT_CONS_Q1_CCY",
+                    f"Das Objekt wird in {zeile.waehrung} gefuehrt, die "
+                    f"Buchungen lauten auf {werte.waehrung}. Gemeldet wird "
+                    f"{werte.waehrung} — so wurde abgerechnet. "
+                    + (
+                        "Die daenischen Zusatzangaben (Bruttomieteinnahme, "
+                        "BFE-Nummer) entfallen dabei, weil sie zwingend in "
+                        "DKK zu melden sind."
+                        if zeile.waehrung == "DKK"
+                        else "Bitte pruefen, welche Angabe stimmt."
+                    ),
+                )
 
             taetigkeiten.append(
                 Vermietung(

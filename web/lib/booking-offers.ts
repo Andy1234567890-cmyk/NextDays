@@ -19,6 +19,7 @@ import type {
   BookingOffer,
   BookingOfferCreate,
   BookingOfferList,
+  BookingOfferUpdate,
 } from "./booking-offers-meta";
 
 type Result<T> =
@@ -64,6 +65,19 @@ export async function createOffer(
   req: BookingOfferCreate,
 ): Promise<Result<BookingOffer>> {
   return call("/booking-offers", { method: "POST", body: req });
+}
+
+/** Offenes Angebot ändern — der Server rechnet den Preis neu. */
+export async function updateOffer(
+  id: string,
+  req: BookingOfferUpdate,
+): Promise<Result<BookingOffer>> {
+  return call(`/booking-offers/${id}`, { method: "PATCH", body: req });
+}
+
+/** Spiegel in der Buchhaltung sicherstellen; Antwort trägt `quote_id`. */
+export async function ensureOfferQuote(id: string): Promise<Result<BookingOffer>> {
+  return call(`/booking-offers/${id}/buchhaltung`, { method: "POST" });
 }
 
 export async function getOffer(id: string): Promise<Result<BookingOffer>> {

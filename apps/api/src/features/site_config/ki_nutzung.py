@@ -41,6 +41,9 @@ FUNKTIONEN = frozenset(
         "abschnitt",
         "blogbeitrag",
         "profil_vorschlag",
+        # Belegausleser der Ausgaben (0658) — ohne den Namen hier: 503 fail-closed
+        # in `buchhaltung.bereiche.ausgaben.service`, der DB-Check kennt ihn längst.
+        "beleg_ocr",
         # Seitenfassungen (0476). MUSS hier UND im DB-Check stehen (0478).
         #
         # Fehlte der Name, buchte der Übersetzungslauf ins Leere: `_schreiben`

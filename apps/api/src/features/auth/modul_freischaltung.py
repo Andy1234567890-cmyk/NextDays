@@ -39,12 +39,33 @@ MODUL_PRAEFIXE: dict[str, tuple[str, ...]] = {
     # 06.09.2026 gegen die Router-Praefixe, nicht aus dem Frontend abgeleitet.
     "personal": ("/personal",),
     "website_builder": ("/site-config",),
+    # Buchhaltung (11.09.2026, Betreiber): „muss nur bei theresa.gruber frei
+    # geschaltet sein bei niemandem sonst" — theresa.gruber ist der
+    # Vorfuehrbetrieb (0630). Das Modul ist eine 1:1-Uebernahme aus Taskilo,
+    # von der erst Rechnungsliste und Rechnung-erstellen portiert sind
+    # (docs/buchhaltung/TASKILO-FINANZ-BESTAND-2026-09-11.md); 13 Routen sind
+    # ComingSoon. Kein zahlender Betrieb soll das sehen.
+    "buchhaltung": ("/buchhaltung",),
     # DAC7 (14.09.2026, Betreiber): die Jahresmeldung ist ein Pay-Modul in
     # Entwicklung und stand bis dahin in KEINER der beiden Praefix-Listen —
     # jeder Admin mit `manage_billing` sah den Menuepunkt und erreichte die
     # Routen. `/taxpayer/dac7`, weil der Router dort haengt
     # (`features/taxpayer/dac7/router.py`), im Browser ist es `/dac7`.
     "dac7": ("/taxpayer/dac7",),
+}
+
+# Pfade UNTER einem gesperrten Praefix, die trotzdem fuer alle offen bleiben.
+# Der `buchhaltung`-Slice traegt historisch die Firmen-/Rechnungsstammdaten
+# (`companies/me`, Logo, USt-IdNr.-Pruefung), die /konto und das Onboarding
+# JEDES Betriebs brauchen — sie gehoeren zum Konto, nicht zur Buchhaltung
+# (siehe Docstring in `buchhaltung/router.py` zu `_profile_write`). Ohne diese
+# Ausnahme haette der Riegel jedem Betrieb sein Konto zerlegt.
+MODUL_AUSNAHMEN: dict[str, tuple[str, ...]] = {
+    "buchhaltung": (
+        "/buchhaltung/companies",
+        "/buchhaltung/vat-check",
+        "/buchhaltung/health",
+    ),
 }
 
 
@@ -54,8 +75,12 @@ def _pfad_modul(pfad: str) -> str | None:
     Vergleich auf Segmentgrenze (`/hr` trifft `/hr/lohn`, aber nicht `/hrx`).
     """
     rest = pfad.split("/api/v1", 1)[-1] if "/api/v1" in pfad else pfad
+
+    def trifft(praefixe: tuple[str, ...]) -> bool:
+        return any(rest == p or rest.startswith(p + "/") for p in praefixe)
+
     for modul, praefixe in MODUL_PRAEFIXE.items():
-        if any(rest == p or rest.startswith(p + "/") for p in praefixe):
+        if trifft(praefixe) and not trifft(MODUL_AUSNAHMEN.get(modul, ())):
             return modul
     return None
 

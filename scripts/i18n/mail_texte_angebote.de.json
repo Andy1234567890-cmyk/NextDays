@@ -18,5 +18,7 @@
   "angebot.bezahlt.absatz_2": "Anreise {anreise}, Abreise {abreise}. Alle weiteren Angaben erhalten Sie vor der Anreise.",
   "angebot.abgelaufen.betreff": "Ihr Angebot für {objekt} ist abgelaufen",
   "angebot.abgelaufen.absatz_1": "Guten Tag {name}, das Angebot für {objekt} ({anreise} bis {abreise}) ist abgelaufen.",
-  "angebot.abgelaufen.absatz_2": "Wenn Sie weiterhin Interesse haben, melden Sie sich gern — wir prüfen die Verfügbarkeit erneut."
+  "angebot.abgelaufen.absatz_2": "Wenn Sie weiterhin Interesse haben, melden Sie sich gern — wir prüfen die Verfügbarkeit erneut.",
+  "angebot.neu.absatz_zeiten": "Check-in ab {checkin}, Check-out bis {checkout}.",
+  "angebot.neu.hinweis_jetzt_faellig": "Bei Annahme zahlen Sie {jetzt}; der Restbetrag von {rest} wird vor der Anreise fällig."
 }

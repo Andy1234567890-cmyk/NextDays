@@ -51,6 +51,8 @@ type UseInvoiceActionsArgs = {
   skontoText: string;
   deliveryDateType: 'single' | 'range';
   deliveryDateRange: { from?: Date; to?: Date };
+  // Personen im Belegkopf (0698) — wird als guestCount gespeichert.
+  guestCount?: number;
   selectedTemplate: ImportedInvoiceTemplate;
   eInvoiceEnabled: boolean;
   setEInvoiceEnabled: Dispatch<SetStateAction<boolean>>;
@@ -83,6 +85,14 @@ type UseInvoiceActionsArgs = {
   reservationCustomerId?: string | null;
   // Dokumentsprache (0099, Gastsprache aus der Buchungs-Vorschau; sonst de).
   documentLanguage?: string;
+  // Belegart: 'quote' speichert über POST /quotes (Angebots-Nummernkreis,
+  // kein E-Rechnungs-Lauf) und öffnet den Versand-Dialog als Angebot.
+  belegart?: 'invoice' | 'quote';
+  /** Bearbeiten eines bestehenden Angebots: Speichern = PATCH statt POST. */
+  editQuoteId?: string | null;
+  /** Aufenthaltsangebot (0701): Objekt und Anzahlung aus dem Belegkopf. */
+  propertyId?: string | null;
+  depositAmount?: string;
 };
 
 export function useInvoiceActions({
@@ -109,6 +119,7 @@ export function useInvoiceActions({
   skontoText,
   deliveryDateType,
   deliveryDateRange,
+  guestCount = 0,
   selectedTemplate,
   eInvoiceEnabled,
   setEInvoiceEnabled,
@@ -136,7 +147,13 @@ export function useInvoiceActions({
   reservationId,
   reservationCustomerId,
   documentLanguage,
+  belegart = 'invoice',
+  editQuoteId = null,
+  propertyId = null,
+  depositAmount = '',
 }: UseInvoiceActionsArgs) {
+  const istAngebot = belegart === 'quote';
+  const standardTage = istAngebot ? 30 : 14;
   // Ref um manuelle Datumsänderungen zu tracken (verhindert Sync-Loops)
   const isManualDateChangeRef = useRef(false);
 
@@ -170,19 +187,19 @@ export function useInvoiceActions({
     if (!currentInvoiceDate) return;
 
     if (!formData.validUntil) {
-      // Wenn kein Fälligkeitsdatum gesetzt ist, verwende Standard 14 Tage
+      // Ohne Fälligkeit: Standard 14 Tage (Rechnung) bzw. 30 Tage Gültigkeit (Angebot)
       const invoiceDate = new Date(currentInvoiceDate);
       const dueDate = new Date(invoiceDate);
-      dueDate.setDate(invoiceDate.getDate() + 14);
+      dueDate.setDate(invoiceDate.getDate() + standardTage);
       const dueDateString = dueDate.toISOString().split('T')[0];
 
       setFormData(prev => ({
         ...prev,
         validUntil: dueDateString,
-        paymentTerms: 'Zahlbar binnen 14 Tagen ohne Abzug',
+        paymentTerms: `Zahlbar binnen ${standardTage} Tagen ohne Abzug`,
       }));
     }
-  }, [formData.invoiceDate, formData.validUntil, setFormData]);
+  }, [formData.invoiceDate, formData.validUntil, setFormData, standardTage]);
 
   // Handler für manuelle Änderung des Fälligkeitsdatums → berechne paymentDays zurück
   const handleValidUntilChange = useCallback(
@@ -228,7 +245,16 @@ export function useInvoiceActions({
       customerNumber: customer.customerNumber || '',
       customerAddress:
         customer.street && customer.city
-          ? `${customer.street}\n${customer.postalCode || ''} ${customer.city}\n${customer.country || 'Deutschland'}`
+          // Kein 'Deutschland'-Ersatzwert (Wurzel 4): fehlt das Land am
+          // Kunden, bleibt die Zeile weg statt ein falsches Land auf den
+          // Beleg zu schreiben.
+          ? [
+            customer.street,
+            `${customer.postalCode || ''} ${customer.city}`.trim(),
+            customer.country,
+          ]
+            .filter(Boolean)
+            .join('\n')
           : prev.customerAddress,
     }));
     setShowCustomerSearchPopup(false);
@@ -293,17 +319,27 @@ export function useInvoiceActions({
     );
   };
 
-  const handleOpenSendModal = () => {
-    // Validation
+  // Pflichtfelder vor Vorschau/Versand — eine Prüfung für beide Wege.
+  const formularVollstaendig = (): boolean => {
     if (!formData.customerName || !formData.validUntil) {
       toast.error('Bitte füllen Sie alle Pflichtfelder aus');
-      return;
+      return false;
     }
-    const hasValidItems = items.some(it => it.description && it.quantity > 0);
-    if (!hasValidItems) {
+    if (!items.some(it => it.description && it.quantity > 0)) {
       toast.error('Bitte fügen Sie mindestens eine gültige Position hinzu');
+      return false;
+    }
+    return true;
+  };
+
+  const handleOpenSendModal = () => {
+    // Angebot: erst speichern (Nummer zieht der Server), dann den Versand-Dialog
+    // mit dem gespeicherten Beleg öffnen — der Dialog speichert nur Rechnungen selbst.
+    if (istAngebot) {
+      void handleSubmit(true);
       return;
     }
+    if (!formularVollstaendig()) return;
 
     // Kundensuche für vollständige Daten
     const selectedCustomer = customers.find(c => c.name === formData.customerName);
@@ -386,6 +422,11 @@ export function useInvoiceActions({
       ]
         .filter(Boolean)
         .join('\n'),
+      // Land als EIGENES Feld (nicht nur in der Adresszeile): die E-Rechnung
+      // braucht den ISO-3166-Code getrennt und trug ihn bis 10.09.2026 fest
+      // als „DE".
+      companyCountry: (company?.companyCountry as string) || '',
+      customerCountry: (selectedCustomer?.country as string) || '',
       companyEmail: (company?.email as string) || '',
       companyPhone:
         (company?.phoneNumber as string) || (company?.companyPhoneNumber as string) || '',
@@ -420,9 +461,16 @@ export function useInvoiceActions({
         taxRate: item.taxRate,
         discountPercent: item.discountPercent || 0,
         unit: item.unit || 'Stk',
+        basis: item.basis || null,
         category: item.category || 'Artikel',
         inventoryItemId: item.inventoryItemId || null,
         extendedDescription: item.extendedDescription || '', // Erweiterte Beschreibung
+        // Aufenthalt der Zeile (0702) — Vorschau/PDF zeigen „Objekt · Anreise – Abreise".
+        propertyId: item.propertyId || null,
+        propertyTitle: item.propertyTitle || null,
+        checkIn: item.checkIn || null,
+        checkOut: item.checkOut || null,
+        parentItemId: item.parentItemId || null,
       })),
 
       // Additional fields — kein EUR-Fallback (Wurzel 4): leer durchreichen, das
@@ -611,9 +659,19 @@ export function useInvoiceActions({
             // rechnungen) und darf nicht auf den Standardsatz kippen.
             taxRate: item.taxRate ?? taxRate,
             unit: item.unit || 'Stk',
+            // Abrechnungsbasis (0698) — der Server prüft den Katalog (422 bei Fremdwert).
+            basis: item.basis || null,
             category: item.category || 'Leistung',
             discountPercent: item.discountPercent || 0,
             inventoryItemId: item.inventoryItemId || null,
+            extendedDescription: item.extendedDescription || '',
+            // Aufenthalt der Zeile + Zugehörigkeit zur Übernachtung (0702).
+            // `parentItemId` ist die CLIENT-ID der Elternzeile; der Server
+            // löst sie nach dem Insert über die Position auf.
+            propertyId: item.propertyId || null,
+            checkIn: item.checkIn || null,
+            checkOut: item.checkOut || null,
+            parentItemId: item.parentItemId || null,
           })),
         amount: subtotal, // Nettobetrag
         tax: vat, // Steuerbetrag
@@ -690,6 +748,22 @@ export function useInvoiceActions({
               to: deliveryDateRange.to?.toISOString().split('T')[0] || null,
             }
             : null,
+        // Kopfdaten für Positionen je Nacht / je Person (0698): Aufenthalt +
+        // Personen werden am Beleg gespeichert (invoices/quotes.stay_from … guest_count).
+        stayFrom:
+          deliveryDateType === 'range'
+            ? deliveryDateRange.from?.toISOString().split('T')[0] || null
+            : null,
+        stayTo:
+          deliveryDateType === 'range'
+            ? deliveryDateRange.to?.toISOString().split('T')[0] || null
+            : null,
+        guestCount: guestCount > 0 ? guestCount : null,
+        // Aufenthaltsangebot (0701): Objekt (Bild/Zeiten/Storno) + Anzahlung.
+        // Leere Anzahlung wird als "" geschickt = „keine" (der Server löscht sie);
+        // fehlendes Feld hieße „unverändert" und ließe eine alte Anzahlung stehen.
+        propertyId: istAngebot ? propertyId : undefined,
+        depositAmount: istAngebot ? (depositAmount.trim() === '' ? '' : Number(depositAmount)) : undefined,
 
         // Original form state preservation for debugging
         _originalFormData: {
@@ -718,15 +792,34 @@ export function useInvoiceActions({
       cleanInvoiceData.createdAt = new Date(cleanInvoiceData.createdAt);
       cleanInvoiceData.updatedAt = new Date(cleanInvoiceData.updatedAt);
 
-      // Save Invoice via FastAPI Backend - TARGET: invoices collection
-      const savedInvoice = (await api.post(
-        `/api/v1/invoices?company_id=${uid}`,
-        cleanInvoiceData,
-      )) as any;
+      // Save via FastAPI Backend — Rechnung → invoices, Angebot → quotes
+      // (angebote_bestand.py nimmt dasselbe camelCase-Payload an). Ein
+      // bestehendes Angebot wird per PATCH geändert; der Status bleibt dabei,
+      // wie er ist (Entwurf bleibt Entwurf, Versendet bleibt Versendet).
+      let savedInvoice: any;
+      if (istAngebot && editQuoteId) {
+        const { status: _status, ...aenderung } = cleanInvoiceData;
+        savedInvoice = await api.patch(`/api/v1/quotes/${editQuoteId}`, aenderung);
+      } else {
+        savedInvoice = (await api.post(
+          istAngebot
+            ? `/api/v1/quotes?company_id=${uid}`
+            : `/api/v1/invoices?company_id=${uid}`,
+          cleanInvoiceData,
+        )) as any;
+      }
       const createdInvoiceId = savedInvoice?.id || savedInvoice;
+      if (istAngebot) {
+        // Vergebene Angebotsnummer in den Beleg für Vorschau/Versand übernehmen.
+        const vergebeneNummer = savedInvoice?.quote_number || savedInvoice?.number || '';
+        invoiceData.number = vergebeneNummer;
+        invoiceData.invoiceNumber = vergebeneNummer;
+        (invoiceData as Record<string, unknown>).quoteNumber = vergebeneNummer;
+        invoiceData.status = savedInvoice?.status || 'draft';
+      }
 
       // 📊 SERVICE USAGE TRACKING - Track service usage for analytics
-      try {
+      if (!istAngebot) try {
         const { ServiceUsageTrackingService } = await import(
           '@/services/serviceUsageTrackingService'
         );
@@ -750,10 +843,16 @@ export function useInvoiceActions({
       // ❌ REMOVED: setNextNumber manipulation - causes race conditions!
       // NumberSequenceService handles all numbering automatically
 
-      toast.success(asDraft ? 'Rechnung als Entwurf gespeichert' : 'Rechnung erstellt');
+      toast.success(
+        istAngebot
+          ? 'Angebot gespeichert'
+          : asDraft
+            ? 'Rechnung als Entwurf gespeichert'
+            : 'Rechnung erstellt',
+      );
 
       // 🚀 E-INVOICE GENERIERUNG NACH SPEICHERN (falls aktiviert)
-      if (!asDraft && eInvoiceEnabled && createdInvoiceId) {
+      if (!istAngebot && !asDraft && eInvoiceEnabled && createdInvoiceId) {
         try {
           const { AutoEInvoiceService } = await import('@/services/autoEInvoiceService');
 
@@ -811,7 +910,9 @@ export function useInvoiceActions({
       const message =
         e instanceof Error && e.message && !e.message.startsWith('API Error')
           ? e.message
-          : 'Rechnung konnte nicht gespeichert werden';
+          : istAngebot
+            ? 'Angebot konnte nicht gespeichert werden'
+            : 'Rechnung konnte nicht gespeichert werden';
       toast.error(message);
     } finally {
       setLoading(false);

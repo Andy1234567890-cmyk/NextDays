@@ -294,6 +294,17 @@ jobs:
           fi
           echo "Keine Importe aus apps/api — die zweite Lesung bleibt unabhängig."
 
+      - name: umschlag.py in allen drei Diensten identisch
+        if: steps.pruefen.outputs.laufen == 'true'
+        working-directory: .
+        # Die GEGENRICHTUNG zur Regel oben, und deshalb direkt daneben: Die
+        # Prüfregeln MÜSSEN unabhängig sein, das Verschlüsselungsformat MUSS
+        # identisch sein. Läuft eine Kopie von `umschlag.py` auseinander,
+        # kann die Empfangsstelle öffnen, was der Versand nicht mehr
+        # verschließt — der Fehler erscheint als „für einen anderen
+        # Empfänger verschlüsselt" und sieht aus wie ein Schlüsselproblem.
+        run: bash scripts/dac7/umschlag-kopien-pruefen.sh
+
       - name: uv installieren
         if: steps.pruefen.outputs.laufen == 'true'
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1

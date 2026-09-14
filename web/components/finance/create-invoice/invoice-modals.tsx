@@ -211,6 +211,8 @@ type InvoiceModalsProps = {
   showCompliancePanel: boolean;
   setShowCompliancePanel: Dispatch<SetStateAction<boolean>>;
   complianceErrors: string[];
+  // Belegart für Versand-/Vorschau-Dialog
+  belegart?: 'invoice' | 'quote';
   // Versand
   showSendDocumentModal: boolean;
   setShowSendDocumentModal: Dispatch<SetStateAction<boolean>>;
@@ -226,6 +228,7 @@ type InvoiceModalsProps = {
 
 // Modals außerhalb des Hauptcontainers (Portale — Reihenfolge wie zuvor)
 export default function InvoiceModals({
+  belegart = 'invoice',
   uid,
   formData,
   setFormData,
@@ -724,7 +727,7 @@ export default function InvoiceModals({
         </SheetContent>
       </Sheet>
 
-      {/* Send Document Modal - IMMER gerendert für html2pdf.js Preload */}
+      {/* Send Document Modal - immer gerendert, damit der Dialog sofort offen ist */}
       <SendDocumentModal
         isOpen={showSendDocumentModal && !!createdDocument}
         onClose={() => {
@@ -732,9 +735,9 @@ export default function InvoiceModals({
           setCreatedDocument(null);
         }}
         document={createdDocument || ({} as InvoiceData)}
-        documentType="invoice"
+        documentType={belegart}
         companyId={uid}
-        redirectAfterAction={`/dashboard/company/${uid}/finance/invoices`}
+        redirectAfterAction={belegart === 'quote' ? '/buchhaltung/angebote' : `/dashboard/company/${uid}/finance/invoices`}
         onSend={onSendDocument}
       />
 
@@ -743,7 +746,7 @@ export default function InvoiceModals({
         isOpen={showLivePreview}
         onClose={() => setShowLivePreview(false)}
         document={buildInvoiceDataForPreview()}
-        documentType="invoice"
+        documentType={belegart}
         companyId={uid}
         mode="preview"
         onSaveAsDraft={() => {

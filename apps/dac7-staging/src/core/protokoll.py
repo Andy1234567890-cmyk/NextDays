@@ -33,6 +33,32 @@ from .pruefung_csv import Befund
 
 
 @dataclass(frozen=True, slots=True)
+class Schritt:
+    """Eine Station auf dem Weg der Meldung durch die Empfangsstelle.
+
+    WOZU: Bis zum 11.09.2026 protokollierte diese Stelle nur das ERGEBNIS
+    einer Einreichung — angenommen oder nicht, mit einer Gesamtdauer. Fuer
+    die Behoerde ist aber gerade der WEG die Frage: Wo wird entschluesselt,
+    woran erkennt die Stelle eine Verfaelschung, was passiert zwischen
+    Empfang und Quittung. Ein Endergebnis beantwortet das nicht.
+
+    Jeder Schritt traegt seine eigene Dauer. Damit ist sichtbar, was die
+    Zeit kostet — und ob die Verschluesselung dabei ins Gewicht faellt
+    (sie tut es nicht, aber das soll man sehen statt glauben).
+
+    `belegt` ist die Stelle fuer einen NACHWEIS, nicht fuer Inhalte: eine
+    Pruefsumme, eine Schluesselkennung, eine Zahl. Nie ein Feldwert der
+    Meldung.
+    """
+
+    name: str
+    geschafft: bool
+    dauer_ms: float
+    beschreibung: str
+    belegt: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class Eintrag:
     """Eine Einreichung, so wie die Behoerde sie protokollieren wuerde."""
 
@@ -73,6 +99,16 @@ class Eintrag:
     # Zeitlimit laeuft, steht der Betrieb ohne Quittung da und weiss
     # nicht, ob sie angekommen ist.
     dauer_ms: float = 0.0
+    # Der Weg dieser Meldung durch die Stelle, Station fuer Station.
+    # Leer bei Eintraegen aus der Zeit vor dem Schrittprotokoll.
+    schritte: list[Schritt] = field(default_factory=list)
+    # Kam die Meldung verschluesselt an?
+    verschluesselt: bool = False
+    # Der Kopf des Umschlags, sofern einer da war: Verfahren, Zeitpunkt,
+    # Schluesselkennung, Pruefsumme des Klartexts. Keine Feldwerte — der
+    # Kopf ist auch im Umschlag unverschluesselt, weil die Gegenstelle
+    # wissen muss, WOMIT sie oeffnen soll.
+    umschlag_kopf: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)

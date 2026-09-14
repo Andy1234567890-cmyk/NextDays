@@ -23,7 +23,11 @@ export interface CompanySettings {
   ust?: 'standard' | 'kleinunternehmer'; // Umsatzsteuer-Status
   profitMethod?: 'euer' | 'guv'; // Gewinnermittlung
   taxMethod?: 'soll' | 'ist'; // Versteuerungsart
-  defaultTaxRate?: '0' | '7' | '19'; // Standard-Steuersatz
+  // Standard-Steuersatz als Zahl-String. BEWUSST kein Literal-Typ '0'|'7'|'19':
+  // das PMS laeuft in allen 27 EU-Staaten (DK 25 %, LU 17 %, SE 12/6 %) - die
+  // deutschen drei Saetze als Typ festzuschreiben hat jeden anderen Betrieb
+  // falsch gerechnet. undefined = nicht konfiguriert (kein Ersatzwert).
+  defaultTaxRate?: string;
   priceInput?: 'netto' | 'brutto'; // Preiseingabe
   accountingSystem?: 'skro3' | 'skro4'; // Kontenrahmen
   lastInvoiceNumber?: string; // Letzte Rechnungsnummer aus altem System (für Migration)
@@ -135,7 +139,10 @@ export function useCompanySettings(userId?: string) {
             ust: userData.step3?.ust || 'standard',
             profitMethod: userData.step3?.profitMethod || 'euer',
             taxMethod: userData.step3?.taxMethod || 'soll',
-            defaultTaxRate: userData.step3?.defaultTaxRate || '19',
+            // Kein '19'-Ersatzwert (Wurzel 4): fehlt der Satz in den
+            // Stammdaten, bleibt er undefined und der Aufrufer muss ihn
+            // erfragen, statt still deutsch zu rechnen.
+            defaultTaxRate: userData.step3?.defaultTaxRate ?? undefined,
             priceInput: userData.step3?.priceInput || 'netto',
             accountingSystem: userData.step3?.accountingSystem || 'skro4',
 
@@ -206,7 +213,11 @@ export function calculateVAT(
   totalAmount: number;
 } {
   const isSmallBusiness = settings?.ust === 'kleinunternehmer';
-  const vatRate = isSmallBusiness ? 0 : parseInt(settings?.defaultTaxRate || '19', 10);
+  // Kein 19-%-Ersatzwert: fehlt der Standardsatz, wird 0 gerechnet statt eines
+  // erfundenen deutschen Satzes (Wurzel 4). parseFloat wegen Nachkommasaetzen.
+  const konfigurierterSatz = parseFloat(settings?.defaultTaxRate ?? '');
+  const vatRate =
+    isSmallBusiness || !Number.isFinite(konfigurierterSatz) ? 0 : konfigurierterSatz;
 
   let netAmount: number;
   let vatAmount: number;

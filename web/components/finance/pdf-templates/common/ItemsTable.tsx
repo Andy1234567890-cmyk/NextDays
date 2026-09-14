@@ -1,8 +1,36 @@
 import type React from 'react';
 import { useDocumentTranslation } from '@/hooks/pdf/useDocumentTranslation';
 import type { ProcessedPDFData } from '@/hooks/pdf/usePDFTemplateData';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { PDF_PAGE_STYLES } from '@/utils/pdf-page-styles';
+
+// Aufenthalt EINER Position (0702): „Objekt · Anreise – Abreise" als
+// Sekundärzeile unter der Beschreibung. Nur, wenn die Werte da sind — ohne
+// Objekttitel oder ohne Zeitraum wird nichts gedruckt (Wurzel 4).
+function AufenthaltZusatz({
+  item,
+  dateLocale,
+  className = 'text-gray-500 text-xs',
+}: {
+  item: unknown;
+  dateLocale: string;
+  className?: string;
+}) {
+  const roh = item as Record<string, unknown>;
+  const titel = typeof roh.propertyTitle === 'string' ? roh.propertyTitle : '';
+  const von = typeof roh.checkIn === 'string' ? roh.checkIn : '';
+  const bis = typeof roh.checkOut === 'string' ? roh.checkOut : '';
+  const zeitraum =
+    von && bis ? `${formatDate(von, dateLocale)} – ${formatDate(bis, dateLocale)}` : '';
+  const text = [titel, zeitraum].filter(Boolean).join(' · ');
+  if (!text) return null;
+  return <div className={className}>{text}</div>;
+}
+
+/** Zusatzleistungen (0702) stehen eingerückt unter ihrer Übernachtung. */
+function kindEinzug(item: unknown): string {
+  return (item as Record<string, unknown>).parentItemId ? 'pl-4' : '';
+}
 
 interface ItemsTableProps {
   data: ProcessedPDFData;
@@ -21,7 +49,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
   showVATPerPosition = false,
   language = 'de',
 }) => {
-  const { t } = useDocumentTranslation(language);
+  const { t, dateLocale } = useDocumentTranslation(language);
   if (!data.realItems || data.realItems.length === 0) {
     return <div className="py-8 text-center text-gray-500">{t('noItems')}</div>;
   }
@@ -92,8 +120,9 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                         {(item as any).articleNumber || `ART${index + 1}`}
                       </td>
                     )}
-                    <td className="px-3 py-4 text-sm">
+                    <td className={`px-3 py-4 text-sm ${kindEinzug(item)}`}>
                       <div className="font-medium">{item.description}</div>
+                      <AufenthaltZusatz item={item} dateLocale={dateLocale} />
                       {(item as any).unit && (
                         <div className="text-gray-500 text-xs">
                           {t('unitLabel')}: {(item as any).unit}
@@ -185,8 +214,13 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                       {(item as any).articleNumber || `ART${index + 1}`}
                     </td>
                   )}
-                  <td className="px-2 py-2 font-mono text-xs">
+                  <td className={`px-2 py-2 font-mono text-xs ${kindEinzug(item)}`}>
                     <div>{item.description}</div>
+                    <AufenthaltZusatz
+                      item={item}
+                      dateLocale={dateLocale}
+                      className="text-gray-500 uppercase"
+                    />
                     {(item as any).unit && (
                       <div className="text-gray-500 uppercase">
                         {t('unitLabel')}: {(item as any).unit}
@@ -251,7 +285,10 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                     {(item as any).articleNumber || `ART-${String(index + 1).padStart(3, '0')}`}
                   </td>
                 )}
-                <td className="border p-3">{item.description}</td>
+                <td className={`border p-3 ${kindEinzug(item)}`}>
+                  {item.description}
+                  <AufenthaltZusatz item={item} dateLocale={dateLocale} />
+                </td>
                 <td className="border p-3 text-center">
                   {item.quantity} {(item as any).unit || t('piece')}
                 </td>

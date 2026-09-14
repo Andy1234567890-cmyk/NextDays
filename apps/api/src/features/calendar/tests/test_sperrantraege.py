@@ -363,6 +363,9 @@ def _tables(*, einheiten: int = 1, mit_eigentuemer: bool = True) -> dict[str, li
                 "id": OBJEKT,
                 "tenant_id": "t-1",
                 "title": "Villa",
+                # Objektwährung (0161): seit 0704 die EINZIGE Währungsquelle des
+                # Preis-Resolvers — ohne sie bricht die Belegung mit 422 ab.
+                "currency": "DKK",
                 "photos": ["https://bilder.example/villa-1.jpg", "…2.jpg"],
             },
             {"id": OBJEKT_FREMD, "tenant_id": "t-9", "title": "Fremd"},

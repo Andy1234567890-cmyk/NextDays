@@ -57,6 +57,7 @@ import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { Input } from "@nextdays/ui/input";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import {
@@ -394,6 +395,7 @@ export function FassungFelder({
   platzhalter,
   format = "html",
   mitBetreff = true,
+  betreffHinweis,
   uebersetzenZiel,
   grundfassung,
 }: {
@@ -407,6 +409,10 @@ export function FassungFelder({
   /** Der Betreff gilt nur für E-Mail. Wo er (noch) nichts bewirkt, bleibt das
    *  Feld weg statt leer dazustehen. */
   mitBetreff?: boolean;
+  /** Erklärung am ℹ-Symbol des Betreffs. Ohne Angabe gilt der allgemeine Satz
+   *  (`subjectHint`); die Automatisierungen setzen ihren eigenen, weil dort
+   *  zwei Versandwege nebeneinander stehen (Portal-Chat und E-Mail). */
+  betreffHinweis?: string;
   /** Sprachcode dieser Fassung. Fehlt er (Grundfassung), gibt es keinen
    *  Übersetzen-Knopf — die Grundfassung ist die Quelle, nicht das Ziel. */
   uebersetzenZiel?: string;
@@ -414,6 +420,7 @@ export function FassungFelder({
   grundfassung?: Fassung;
 }) {
   const t = useTranslations("inbox");
+  const tGemein = useTranslations("common");
   return (
     <div className="flex flex-col gap-2">
       {uebersetzenZiel && (
@@ -428,20 +435,32 @@ export function FassungFelder({
       )}
       {mitBetreff && (
         <>
-          <label className="text-sm font-medium" htmlFor={`${hoeheSchluessel}-betreff`}>
-            {t("subjectLabel")}
-          </label>
+          {/* Die Einschränkung steht DA, nicht im Hilfeartikel: über den
+              Gast-Chat der Portale geht kein Betreff hinaus, über E-Mail
+              schon. Wer hier tippt, soll wissen, wohin es geht (Wurzel 4 —
+              kein Versprechen, das der Versand nicht hält).
+              Am ℹ-Symbol und nicht als Absatz darunter: Hilfetexte gehören
+              projektweit ins Symbol, sonst wächst jede Maske um eine Zeile,
+              die niemand mehr liest. */}
+          <div className="flex items-center gap-1.5">
+            <label
+              className="text-sm font-medium"
+              htmlFor={`${hoeheSchluessel}-betreff`}
+            >
+              {t("subjectLabel")}
+            </label>
+            <InfoHinweis
+              titel={t("subjectLabel")}
+              text={betreffHinweis ?? t("subjectHint")}
+              ariaLabel={tGemein("explain", { label: t("subjectLabel") })}
+            />
+          </div>
           <Input
             id={`${hoeheSchluessel}-betreff`}
             value={fassung.subject}
             onChange={(e) => onChange({ ...fassung, subject: e.target.value })}
             placeholder={t("subjectLabel")}
           />
-          {/* Die Einschränkung steht DA, nicht im Hilfeartikel: unser Versand
-              läuft über den Gast-Chat der Portale, und der überträgt keinen
-              Betreff. Wer hier tippt, soll wissen, wohin es geht (Wurzel 4 —
-              kein Versprechen, das der Versand nicht hält). */}
-          <p className="-mt-1 text-xs text-muted-foreground">{t("subjectHint")}</p>
         </>
       )}
       <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">

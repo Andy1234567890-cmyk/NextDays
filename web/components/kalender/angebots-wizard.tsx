@@ -13,6 +13,12 @@
 // zentralen Resolver, der auch das Angebot serverseitig rechnet (Wurzel 3).
 // Die Vorschau hier ist reine Anzeige — verbindlich ist, was der Server beim
 // Anlegen in den Snapshot schreibt.
+//
+// Stammdaten des Empfängers sind PFLICHT (0703, 14.09.2026): Person oder
+// Organisation, Anschrift mit Land. Ein Angebot ist ein Beleg; aus diesen
+// Angaben legt die Brücke 0699 den Debitor in der Buchhaltung an. Vorher gab
+// es nur Name/E-Mail/Telefon — der Debitor entstand ohne Anschrift, und der
+// Editor zeigte jeden Gast als „Organisation".
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
@@ -20,10 +26,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 import { Label } from "@nextdays/ui/label";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import { Textarea } from "@nextdays/ui/textarea";
 import { createOffer, sendOffer } from "@/lib/booking-offers";
+import { STEUERFREIE_REGELN, type SteuerfreieRegel } from "@/lib/booking-offers-meta";
 import { formatCurrency } from "@/lib/currency";
 import { type Quote, getQuote } from "@/lib/pricing";
+import { useCountryOptions } from "@/lib/use-country-options";
 
 type WizardProp = { id: string; title: string };
 
@@ -52,6 +61,17 @@ export function AngebotsWizard({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [kontaktTyp, setKontaktTyp] = useState<"private" | "business">("private");
+  const [firma, setFirma] = useState("");
+  const [strasse, setStrasse] = useState("");
+  const [plz, setPlz] = useState("");
+  const [ort, setOrt] = useState("");
+  // Kein vorbelegtes Land (Wurzel 4): der Betrieb wählt es.
+  const [land, setLand] = useState("");
+  // Organisation: USt-IdNr. und „ohne USt" (0704). Leer = mit USt.
+  const [ustId, setUstId] = useState("");
+  const [steuerregel, setSteuerregel] = useState<SteuerfreieRegel | "">("");
+  const laender = useCountryOptions();
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
   const [pets, setPets] = useState(0);
@@ -112,9 +132,18 @@ export function AngebotsWizard({
     (Number.isNaN(anzahlungZahl) ||
       anzahlungZahl <= 0 ||
       (quote != null && anzahlungZahl > quote.total));
+  const stammdatenVollstaendig =
+    strasse.trim().length > 0 &&
+    plz.trim().length > 0 &&
+    ort.trim().length > 0 &&
+    land.length > 0 &&
+    (kontaktTyp === "private" || firma.trim().length > 0) &&
+    // Reverse Charge ohne USt-IdNr. lehnt der Server ab — hier schon sperren.
+    !(kontaktTyp === "business" && steuerregel === "EU_REVERSE_18B" && ustId.trim() === "");
   const bereit =
     name.trim().length > 0 &&
     email.includes("@") &&
+    stammdatenVollstaendig &&
     naechte > 0 &&
     quote != null &&
     !quote.priceless &&
@@ -133,6 +162,14 @@ export function AngebotsWizard({
       guest_name: name.trim(),
       guest_email: email.trim(),
       guest_phone: phone.trim() || null,
+      guest_type: kontaktTyp,
+      guest_company: kontaktTyp === "business" ? firma.trim() : null,
+      guest_street: strasse.trim(),
+      guest_postal_code: plz.trim(),
+      guest_city: ort.trim(),
+      guest_country: land,
+      guest_vat_id: kontaktTyp === "business" ? ustId.trim() || null : null,
+      tax_rule: kontaktTyp === "business" && steuerregel ? steuerregel : null,
       gueltig_tage: gueltigTage,
       deposit_amount: anzahlungZahl,
       internal_note: notiz.trim() || null,
@@ -165,7 +202,7 @@ export function AngebotsWizard({
         className="absolute inset-0 bg-black/30"
         onClick={onClose}
       />
-      <div className="relative z-10 flex h-full w-full max-w-[28rem] flex-col bg-card shadow-xl">
+      <div className="relative z-10 flex h-full w-full max-w-[44rem] flex-col bg-card shadow-xl">
         <div className="flex items-start justify-between gap-4 border-b px-5 py-4">
           <div>
             <h2 className="font-display text-xl font-extrabold">{t("wizard.titel")}</h2>
@@ -185,15 +222,73 @@ export function AngebotsWizard({
 
         <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
           <section className="space-y-3">
-            <h3 className="text-sm font-semibold">{t("wizard.gast")}</h3>
-            <div className="space-y-1.5">
-              <Label htmlFor="angebot-name">{t("felder.name")}</Label>
-              <Input
-                id="angebot-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t("felder.namePlatzhalter")}
-              />
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold">{t("wizard.gast")}</h3>
+              <div
+                role="radiogroup"
+                aria-label={t("felder.kontaktTyp")}
+                className="inline-flex overflow-hidden rounded-full border text-sm"
+              >
+                {(["business", "private"] as const).map((typ) => (
+                  <button
+                    key={typ}
+                    type="button"
+                    role="radio"
+                    aria-checked={kontaktTyp === typ}
+                    onClick={() => setKontaktTyp(typ)}
+                    className={
+                      kontaktTyp === typ
+                        ? "bg-accent px-3 py-1 text-white"
+                        : "px-3 py-1 text-foreground hover:bg-muted"
+                    }
+                  >
+                    {t(typ === "business" ? "felder.organisation" : "felder.person")}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {kontaktTyp === "business" && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="angebot-firma">{t("felder.firma")}</Label>
+                  <Input
+                    id="angebot-firma"
+                    value={firma}
+                    onChange={(e) => setFirma(e.target.value)}
+                    placeholder={t("felder.firmaPlatzhalter")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="angebot-ustid">{t("felder.ustId")}</Label>
+                  <Input
+                    id="angebot-ustid"
+                    value={ustId}
+                    onChange={(e) => setUstId(e.target.value)}
+                    placeholder={t("felder.ustIdPlatzhalter")}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="angebot-name">
+                  {t(kontaktTyp === "business" ? "felder.ansprechperson" : "felder.name")}
+                </Label>
+                <Input
+                  id="angebot-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder={t("felder.namePlatzhalter")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="angebot-phone">{t("felder.telefon")}</Label>
+                <Input
+                  id="angebot-phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="angebot-email">{t("felder.email")}</Label>
@@ -206,14 +301,65 @@ export function AngebotsWizard({
               />
               <p className="text-xs text-muted-foreground">{t("felder.emailHinweis")}</p>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="angebot-phone">{t("felder.telefon")}</Label>
-              <Input
-                id="angebot-phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
+            <div className="grid gap-3 sm:grid-cols-[1fr_7rem_1fr]">
+              <div className="space-y-1.5">
+                <Label htmlFor="angebot-strasse">{t("felder.strasse")}</Label>
+                <Input
+                  id="angebot-strasse"
+                  value={strasse}
+                  onChange={(e) => setStrasse(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="angebot-plz">{t("felder.plz")}</Label>
+                <Input id="angebot-plz" value={plz} onChange={(e) => setPlz(e.target.value)} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="angebot-ort">{t("felder.ort")}</Label>
+                <Input id="angebot-ort" value={ort} onChange={(e) => setOrt(e.target.value)} required />
+              </div>
             </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="angebot-land">{t("felder.land")}</Label>
+                <NativeSelect
+                  id="angebot-land"
+                  value={land}
+                  onChange={(e) => setLand(e.target.value)}
+                  aria-label={t("felder.land")}
+                >
+                  <option value="">{t("felder.landWaehlen")}</option>
+                  {laender.map((l) => (
+                    <option key={l.value} value={l.value}>
+                      {l.label}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </div>
+              {kontaktTyp === "business" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="angebot-steuer">{t("felder.umsatzsteuer")}</Label>
+                  <NativeSelect
+                    id="angebot-steuer"
+                    value={steuerregel}
+                    onChange={(e) => setSteuerregel(e.target.value as SteuerfreieRegel | "")}
+                    aria-label={t("felder.umsatzsteuer")}
+                  >
+                    <option value="">{t("felder.mitUst")}</option>
+                    {STEUERFREIE_REGELN.map((r) => (
+                      <option key={r} value={r}>
+                        {t(`steuerregel.${r}`)}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  {steuerregel === "EU_REVERSE_18B" && ustId.trim() === "" && (
+                    <p className="text-xs text-destructive">{t("felder.ustIdPflicht")}</p>
+                  )}
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">{t("felder.stammdatenHinweis")}</p>
             <div className="grid grid-cols-3 gap-2">
               <div className="space-y-1.5">
                 <Label htmlFor="angebot-adults">{t("felder.erwachsene")}</Label>
@@ -267,7 +413,11 @@ export function AngebotsWizard({
                   <span>{t("wizard.summe")}</span>
                   <span>{formatCurrency(quote.total, quote.currency)}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">{t("wizard.preisHinweis")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {kontaktTyp === "business" && steuerregel
+                    ? t("wizard.preisNettoHinweis")
+                    : t("wizard.preisHinweis")}
+                </p>
               </>
             )}
             {!quote && !quoteFehler && (

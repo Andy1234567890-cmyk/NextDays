@@ -8,6 +8,76 @@
 import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import { PDFDocument } from 'pdf-lib';
 import { api } from '@/lib/api-client';
+import {
+  belegWaehrungErzwingen,
+  steuersatzErzwingen,
+} from '@/lib/steuer-waehrung';
+
+// Eingaben der XML-Erzeugung. Beleg und Firma kommen aus unterschiedlichen
+// Quellen (Editor-Formular, gespeicherte Rechnung, Firmenprofil) mit teils
+// alternativen Feldnamen — deshalb optionale Felder plus offener Rest statt
+// `any`: was das XML liest, ist benannt; was es nicht liest, stört nicht.
+export interface EInvoicePosition {
+  description?: string;
+  name?: string;
+  articleNumber?: string;
+  quantity?: number;
+  unit?: string;
+  unitPrice?: number;
+  price?: number;
+  total?: number;
+  totalPrice?: number;
+  taxRate?: number;
+  vatRate?: number;
+  [key: string]: unknown;
+}
+
+export interface EInvoiceBeleg {
+  // Pflichtangaben einer E-Rechnung (EN 16931) — ohne sie gibt es kein XML.
+  invoiceNumber: string;
+  issueDate: string;
+  dueDate: string;
+  isStorno?: boolean;
+  currency?: string;
+  currencyCode?: string;
+  amount: number;
+  tax: number;
+  total: number;
+  vatRate?: number;
+  items: EInvoicePosition[];
+  customerName: string;
+  customerAddress: string;
+  customerEmail?: string;
+  customerNumber?: string;
+  customerVatId?: string;
+  customerCountry?: string;
+  customer?: { country?: string } | null;
+  notes?: string;
+  paymentTerms?: string;
+  paymentTermsDays?: number;
+  purchaseOrderNumber?: string;
+  buyerReference?: string;
+  buyerAccountingReference?: string;
+  leitwegId?: string;
+  [key: string]: unknown;
+}
+
+export interface EInvoiceFirma {
+  companyName: string;
+  companyAddress: string;
+  companyEmail?: string;
+  companyVatId?: string;
+  taxNumber?: string;
+  registrationNumber?: string;
+  legalForm?: string;
+  iban?: string;
+  bic?: string;
+  accountHolder?: string;
+  companyCountry?: string;
+  country?: string;
+  tenantCountry?: string;
+  [key: string]: unknown;
+}
 
 export interface EInvoiceData {
   id?: string;
@@ -116,9 +186,9 @@ export class EInvoiceService {
    * Generiert ZUGFeRD XML für eine Rechnung
    */
   static async generateZUGFeRDXML(
-    invoiceData: any,
+    invoiceData: EInvoiceBeleg,
     metadata: ZUGFeRDMetadata,
-    companyData: any,
+    companyData: EInvoiceFirma,
   ): Promise<string> {
     try {
       // Wurzel 4: Waehrung IMMER aus den Belegdaten, nie hardcoden. Fehlt sie,
@@ -155,7 +225,7 @@ export class EInvoiceService {
           <ram:PostcodeCode>${EInvoiceService.extractPostcode(companyData.companyAddress)}</ram:PostcodeCode>
           <ram:LineOne>${EInvoiceService.extractAddressLine(companyData.companyAddress)}</ram:LineOne>
           <ram:CityName>${EInvoiceService.extractCity(companyData.companyAddress)}</ram:CityName>
-          <ram:CountryID>DE</ram:CountryID>
+          <ram:CountryID>${EInvoiceService.requireCountry(companyData?.companyCountry ?? companyData?.country ?? companyData?.tenantCountry, 'Verkäufer')}</ram:CountryID>
         </ram:PostalTradeAddress>
         ${companyData.companyEmail ? `<ram:URIUniversalCommunication>\n          <ram:URIID schemeID="EM">${companyData.companyEmail}</ram:URIID>\n        </ram:URIUniversalCommunication>` : ''}
         <ram:SpecifiedTaxRegistration>
@@ -171,7 +241,7 @@ export class EInvoiceService {
           <ram:PostcodeCode>${EInvoiceService.extractPostcode(invoiceData.customerAddress)}</ram:PostcodeCode>
           <ram:LineOne>${EInvoiceService.extractAddressLine(invoiceData.customerAddress)}</ram:LineOne>
           <ram:CityName>${EInvoiceService.extractCity(invoiceData.customerAddress)}</ram:CityName>
-          <ram:CountryID>DE</ram:CountryID>
+          <ram:CountryID>${EInvoiceService.requireCountry(invoiceData?.customerCountry ?? invoiceData?.customer?.country, 'Käufer')}</ram:CountryID>
         </ram:PostalTradeAddress>
         ${invoiceData.customerEmail ? `<ram:URIUniversalCommunication>\n          <ram:URIID schemeID="EM">${invoiceData.customerEmail}</ram:URIID>\n        </ram:URIUniversalCommunication>` : ''}
         ${invoiceData.customerVatId ? `<ram:SpecifiedTaxRegistration>\n          <ram:ID schemeID="VA">${invoiceData.customerVatId}</ram:ID>\n        </ram:SpecifiedTaxRegistration>` : ''}
@@ -235,9 +305,9 @@ export class EInvoiceService {
    * Generiert XRechnung XML für eine Rechnung
    */
   static async generateXRechnungXML(
-    invoiceData: any,
+    invoiceData: EInvoiceBeleg,
     metadata: XRechnungMetadata,
-    companyData: any,
+    companyData: EInvoiceFirma,
   ): Promise<string> {
     try {
       // Wurzel 4: Belegwaehrung durchreichen statt EUR hardcoden; fehlt sie,
@@ -269,7 +339,7 @@ export class EInvoiceService {
         <cbc:CityName>${EInvoiceService.extractCity(companyData.companyAddress)}</cbc:CityName>
         <cbc:PostalZone>${EInvoiceService.extractPostcode(companyData.companyAddress)}</cbc:PostalZone>
         <cac:Country>
-          <cbc:IdentificationCode>DE</cbc:IdentificationCode>
+          <cbc:IdentificationCode>${EInvoiceService.requireCountry(companyData?.companyCountry ?? companyData?.country ?? companyData?.tenantCountry, 'Verkäufer')}</cbc:IdentificationCode>
         </cac:Country>
       </cac:PostalAddress>
       <cac:PartyTaxScheme>
@@ -291,7 +361,7 @@ export class EInvoiceService {
         <cbc:CityName>${EInvoiceService.extractCity(invoiceData.customerAddress)}</cbc:CityName>
         <cbc:PostalZone>${EInvoiceService.extractPostcode(invoiceData.customerAddress)}</cbc:PostalZone>
         <cac:Country>
-          <cbc:IdentificationCode>DE</cbc:IdentificationCode>
+          <cbc:IdentificationCode>${EInvoiceService.requireCountry(invoiceData?.customerCountry ?? invoiceData?.customer?.country, 'Käufer')}</cbc:IdentificationCode>
         </cac:Country>
       </cac:PostalAddress>
     </cac:Party>
@@ -490,7 +560,7 @@ export class EInvoiceService {
   }
 
   // Generiert Positionen für ZUGFeRD
-  private static generateLineItems(items: any[]): string {
+  private static generateLineItems(items: EInvoicePosition[] = []): string {
     return items
       .map(
         (item, index) => `
@@ -514,7 +584,7 @@ export class EInvoiceService {
         <ram:ApplicableTradeTax>
           <ram:TypeCode>VAT</ram:TypeCode>
           <ram:CategoryCode>S</ram:CategoryCode>
-          <ram:RateApplicablePercent>${item.taxRate || item.vatRate || 19}</ram:RateApplicablePercent>
+          <ram:RateApplicablePercent>${EInvoiceService.requireTaxRate(item)}</ram:RateApplicablePercent>
         </ram:ApplicableTradeTax>
         <ram:SpecifiedTradeSettlementLineMonetarySummation>
           <ram:LineTotalAmount>${(item.total || item.totalPrice || 0).toFixed(2)}</ram:LineTotalAmount>
@@ -526,19 +596,19 @@ export class EInvoiceService {
   }
 
   // Generiert Positionen für XRechnung
-  private static generateXRechnungLineItems(items: any[], currency: string): string {
+  private static generateXRechnungLineItems(items: EInvoicePosition[] = [], currency: string): string {
     return items
       .map(
         (item, index) => `
   <cac:InvoiceLine>
     <cbc:ID>${index + 1}</cbc:ID>
     <cbc:InvoicedQuantity unitCode="HUR">${item.quantity}</cbc:InvoicedQuantity>
-    <cbc:LineExtensionAmount currencyID="${currency}">${item.total.toFixed(2)}</cbc:LineExtensionAmount>
+    <cbc:LineExtensionAmount currencyID="${currency}">${(item.total ?? item.totalPrice ?? 0).toFixed(2)}</cbc:LineExtensionAmount>
     <cac:Item>
       <cbc:Name>${item.description}</cbc:Name>
     </cac:Item>
     <cac:Price>
-      <cbc:PriceAmount currencyID="${currency}">${item.unitPrice.toFixed(2)}</cbc:PriceAmount>
+      <cbc:PriceAmount currencyID="${currency}">${(item.unitPrice ?? item.price ?? 0).toFixed(2)}</cbc:PriceAmount>
     </cac:Price>
   </cac:InvoiceLine>`,
       )
@@ -552,15 +622,46 @@ export class EInvoiceService {
    * Akzeptiert die ueblichen Feldnamen aus dem Rechnungs-API (currency /
    * currencyCode) und normalisiert auf ISO-4217 (Grossbuchstaben).
    */
-  private static requireCurrency(invoiceData: any): string {
-    const raw = invoiceData?.currency ?? invoiceData?.currencyCode;
-    const currency = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
-    if (!/^[A-Z]{3}$/.test(currency)) {
+  private static requireCurrency(invoiceData: EInvoiceBeleg): string {
+    // Eine Quelle (lib/steuer-waehrung) statt eigener Prüf-Kopie hier.
+    return belegWaehrungErzwingen(
+      'E-Rechnung',
+      invoiceData?.currency,
+      invoiceData?.currencyCode,
+    );
+  }
+
+  /**
+   * Steuersatz einer Position fuer das XML. Fail-closed ueber die EINE Quelle:
+   * frueher stand hier `item.taxRate || item.vatRate || 19`, was (a) den
+   * deutschen Regelsatz auf jeden Beleg ohne eigenen Satz erfand und (b) per
+   * `||` die legitime 0 einer steuerbefreiten Position auf 19 % hochzog. Beides
+   * sind falsche Angaben auf einem rechtsverbindlichen Dokument.
+   */
+  private static requireTaxRate(item: EInvoicePosition): number {
+    return steuersatzErzwingen(
+      `E-Rechnung, Position „${item?.description ?? item?.name ?? '?'}"`,
+      item?.taxRate,
+      item?.vatRate,
+    );
+  }
+
+  /**
+   * Laendercode (ISO-3166-1 alpha-2) fuer eine Adresse im XML. Frueher stand
+   * hier fest `DE` fuer Verkaeufer UND Kaeufer — bei einem daenischen Betrieb
+   * eine Falschangabe im rechtsverbindlichen Beleg, die niemand sieht.
+   * Fail-closed: fehlt das Land, wird kein Land erfunden.
+   */
+  private static requireCountry(wert: unknown, rolle: string): string {
+    const code = typeof wert === 'string' ? wert.trim().toUpperCase() : '';
+    if (!/^[A-Z]{2}$/.test(code)) {
       throw new Error(
-        'Belegwährung fehlt oder ist ungültig — E-Rechnung kann ohne gültigen ISO-4217-Währungscode nicht erzeugt werden.',
+        `Länderkennung des ${rolle} fehlt oder ist ungültig — die E-Rechnung ` +
+          'verlangt einen ISO-3166-1-alpha-2-Code (z. B. DE, DK). Land in den ' +
+          'Stammdaten bzw. am Kunden hinterlegen.',
       );
     }
-    return currency;
+    return code;
   }
 
   /**
@@ -568,7 +669,7 @@ export class EInvoiceService {
    */
   static async validateXMLStructure(xmlContent: string): Promise<{
     isValid: boolean;
-    parsedData?: any;
+    parsedData?: unknown;
     errors: string[];
   }> {
     try {
@@ -605,9 +706,9 @@ export class EInvoiceService {
    * Generiert ZUGFeRD XML mit TSE-Daten
    */
   static async generateZUGFeRDWithTSE(
-    invoiceData: any,
+    invoiceData: EInvoiceBeleg,
     metadata: ZUGFeRDMetadata,
-    companyData: any,
+    companyData: EInvoiceFirma,
     tseData?: TSEData,
   ): Promise<string> {
     try {
@@ -754,13 +855,13 @@ export class EInvoiceService {
     }
   }
 
-  private static convertZUGFeRDToXRechnung(_zugferdData: any): string {
+  private static convertZUGFeRDToXRechnung(_zugferdData: unknown): string {
     // Implementierung der ZUGFeRD zu XRechnung Konvertierung
     // Dies ist eine vereinfachte Version - in der Praxis wäre eine vollständige Feldmapping notwendig
     return '<?xml version="1.0" encoding="UTF-8"?>\n<!-- XRechnung konvertiert aus ZUGFeRD -->';
   }
 
-  private static convertXRechnungToZUGFeRD(_xrechnungData: any): string {
+  private static convertXRechnungToZUGFeRD(_xrechnungData: unknown): string {
     // Implementierung der XRechnung zu ZUGFeRD Konvertierung
     // Dies ist eine vereinfachte Version - in der Praxis wäre eine vollständige Feldmapping notwendig
     return '<?xml version="1.0" encoding="UTF-8"?>\n<!-- ZUGFeRD konvertiert aus XRechnung -->';

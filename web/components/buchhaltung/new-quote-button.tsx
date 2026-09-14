@@ -31,6 +31,8 @@ import {
   useLineItemRows,
 } from "@/components/buchhaltung/line-items-editor";
 import { createQuote, type Customer } from "@/lib/buchhaltung";
+import { useNewAuth } from "@/contexts/NewAuthContext";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 const NO_CUSTOMER = "__none__";
 
@@ -38,6 +40,12 @@ export function NewQuoteButton({ customers = [] }: { customers?: Customer[] }) {
   const t = useTranslations("finance");
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  // Standardsatz des Betriebs (DK 25 %, LU 17 %, DE 19 % …) als Vorbelegung der
+  // Positionen. Ohne ihn blieb hier eine feste 19 stehen — ein fremder Satz auf
+  // dem Angebot eines Betriebs, der ihn nie gesetzt hat (Wurzel 4). Ist nichts
+  // hinterlegt, bleibt das Feld leer statt geraten.
+  const { user } = useNewAuth();
+  const { settings } = useCompanySettings(user?.uid);
   const {
     rows,
     setRow,
@@ -47,7 +55,7 @@ export function NewQuoteButton({ customers = [] }: { customers?: Customer[] }) {
     netTotal,
     taxTotal,
     toLineItemInputs,
-  } = useLineItemRows();
+  } = useLineItemRows(settings?.defaultTaxRate);
   const [customerId, setCustomerId] = useState(NO_CUSTOMER);
   const [validUntil, setValidUntil] = useState("");
   const [notes, setNotes] = useState("");

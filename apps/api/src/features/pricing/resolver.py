@@ -383,21 +383,17 @@ class PricingResolver:
 
     def _property_currency(self, property_id: str) -> str | None:
         """Zentrale Objektwährung (properties.currency, Migration 0161) — die
-        Wahrheit, wenn kein Rate-Plan die Währung liefert. ECHTER gespeicherter
-        Wert, kein Fallback-Ersatz (Wurzel 4): fehlt sie, bleibt es None und die
-        Anzeige rendert symbollos, nie ein erfundenes €."""
-        try:
-            res = (
-                self._db()
-                .table("properties")
-                .select("currency")
-                .eq("id", property_id)
-                .limit(1)
-                .execute()
-            ).data or []
-        except Exception as exc:  # noqa: BLE001 — kein Kippen des Quotes
-            log.warning("property_currency_unavailable", error=str(exc))
-            return None
+        EINZIGE Währungsquelle des Quotes. ECHTER gespeicherter Wert, kein
+        Ersatz (Wurzel 4): fehlt sie, gibt es None und der Aufrufer schlägt
+        fehl. Ein DB-Fehler wird nicht verschluckt (Wurzel 5)."""
+        res = (
+            self._db()
+            .table("properties")
+            .select("currency")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
         return (res[0].get("currency") if res else None) or None
 
     def _load_addons(
@@ -1043,17 +1039,27 @@ class PricingResolver:
                 self._effective_for_day(day, overrides, dynamic, config, base, {})
                 for day in nights
             ]
-        # Währung (Priorität, alles ECHTE Werte — kein EUR-Fallback, Wurzel 4):
-        # 1) Rate-Plan (Verkaufs-Wahrheit, in ihr pusht Channex; wird beim Setzen
-        #    der Objektwährung ohnehin auf diese gezogen — 0161), 2) zentrale
-        #    Objektwährung (properties.currency, greift auch ohne Rate-Plan),
-        #    3) property_pricing_config, sonst leer → symbollose Anzeige.
-        currency = (
-            rp_currency
-            or self._property_currency(req.property_id)
-            or config.currency
-            or ""
-        )
+        # Währung: AUSSCHLIESSLICH die zentrale Objektwährung (properties.currency,
+        # 0161 — die Einstellung des Betriebs; Ratenpläne und Preiskonfiguration
+        # folgen ihr per Trigger 0704). Keine Kette aus Ersatzquellen (Wurzel 4):
+        # fehlt die Objektwährung, ist das ein Datenfehler → 422, kein Preis in
+        # einer geratenen Währung. Bis 0704 stand hier `rp_currency or … or ""`:
+        # ein Betrieb, der sein Konto auf DKK umstellte, bekam Angebote weiter
+        # in € — 11 Objekte, live gesehen.
+        currency = self._property_currency(req.property_id)
+        if not currency:
+            raise PricingError(
+                "Dem Objekt fehlt die Währung. Bitte in den Objekteinstellungen "
+                "setzen — ohne sie wird kein Preis berechnet.",
+                status_code=422,
+            )
+        if rp_currency and rp_currency != currency:
+            log.warning(
+                "rate_plan_currency_weicht_ab",
+                property_id=req.property_id,
+                objekt=currency,
+                rate_plan=rp_currency,
+            )
         priced = [d.price for d in per_day if d.price is not None]
         priceless = len(priced) == 0
         unpriced_nights = len(per_day) - len(priced)

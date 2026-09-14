@@ -122,3 +122,26 @@ export function computeTotals(
 
   return { subtotal, vat, grandTotal, taxGrouped };
 }
+
+/**
+ * Anzeigewerte EINER Position: Einzelpreis in der gewählten Darstellung,
+ * Netto-/Bruttobetrag nach Positionsrabatt. Rabatt-Positionen (category
+ * 'discount') zählen negativ und tragen selbst keinen Positionsrabatt.
+ */
+export function zeilenBetraege(
+  item: { unitPrice: number; total: number; taxRate?: number; category?: string; discountPercent?: number },
+  regelsatz: number,
+  showNet: boolean,
+): { satzFehlt: boolean; unitPriceDisplay: number; totalNet: number; totalGross: number } {
+  const satzFehlt = item.taxRate === undefined || item.taxRate === null;
+  const satz = item.taxRate ?? regelsatz;
+  const istRabatt = item.category === 'discount';
+  const faktor = istRabatt ? 1 : 1 - Math.max(0, Math.min(100, item.discountPercent || 0)) / 100;
+  const totalNet = (item.total || 0) * (istRabatt ? -1 : 1) * faktor;
+  return {
+    satzFehlt,
+    unitPriceDisplay: showNet ? item.unitPrice : item.unitPrice * (1 + satz / 100),
+    totalNet,
+    totalGross: totalNet * (1 + satz / 100),
+  };
+}

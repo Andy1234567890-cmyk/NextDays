@@ -147,6 +147,9 @@ const MAIN: readonly NavItem[] = [
 const MODUL_PFADE: Record<string, string> = {
   "/hr": "personal",
   "/website": "website_builder",
+  // 11.09.2026: Buchhaltung nur fuer den Vorfuehrbetrieb (theresa.gruber) —
+  // bis dahin sah jeder Admin mit `owner_reporting` den Punkt und bekam 402.
+  "/buchhaltung": "buchhaltung",
   // 14.09.2026: DAC7 ist ein Pay-Modul in Entwicklung; bis dahin fehlte es
   // hier UND im Server — jeder Admin mit `manage_billing` sah es.
   "/dac7": "dac7",
@@ -291,7 +294,7 @@ const VR_GROUP: NavGroup = {
 // darueber, was sichtbar ist.
 function buildGroups(
   accommodationType: AccommodationType,
-  istIntern: boolean,
+  module: readonly string[],
 ): readonly NavGroup[] {
   const hotel = accommodationType === "hotel";
   // Objekt-Stammdaten als erstes Item der Betriebs-Gruppe: Hotel spricht von
@@ -307,16 +310,20 @@ function buildGroups(
   };
   // Buchhaltung als eigener Reiter, betriebsartabhängig bestückt.
   //
-  // NUR IN INTERNEN KONTEN (Stand 30.08.2026, `tenants.is_internal`, 0505):
-  // das Modul ist in Entwicklung, 13 seiner 17 Unterseiten sind noch
-  // Platzhalter. In einem echten Betrieb wäre das ein Menüpunkt, hinter dem
-  // nichts steht. Zum Freischalten diese Bedingung entfernen — dann auch den
-  // Riegel in `app/(dashboard)/buchhaltung/layout.tsx`, beide gehören zusammen.
+  // NUR MIT FREIGESCHALTETEM MODUL `buchhaltung` (0572/0633, seit 11.09.2026):
+  // das Modul ist eine 1:1-Übernahme aus Taskilo, 13 seiner 17 Unterseiten
+  // sind Platzhalter. Anweisung vom 11.09.2026: „nur bei theresa.gruber, bei
+  // niemandem sonst" — theresa.gruber ist der Vorführbetrieb Nordstrand.
+  //
+  // Bis dahin hing die Gruppe an `is_internal` (0505, die Fotomodell-Konten).
+  // Das war live genau falsch herum: Nordstrand trägt `is_internal` NICHT und
+  // sah die Gruppe nicht, Nordlys (die öffentliche Live-Vorschau) und Seeblick
+  // sahen sie. Die Freischaltung ist die Ebene, die dafür gebaut wurde; der
+  // Seiten-Riegel in `app/(dashboard)/buchhaltung/layout.tsx` und der
+  // API-Riegel in `auth/modul_freischaltung.py` prüfen dasselbe Modul.
   //
   // NICHT `is_demo`: das ist die anonyme Schaufenster-Vorführung, und dort ist
-  // `/buchhaltung` gerade GESPERRT (`demo_gate.GESPERRTE_PRAEFIXE`). Die
-  // Bedingung wäre also genau falsch herum — der Punkt erschiene ausgerechnet
-  // dort, wo die API ihn verweigert.
+  // `/buchhaltung` gerade GESPERRT (`demo_gate.GESPERRTE_PRAEFIXE`).
   const accountingGroup: NavGroup = {
     groupKey: "accounting",
     icon: "ph:calculator",
@@ -327,7 +334,7 @@ function buildGroups(
   // Gäste), dann der Verkauf, zuletzt die kontoweiten Werkzeuge.
   return [
     operationsGroup,
-    ...(istIntern ? [accountingGroup] : []),
+    ...(module.includes("buchhaltung") ? [accountingGroup] : []),
     {
       // Reservierungen (Casona-Muster): Übersicht · Gruppen · Stop-Sell.
       // Stop-Sell steuert die Buchbarkeit von Zeiträumen — das ist
@@ -538,7 +545,6 @@ export function AppSidebar({
   accommodationType = "vacation_rental",
   country = null,
   istDemo = false,
-  istIntern = false,
   module = [],
   logoUrl = null,
   einrichtungOffen = false,
@@ -556,11 +562,10 @@ export function AppSidebar({
   // als nicht öffenbar markiert. Ausblenden würde den Umfang der Software
   // verstecken; der Schutz selbst liegt ohnehin im Backend (`demo_gate`).
   istDemo?: boolean;
-  // Internes Konto des Hauses (`tenants.is_internal`, 0505): schaltet die
-  // Buchhaltung frei, die noch in Entwicklung ist. Getrennt von `istDemo` —
-  // das ist die anonyme Vorführung, dort ist die Buchhaltung gesperrt.
-  istIntern?: boolean;
-  /** Freigeschaltete Module dieses Betriebs (0572), z. B. „personal". */
+  /** Freigeschaltete Module dieses Betriebs (0572): „personal",
+   *  „website_builder", „buchhaltung" (11.09.2026, nur der Vorführbetrieb).
+   *  Bis dahin schaltete das interne Konto (`is_internal`, 0505) die
+   *  Buchhaltung — falsch herum, siehe Kommentar bei `accountingGroup`. */
   module?: string[];
   /** Firmenlogo aus Konto → Profil (`tenant_billing_profile.company_logo_url`).
    *  null = keins hochgeladen → die Karte zeigt die Initialen. */
@@ -600,7 +605,7 @@ export function AppSidebar({
   const alleHrefs = [
     ...MAIN.map((i) => i.href),
     ...BOTTOM.map((i) => i.href),
-    ...buildGroups(accommodationType, istIntern).flatMap((g) =>
+    ...buildGroups(accommodationType, module).flatMap((g) =>
       g.items.map((i) => i.href),
     ),
   ];
@@ -663,7 +668,7 @@ export function AppSidebar({
 
   const mainItems = MAIN.filter(canSee);
   const bottomItems = BOTTOM.filter(canSee);
-  const groups = buildGroups(accommodationType, istIntern);
+  const groups = buildGroups(accommodationType, module);
 
   // Anzeigename + Initialen aus der E-Mail ableiten (bis echtes Profil da ist).
   const displayName = email ? email.split("@")[0] : t("account.title");

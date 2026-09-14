@@ -170,7 +170,6 @@ export default async function DashboardLayout({
           accommodationType={accommodationType}
           country={me?.country ?? null}
           istDemo={Boolean(me?.is_demo)}
-          istIntern={Boolean(me?.is_internal)}
           module={me?.enabled_modules ?? []}
           logoUrl={me?.tenant_logo_url ?? null}
           einrichtungOffen={einrichtungOffen}

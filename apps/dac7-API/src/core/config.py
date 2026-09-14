@@ -48,6 +48,32 @@ class Settings(BaseSettings):
 
     max_datei_bytes: int = 20 * 1024 * 1024
 
+    # --- Verschluesselung der Nutzdaten -----------------------------------
+    # Der oeffentliche Schluessel der Gegenstelle (PEM). Ist er gesetzt,
+    # geht die Meldung als verschluesselter Umschlag hinaus
+    # (`core/umschlag.py`: RSA-4096-OAEP + AES-256-GCM); ist er leer, als
+    # Klartext.
+    #
+    # WARUM DAS NICHT PFLICHT IST: Fuer das Meldejahr 2025 nimmt die
+    # Behoerde Klartext ueber TastSelv Erhverv entgegen; ein Zwang zur
+    # Verschluesselung wuerde den heute gueltigen Weg verbauen. Die
+    # Verschluesselung ist der Weg, den die Behoerde sich fuer die Zukunft
+    # ansieht.
+    #
+    # Zu holen bei der Gegenstelle unter `GET /v1/schluessel` — nicht von
+    # Hand kopieren: Bei einem Schluesselwechsel verschluesselt der
+    # Absender sonst weiter gegen den alten.
+    amt_pubkey: str = ""
+
+    # Verschluesselt senden, obwohl kein Schluessel vorliegt? Dann NICHT
+    # senden. Fail-closed: Wer Verschluesselung verlangt hat, soll keine
+    # Klartextmeldung an eine Steuerbehoerde geschickt bekommen, weil eine
+    # Variable fehlte (Wurzel 4/5).
+    verschluesselung_pflicht: bool = False
+
+    def sendet_verschluesselt(self) -> bool:
+        return bool(self.amt_pubkey.strip())
+
 
 @lru_cache
 def get_settings() -> Settings:

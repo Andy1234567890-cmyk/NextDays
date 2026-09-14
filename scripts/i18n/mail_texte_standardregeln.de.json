@@ -1,0 +1,14 @@
+{
+  "standardregeln.booking_new.name": "Buchungsbestätigung",
+  "standardregeln.booking_new.betreff": "Ihre Buchung für {{property_name}} ist bestätigt",
+  "standardregeln.booking_new.text": "Guten Tag {{guest_first_name}},\n\nvielen Dank für Ihre Buchung. Wir haben Ihren Aufenthalt in {{property_name}} vom {{check_in}} bis {{check_out}} notiert.\n\nWenn Sie Fragen haben, antworten Sie einfach auf diese Nachricht.\n\nFreundliche Grüße",
+  "standardregeln.before_checkin.name": "Erinnerung vor der Anreise",
+  "standardregeln.before_checkin.betreff": "Morgen ist Ihre Anreise in {{property_name}}",
+  "standardregeln.before_checkin.text": "Guten Tag {{guest_first_name}},\n\nmorgen, am {{check_in}}, erwarten wir Sie in {{property_name}}.\n\nSagen Sie uns gern kurz Bescheid, wann Sie ungefähr eintreffen.\n\nFreundliche Grüße",
+  "standardregeln.on_checkin.name": "Begrüßung am Anreisetag",
+  "standardregeln.on_checkin.betreff": "Willkommen in {{property_name}}",
+  "standardregeln.on_checkin.text": "Guten Tag {{guest_first_name}},\n\nherzlich willkommen in {{property_name}}. Wir wünschen Ihnen einen guten Aufenthalt.\n\nMelden Sie sich jederzeit, wenn Sie etwas brauchen.\n\nFreundliche Grüße",
+  "standardregeln.on_checkout.name": "Verabschiedung am Abreisetag",
+  "standardregeln.on_checkout.betreff": "Gute Heimreise aus {{property_name}}",
+  "standardregeln.on_checkout.text": "Guten Tag {{guest_first_name}},\n\nheute endet Ihr Aufenthalt in {{property_name}}. Vielen Dank, dass Sie bei uns waren.\n\nWir wünschen Ihnen eine gute Heimreise.\n\nFreundliche Grüße"
+}

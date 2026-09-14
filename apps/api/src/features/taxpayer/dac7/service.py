@@ -31,6 +31,7 @@ from .kanaele import Meldungsart
 from .modell import Anbieter, Meldung, Pruefbericht
 from .pruefung import pruefen
 from .rechner import quartal_von, zahlungszeitpunkt
+from .xml_dpi import schreiben as schreiben_xml
 
 log = get_logger("nextdays.dac7.service")
 
@@ -414,13 +415,26 @@ class Dac7Service:
             .order("doc_ref_id")
         )
 
-    def datei_neu_erzeugen(self, ctx: AuthContext, lauf_id: str) -> str:
+    def datei_neu_erzeugen(
+        self, ctx: AuthContext, lauf_id: str, *, format: str = "csv"
+    ) -> str:
         """Die Datei eines gespeicherten Laufs erneut erzeugen.
 
         Möglich, weil die Erzeugung reproduzierbar ist: gleiche Daten,
         gleiche Datei. Die Prüfsumme des Laufs belegt, ob sie es noch ist —
         weicht sie ab, haben sich die zugrunde liegenden Daten geändert, und
         genau das muss auffallen.
+
+        `format` wählt den Serialisierer: `csv` für das Meldejahr 2025
+        (TastSelv Erhverv), `xml` für das DPI-XML ab 2026. Beide lesen
+        DENSELBEN gerechneten Baum — die Meldung entsteht einmal, nur ihre
+        Schreibweise unterscheidet sich.
+
+        Die Prüfsummen-Gegenprobe gilt nur für die CSV: Der Lauf hat seine
+        Prüfsumme über sie gebildet, und das DPI-XML trägt einen
+        Übermittlungs-Zeitstempel, der sich bei jedem Aufruf ändert. Ein
+        Vergleich dagegen würde immer abweichen und damit nichts mehr
+        aussagen.
         """
         tenant_id = self._tenant(ctx)
         lauf = self._lauf_laden(tenant_id, lauf_id)
@@ -438,6 +452,9 @@ class Dac7Service:
                 "zugrunde liegenden Daten sind unvollständig geworden."
             )
             raise Dac7Error(msg, status_code=409)
+
+        if format == "xml":
+            return schreiben_xml(meldung)
 
         datei = schreiben(meldung)
         pruefsumme = hashlib.sha256(datei.encode("utf-8")).hexdigest()

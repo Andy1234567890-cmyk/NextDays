@@ -130,9 +130,10 @@ export class CustomerService {
       );
       return result.customerNumber;
     } catch (error) {
-      console.error('Fehler beim Generieren der Kundennummer:', error);
-      // Fallback
-      return `KD-${Date.now().toString().slice(-4)}`;
+      // Kein Ersatzwert aus der Uhrzeit (Wurzel 4) — der Aufrufer lässt das
+      // Feld leer, der Server vergibt beim Speichern.
+      console.error('Vorschau der Kundennummer nicht verfügbar:', error);
+      throw error;
     }
   }
 
@@ -227,18 +228,6 @@ export class CustomerService {
       return csvRows.join('\n');
     } catch (error) {
       console.error('Fehler beim Exportieren der Kunden:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Synchronisiert den Kunden-Nummernkreis mit den existierenden Kundennummern
-   */
-  static async syncCustomerNumberSequence(companyId: string): Promise<void> {
-    try {
-      await api.post(`/api/v1/number-sequences/${companyId}/sync`, { type: 'Kunde' });
-    } catch (error) {
-      console.error('❌ Fehler beim Synchronisieren des Kunden-Nummernkreises:', error);
       throw error;
     }
   }

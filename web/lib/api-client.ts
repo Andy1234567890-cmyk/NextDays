@@ -27,20 +27,65 @@ interface ApiOptions extends RequestInit {
  * NextDays-Backend leben diese unter dem `buchhaltung`-Slice
  * (`/api/v1/buchhaltung/...`). So bleibt der Bestands-Code unverändert.
  */
-function mapEndpoint(endpoint: string): string {
-  return endpoint
-    .replace("/api/v1/invoices", "/api/v1/buchhaltung/invoices")
-    .replace("/api/v1/customers", "/api/v1/buchhaltung/customers")
-    .replace("/api/v1/booking-accounts", "/api/v1/buchhaltung/booking-accounts")
-    .replace("/api/v1/quotes", "/api/v1/buchhaltung/quotes")
-    .replace("/api/v1/companies", "/api/v1/buchhaltung/companies")
-    .replace("/api/v1/number-sequences", "/api/v1/buchhaltung/number-sequences")
-    .replace(
-      "/api/v1/inline-invoice-services",
-      "/api/v1/buchhaltung/inline-invoice-services",
-    )
-    .replace("/api/v1/text-templates", "/api/v1/buchhaltung/text-templates")
-    .replace("/api/v1/users", "/api/v1/buchhaltung/users");
+// Alte Taskilo-Pfade → unser Buchhaltungs-Slice. Der Bestand ruft
+// `/api/v1/expenses`, `/api/v1/reminders` … genau wie im alten Backend; bei
+// uns liegt ALLES davon unter `/api/v1/buchhaltung/<alter Pfad>` (Modul-Riegel
+// `auth/modul_freischaltung.py` greift so über den einen Präfix). Tabelle statt
+// Kette von `.replace`: bis zum 11.09.2026 stand hier eine Kette aus neun
+// Ersetzungen, und `/finance/customers` fiel durch, weil `/api/v1/customers`
+// kein Teilstring davon ist — die Kundensuche im Mailversand lief ins 404.
+// Ein Segment, das NICHT hier steht, geht unverändert an FastAPI — und dort ins
+// 404. Neue Bereiche tragen sich hier ein, nicht mit einer weiteren Ersetzung.
+const BUCHHALTUNG_SEGMENTE: ReadonlySet<string> = new Set([
+  "bank-transactions",
+  "booking-accounts",
+  "cashbook",
+  "cost-centers",
+  "companies",
+  "contacts",
+  "customers",
+  "datev",
+  "delivery-notes",
+  "documents",
+  "einvoice",
+  "einvoices",
+  "email",
+  "expenses",
+  "finapi",
+  "fixed-assets",
+  "gobd",
+  "inline-invoice-services",
+  "inventory",
+  "invoices",
+  "items",
+  "number-sequences",
+  "order-confirmations",
+  "payment-accounts",
+  "payment-methods",
+  "quotes",
+  "recurring-invoices",
+  "reminders",
+  "reports",
+  "send-invoice-email",
+  "suppliers",
+  "tax",
+  "tax-reports",
+  "text-templates",
+  "transaction-links",
+  "users",
+]);
+
+export function mapEndpoint(endpoint: string): string {
+  // Der ältere Bestand (EmailSendModal) sucht Kunden unter `/finance/customers`.
+  const pfad = endpoint
+    .replace(/^\/api\/v1\/finance\/customers/, "/api/v1/customers")
+    // finAPI hing alt ohne Versionspräfix unter `/api/finapi`.
+    .replace(/^\/api\/finapi(?=\/|$)/, "/api/v1/finapi");
+  const treffer = /^\/api\/v1\/([a-z-]+)(?=\/|\?|$)/.exec(pfad);
+  if (!treffer || treffer[1] === "buchhaltung" || !BUCHHALTUNG_SEGMENTE.has(treffer[1])) {
+    return pfad;
+  }
+  return pfad.replace("/api/v1/", "/api/v1/buchhaltung/");
 }
 
 /**

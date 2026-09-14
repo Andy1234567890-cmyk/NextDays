@@ -132,6 +132,8 @@ class AuthService:
         # Channel-Manager: für den neuen Tenant eine Provider-Group anlegen
         # (non-blocking — Registrierung darf daran nie scheitern).
         self._ensure_channel_manager_group(tenant_id)
+        # Posteingang: den Standard-Regelsatz als INAKTIVEN Vorschlag anlegen.
+        self._standard_automail_regeln(tenant_id)
         # Partnerprogramm (0517): den Betrieb seinem Empfehler zuordnen.
         self._partner_zuordnen(req, tenant_id)
         # Frisch registriert → 2FA ist noch nie aktiv, login() liefert also immer
@@ -171,6 +173,33 @@ class AuthService:
                 tenant_id=tenant_id,
                 code=req.referral_code,
                 error=str(exc)[:300],
+            )
+
+    def _standard_automail_regeln(self, tenant_id: str) -> None:
+        """Vier INAKTIVE Automail-Regeln für den frischen Betrieb (14.09.2026).
+
+        Nebenpfad: der Betrieb muss auch dann entstehen, wenn der Posteingang
+        gerade nicht mitspielt — ein Konto ohne Regelvorschläge ist ein
+        Schönheitsfehler, ein fehlgeschlagenes Register ein verlorener Kunde.
+        Der Fehler wird aber LAUT geloggt (ERROR), weil ihn sonst niemand je
+        bemerkt: eine leere Regelliste sieht aus wie „so ist es gedacht".
+
+        Die Sprache kommt aus dem Betrieb (`tenants.default_language`) über
+        dieselbe Kette wie jede Mail (`core.mail_sprache`); ist dort nichts
+        gepflegt, greift deren `FALLBACK` — kein hier erfundener Wert.
+        """
+        try:
+            from src.core.mail_empfaenger import betriebs_sprache  # noqa: PLC0415
+            from src.core.mail_sprache import aufloesen  # noqa: PLC0415
+            from src.features.inbox.standard_regeln import (  # noqa: PLC0415
+                standard_regeln_anlegen,
+            )
+
+            sprache = aufloesen(betriebs_sprache(self._service, tenant_id))
+            standard_regeln_anlegen(self._service, tenant_id, sprache)
+        except Exception as exc:  # noqa: BLE001 — darf Registrierung nie blockieren
+            log.error(
+                "standardregeln_fehlgeschlagen", tenant_id=tenant_id, error=str(exc)
             )
 
     def _ensure_channel_manager_group(self, tenant_id: str) -> None:
@@ -931,7 +960,13 @@ class AuthService:
             capabilities=sorted(c.value for c in caps),
             permissions=sorted(p.value for p in perms),
             accommodation_type=tenant_meta.get("accommodation_type"),
-            is_demo=bool(tenant_meta.get("is_demo")),
+            # Der Vorfuehrbetrieb (0630) meldet sich NICHT als Demo: Balken,
+            # Sidebar-Schloesser und Nur-Lesen-Hinweise haengen im Frontend
+            # an diesem Feld, und fuer ihn gelten die Riegel nicht. Wuerde er
+            # `is_demo: true` melden, zeigte die Oberflaeche Sperren, die die
+            # API gar nicht mehr durchsetzt — eine Anzeige, die luegt.
+            is_demo=bool(tenant_meta.get("is_demo"))
+            and not tenant_meta.get("ist_vorfuehrbetrieb"),
             is_internal=bool(tenant_meta.get("is_internal")),
             # Liste, nie None: eine fehlende Spalte oder ein leeres Feld sind
             # beide „kein Modul freigeschaltet" — der Aufrufer soll dafuer
@@ -974,7 +1009,8 @@ class AuthService:
             self._service.table("tenants")
             .select(
                 "name, accommodation_type, account_type, default_language, "
-                "country, is_demo, is_internal, enabled_modules"
+                "country, is_demo, is_internal, ist_vorfuehrbetrieb, "
+                "enabled_modules"
             )
             .eq("id", tenant_id)
             .limit(1)

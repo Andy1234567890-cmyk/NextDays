@@ -2,6 +2,7 @@
 // Server Component — lädt über die Server-Action, rendert Liste + Anlegen.
 import { Icon } from "@iconify/react";
 import { getTranslations } from "next-intl/server";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { NewCustomerButton } from "@/components/buchhaltung/new-customer-button";
@@ -49,7 +50,13 @@ export default async function KundenPage() {
         <Card className="overflow-hidden p-0">
           <ul className="divide-y divide-border">
             {res.data.items.map((c) => (
-              <li key={c.id} className="flex items-center gap-3 p-3">
+              <li key={c.id}>
+                {/* Zeile führt zur Detailseite (Kennzahlen, Ansprechpartner,
+                  Adressen, Notizen — Bereich »kontakte«). */}
+                <Link
+                  href={`/buchhaltung/kunden/${c.id}`}
+                  className="flex items-center gap-3 p-3 transition-colors hover:bg-secondary/30"
+                >
                 <Avatar>
                   <AvatarFallback>{initials(c)}</AvatarFallback>
                 </Avatar>
@@ -69,6 +76,8 @@ export default async function KundenPage() {
                 <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
                   {c.customer_type === "private" ? t("kundenPage.typePrivate") : t("kundenPage.typeBusiness")}
                 </span>
+                <Icon icon="ph:caret-right" className="size-4 shrink-0 text-muted-foreground" />
+                </Link>
               </li>
             ))}
           </ul>

@@ -14,6 +14,7 @@ Drei Sichten auf dieselbe Zeile, die sich bewusst unterscheiden:
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
@@ -44,6 +45,12 @@ class OfferQuoteLine(BaseModel):
     kind: str | None = None
 
 
+# Steuerfreie Regeln des Beleg-Editors (web/types/taxRules.ts), die ein Angebot
+# ohne USt tragen darf — dieselben Schlüssel, damit der Spiegel-Beleg sie 1:1
+# übernimmt (DB-CHECK 0704 deckungsgleich).
+SteuerfreieRegel = Literal["EU_REVERSE_18B", "DE_EXEMPT_4_USTG", "NON_EU_OUT_OF_SCOPE"]
+
+
 class BookingOfferCreate(BaseModel):
     """Ein Angebot anlegen. Der Preis kommt vom Server, nicht vom Client."""
 
@@ -57,6 +64,20 @@ class BookingOfferCreate(BaseModel):
     guest_name: str = Field(min_length=1, max_length=200)
     guest_email: EmailStr
     guest_phone: str | None = Field(default=None, max_length=50)
+    # Stammdaten des Empfängers (0703) — Pflicht, weil das Angebot ein Beleg
+    # ist und die Brücke 0699 daraus den Debitor anlegt. Organisation braucht
+    # den Firmennamen; der Gastname bleibt die Ansprechperson.
+    guest_type: Literal["private", "business"] = "private"
+    guest_company: str | None = Field(default=None, max_length=200)
+    guest_street: str = Field(min_length=1, max_length=200)
+    guest_postal_code: str = Field(min_length=1, max_length=20)
+    guest_city: str = Field(min_length=1, max_length=120)
+    guest_country: str = Field(min_length=1, max_length=80)
+    # Organisation: USt-IdNr. und optional eine steuerfreie Regel (0704). Mit
+    # Regel wird der Snapshot NETTO gerechnet und der Spiegel-Beleg trägt 0 %
+    # USt — Angebote an Firmen im EU-Ausland (Reverse Charge) brauchen das.
+    guest_vat_id: str | None = Field(default=None, max_length=40)
+    tax_rule: SteuerfreieRegel | None = None
     # Sprache des Gastes (Mail + Annahmeseite). Ohne Angabe entscheidet der
     # Server über `mail_sprache.aufloesen` — nie hart Deutsch.
     language: str | None = Field(default=None, max_length=10)
@@ -79,6 +100,31 @@ class BookingOfferCreate(BaseModel):
             raise ValueError(msg)
         return geputzt
 
+    @field_validator("guest_street", "guest_postal_code", "guest_city", "guest_country")
+    @classmethod
+    def _anschrift_nicht_leer(cls, wert: str) -> str:
+        geputzt = wert.strip()
+        if not geputzt:
+            msg = "Die Anschrift des Empfängers ist Pflicht."
+            raise ValueError(msg)
+        return geputzt
+
+    @model_validator(mode="after")
+    def _firma_bei_organisation(self) -> BookingOfferCreate:
+        firma = (self.guest_company or "").strip()
+        if self.guest_type == "business" and not firma:
+            msg = "Für eine Organisation ist der Firmenname Pflicht."
+            raise ValueError(msg)
+        self.guest_company = firma or None
+        self.guest_vat_id = (self.guest_vat_id or "").strip() or None
+        if self.tax_rule and self.guest_type != "business":
+            msg = "Ohne Umsatzsteuer ist nur für Organisationen möglich."
+            raise ValueError(msg)
+        if self.tax_rule == "EU_REVERSE_18B" and not self.guest_vat_id:
+            msg = "Reverse Charge verlangt die USt-IdNr. des Empfängers."
+            raise ValueError(msg)
+        return self
+
     @model_validator(mode="after")
     def _zeitraum_pruefen(self) -> BookingOfferCreate:
         if self.check_out <= self.check_in:
@@ -89,6 +135,45 @@ class BookingOfferCreate(BaseModel):
             msg = f"Ein Angebot umfasst höchstens {MAX_NAECHTE} Nächte."
             raise ValueError(msg)
         return self
+
+
+class BookingOfferUpdate(BaseModel):
+    """Ein noch offenes Angebot ändern (Entwurf, verschickt, geöffnet).
+
+    Alle Felder optional; was fehlt, bleibt. Der Preis wird bei JEDER Änderung
+    neu über den zentralen Resolver gerechnet (Wurzel 3) — auch wenn nur der
+    Name geändert wurde, denn der Snapshot muss zum Stand der Mail passen, die
+    danach (erneut) verschickt wird. Das Objekt selbst ist nicht änderbar: ein
+    anderes Objekt ist ein anderes Angebot.
+    """
+
+    unit_id: str | None = None
+    check_in: date | None = None
+    check_out: date | None = None
+    adults: int | None = Field(default=None, ge=1, le=50)
+    children: int | None = Field(default=None, ge=0, le=50)
+    pets: int | None = Field(default=None, ge=0, le=50)
+    guest_name: str | None = Field(default=None, min_length=1, max_length=200)
+    guest_email: EmailStr | None = None
+    guest_phone: str | None = Field(default=None, max_length=50)
+    guest_type: Literal["private", "business"] | None = None
+    guest_company: str | None = Field(default=None, max_length=200)
+    guest_street: str | None = Field(default=None, min_length=1, max_length=200)
+    guest_postal_code: str | None = Field(default=None, min_length=1, max_length=20)
+    guest_city: str | None = Field(default=None, min_length=1, max_length=120)
+    guest_country: str | None = Field(default=None, min_length=1, max_length=80)
+    guest_vat_id: str | None = Field(default=None, max_length=40)
+    tax_rule: SteuerfreieRegel | None = None
+    # Steuerregel ausdrücklich streichen (None allein heißt „unverändert").
+    tax_rule_entfernen: bool = False
+    language: str | None = Field(default=None, max_length=10)
+    # Neue Frist ab JETZT (Tage) — None = Ablauf bleibt.
+    gueltig_tage: int | None = Field(default=None, ge=1, le=MAX_GUELTIG_TAGE)
+    deposit_amount: float | None = Field(default=None, gt=0)
+    # Anzahlung ausdrücklich streichen (None allein heißt „unverändert").
+    deposit_entfernen: bool = False
+    internal_note: str | None = Field(default=None, max_length=2000)
+    rate_plan_id: str | None = None
 
 
 class BookingOfferOut(BaseModel):
@@ -107,6 +192,14 @@ class BookingOfferOut(BaseModel):
     guest_name: str
     guest_email: str
     guest_phone: str | None = None
+    guest_type: str = "private"
+    guest_company: str | None = None
+    guest_street: str | None = None
+    guest_postal_code: str | None = None
+    guest_city: str | None = None
+    guest_country: str | None = None
+    guest_vat_id: str | None = None
+    tax_rule: str | None = None
     language: str | None = None
     currency: str
     total_amount: float
@@ -119,6 +212,8 @@ class BookingOfferOut(BaseModel):
     accepted_at: datetime | None = None
     declined_at: datetime | None = None
     reservation_id: str | None = None
+    # Spiegel in der Buchhaltung (0699) — None ohne Modul.
+    quote_id: str | None = None
     internal_note: str | None = None
     created_at: datetime
     updated_at: datetime
@@ -162,6 +257,11 @@ class PublicOfferOut(BaseModel):
     # den die Seite in der Gastsprache ausgibt.
     blocked_reason: str | None = None
     company_name: str | None = None
+    # Aufenthaltskontext (buchhaltung.aufenthalt_kontext): Bild, Adresse,
+    # Check-in/-out-Zeiten, Zahlungsplan, Storno-Staffel, Hausregeln. None,
+    # wenn das Objekt nichts davon gepflegt hat — die Seite zeigt dann nichts,
+    # statt etwas zu erfinden.
+    stay: dict | None = None
 
 
 class PublicOfferAcceptResponse(BaseModel):

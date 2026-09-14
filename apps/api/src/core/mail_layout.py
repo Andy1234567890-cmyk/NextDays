@@ -268,6 +268,12 @@ class MailInhalt:
     absender_zeile: str | None = None
     abmelde_url: str | None = None
     sprache: str = FALLBACK
+    # Optionales Bild über der Überschrift (Angebotsmail: Titelbild des Objekts,
+    # 0701). Eine externe URL, kein CID-Anhang: Objektfotos liegen im Storage,
+    # nicht im Repo. Blockiert ein Client Bilder, bleibt der alt-Text — die Mail
+    # verliert Optik, keine Aussage. Die Textfassung kennt das Bild nicht.
+    bild_url: str | None = None
+    bild_alt: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -606,11 +612,19 @@ def _kopf(marke: Marke) -> str:
 
 def _rumpf(inhalt: MailInhalt, marke: Marke) -> str:
     """Der Inhaltsbereich: Überschrift, Absätze, Button, Hinweise, Gruß."""
-    teile = [
+    teile: list[str] = []
+    if inhalt.bild_url and inhalt.bild_url.startswith("https://"):
+        teile.append(
+            f'<img src="{escape(inhalt.bild_url, quote=True)}" '
+            f'alt="{escape(inhalt.bild_alt, quote=True)}" width="520" '
+            f'style="display:block;border:0;outline:none;width:100%;max-width:520px;'
+            f'height:auto;border-radius:12px;margin:0 0 20px 0;">'
+        )
+    teile.append(
         f'<h1 style="margin:0 0 20px 0;font-family:{_SCHRIFT};font-size:22px;'
         f'line-height:1.3;font-weight:600;color:#0a0a0a;">'
         f"{escape(inhalt.titel)}</h1>"
-    ]
+    )
     for absatz in inhalt.absaetze:
         teile.append(
             f'<p style="margin:0 0 16px 0;font-family:{_SCHRIFT};font-size:16px;'

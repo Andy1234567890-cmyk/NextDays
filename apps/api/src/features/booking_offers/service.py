@@ -28,6 +28,7 @@ BEVOR Geld fließt. Der Betrieb hat diese Kehrseite schon bei 0409 gewählt.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 from typing import Any
 
 from supabase import Client
@@ -45,6 +46,7 @@ from src.core.sales_channels import (
 )
 from src.core.security import AuthContext, secrets_match
 from src.core.supabase import load_scoped
+from src.features.buchhaltung.reservation_invoice import _property_vat_rate
 
 from .common import (
     ABLAUFBAR,
@@ -63,6 +65,7 @@ from .schemas import (
     BookingOfferCreate,
     BookingOfferList,
     BookingOfferOut,
+    BookingOfferUpdate,
     OfferQuoteLine,
     PublicOfferAcceptResponse,
     PublicOfferOut,
@@ -77,14 +80,37 @@ log = get_logger(__name__)
 # kein neuer erfunden (siehe scripts/i18n/kanal-enums-pruefen.mjs).
 KANAL = "website"
 
+def _stammdaten(req: BookingOfferCreate, bestand: dict | None = None) -> dict[str, Any]:
+    """Stammdaten-Spalten (0703) aus der Anfrage. Beim Ändern eines Altbestands
+    ohne Anschrift steht im Schema der Platzhalter „-" — der wird NICHT
+    gespeichert, die Spalte bleibt, was sie war (leer)."""
+    def wert(feld: str) -> str | None:
+        v = getattr(req, feld)
+        if v == "-" and bestand is not None and not bestand.get(feld):
+            return None
+        return v
+    return {
+        "guest_type": req.guest_type,
+        "guest_company": req.guest_company,
+        "guest_vat_id": req.guest_vat_id,
+        "tax_rule": req.tax_rule,
+        "guest_street": wert("guest_street"),
+        "guest_postal_code": wert("guest_postal_code"),
+        "guest_city": wert("guest_city"),
+        "guest_country": wert("guest_country"),
+    }
+
+
 # Spalten, die die Betriebssicht braucht. Als Konstante, damit Liste und Detail
 # nicht auseinanderlaufen.
 SPALTEN = (
     "id, tenant_id, property_id, unit_id, check_in, check_out, adults, children, "
-    "pets, guest_name, guest_email, guest_phone, language, currency, "
+    "pets, guest_name, guest_email, guest_phone, guest_type, guest_company, "
+    "guest_street, guest_postal_code, guest_city, guest_country, guest_vat_id, "
+    "tax_rule, language, currency, "
     "quote_snapshot, total_amount, deposit_amount, expires_at, status, sent_at, "
     "viewed_at, accepted_at, declined_at, booking_intent_id, reservation_id, "
-    "internal_note, created_by, created_at, updated_at"
+    "internal_note, quote_id, created_by, created_at, updated_at"
 )
 
 # Obergrenze der Listenabfrage (Wurzel 8: kein unbegrenzter Bereich).
@@ -158,6 +184,33 @@ class BookingOffersService:
 
     # --- Hilfen ------------------------------------------------------------
 
+    def _buchhaltung_spiegeln(self, zeile: dict, *, ctx: AuthContext | None = None,
+                              titel: str = "") -> None:
+        """Brücke in die Buchhaltung (0699): Angebot als `quotes`-Zeile spiegeln
+        bzw. dessen Status nachziehen — nur, wenn das Modul gebucht ist.
+
+        Best-effort: der Verkauf darf nicht an der Buchhaltung scheitern. Ein
+        Fehler wird LAUT geloggt (die Brücke selbst loggt fachliche Gründe),
+        der Hauptpfad läuft weiter. Import im Körper: der buchhaltung-Slice
+        zieht schwere Abhängigkeiten nach, die der Webhook nicht braucht."""
+        try:
+            from src.features.buchhaltung import angebot_bruecke  # noqa: PLC0415
+
+            if ctx is not None and not zeile.get("quote_id"):
+                quote_id = angebot_bruecke.spiegel_anlegen(self._db, ctx, zeile, titel)
+                if quote_id:
+                    self._db.table("booking_offers").update({"quote_id": quote_id}).eq(
+                        "id", str(zeile["id"])
+                    ).execute()
+                    zeile["quote_id"] = quote_id
+            angebot_bruecke.spiegel_status(self._db, zeile)
+        except Exception as exc:  # noqa: BLE001 — Best-effort-Spiegel, Hauptpfad bleibt
+            log.error(
+                "angebot_buchhaltung_spiegel_fehlgeschlagen",
+                offer_id=str(zeile.get("id") or ""),
+                error=str(exc)[:300],
+            )
+
     def _tenant(self, ctx: AuthContext) -> str:
         if not ctx.tenant_id:
             raise BookingOfferError(
@@ -185,7 +238,7 @@ class BookingOffersService:
             "properties",
             property_id,
             tenant_id,
-            columns="id, title, city, currency, max_guests, status",
+            columns="id, tenant_id, title, city, currency, max_guests, status",
             not_found=BookingOfferError(
                 "Objekt nicht gefunden.", status_code=404
             ),
@@ -232,6 +285,14 @@ class BookingOffersService:
             guest_name=str(zeile["guest_name"]),
             guest_email=str(zeile["guest_email"]),
             guest_phone=str(zeile["guest_phone"]) if zeile.get("guest_phone") else None,
+            guest_type=str(zeile.get("guest_type") or "private"),
+            guest_company=zeile.get("guest_company") or None,
+            guest_street=zeile.get("guest_street") or None,
+            guest_postal_code=zeile.get("guest_postal_code") or None,
+            guest_city=zeile.get("guest_city") or None,
+            guest_country=zeile.get("guest_country") or None,
+            guest_vat_id=zeile.get("guest_vat_id") or None,
+            tax_rule=zeile.get("tax_rule") or None,
             language=str(zeile["language"]) if zeile.get("language") else None,
             currency=str(zeile["currency"]),
             total_amount=float(zeile["total_amount"]),
@@ -254,6 +315,7 @@ class BookingOffersService:
             reservation_id=(
                 str(zeile["reservation_id"]) if zeile.get("reservation_id") else None
             ),
+            quote_id=str(zeile["quote_id"]) if zeile.get("quote_id") else None,
             internal_note=(
                 str(zeile["internal_note"]) if zeile.get("internal_note") else None
             ),
@@ -285,37 +347,9 @@ class BookingOffersService:
         """
         tenant_id = self._tenant(ctx)
         prop = self._objekt(tenant_id, req.property_id)
-
-        if req.check_in < date.today():
-            raise BookingOfferError(
-                "Das Anreisedatum liegt in der Vergangenheit.", status_code=422
-            )
-        gaeste = req.adults + req.children
-        max_gaeste = prop.get("max_guests")
-        if max_gaeste is not None and gaeste > int(max_gaeste):
-            raise BookingOfferError(
-                "Die Gästezahl übersteigt die Kapazität des Objekts.",
-                status_code=422,
-            )
-        if req.unit_id:
-            self._pruefe_einheit(req.property_id, req.unit_id)
-
-        quote = self._quote(req)
+        quote = self._pruefen_und_bepreisen(prop, req)
         currency = quote["currency"]
         gesamt = float(quote["total"])
-        if gesamt <= 0:
-            # Ein Angebot über 0 wäre nicht bezahlbar — und ohne Zahlung
-            # entsteht keine Buchung. Klar fehlschlagen statt einen Betrag zu
-            # erfinden (Wurzel 4).
-            raise BookingOfferError(
-                "Für diesen Zeitraum ergibt sich kein Preis. Bitte Preise und "
-                "Verfügbarkeit des Objekts prüfen.",
-                status_code=422,
-            )
-        if req.deposit_amount is not None and req.deposit_amount > gesamt:
-            raise BookingOfferError(
-                "Die Anzahlung ist höher als der Gesamtbetrag.", status_code=422
-            )
 
         klartext, hash_wert = neuer_token()
         ablauf = _jetzt() + timedelta(days=req.gueltig_tage)
@@ -334,6 +368,7 @@ class BookingOffersService:
             "guest_name": req.guest_name,
             "guest_email": str(req.guest_email),
             "guest_phone": req.guest_phone,
+            **_stammdaten(req),
             "language": sprache,
             "currency": currency,
             "quote_snapshot": quote,
@@ -362,11 +397,270 @@ class BookingOffersService:
             betrag=gesamt,
             currency=currency,
         )
+        # Buchhaltungs-Angebot spiegeln (0699), wenn das Modul gebucht ist.
+        self._buchhaltung_spiegeln(row, ctx=ctx, titel=str(prop.get("title") or ""))
         # Der Klartext-Token wird NICHT gespeichert und NICHT zurückgegeben —
         # er lebt nur bis zum Mailversand. Direkt nach dem Anlegen senden ist
         # der Normalfall; die Oberfläche ruft `senden()` unmittelbar danach.
         self._token_cache[str(row["id"])] = klartext
         return self._antwort(row, titel=str(prop.get("title") or "") or None)
+
+    def _pruefen_und_bepreisen(self, prop: dict, req: BookingOfferCreate) -> dict:
+        """Fachliche Prüfung + Preis-Snapshot — geteilt von Anlegen und Ändern,
+        damit ein geändertes Angebot denselben Regeln unterliegt wie ein neues."""
+        if req.check_in < date.today():
+            raise BookingOfferError(
+                "Das Anreisedatum liegt in der Vergangenheit.", status_code=422
+            )
+        gaeste = req.adults + req.children
+        max_gaeste = prop.get("max_guests")
+        if max_gaeste is not None and gaeste > int(max_gaeste):
+            raise BookingOfferError(
+                "Die Gästezahl übersteigt die Kapazität des Objekts.",
+                status_code=422,
+            )
+        if req.unit_id:
+            self._pruefe_einheit(req.property_id, req.unit_id)
+
+        quote = self._quote(req)
+        if req.tax_rule:
+            quote = self._ohne_umsatzsteuer(quote, str(prop["tenant_id"]), req.property_id)
+        gesamt = float(quote["total"])
+        if gesamt <= 0:
+            # Ein Angebot über 0 wäre nicht bezahlbar — und ohne Zahlung
+            # entsteht keine Buchung. Klar fehlschlagen statt einen Betrag zu
+            # erfinden (Wurzel 4).
+            raise BookingOfferError(
+                "Für diesen Zeitraum ergibt sich kein Preis. Bitte Preise und "
+                "Verfügbarkeit des Objekts prüfen.",
+                status_code=422,
+            )
+        if req.deposit_amount is not None and req.deposit_amount > gesamt:
+            raise BookingOfferError(
+                "Die Anzahlung ist höher als der Gesamtbetrag.", status_code=422
+            )
+        return quote
+
+    def _ohne_umsatzsteuer(self, quote: dict, tenant_id: str, property_id: str) -> dict:
+        """Snapshot NETTO stellen (0704): der Resolver liefert Bruttopreise
+        (USt im Preis enthalten). Ein Angebot ohne USt an eine Organisation
+        weist die Beträge ohne die Steuer aus; Abgaben (Kurtaxe, kind='tax')
+        bleiben, sie sind keine USt. Der Satz je Zeile: eigener Snapshot-Satz
+        (Gebühren), sonst die USt des Objekts (property_pricing_config.taxes),
+        sonst der Übernachtungssatz des Kontos. Fehlt jeder Satz, kann nichts
+        herausgerechnet werden → 422, kein geratener Prozentwert (Wurzel 4)."""
+        cfg = (
+            self._db.table("property_pricing_config")
+            .select("taxes")
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        satz = _property_vat_rate(list((cfg[0].get("taxes") if cfg else None) or []))
+        if satz is None:
+            profil = (
+                self._db.table("tenant_billing_profile")
+                .select("lodging_tax_rate")
+                .eq("tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            roh = profil[0].get("lodging_tax_rate") if profil else None
+            satz = Decimal(str(roh)) if roh is not None else None
+        if satz is None:
+            raise BookingOfferError(
+                "Ohne Umsatzsteuer nicht berechenbar: dem Objekt und dem Konto "
+                "fehlt der Übernachtungs-Steuersatz.",
+                status_code=422,
+            )
+        zeilen: list[dict] = []
+        for ln in quote.get("lines") or []:
+            zeile = dict(ln)
+            if zeile.get("kind") != "tax":
+                eigener = zeile.get("tax_rate")
+                rate = Decimal(str(eigener)) if eigener is not None else satz
+                netto = Decimal(str(zeile.get("amount") or 0)) / (1 + rate / Decimal(100))
+                zeile["amount"] = float(netto.quantize(Decimal("0.01")))
+                zeile["tax_rate"] = 0.0
+            zeilen.append(zeile)
+        neu = dict(quote)
+        neu["lines"] = zeilen
+        neu["total"] = round(sum(float(z.get("amount") or 0) for z in zeilen), 2)
+        logis = [z for z in zeilen if z.get("kind") == "lodging"]
+        if logis:
+            neu["nightly_total"] = round(sum(float(z["amount"]) for z in logis), 2)
+        neu["tax_free"] = True
+        return neu
+
+    # --- Ändern ------------------------------------------------------------
+
+    def aendern(
+        self, ctx: AuthContext, offer_id: str, req: BookingOfferUpdate
+    ) -> BookingOfferOut:
+        """Offenes Angebot ändern (Entwurf, verschickt, geöffnet).
+
+        Zusammengeführt aus Bestand + Änderung entsteht ein vollständiger
+        ``BookingOfferCreate`` — dessen Validierung (Zeitraum, Nächte-Deckel)
+        und die geteilte Prüfung gelten damit auch hier. Der Preis wird neu
+        gerechnet und als Snapshot festgehalten. Der Annahmelink des Gastes
+        bleibt derselbe: der Gast sieht dort den neuen Stand.
+
+        Nach dem Ändern wird NICHT automatisch verschickt — das entscheidet
+        die Oberfläche (Entwurf bleibt Entwurf, ein verschicktes Angebot
+        bekommt „erneut senden" angeboten).
+        """
+        tenant_id = self._tenant(ctx)
+        zeile = self._laden(tenant_id, offer_id)
+        if str(zeile["status"]) not in {"draft", "sent", "viewed"}:
+            raise BookingOfferError(
+                "Nur offene Angebote (Entwurf, verschickt, geöffnet) können "
+                "geändert werden.",
+                status_code=409,
+            )
+        prop = self._objekt(tenant_id, str(zeile["property_id"]))
+        aenderung = req.model_dump(exclude_none=True, exclude={"deposit_entfernen"})
+        anzahlung = (
+            None if req.deposit_entfernen
+            else aenderung.pop("deposit_amount", zeile.get("deposit_amount"))
+        )
+        aenderung.pop("gueltig_tage", None)
+        try:
+            voll = BookingOfferCreate(
+                property_id=str(zeile["property_id"]),
+                unit_id=aenderung.get("unit_id", zeile.get("unit_id")),
+                check_in=aenderung.get("check_in", _as_date(zeile["check_in"])),
+                check_out=aenderung.get("check_out", _as_date(zeile["check_out"])),
+                adults=aenderung.get("adults", int(zeile["adults"])),
+                children=aenderung.get("children", int(zeile["children"])),
+                pets=aenderung.get("pets", int(zeile["pets"])),
+                guest_name=aenderung.get("guest_name", str(zeile["guest_name"])),
+                guest_email=aenderung.get("guest_email", str(zeile["guest_email"])),
+                guest_phone=aenderung.get("guest_phone", zeile.get("guest_phone")),
+                guest_type=aenderung.get("guest_type", zeile.get("guest_type") or "private"),
+                guest_company=aenderung.get("guest_company", zeile.get("guest_company")),
+                # Altbestand vor 0703 hat keine Anschrift — leer bleibt leer, aber
+                # das Pflichtfeld-Schema würde daran scheitern: Bestand wird nur
+                # dann geprüft, wenn der Nutzer die Anschrift mitschickt.
+                guest_street=aenderung.get("guest_street", zeile.get("guest_street") or "-"),
+                guest_postal_code=aenderung.get(
+                    "guest_postal_code", zeile.get("guest_postal_code") or "-"
+                ),
+                guest_city=aenderung.get("guest_city", zeile.get("guest_city") or "-"),
+                guest_country=aenderung.get("guest_country", zeile.get("guest_country") or "-"),
+                guest_vat_id=aenderung.get("guest_vat_id", zeile.get("guest_vat_id")),
+                tax_rule=(
+                    None if req.tax_rule_entfernen
+                    else aenderung.get("tax_rule", zeile.get("tax_rule"))
+                ),
+                language=aenderung.get("language", zeile.get("language")),
+                deposit_amount=float(anzahlung) if anzahlung is not None else None,
+                internal_note=aenderung.get("internal_note", zeile.get("internal_note")),
+                rate_plan_id=aenderung.get("rate_plan_id"),
+            )
+        except ValueError as exc:
+            raise BookingOfferError(str(exc), status_code=422) from exc
+
+        quote = self._pruefen_und_bepreisen(prop, voll)
+        patch: dict[str, Any] = {
+            "unit_id": voll.unit_id,
+            "check_in": voll.check_in.isoformat(),
+            "check_out": voll.check_out.isoformat(),
+            "adults": voll.adults,
+            "children": voll.children,
+            "pets": voll.pets,
+            "guest_name": voll.guest_name,
+            "guest_email": str(voll.guest_email),
+            "guest_phone": voll.guest_phone,
+            **_stammdaten(voll, bestand=zeile),
+            "language": sprache_fuer_gast(
+                self._db, guest_language=voll.language, tenant_id=tenant_id
+            ),
+            "currency": quote["currency"],
+            "quote_snapshot": quote,
+            "total_amount": float(quote["total"]),
+            "deposit_amount": voll.deposit_amount,
+            "internal_note": voll.internal_note,
+        }
+        if req.gueltig_tage is not None:
+            patch["expires_at"] = (_jetzt() + timedelta(days=req.gueltig_tage)).isoformat()
+        aktualisiert = (
+            self._db.table("booking_offers")
+            .update(patch)
+            .eq("id", offer_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        ).data or []
+        row = aktualisiert[0] if aktualisiert else {**zeile, **patch}
+        log.info(
+            "angebot_geaendert",
+            tenant_id=tenant_id,
+            offer_id=offer_id,
+            felder=sorted(aenderung),
+            betrag=patch["total_amount"],
+        )
+        self._buchhaltung_nachziehen(ctx, row, str(prop.get("title") or ""))
+        return self._antwort(row, titel=str(prop.get("title") or "") or None)
+
+    def buchhaltung_sicherstellen(self, ctx: AuthContext, offer_id: str) -> BookingOfferOut:
+        """Spiegel in der Buchhaltung anlegen, falls noch keiner existiert
+        (Altbestand vor 0699), und das Angebot mit `quote_id` zurückgeben.
+
+        Ohne gebuchtes Modul 409 — die Oberfläche sagt dann, WARUM es keine
+        Ansicht gibt, statt eine leere Seite zu öffnen."""
+        tenant_id = self._tenant(ctx)
+        zeile = self._laden(tenant_id, offer_id)
+        titel = self._titel(str(zeile["property_id"])) or ""
+        if not zeile.get("quote_id"):
+            from src.features.buchhaltung import angebot_bruecke  # noqa: PLC0415
+            from src.features.buchhaltung.guards import BUCHHALTUNG_MODULE_KEY  # noqa: PLC0415
+            from src.features.subscriptions.entitlements import modul_aktiv  # noqa: PLC0415
+
+            if not modul_aktiv(self._db, tenant_id, BUCHHALTUNG_MODULE_KEY):
+                raise BookingOfferError(
+                    "Das Buchhaltungsmodul ist nicht gebucht — ohne Modul gibt es "
+                    "keine Angebotsansicht mit PDF.",
+                    status_code=409,
+                )
+            quote_id = angebot_bruecke.spiegel_anlegen(self._db, ctx, zeile, titel)
+            if not quote_id:
+                raise BookingOfferError(
+                    "Das Angebot konnte nicht in die Buchhaltung übernommen werden "
+                    "(Steuersatz oder Währung fehlt — siehe Log).",
+                    status_code=422,
+                )
+            self._db.table("booking_offers").update({"quote_id": quote_id}).eq(
+                "id", offer_id
+            ).eq("tenant_id", tenant_id).execute()
+            zeile["quote_id"] = quote_id
+            angebot_bruecke.spiegel_status(self._db, zeile)
+        elif str(zeile["status"]) in {"draft", "sent", "viewed"} and self._spiegel_ohne_sprache(
+            str(zeile["quote_id"])
+        ):
+            # Altspiegel (vor 0700: ohne Sprache, ohne Anschreiben) genau EINMAL
+            # auf den heutigen Stand heben. Danach ist der Buchhaltungs-Editor
+            # die Bearbeitungsoberfläche — seine Texte überschreibt die Brücke
+            # nicht mehr (Rückweg: angebot_bruecke.quelle_nachziehen).
+            self._buchhaltung_nachziehen(ctx, zeile, titel)
+        return self._antwort(zeile, titel=titel or None)
+
+    def _spiegel_ohne_sprache(self, quote_id: str) -> bool:
+        rows = (
+            self._db.table("quotes").select("language").eq("id", quote_id).limit(1).execute()
+        ).data or []
+        return bool(rows) and rows[0].get("language") is None
+
+    def _buchhaltung_nachziehen(self, ctx: AuthContext, zeile: dict, titel: str) -> None:
+        """Spiegel in der Buchhaltung (0699) inhaltlich nachziehen — best-effort."""
+        try:
+            from src.features.buchhaltung import angebot_bruecke  # noqa: PLC0415
+
+            angebot_bruecke.spiegel_aktualisieren(self._db, ctx, zeile, titel)
+        except Exception as exc:  # noqa: BLE001 — Best-effort-Spiegel, Hauptpfad bleibt
+            log.error(
+                "angebot_buchhaltung_nachziehen_fehlgeschlagen",
+                offer_id=str(zeile.get("id") or ""),
+                error=str(exc)[:300],
+            )
 
     # Der Klartext-Token lebt genau eine Anfrage lang: zwischen `anlegen()` und
     # dem unmittelbar folgenden `senden()`. Als Instanz-Attribut und nicht in
@@ -529,6 +823,7 @@ class BookingOffersService:
             .execute()
         ).data
         row = aktualisiert[0] if aktualisiert else self._laden(tenant_id, offer_id)
+        self._buchhaltung_spiegeln(row, ctx=ctx, titel=str(prop.get("title") or ""))
         log.info(
             "angebot_verschickt",
             tenant_id=tenant_id,
@@ -584,11 +879,39 @@ class BookingOffersService:
             "frist": _as_dt(zeile["expires_at"]).date().isoformat(),
         }
         betreff = mail_text("angebot.neu.betreff", sprache, **werte)
+        # Aufenthaltskontext (0701): Titelbild, Check-in-/Check-out-Zeit,
+        # Zahlungsplan — dieselbe Quelle wie PDF und Annahmeseite.
+        kontext = self._aufenthalt(zeile, check_in) or {}
+        absaetze = [
+            mail_text("angebot.neu.absatz_1", sprache, **werte),
+            mail_text("angebot.neu.absatz_2", sprache, **werte),
+        ]
+        if kontext.get("check_in_time") and kontext.get("check_out_time"):
+            absaetze.append(
+                mail_text(
+                    "angebot.neu.absatz_zeiten",
+                    sprache,
+                    checkin=str(kontext["check_in_time"]),
+                    checkout=str(kontext["check_out_time"]),
+                )
+            )
+        absaetze.append(mail_text("angebot.neu.absatz_3", sprache))
         hinweise = [
             mail_text("angebot.neu.hinweis_frist", sprache, **werte),
             mail_text("angebot.neu.hinweis_keine_reservierung", sprache),
         ]
-        if anzahlung is not None:
+        plan = kontext.get("payment_plan") or {}
+        if plan.get("due_later"):
+            hinweise.insert(
+                0,
+                mail_text(
+                    "angebot.neu.hinweis_jetzt_faellig",
+                    sprache,
+                    jetzt=f"{float(plan['due_now']):.2f} {currency}",
+                    rest=f"{float(plan['due_later']):.2f} {currency}",
+                ),
+            )
+        elif anzahlung is not None:
             hinweise.insert(
                 0,
                 mail_text(
@@ -600,17 +923,15 @@ class BookingOffersService:
         inhalt = mail_rendern(
             MailInhalt(
                 titel=betreff,
-                absaetze=[
-                    mail_text("angebot.neu.absatz_1", sprache, **werte),
-                    mail_text("angebot.neu.absatz_2", sprache, **werte),
-                    mail_text("angebot.neu.absatz_3", sprache),
-                ],
+                absaetze=absaetze,
                 aktion=Aktion(
                     text=mail_text("angebot.neu.aktion", sprache),
                     url=self._angebots_url(token),
                 ),
                 hinweise=hinweise,
                 sprache=sprache,
+                bild_url=kontext.get("cover_url") or None,
+                bild_alt=objekt,
             )
         )
         try:
@@ -657,6 +978,7 @@ class BookingOffersService:
         ).data
         log.info("angebot_zurueckgezogen", tenant_id=tenant_id, offer_id=offer_id)
         row = aktualisiert[0] if aktualisiert else self._laden(tenant_id, offer_id)
+        self._buchhaltung_spiegeln(row)
         return self._antwort(row, titel=self._titel(str(row["property_id"])))
 
     # --- Öffentlich: lesen -------------------------------------------------
@@ -711,6 +1033,26 @@ class BookingOffersService:
             acceptable=annehmbar,
             blocked_reason=None if annehmbar else self._grund(status),
             company_name=firma,
+            stay=self._aufenthalt(zeile, check_in),
+        )
+
+    def _aufenthalt(self, zeile: dict, check_in: date) -> dict | None:
+        """Bild, Zeiten, Zahlungsplan, Storno, Hausregeln — dieselbe Quelle wie
+        das Angebots-PDF der Buchhaltung. Import im Körper: Webhook-Pfad."""
+        from src.features.buchhaltung.aufenthalt_kontext import (  # noqa: PLC0415
+            aufenthalt_kontext,
+        )
+
+        return aufenthalt_kontext(
+            self._db,
+            str(zeile["tenant_id"]),
+            str(zeile["property_id"]),
+            lang=str(zeile.get("language") or "en"),
+            total=zeile.get("total_amount"),
+            check_in=check_in,
+            deposit=zeile.get("deposit_amount"),
+            rate_plan_id=(zeile.get("quote_snapshot") or {}).get("rate_plan_id")
+            if isinstance(zeile.get("quote_snapshot"), dict) else None,
         )
 
     @staticmethod
@@ -810,6 +1152,7 @@ class BookingOffersService:
             offer_id=offer_id,
             betrag=faellig,
         )
+        self._buchhaltung_spiegeln({**zeile, "status": "accepted"})
         self._betrieb_benachrichtigen(zeile, schluessel="angenommen")
         return PublicOfferAcceptResponse(
             payment_url=zahlung["url"],
@@ -998,6 +1341,7 @@ class BookingOffersService:
                 tenant_id=str(zeile["tenant_id"]),
                 offer_id=str(zeile["id"]),
             )
+            self._buchhaltung_spiegeln({**zeile, "status": "declined"})
             self._betrieb_benachrichtigen(zeile, schluessel="abgelehnt")
         return self.oeffentlich_lesen(token)
 
@@ -1049,6 +1393,7 @@ class BookingOffersService:
         log.info(
             "angebot_bezahlt", offer_id=offer_id, reservation_id=reservation_id
         )
+        self._buchhaltung_spiegeln(geclaimt[0])
 
     # --- Takt: ablaufen ---------------------------------------------------
 
@@ -1068,4 +1413,6 @@ class BookingOffersService:
         ).data or []
         if zeilen:
             log.info("angebote_abgelaufen", anzahl=len(zeilen))
+            for zeile in zeilen:
+                self._buchhaltung_spiegeln(zeile)
         return len(zeilen)

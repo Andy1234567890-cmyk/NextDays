@@ -120,7 +120,7 @@ def demo_schreibzugriff_pruefen(
         res = (
             get_service_client()
             .table("tenants")
-            .select("is_demo")
+            .select("is_demo, ist_vorfuehrbetrieb")
             .eq("id", ctx.tenant_id)
             .limit(1)
             .execute()
@@ -136,6 +136,8 @@ def demo_schreibzugriff_pruefen(
             detail="Zugang konnte nicht geprüft werden.",
         ) from exc
     rows = res.data or []
+    if rows and rows[0].get("ist_vorfuehrbetrieb"):
+        return
     if rows and rows[0].get("is_demo"):
         log.info(
             "demo_gate_abgewiesen",
@@ -237,6 +239,8 @@ def demo_bereich_pruefen(pfad: str, ctx: AuthContext) -> None:
         return
     if not _ist_demo_mandant(ctx):
         return
+    if _ist_vorfuehrbetrieb(ctx):
+        return
     log.info(
         "demo_gate_bereich_abgewiesen",
         tenant_id=ctx.tenant_id,
@@ -261,6 +265,44 @@ def _pfad_gesperrt(pfad: str) -> bool:
         rest == p or rest.startswith(p + "/")
         for p in (*GESPERRTE_PRAEFIXE, *GESPERRTE_ENDPUNKTE)
     )
+
+
+def _ist_vorfuehrbetrieb(ctx: AuthContext) -> bool:
+    """Fragt `tenants.ist_vorfuehrbetrieb` (0630).
+
+    Fuer diesen einen Betrieb gelten die Vorfuehr-Riegel nicht: An ihm wird
+    Skattestyrelsen der komplette DAC7-Weg gezeigt, von den Daten des
+    Betriebs ueber die Verschluesselung bis zur Quittung der
+    Empfangsstelle. Das geht nicht mit einem Zugang, der weder die
+    Steuerseite oeffnen noch einen Meldelauf anlegen darf.
+
+    Ein Lesefehler hebt NICHTS auf: `False` ist hier die restriktive
+    Antwort, der Riegel bleibt dann stehen. Das ist die richtige Richtung —
+    faellt die Abfrage aus, ist eine nicht vorfuehrbare Demo das kleinere
+    Uebel als eine schreibbare (Wurzel 5).
+
+    Was hierdurch NICHT faellt: RLS, der Mandanten-Scope jeder Abfrage und
+    die Capability-Pruefung der Endpunkte. Der Vorfuehrbetrieb kann genau
+    das, was sein eigener Admin koennte — nicht mehr.
+    """
+    try:
+        res = (
+            get_service_client()
+            .table("tenants")
+            .select("ist_vorfuehrbetrieb")
+            .eq("id", ctx.tenant_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:  # noqa: BLE001 — Riegel bleibt stehen
+        log.warning(
+            "vorfuehrbetrieb_lesefehler",
+            tenant_id=ctx.tenant_id,
+            error=str(exc)[:200],
+        )
+        return False
+    rows = res.data or []
+    return bool(rows and rows[0].get("ist_vorfuehrbetrieb"))
 
 
 def _ist_demo_mandant(ctx: AuthContext) -> bool:

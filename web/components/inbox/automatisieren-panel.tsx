@@ -16,10 +16,17 @@
 // zurück.
 import { Icon } from "@iconify/react";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
 import { Checkbox } from "@nextdays/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@nextdays/ui/dialog";
 import {
   Sheet,
   SheetContent,
@@ -28,12 +35,20 @@ import {
 } from "@nextdays/ui/sheet";
 import { Switch } from "@nextdays/ui/switch";
 import {
-  AUTOMATION_KANAELE,
+  AUTOMATION_KANAL_LISTE,
   PHASEN,
+  ausloeserUndZeitplan,
   istZeitplanRegel,
+  nichtAbgedeckt,
   phaseVon,
   zeitachse,
+  zeitplanText,
 } from "@/lib/automation-phasen";
+import {
+  AutomationStandChips,
+  AutomationStandFehler,
+  zustandName,
+} from "@/components/inbox/automation-stand-chips";
 import { type ComposerGriff } from "@/components/inbox/composer-editor";
 import { SchnellantwortenAnsicht } from "@/components/inbox/schnellantworten-panel";
 import {
@@ -46,16 +61,25 @@ import { SprachenAnsicht } from "@/components/inbox/sprachen-panel";
 import { channelLogoLoose } from "@/lib/channel-logos";
 import {
   type Automation,
+  type AutomationNachricht,
+  type AutomationStand,
+  type InboxThread,
   type MessageLanguage,
   type MessageTemplate,
   deleteAutomation,
+  getAutomation,
+  getAutomationStand,
+  listAutomationNachrichten,
   listAutomations,
   listAvailableLanguages,
+  listInboxThreads,
   listMessageLanguages,
   listTemplates,
+  renderForThread,
   updateAutomation,
 } from "@/lib/inbox";
 import { listProperties } from "@/lib/properties";
+import { formatDateTime } from "@/lib/utils";
 
 // So viele Regeln zeigt ein Abschnitt sofort; der Rest steckt hinter
 // „Mehr anzeigen (n)" — wie bei Lodgify, damit ein Betrieb mit 15 Regeln je
@@ -92,17 +116,28 @@ export function AutomatisierenPanel({
   // es eine Vorlage gibt — nicht, was drinsteht. Genau das war der Fall.
   const [vorlagen, setVorlagen] = useState<MessageTemplate[]>([]);
   const [geladen, setGeladen] = useState(false);
+  // Zustand je Regel aus dem Versandprotokoll. Kein Realtime-Abo: die Tabelle
+  // `automation_scheduled_message` ist seit 0337 für `authenticated` gesperrt
+  // (Wurzel 6) — ein Abo wäre eine stumme Attrappe. Deshalb wird nach JEDER
+  // eigenen Aktion ausdrücklich neu geladen.
+  const [stand, setStand] = useState<Record<string, AutomationStand>>({});
 
   /** Lädt alles neu und gibt die frischen Regeln zurück (für die Detailansicht). */
   async function load(): Promise<Automation[]> {
-    const [res, props, tpl] = await Promise.all([
+    const [res, props, tpl, st] = await Promise.all([
       listAutomations(),
       listProperties(),
       listTemplates(),
+      getAutomationStand(),
     ]);
     const regeln = res.ok ? res.data.items : [];
     if (res.ok) setItems(regeln);
     if (tpl.ok) setVorlagen(tpl.data.items);
+    if (st.ok) {
+      setStand(
+        Object.fromEntries(st.data.items.map((x) => [x.automation_id, x])),
+      );
+    }
     if (props.ok) {
       setObjekte(
         props.data.items.map((p) => ({
@@ -186,6 +221,8 @@ export function AutomatisierenPanel({
           <ListenAnsicht
             items={items}
             geladen={geladen}
+            objekte={objekte}
+            stand={stand}
             onOeffnen={(r) => setAnsicht({ regel: r })}
           />
         ) : (
@@ -193,6 +230,7 @@ export function AutomatisierenPanel({
             regel={ansicht.regel}
             objekte={objekte}
             vorlagen={vorlagen}
+            stand={stand[ansicht.regel.id]}
             // Bearbeiten: neu laden und IN der Regel bleiben — wer gerade
             // Kanäle gesetzt hat, will das Ergebnis sehen, nicht in der Liste
             // stehen. Die frisch geladene Fassung ersetzt die angezeigte.
@@ -274,10 +312,14 @@ function MenuAnsicht({
 function ListenAnsicht({
   items,
   geladen,
+  objekte,
+  stand,
   onOeffnen,
 }: {
   items: Automation[];
   geladen: boolean;
+  objekte: PanelObjekt[];
+  stand: Record<string, AutomationStand>;
   onOeffnen: (a: Automation) => void;
 }) {
   const t = useTranslations("inbox");
@@ -317,7 +359,12 @@ function ListenAnsicht({
               <ul className="flex flex-col gap-2">
                 {sichtbar.map((a) => (
                   <li key={a.id}>
-                    <RegelZeile regel={a} onClick={() => onOeffnen(a)} />
+                    <RegelZeile
+                      regel={a}
+                      objekte={objekte}
+                      stand={stand[a.id]}
+                      onClick={() => onOeffnen(a)}
+                    />
                   </li>
                 ))}
               </ul>
@@ -346,11 +393,29 @@ function ListenAnsicht({
  * Eine Regel als Zeile: Zeitplan-Zeile darüber, darunter Name, Kanal-Logos,
  * Reichweite und Status — die Verdichtung, die Lodgify zeigt.
  */
-function RegelZeile({ regel, onClick }: { regel: Automation; onClick: () => void }) {
+function RegelZeile({
+  regel,
+  objekte,
+  stand,
+  onClick,
+}: {
+  regel: Automation;
+  objekte: PanelObjekt[];
+  stand?: AutomationStand;
+  onClick: () => void;
+}) {
   const t = useTranslations("inbox");
+  const zeitpunktText = useZeitpunktText();
+  // Feste Objektliste: welche aktiven Objekte des Betriebs fehlen darin? Ein
+  // neu angelegtes Haus fiel bis zum 14.09.2026 still aus jeder Regel mit
+  // Liste — hier steht es jetzt sichtbar dran. Die Rechnung steht in
+  // `lib/automation-phasen`, weil der Tab dieselbe braucht.
+  const luecke = nichtAbgedeckt(regel, objekte);
   return (
     <>
-      <p className="px-1 pb-1 text-xs text-muted-foreground">{zeitplanText(regel, t)}</p>
+      <p className="px-1 pb-1 text-xs text-muted-foreground">
+        {ausloeserUndZeitplan(regel, t)}
+      </p>
       <button
         type="button"
         onClick={onClick}
@@ -365,8 +430,21 @@ function RegelZeile({ regel, onClick }: { regel: Automation; onClick: () => void
                 ? t("autoAllHouses")
                 : `${regel.property_ids.length} ${t("autoHousesCount")}`}
             </span>
+            {luecke > 0 && (
+              <span
+                className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-900"
+                title={t("autoHousesUncoveredHint")}
+              >
+                {t("autoHousesUncovered", { count: luecke })}
+              </span>
+            )}
             <StatusChip aktiv={regel.is_active} />
           </span>
+          {/* Was die Regel bisher WIRKLICH getan hat. Ohne diese Zeile sah eine
+              Regel, die seit Wochen an einem fehlenden Platzhalter scheitert,
+              genauso aus wie eine, die täglich zustellt. */}
+          <AutomationStandChips stand={stand} zeitpunktText={zeitpunktText} />
+          <AutomationStandFehler stand={stand} zeitpunktText={zeitpunktText} />
         </span>
         <Icon icon="ph:caret-right" className="size-4 shrink-0 text-muted-foreground" />
       </button>
@@ -419,21 +497,28 @@ function DetailAnsicht({
   regel,
   objekte,
   vorlagen,
+  stand,
   onGeaendert,
   onGeloescht,
 }: {
   regel: Automation;
   objekte: PanelObjekt[];
   vorlagen: MessageTemplate[];
+  stand?: AutomationStand;
   onGeaendert: () => void;
   onGeloescht: () => void;
 }) {
   const t = useTranslations("inbox");
+  const zeitpunktText = useZeitpunktText();
   const [pending, start] = useTransition();
   // Welcher Auswahl-Dialog ist offen? (Kanäle bzw. Unterkünfte)
   const [wahl, setWahl] = useState<"channels" | "houses" | null>(null);
   // Inhalt bearbeiten (der Stift am Abschnitt „Inhalt").
   const [inhaltOffen, setInhaltOffen] = useState(false);
+  // Vorschau mit einer echten Buchung (ersetzt den toten „Testnachricht"-Knopf).
+  const [vorschauOffen, setVorschauOffen] = useState(false);
+  // Löschbestätigung — nie `window.confirm` (nicht übersetzbar, nicht gestaltbar).
+  const [loeschFrage, setLoeschFrage] = useState(false);
 
   // Der Text, der wirklich rausgeht: eigener Text der Regel, sonst der Text
   // der verknüpften Vorlage. Nur „stammt aus einer Vorlage" anzuzeigen, ohne
@@ -443,25 +528,56 @@ function DetailAnsicht({
     vorlagen.find((v) => v.id === regel.template_id)?.body?.trim() ||
     null;
 
-  function umschalten() {
+  /**
+   * EIN Feld der Regel ändern — auf dem FRISCHEN Stand, nicht auf der Kopie.
+   *
+   * `updateAutomation` nimmt den vollen Datensatz. Die angezeigte `regel` ist
+   * eine Kopie vom letzten Laden; sie zurückzuschreiben machte jede
+   * zwischenzeitliche Änderung rückgängig — ein Haken am Kanal setzte den Text
+   * zurück, den ein Kollege gerade gespeichert hatte (Wurzel 1: der
+   * Gegenzustand gehört zur Änderung). Ein Realtime-Abo gäbe es als Ausweg
+   * nicht: `message_automation` ist seit 0337 gesperrt (Wurzel 6).
+   */
+  function feldSchreiben(patch: Partial<Automation>, erfolg: string) {
     start(async () => {
-      await updateAutomation(regel.id, { ...regel, is_active: !regel.is_active });
+      const frisch = await getAutomation(regel.id);
+      if (!frisch.ok) {
+        toast.error(frisch.error);
+        return;
+      }
+      const res = await updateAutomation(regel.id, { ...frisch.data, ...patch });
+      if (res.ok) toast.success(erfolg);
+      else toast.error(res.error);
       onGeaendert();
     });
+  }
+
+  function umschalten() {
+    feldSchreiben(
+      { is_active: !regel.is_active },
+      regel.is_active ? t("autoPausedDone") : t("autoActivated"),
+    );
   }
 
   /** Kanäle oder Objekte der Regel speichern und die Liste neu laden. */
   function speichern(feld: "channels" | "property_ids", werte: string[]) {
     setWahl(null);
-    start(async () => {
-      await updateAutomation(regel.id, { ...regel, [feld]: werte });
-      onGeaendert();
-    });
+    // Alle Objekte angehakt = „alle" — als LEERE Liste speichern, sonst fällt
+    // jedes später angelegte Objekt aus der Regel (der Server normiert das
+    // ebenfalls; hier, damit die Anzeige sofort „Alle Unterkünfte" zeigt).
+    const alleGewaehlt =
+      feld === "property_ids" &&
+      objekte.length > 0 &&
+      objekte.every((o) => werte.includes(o.id));
+    feldSchreiben({ [feld]: alleGewaehlt ? [] : werte }, t("autoSaved"));
   }
 
   function loeschen() {
+    setLoeschFrage(false);
     start(async () => {
-      await deleteAutomation(regel.id);
+      const res = await deleteAutomation(regel.id);
+      if (res.ok) toast.success(t("autoDeleted"));
+      else toast.error(res.error);
       onGeloescht();
     });
   }
@@ -516,7 +632,18 @@ function DetailAnsicht({
             frei getippt — ein Bearbeiten-Symbol würde etwas versprechen, was
             die Karte nicht kann. */}
         <Abschnitt titel={t("autoSectionSchedule")} offenAnfangs nichtKlappbar>
-          <p className="text-sm text-muted-foreground">{zeitplanText(regel, t)}</p>
+          <p className="text-sm text-muted-foreground">
+            {zeitplanText(regel, t)}
+          </p>
+        </Abschnitt>
+
+        {/* VERSAND — was die Regel wirklich getan hat. Der Abschnitt fehlte
+            ganz: der Zustand stand allein in `automation_scheduled_message`
+            und wurde von keiner Oberfläche gelesen. */}
+        <Abschnitt titel={t("autoStandTitle")} offenAnfangs>
+          <AutomationStandChips stand={stand} zeitpunktText={zeitpunktText} />
+          <AutomationStandFehler stand={stand} zeitpunktText={zeitpunktText} />
+          <VersandProtokoll regelId={regel.id} />
         </Abschnitt>
 
         <Abschnitt
@@ -577,10 +704,17 @@ function DetailAnsicht({
           titel={wahl === "channels" ? t("autoManageChannels") : t("autoManageHouses")}
           optionen={
             wahl === "channels"
-              ? AUTOMATION_KANAELE.map((c) => ({
-                  id: c,
-                  label: c,
-                  logo: channelLogoLoose(c),
+              ? AUTOMATION_KANAL_LISTE.map((c) => ({
+                  id: c.name,
+                  label: c.name,
+                  // Der Untertitel sagt NUR, ob der Kanal über ein fremdes
+                  // Portal läuft — nicht, ob er beim Betrieb verbunden ist.
+                  // Das stünde hier ungeprüft da und wäre eine Behauptung
+                  // (Wurzel 4); verbunden oder nicht steht im Kanalmanager.
+                  unterzeile: c.portal
+                    ? t("autoChannelPortal")
+                    : t("autoChannelOwn"),
+                  logo: channelLogoLoose(c.name),
                 }))
               : objekte.map((o) => ({ id: o.id, label: o.title, foto: o.photo }))
           }
@@ -603,14 +737,254 @@ function DetailAnsicht({
         />
       )}
 
+      {vorschauOffen && (
+        <VorschauAnsicht
+          text={inhalt}
+          onSchliessen={() => setVorschauOffen(false)}
+        />
+      )}
+
+      {/* Löschen nimmt bereits eingeplante Nachrichten mit (ON DELETE CASCADE
+          auf `automation_scheduled_message`) — deshalb eine Rückfrage. Ein
+          `window.confirm` wäre keine: er lässt sich weder übersetzen noch
+          gestalten und erscheint in jeder Sprache auf Englisch/Deutsch. */}
+      <Dialog open={loeschFrage} onOpenChange={setLoeschFrage}>
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle>{t("autoDeleteConfirmTitle")}</DialogTitle>
+          <DialogDescription>
+            {t("autoDeleteConfirmText", { name: regel.name })}
+          </DialogDescription>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setLoeschFrage(false)}
+            >
+              {t("autoCancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={loeschen}
+              disabled={pending}
+            >
+              {t("autoDelete")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex justify-between gap-2 border-t border-border p-4">
-        <Button type="button" variant="outline" disabled>
-          <Icon icon="ph:paper-plane-tilt" className="size-4" />
-          {t("autoTestMessage")}
+        {/* Statt „Testnachricht": der Knopf war fest deaktiviert und hatte
+            keinen Handler — ein Versprechen ohne Einlösung. Eine echte
+            Testnachricht ginge zudem an einen echten Gast; die Vorschau
+            beantwortet dieselbe Frage („kommt das richtig an?"), ohne etwas
+            zu verschicken. */}
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setVorschauOffen(true)}
+          disabled={!inhalt}
+          title={inhalt ? undefined : t("autoPreviewNoContent")}
+        >
+          <Icon icon="ph:eye" className="size-4" />
+          {t("autoPreview")}
         </Button>
-        <Button type="button" variant="outline" onClick={loeschen} disabled={pending}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setLoeschFrage(true)}
+          disabled={pending}
+        >
           <Icon icon="ph:trash" className="size-4" />
           {t("autoDelete")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Die jüngsten Protokollzeilen EINER Regel — Zustand, Zeitpunkt, Grund.
+ *
+ * Eigener Aufruf und nicht Teil des Stands: die Verdichtung braucht jede
+ * Oberfläche, die Einzelzeilen nur, wer eine bestimmte Regel öffnet. Sie für
+ * alle Regeln mitzuladen wäre eine Datenlast, die niemand anzeigt.
+ *
+ * Kein Realtime-Abo: `automation_scheduled_message` hat seit 0337 kein
+ * SELECT-Grant für `authenticated` (Wurzel 6) — ein Abo wäre eine stumme
+ * Attrappe. Neu geladen wird darum beim Öffnen der Regel.
+ */
+function VersandProtokoll({ regelId }: { regelId: string }) {
+  const t = useTranslations("inbox");
+  const zeitpunktText = useZeitpunktText();
+  const [zeilen, setZeilen] = useState<AutomationNachricht[] | null>(null);
+  const [fehler, setFehler] = useState<string | null>(null);
+
+  useEffect(() => {
+    let aktuell = true;
+    void listAutomationNachrichten(regelId, 10).then((res) => {
+      if (!aktuell) return;
+      // LADEFEHLER WERDEN ANGEZEIGT, NICHT VERSCHLUCKT (Wurzel 5): eine leere
+      // Liste sähe sonst aus wie „noch nichts versendet".
+      if (res.ok) setZeilen(res.data.items);
+      else setFehler(res.error);
+    });
+    return () => {
+      aktuell = false;
+    };
+  }, [regelId]);
+
+  if (fehler) return <p className="mt-2 text-xs text-destructive">{fehler}</p>;
+  if (zeilen === null) {
+    return <p className="mt-2 text-xs text-muted-foreground">{t("autoLoading")}</p>;
+  }
+  if (zeilen.length === 0) {
+    return (
+      <p className="mt-2 text-xs text-muted-foreground">{t("autoStandEmpty")}</p>
+    );
+  }
+  return (
+    <ul className="mt-3 flex flex-col gap-1.5">
+      {zeilen.map((z) => (
+        <li key={z.id} className="flex flex-col text-xs">
+          <span className="flex flex-wrap items-center gap-2">
+            <span
+              className={
+                z.status === "failed"
+                  ? "font-medium text-destructive"
+                  : "font-medium"
+              }
+            >
+              {zustandName(z.status, t)}
+            </span>
+            <span className="text-muted-foreground">
+              {/* Bei offenen Zeilen zählt der GEPLANTE Zeitpunkt, bei
+                  erledigten der, zu dem wir sie erledigt haben. Beides in eine
+                  Spalte zu werfen hieße, zwei verschiedene Dinge gleich zu
+                  benennen. */}
+              {z.status === "pending" || z.status === "sending"
+                ? t("autoStandPlannedFor", {
+                    zeit: z.send_at ? zeitpunktText(z.send_at) : "",
+                  })
+                : t("autoStandHandledAt", {
+                    zeit: z.updated_at ? zeitpunktText(z.updated_at) : "",
+                  })}
+            </span>
+          </span>
+          {z.last_error && (
+            <span className="text-destructive">{z.last_error}</span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Vorschau: der Text der Regel mit den Daten EINER echten Buchung.
+ *
+ * Ersetzt den toten Knopf „Testnachricht". Eine echte Testnachricht ginge über
+ * denselben Weg an einen echten Gast — und das ist keine Prüfung, sondern ein
+ * Versand. Hier wird NICHTS verschickt: der Server löst nur die Platzhalter
+ * auf (`renderForThread`). Fehlt ein Wert, antwortet er mit 422 und nennt das
+ * Feld; genau dieser Satz steht dann hier, unverändert. Ihn zu glätten nähme
+ * dem Betrieb die einzige Angabe, mit der er es beheben kann.
+ */
+function VorschauAnsicht({
+  text,
+  onSchliessen,
+}: {
+  text: string | null;
+  onSchliessen: () => void;
+}) {
+  const t = useTranslations("inbox");
+  const [threads, setThreads] = useState<InboxThread[] | null>(null);
+  const [gewaehlt, setGewaehlt] = useState<string | null>(null);
+  const [ergebnis, setErgebnis] = useState<string | null>(null);
+  const [fehler, setFehler] = useState<string | null>(null);
+  const [laeuft, setLaeuft] = useState(false);
+
+  useEffect(() => {
+    void listInboxThreads().then((res) => {
+      if (res.ok) setThreads(res.data.items);
+      else setFehler(res.error);
+    });
+  }, []);
+
+  async function vorschau(threadId: string) {
+    if (!text) return;
+    setGewaehlt(threadId);
+    setErgebnis(null);
+    setFehler(null);
+    setLaeuft(true);
+    const res = await renderForThread(threadId, text);
+    setLaeuft(false);
+    if (res.ok) setErgebnis(res.data.text);
+    else setFehler(res.error);
+  }
+
+  return (
+    <div className="absolute inset-0 z-10 flex flex-col bg-background">
+      <header className="flex items-center gap-2 border-b border-border p-4">
+        <button
+          type="button"
+          onClick={onSchliessen}
+          aria-label={t("autoBack")}
+          className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Icon icon="ph:arrow-left" className="size-5" />
+        </button>
+        <h2 className="flex-1 text-center font-semibold">{t("autoPreviewTitle")}</h2>
+      </header>
+      <div className="flex-1 overflow-y-auto p-4">
+        <p className="mb-3 text-xs text-muted-foreground">{t("autoPreviewHint")}</p>
+        {threads === null && !fehler && (
+          <p className="text-sm text-muted-foreground">{t("autoLoading")}</p>
+        )}
+        {threads !== null && threads.length === 0 && (
+          <p className="text-sm text-muted-foreground">{t("autoPreviewEmpty")}</p>
+        )}
+        <ul className="flex flex-col gap-1">
+          {(threads ?? []).map((th) => (
+            <li key={th.id}>
+              <button
+                type="button"
+                onClick={() => void vorschau(th.id)}
+                className={
+                  "flex w-full flex-col rounded-2xl border p-3 text-left hover:border-accent " +
+                  (gewaehlt === th.id ? "border-accent" : "border-border")
+                }
+              >
+                <span className="truncate text-sm font-medium">
+                  {/* Kein erfundener Ersatzname: fehlt der Gastname, steht der
+                      Buchungscode da, und fehlt auch der, bleibt es leer. */}
+                  {th.guest_name || th.ota_reservation_code || ""}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {[th.property_title, th.arrival_date, th.ota_name]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        {laeuft && (
+          <p className="mt-3 text-sm text-muted-foreground">
+            {t("autoPreviewLoading")}
+          </p>
+        )}
+        {fehler && <p className="mt-3 text-sm text-destructive">{fehler}</p>}
+        {ergebnis !== null && (
+          <article className="mt-3 rounded-2xl border border-border p-4">
+            <p className="whitespace-pre-wrap break-words text-sm">{ergebnis}</p>
+          </article>
+        )}
+      </div>
+      <div className="flex justify-end gap-2 border-t border-border p-4">
+        <Button type="button" variant="outline" onClick={onSchliessen}>
+          {t("autoCancel")}
         </Button>
       </div>
     </div>
@@ -686,14 +1060,29 @@ function InhaltBearbeiten({
       .filter((f) => f.body.trim() || f.subject.trim())
       .map((f) => ({ lang: f.lang, subject: f.subject, message: f.body }));
     start(async () => {
+      // Regel FRISCH holen, statt die geladene Kopie zurückzuschreiben:
+      // `updateAutomation` schickt den vollen Datensatz, und die Kopie ist so
+      // alt wie das Öffnen des Panels. Wer hier nur den Text ändert, setzte
+      // sonst Zeitplan, Kanäle und Zuweisung auf den Stand von vorhin zurück.
+      const frisch = await getAutomation(regel.id);
+      if (!frisch.ok) {
+        setFehler(frisch.error);
+        toast.error(frisch.error);
+        return;
+      }
       const res = await updateAutomation(regel.id, {
-        ...regel,
+        ...frisch.data,
         message: grund.body,
         subject: grund.subject,
         texts,
       });
-      if (res.ok) onFertig();
-      else setFehler(res.error);
+      if (res.ok) {
+        toast.success(t("autoSaved"));
+        onFertig();
+      } else {
+        setFehler(res.error);
+        toast.error(res.error);
+      }
     });
   }
 
@@ -720,7 +1109,12 @@ function InhaltBearbeiten({
           // und hielte zwei gleich aussehende Fassungen für „unverändert".
           key={aktiv}
           format="text"
-          mitBetreff={false}
+          // MIT BETREFF (14.09.2026): Direkt-, Website- und myBestDays-
+          // Buchungen haben keinen Portal-Chat, dort ist E-Mail der Versandweg
+          // — und eine Mail ohne Betreff kommt als leere Zeile an. Die
+          // Einschränkung steht am ℹ-Symbol des Feldes.
+          mitBetreff
+          betreffHinweis={t("autoSubjectHint")}
           fassung={fassungen[aktiv] ?? { subject: "", body: "" }}
           onChange={(f) => setFassungen((prev) => ({ ...prev, [aktiv]: f }))}
           griff={griff}
@@ -760,7 +1154,14 @@ function AuswahlDialog({
   onBestaetigen,
 }: {
   titel: string;
-  optionen: { id: string; label: string; logo?: string | null; foto?: string | null }[];
+  optionen: {
+    id: string;
+    label: string;
+    /** Zweite Zeile unter dem Namen (z. B. „Portal"). */
+    unterzeile?: string;
+    logo?: string | null;
+    foto?: string | null;
+  }[];
   gewaehlt: string[];
   onAbbrechen: () => void;
   onBestaetigen: (werte: string[]) => void;
@@ -799,7 +1200,14 @@ function AuswahlDialog({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={o.logo} alt="" className="size-5 shrink-0 rounded-sm object-contain" />
                 )}
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">{o.label}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{o.label}</span>
+                  {o.unterzeile && (
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {o.unterzeile}
+                    </span>
+                  )}
+                </span>
                 <Checkbox
                   checked={an}
                   onCheckedChange={() =>
@@ -895,35 +1303,15 @@ function Abschnitt({
 }
 
 /**
- * Der Zeitplan als Satz: „3 Tage vor der Ankunft des Gastes".
+ * ISO-Zeitstempel in der Sprache des Nutzers.
  *
- * Dieselbe Regel wie im Automatisierungen-Tab — hier NICHT neu erfunden,
- * sondern aus den vorhandenen Bausteinen zusammengesetzt, damit dieselbe Regel
- * an beiden Stellen gleich heißt.
+ * Ein ungültiger Wert bleibt LEER statt „Invalid Date" — eine kaputte Angabe
+ * liest sich wie ein Fehler der Regel, nicht wie einer der Anzeige.
  */
-function zeitplanText(
-  a: Automation,
-  t: (k: string, v?: Record<string, string | number | Date>) => string,
-): string {
-  if (!istZeitplanRegel(a)) {
-    const fenster =
-      a.window_from && a.window_to ? `${a.window_from}–${a.window_to}` : t("autoAlways");
-    return `${t("autoTrigger_message_received")} · ${fenster}`;
-  }
-  // `offset_value`/`offset_unit` kamen mit 0303 dazu. Ein Server, der die
-  // Felder noch nicht liefert (laufender Prozess vor dem Neustart), schickt
-  // `undefined` — daraus wurde `autoUnit_undefined` und die ganze Liste kippte
-  // mit MISSING_MESSAGE. Auf die Tages-Sicht zurückfallen, statt zu zerbrechen.
-  const einheit = a.offset_unit ?? "days";
-  const versatz = a.offset_value ?? a.offset_days ?? 0;
-  const abs = Math.abs(versatz);
-  const anker = t(`autoAnchor_${a.anchor}`);
-  // Zeitzone dazuschreiben, in BEIDEN Fällen: ohne Haken gilt UTC, und „06:00"
-  // ohne Zusatz liest jeder als sechs Uhr vor Ort (für Dänemark sind das zwei
-  // Stunden Unterschied). Gleiche Regel wie im Automatisierungen-Tab.
-  const zone = a.use_property_timezone ? t("autoLocalTime") : "UTC";
-  const zeit = a.send_time ? ` · ${a.send_time} (${zone})` : "";
-  if (abs === 0) return `${t("autoOnDayOf", { anchor: anker })}${zeit}`;
-  const richtung = versatz < 0 ? t("autoBefore") : t("autoAfter");
-  return `${abs} ${t(`autoUnit_${einheit}`)} ${richtung} ${anker}${zeit}`;
+function useZeitpunktText(): (iso: string) => string {
+  const locale = useLocale();
+  return (iso: string) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? "" : formatDateTime(iso, locale);
+  };
 }

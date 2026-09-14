@@ -57,6 +57,14 @@ export const TEMPLATE_PAGE_DEFINITIONS: Record<string, TemplatePageInfo> = {
     estimatedPages: 2,
     supportsMultiPage: true,
   },
+  // Aufenthaltsangebot (Hotel/FeWo): eine Seite, Buchungsvorschau statt Tabelle.
+  TEMPLATE_STAY: {
+    templateId: 'TEMPLATE_STAY',
+    pageType: 'single-page',
+    hasPageBreaks: false,
+    estimatedPages: 1,
+    supportsMultiPage: false,
+  },
 };
 
 /**

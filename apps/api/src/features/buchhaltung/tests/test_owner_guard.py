@@ -9,7 +9,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.core.security import AuthContext
-from src.features.buchhaltung.router import _require_agency_finance
+from src.features.buchhaltung.guards import _require_agency_finance
 
 
 def test_owner_blocked_from_buchhaltung() -> None:

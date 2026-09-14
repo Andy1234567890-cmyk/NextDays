@@ -543,7 +543,48 @@ class CsvImportMixin:
             # Eigentuemer und Betrieb, keine Aufgaben fuer abgereiste Gaeste.
             bestandsimport=True,
         )
+        if geschrieben:
+            self._posteingang_spiegeln(db, tenant_id, booking_id)
         return geschrieben, booking_id
+
+    @staticmethod
+    def _posteingang_spiegeln(db: Client, tenant_id: str, booking_id: str) -> None:
+        """Uebernommene Buchung → Konversation im Posteingang + Automails.
+
+        WARUM DAS JETZT ANDERS IST: Eine per CSV uebernommene Buchung hatte
+        bisher keine Zeile in `channex_booking` — also keinen Thread, also keine
+        einzige Automail. Genau das ist aber der Fall, in dem der Betrieb sie
+        braucht: er zieht mit LAUFENDEN Buchungen zu uns um, und der Gast, der
+        naechste Woche anreist, soll seine Anreise-Info bekommen.
+
+        Die befuerchtete Mail-Lawine verhindert nicht das Weglassen des Threads,
+        sondern die Nachzuegler-Regel: `planung._versandstatus` setzt jede Zeile,
+        deren Zeitpunkt ueber `NACHZUEGLER_STUNDEN` zurueckliegt, auf 'skipped'
+        (mit Grund). Ein Bestand aus drei Jahren erzeugt damit 'skipped'-Zeilen,
+        keine Mails — und die kommende Woche wird trotzdem bedient.
+
+        Der Spiegel braucht die Reservierungs-ID; hier ist nur der
+        Dedup-Schluessel bekannt. Ueber ihn wird sie tenant-gescopt geholt
+        (Wurzel 3).
+        """
+        from src.features.inbox import thread_spiegel  # noqa: PLC0415
+
+        rows = (
+            db.table("reservations")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("source_channex_booking_id", booking_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return
+        thread_spiegel.spiegeln_best_effort(
+            db,
+            tenant_id,
+            str(rows[0]["id"]),
+            quelle=thread_spiegel.QUELLE_UEBERNAHME,
+        )
 
     @staticmethod
     def _zeilen_bezeichnung(raw: dict[str, Any]) -> str:

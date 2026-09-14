@@ -12,15 +12,18 @@ der Regel sind (Wurzel 1).
 """
 from __future__ import annotations
 
+from supabase import Client
+
 from src.core.security import AuthContext
 
-from .ausloeser import ALLE_TRIGGER
+from .ausloeser import ALLE_TRIGGER, DATUMS_TRIGGER
 from .automation_mapping import (
     AUTOMATION_COLS,
     automation_payload,
     automation_row,
 )
 from .errors import InboxError
+from .objekt_zuweisung import aktive_objekt_ids, zuweisung_normieren
 from .schemas import Automation, AutomationList, AutomationUpsert
 from .sprachen import automation_texte, automation_texte_schreiben
 
@@ -51,6 +54,19 @@ class AutomationenMixin:
                 "Wochentage müssen zwischen 0 (Mo) und 6 (So) liegen.",
                 status_code=422,
             )
+        if req.only_first_message and req.trigger in DATUMS_TRIGGER:
+            # „Nur bei der ersten Gastnachricht" zählt eingegangene NACHRICHTEN
+            # (`zaehle_gastnachrichten_je_buchung`). Für eine Datums-Regel gibt
+            # es keine Nachricht, an der gezählt werden könnte — die Einstellung
+            # wurde gespeichert, in der Oberfläche angezeigt und von der Planung
+            # nie gelesen. Eine Attrappe, die dem Betrieb eine Einschränkung
+            # zusagt, die es nicht gibt: 422 statt still ignorieren (Wurzel 5).
+            raise InboxError(
+                "„Nur bei der ersten Gastnachricht“ gilt ausschließlich für den "
+                "Auslöser „Nachricht empfangen“ — eine Datums-Regel hängt an "
+                "keiner Nachricht.",
+                status_code=422,
+            )
         if not (req.message or "").strip() and not req.template_id:
             raise InboxError(
                 "Die Automatisierung braucht einen Text oder eine Vorlage.",
@@ -64,6 +80,16 @@ class AutomationenMixin:
                 raise InboxError(f"Ungültiger Sprachcode: {t.lang}", status_code=422)
             self._felder_pruefen(t.message)
             self._felder_pruefen(t.subject)
+
+    def _payload_normiert(self, db: Client, tenant_id: str, req: AutomationUpsert) -> dict:
+        """Upsert-Payload mit normierter Objektliste: deckt sie alle aktiven
+        Objekte ab, wird NULL (= alle) gespeichert — sonst fiele jedes später
+        angelegte Objekt aus der Regel (objekt_zuweisung, 14.09.2026)."""
+        payload = self._automation_payload(req)
+        payload["property_ids"] = zuweisung_normieren(
+            payload.get("property_ids"), aktive_objekt_ids(db, tenant_id)
+        )
+        return payload
 
     def list_automations(self, ctx: AuthContext) -> AutomationList:
         db, tenant_id = self._require(ctx)
@@ -88,7 +114,7 @@ class AutomationenMixin:
         self._automation_pruefen(req)
         ins = (
             db.table("message_automation")
-            .insert({"tenant_id": tenant_id, **self._automation_payload(req)})
+            .insert({"tenant_id": tenant_id, **self._payload_normiert(db, tenant_id, req)})
             .execute()
         ).data
         row = ins[0]
@@ -111,7 +137,7 @@ class AutomationenMixin:
         self._automation_pruefen(req)
         upd = (
             db.table("message_automation")
-            .update(self._automation_payload(req))
+            .update(self._payload_normiert(db, tenant_id, req))
             .eq("tenant_id", tenant_id)
             .eq("id", automation_id)
             .execute()

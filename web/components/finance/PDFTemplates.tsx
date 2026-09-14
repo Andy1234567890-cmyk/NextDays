@@ -10,6 +10,7 @@ import {
   StandardTemplate,
   TechnicalTemplate,
   usePDFTemplateData,
+  StayTemplate,
 } from './pdf-templates';
 
 const PDFTemplate: React.FC<PDFTemplateProps> = props => {
@@ -95,6 +96,17 @@ const PDFTemplate: React.FC<PDFTemplateProps> = props => {
       case 'TEMPLATE_DYNAMIC':
         return (
           <DynamicTemplate
+            data={data}
+            color={props.color}
+            logoSize={props.logoSize || 50}
+            pageMode={pageMode}
+            documentType={props.documentType}
+            documentSettings={documentSettings}
+          />
+        );
+      case 'TEMPLATE_STAY':
+        return (
+          <StayTemplate
             data={data}
             color={props.color}
             logoSize={props.logoSize || 50}

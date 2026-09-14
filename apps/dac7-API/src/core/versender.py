@@ -34,6 +34,7 @@ from typing import Any
 
 import httpx
 
+from . import umschlag as umschlag_modul
 from .config import Settings, get_settings
 from .logging import get_logger
 
@@ -59,6 +60,10 @@ class Versandergebnis:
     pruefsumme: str
     ziel: str
     ist_teststufe: bool
+    # Ging die Meldung als verschluesselter Umschlag hinaus? Gehoert in
+    # das Ergebnis, nicht nur ins Log: Der Betrieb muss belegen koennen,
+    # WIE uebermittelt wurde.
+    verschluesselt: bool = False
     # Die vollstaendige Antwort der Gegenstelle, unveraendert. Der Betrieb
     # braucht sie im Streitfall.
     antwort: dict[str, Any] = field(default_factory=dict)
@@ -67,19 +72,64 @@ class Versandergebnis:
 async def senden(rohdaten: bytes, dateiname: str) -> Versandergebnis:
     """Eine fertige Meldedatei bei der Behoerde einreichen."""
     e = get_settings()
+    # Die Pruefsumme des KLARTEXTS, immer. Sie ist der Nachweis, WAS
+    # eingereicht wurde, und muss deshalb unabhaengig davon sein, ob und
+    # womit verschluesselt wurde: Zweimal verschluesselt ergibt zweimal
+    # andere Bytes (frischer Nonce), eine Pruefsumme darueber belegte
+    # nichts.
     pruef = hashlib.sha256(rohdaten).hexdigest()
     ziel = e.amt_url.rstrip("/") + "/v1/einreichung"
+
+    if e.verschluesselung_pflicht and not e.sendet_verschluesselt():
+        # Fail-closed: nicht senden. Eine Klartextmeldung an eine
+        # Steuerbehoerde, weil eine Variable fehlte, ist kein
+        # Schoenheitsfehler (Wurzel 4/5).
+        log.warning("versand_abgebrochen_kein_schluessel", ziel=ziel)
+        return _ergebnis(
+            angenommen=False,
+            nummer=None,
+            meldung=(
+                "Die Meldung wurde NICHT gesendet: Verschlüsselung ist "
+                "verlangt (VERSCHLUESSELUNG_PFLICHT), aber es liegt kein "
+                "öffentlicher Schlüssel der Gegenstelle vor (AMT_PUBKEY). "
+                "Er ist dort unter /v1/schluessel abrufbar."
+            ),
+            wiederholbar=True,
+            pruef=pruef,
+            ziel=ziel,
+            e=e,
+        )
+
+    nutzlast, sendename, verschluesselt = _nutzlast_bilden(
+        rohdaten, dateiname, e
+    )
+    if verschluesselt is None:
+        return _ergebnis(
+            angenommen=False,
+            nummer=None,
+            meldung=(
+                "Die Meldung wurde NICHT gesendet: Der öffentliche "
+                "Schlüssel der Gegenstelle ist unbrauchbar. "
+                f"{sendename}"
+            ),
+            wiederholbar=True,
+            pruef=pruef,
+            ziel=ziel,
+            e=e,
+        )
 
     log.info(
         "versand_beginnt",
         ziel=ziel,
         teststufe=e.amt_ist_teststufe,
         bytes=len(rohdaten),
+        gesendete_bytes=len(nutzlast),
+        verschluesselt=verschluesselt,
         pruefsumme=pruef[:16],
     )
 
     try:
-        antwort = await _anfragen(ziel, rohdaten, dateiname, e)
+        antwort = await _anfragen(ziel, nutzlast, sendename, e)
     except httpx.TimeoutException:
         return _ergebnis(
             angenommen=None,
@@ -106,7 +156,32 @@ async def senden(rohdaten: bytes, dateiname: str) -> Versandergebnis:
             e=e,
         )
 
-    return _auswerten(antwort, pruef, ziel, e)
+    return _auswerten(antwort, pruef, ziel, e, verschluesselt=verschluesselt)
+
+
+def _nutzlast_bilden(
+    rohdaten: bytes, dateiname: str, e: Settings
+) -> tuple[bytes, str, bool | None]:
+    """Was tatsaechlich auf die Leitung geht.
+
+    Gibt `(nutzlast, dateiname, verschluesselt)` zurueck. `verschluesselt`
+    ist `None`, wenn der Schluessel unbrauchbar war — dann traegt der
+    zweite Wert den Grund, und es wird NICHT gesendet: Auf einen
+    unbrauchbaren Schluessel mit Klartext auszuweichen waere genau die
+    falsche Richtung (Wurzel 5).
+
+    Die Endung `.umschlag` ist eine Hilfe fuer den Menschen, kein
+    Erkennungsmerkmal: Die Gegenstelle erkennt den Umschlag am INHALT.
+    """
+    if not e.sendet_verschluesselt():
+        return rohdaten, dateiname, False
+    try:
+        brief = umschlag_modul.verschliessen(
+            rohdaten, e.amt_pubkey, dateiname=dateiname
+        )
+    except umschlag_modul.UmschlagError as exc:
+        return b"", str(exc), None
+    return brief, f"{dateiname}.umschlag", True
 
 
 async def _anfragen(
@@ -127,7 +202,12 @@ async def _anfragen(
 
 
 def _auswerten(
-    antwort: httpx.Response, pruef: str, ziel: str, e: Settings
+    antwort: httpx.Response,
+    pruef: str,
+    ziel: str,
+    e: Settings,
+    *,
+    verschluesselt: bool = False,
 ) -> Versandergebnis:
     if antwort.status_code == 503:
         return _ergebnis(
@@ -142,6 +222,7 @@ def _auswerten(
             pruef=pruef,
             ziel=ziel,
             e=e,
+            verschluesselt=verschluesselt,
         )
     if antwort.status_code in (401, 403):
         return _ergebnis(
@@ -156,6 +237,7 @@ def _auswerten(
             pruef=pruef,
             ziel=ziel,
             e=e,
+            verschluesselt=verschluesselt,
         )
 
     try:
@@ -173,6 +255,7 @@ def _auswerten(
             pruef=pruef,
             ziel=ziel,
             e=e,
+            verschluesselt=verschluesselt,
         )
 
     angenommen = bool(daten.get("angenommen"))
@@ -197,6 +280,7 @@ def _auswerten(
         pruef=pruef,
         ziel=ziel,
         e=e,
+        verschluesselt=verschluesselt,
         antwort=daten,
     )
 
@@ -211,6 +295,7 @@ def _ergebnis(
     ziel: str,
     e: Settings,
     antwort: dict[str, Any] | None = None,
+    verschluesselt: bool = False,
 ) -> Versandergebnis:
     ergebnis = Versandergebnis(
         angenommen=angenommen,
@@ -221,6 +306,7 @@ def _ergebnis(
         pruefsumme=pruef,
         ziel=ziel,
         ist_teststufe=e.amt_ist_teststufe,
+        verschluesselt=verschluesselt,
         antwort=antwort or {},
     )
     log.info(

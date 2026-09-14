@@ -14,6 +14,7 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -30,7 +31,7 @@ import {
   OFFER_STATUSES,
   STATUS_TON,
 } from "@/lib/booking-offers-meta";
-import { cancelOffer, listOffers, sendOffer } from "@/lib/booking-offers";
+import { cancelOffer, ensureOfferQuote, listOffers, sendOffer } from "@/lib/booking-offers";
 import { formatCurrency } from "@/lib/currency";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -43,12 +44,33 @@ const TON_KLASSE: Record<"neutral" | "offen" | "gut" | "aus", string> = {
 
 export function AngeboteListe() {
   const t = useTranslations("angebote");
+  // Sprung aus dem Kalender-Balken (?angebot=<id>): Eintrag markieren + hinscrollen.
+  const markiert = useSearchParams().get("angebot");
+  const router = useRouter();
   const [items, setItems] = useState<BookingOffer[]>([]);
   const [gesamt, setGesamt] = useState(0);
   const [filter, setFilter] = useState<OfferStatus | "alle">("alle");
   const [laedt, setLaedt] = useState(true);
   const [fehler, setFehler] = useState<string | null>(null);
   const [aktion, setAktion] = useState<string | null>(null);
+  // Anschauen und Bearbeiten laufen über die Buchhaltung: dieselbe
+  // Angebotsansicht (PDF, Versand, Status) und derselbe Editor wie bei
+  // Rechnungen — kein eigener Drawer. Fehlt der Spiegel (Altbestand vor 0699),
+  // legt der Server ihn jetzt an; ohne Modul kommt 409 mit dem Grund. Änderungen
+  // im Editor fließen ins Kalender-Angebot zurück (angebot_bruecke.quelle_nachziehen).
+  async function inBuchhaltung(id: string, bearbeiten: boolean) {
+    setAktion(id);
+    const res = await ensureOfferQuote(id);
+    setAktion(null);
+    if (!res.ok) {
+      setFehler(res.error);
+      return;
+    }
+    if (!res.data.quote_id) return;
+    router.push(
+      `/buchhaltung/angebote/${res.data.quote_id}${bearbeiten ? "/bearbeiten" : ""}`,
+    );
+  }
 
   const laden = useCallback(async () => {
     setLaedt(true);
@@ -150,7 +172,13 @@ export function AngeboteListe() {
             {items.map((o) => (
               <li
                 key={o.id}
-                className="rounded-(--radius) border bg-card px-4 py-3"
+                id={`angebot-${o.id}`}
+                ref={(el) => {
+                  if (el && o.id === markiert) el.scrollIntoView({ block: "center" });
+                }}
+                className={`rounded-(--radius) border bg-card px-4 py-3 ${
+                  o.id === markiert ? "ring-2 ring-amber-500" : ""
+                }`}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -168,6 +196,12 @@ export function AngeboteListe() {
                     </p>
                     <p className="mt-0.5 text-sm">
                       {formatCurrency(o.total_amount, o.currency)}
+                      {o.tax_rule && (
+                        <span className="text-muted-foreground">
+                          {" · "}
+                          {t(`steuerregel.${o.tax_rule}`)}
+                        </span>
+                      )}
                       {o.deposit_amount != null && (
                         <span className="text-muted-foreground">
                           {" · "}
@@ -182,6 +216,14 @@ export function AngeboteListe() {
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={aktion === o.id}
+                      onClick={() => void inBuchhaltung(o.id, false)}
+                    >
+                      {t("aktionen.anschauen")}
+                    </Button>
                     {o.reservation_id && (
                       <Button asChild variant="outline" size="sm">
                         <Link href={`/reservierungen/${o.reservation_id}`}>
@@ -193,6 +235,14 @@ export function AngeboteListe() {
                       o.status === "sent" ||
                       o.status === "viewed") && (
                       <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={aktion === o.id}
+                          onClick={() => void inBuchhaltung(o.id, true)}
+                        >
+                          {t("aktionen.bearbeiten")}
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -225,6 +275,7 @@ export function AngeboteListe() {
           </ul>
         </>
       )}
+
     </div>
   );
 }

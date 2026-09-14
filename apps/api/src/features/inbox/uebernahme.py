@@ -11,11 +11,27 @@ blättern — genau dort, wo er jede andere Konversation liest.
 
 WAS HIER NICHT PASSIERT — und zwar mit Absicht:
 Es wird KEINE Zeile nach `channex_booking` oder `portal_messages` geschrieben.
-`channex_booking.channex_booking_id` ist NOT NULL + unique; um dort
-hineinzukommen, müsste man eine Channex-ID für eine Buchung erfinden, die nie
-über Channex lief. Die Daten bleiben, wo sie sind — sie werden nur GELESEN und
+Die übernommenen NACHRICHTEN bleiben, wo sie sind — sie werden nur GELESEN und
 in die Form gebracht, die der Posteingang ohnehin spricht (dasselbe Muster wie
 die WhatsApp-Threads im Frontend: eigener ID-Präfix, keine Datenwanderung).
+
+WAS SICH 09/2026 GEÄNDERT HAT — und warum das kein Widerspruch ist:
+Hier stand zusätzlich die Begründung, in `channex_booking` käme man ohnehin
+nicht hinein, weil `channex_booking_id` eine erfundene Channex-ID verlangte.
+Das war schon damals falsch: die Spalte ist ein Dedup-SCHLÜSSEL, keine Zusage
+über die Herkunft — die eigene Reservierungs-ID ist dort die stabile Kennung
+(so macht es der Marktplatz seit jeher). Aus der Fehlannahme folgte ein realer
+Ausfall: eine übernommene Buchung hatte keinen Thread, und die
+Nachrichten-Automatisierungen planen ausschließlich über Threads. Ein Betrieb,
+der mit LAUFENDEN Buchungen zu uns umzieht, bekam für sie keine einzige
+Automail — ausgerechnet in der Woche, in der er uns zum ersten Mal braucht.
+
+Die BUCHUNG bekommt deshalb jetzt ihren Thread (`inbox.thread_spiegel`,
+aufgerufen aus dem CSV-/PMS-Übernahmepfad). Der übernommene VERLAUF hier bleibt
+davon unberührt: er ist ein eingefrorenes Archiv aus einem fremden System und
+wandert nirgendwohin. Die befürchtete Mail-Lawine über den Altbestand
+verhindert die Nachzügler-Regel (`planung._versandstatus`), nicht das Fehlen
+des Threads.
 
 READ-ONLY: Ein übernommener Verlauf ist ein eingefrorenes Archiv aus einem
 fremden System. Man kann darauf nicht antworten — der Kanal, über den er lief,

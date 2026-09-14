@@ -548,6 +548,22 @@ class Settings(BaseSettings):
     # schicken. NICHT direkt lesen — der wirksame Wert ist `push_sandbox`.
     push_sandbox_override: bool | None = None
 
+    # --- DAC7-Uebermittlung (Versanddienst, eigener Dienst) --------------
+    # Adresse des Versanddienstes `apps/dac7-API`. Er ist die EINZIGE
+    # Stelle, die mit der Steuerbehoerde spricht; das PMS erzeugt die
+    # Meldung und gibt sie dorthin.
+    #
+    # Leer = keine Uebermittlung aus der Oberflaeche. Dann bleibt der Weg
+    # wie bisher: Datei herunterladen und bei der Behoerde hochladen. Kein
+    # Vorgabewert, der auf irgendeinen Dienst zeigt — eine falsch
+    # konfigurierte Umgebung, die still an die echte Behoerde sendet, ist
+    # der teuerste denkbare Fehler dieses Bereichs (Wurzel 4).
+    dac7_versand_url: str = ""
+    dac7_versand_token: str = ""
+    # Wie lange auf den Versanddienst gewartet wird. Er wartet selbst auf
+    # die Behoerde, deshalb laenger als ein normaler interner Aufruf.
+    dac7_versand_zeitlimit_s: float = 90.0
+
     # Öffentliche Adresse des Plattform-Backoffice (admin/). Wird für die
     # Einladungslinks des Backoffice-Teams gebraucht; fehlt sie, schlägt die
     # Einladung klar fehl, statt eine erfundene URL zu verschicken (Wurzel 4).

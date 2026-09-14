@@ -18,7 +18,8 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 import { NativeSelect } from '@nextdays/ui/native-select';
-import { getVATFormat, validateVATNumber } from '@/utils/vatValidation';
+import { getVATFormat, laendernameDeutsch, validateVATNumber } from '@/utils/vatValidation';
+import { LAENDER } from '@/lib/laender';
 
 export interface ContactPerson {
   id: string;
@@ -128,9 +129,16 @@ function AddCustomerModal({
     street: '',
     city: '',
     postalCode: '',
-    country: 'Deutschland',
-    // Unternehmenstyp für Deutschland
-    businessType: 'kleinunternehmer', // 'kleinunternehmer' oder 'regelbesteuert'
+    // Kein vorausgewaehltes Land: „Deutschland" war eine Annahme ueber den
+    // Kunden eines Betriebs, der ueberall in der EU sitzen kann — und sie
+    // schaltete zugleich den deutschen Steuernummer-Zweig weiter unten frei
+    // (Wurzel 4). Leer heisst: der Betrieb waehlt.
+    country: '',
+    // Kein vorbelegter Unternehmenstyp: „kleinunternehmer" ist eine
+    // steuerliche Behauptung ueber den Kunden, und mehrere EU-Staaten (etwa
+    // Spanien) kennen dieses Regime gar nicht — siehe `befreiungFuerLand`
+    // in lib/laender. Leer, bis es jemand setzt.
+    businessType: '',
     taxNumber: '',
     vatId: '',
     vatValidated: false,
@@ -322,8 +330,10 @@ function AddCustomerModal({
         street: '',
         city: '',
         postalCode: '',
-        country: 'Deutschland',
-        businessType: 'kleinunternehmer',
+        // Reset auf denselben leeren Ausgangszustand wie oben — sonst haette
+        // der zweite angelegte Kunde stillschweigend wieder DE/Kleinunternehmer.
+        country: '',
+        businessType: '',
         taxNumber: '',
         vatId: '',
         vatValidated: false,
@@ -692,17 +702,27 @@ function AddCustomerModal({
                     className="w-full"
                     required
                   >
-                    <option value="Deutschland">{tCountry("DE")}</option>
-                    <option value="Österreich">{tCountry("AT")}</option>
-                    <option value="Schweiz">{tCountry("CH")}</option>
-                    <option value="Niederlande">{tCountry("NL")}</option>
-                    <option value="Belgien">{tCountry("BE")}</option>
-                    <option value="Frankreich">{tCountry("FR")}</option>
-                    <option value="Italien">{tCountry("IT")}</option>
-                    <option value="Spanien">{tCountry("ES")}</option>
-                    <option value="Polen">{tCountry("PL")}</option>
-                    <option value="Tschechien">{tCountry("CZ")}</option>
-                    <option value="Andere">Andere</option>
+                    {/* Kein Land vorausgewaehlt: der Betrieb sagt, wo sein
+                        Kunde sitzt — Raten waere hier eine steuerliche
+                        Behauptung (Wurzel 4). */}
+                    {/* Sprachneutraler Leereintrag (kein neuer i18n-Schluessel
+                        fuer 24 Sprachen noetig) — das Pflichtfeld-Label „Land *"
+                        traegt die Bedeutung, `required` erzwingt die Auswahl. */}
+                    <option value="">—</option>
+                    {/* Laenderliste aus der EINEN Quelle (lib/laender.LAENDER,
+                        28 Eintraege). Vorher standen hier zehn fest eingetippte
+                        Laender, Daenemark fehlte — ein DK-Kunde liess sich nicht
+                        anlegen. Der gespeicherte WERT bleibt bewusst der
+                        deutsche Klarname: genau darauf sind der Bestand, die
+                        Schwester-Maske NewCustomerModal und `getVATFormat`
+                        (utils/vatValidation) verschluesselt. Ein Umstieg auf
+                        ISO-Codes muesste alle drei zugleich mitnehmen und
+                        gehoert nicht in diese Aenderung. */}
+                    {LAENDER.map(land => (
+                      <option key={land.code} value={laendernameDeutsch(land.code)}>
+                        {tCountry(land.code)}
+                      </option>
+                    ))}
                   </NativeSelect>
                 </div>
               </div>

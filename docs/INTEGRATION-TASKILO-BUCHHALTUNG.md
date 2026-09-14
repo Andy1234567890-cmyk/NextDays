@@ -151,6 +151,13 @@ Konsequenzen für den Merge:
 
 ## 7. Roadmap & Fortschritt
 
+> **Gegengeprüft am 11.09.2026** — [buchhaltung/TASKILO-FINANZ-BESTAND-2026-09-11.md](buchhaltung/TASKILO-FINANZ-BESTAND-2026-09-11.md):
+> Schritt 2 nennt `POST /number-sequences/next` als erledigt; das Backend hat ihn
+> inzwischen bewusst entfernt (`buchhaltung/router.py:330`), `numberSequenceService`
+> ruft ihn weiter auf. Schritt 3 ist zur Bauzeit fertig, zur Laufzeit laufen 13 Pfade
+> ins 404. ADR-0009 steht noch auf »nicht 1:1 kopieren« und braucht den Nachtrag zur Revision.
+
+
 **Strategie (REVIDIERT):** Die echten Taskilo-Komponenten werden **1:1 übernommen**
 (unveränderter Inhalt/Logik/JSX), nicht nachgebaut — der frühere Neuaufbau-Ansatz
 lieferte nur dünne Attrappen ohne GoBD-Logik. Möglich wird das, weil `@tasko/ui`

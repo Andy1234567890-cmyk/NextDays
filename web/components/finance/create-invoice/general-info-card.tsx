@@ -44,6 +44,7 @@ import type { CreateInvoiceFormData } from '@/types/formData';
 
 // Header-Bar oben: Titel, E-Rechnung-Toggle, Entwurf/Vorschau/Erstellen-Aktionen
 export function InvoiceHeaderBar({
+  belegart = 'invoice',
   eInvoiceEnabled,
   handleEInvoiceToggle,
   loading,
@@ -51,6 +52,7 @@ export function InvoiceHeaderBar({
   setShowLivePreview,
   handleOpenSendModal,
 }: {
+  belegart?: 'invoice' | 'quote';
   eInvoiceEnabled: boolean;
   handleEInvoiceToggle: (enabled: boolean) => Promise<void>;
   loading: boolean;
@@ -59,6 +61,7 @@ export function InvoiceHeaderBar({
   handleOpenSendModal: () => void;
 }) {
   const t = useTranslations('finance');
+  const istAngebot = belegart === 'quote';
   return (
     <header className="w-full" style={{ maxWidth: '1440px' }}>
       <div className="flex items-center justify-between border-gray-200 border-b py-4">
@@ -66,14 +69,15 @@ export function InvoiceHeaderBar({
         <div className="flex items-center">
           <div>
             <h2 className="font-bold text-2xl text-gray-900">
-              {t('generalInfoCard.newInvoiceTitle')}
+              {istAngebot ? t('generalInfoCard.newQuoteTitle') : t('generalInfoCard.newInvoiceTitle')}
             </h2>
           </div>
         </div>
 
         {/* Right side - Controls and Actions */}
         <div className="flex items-center gap-4">
-          {/* E-Rechnung Toggle */}
+          {/* E-Rechnung Toggle — nur Rechnungen (ein Angebot ist keine E-Rechnung) */}
+          {!istAngebot && (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
               <Switch
@@ -90,6 +94,7 @@ export function InvoiceHeaderBar({
               </span>
             </div>
           </div>
+          )}
 
           {/* Divider */}
           <div className="h-6 w-px bg-gray-300"></div>
@@ -131,7 +136,7 @@ export function InvoiceHeaderBar({
               ) : (
                 <Icon icon="lucide:send" className="mr-2 h-4 w-4" />
               )}
-              {t('generalInfoCard.createInvoice')}
+              {istAngebot ? t('generalInfoCard.createQuote') : t('generalInfoCard.createInvoice')}
             </Button>
 
             {/* More Options Dropdown */}
@@ -184,6 +189,7 @@ export function InvoiceHeaderBar({
 }
 
 type GeneralInfoCardProps = {
+  belegart?: 'invoice' | 'quote';
   uid: string;
   userUid: string;
   formData: CreateInvoiceFormData;
@@ -207,10 +213,14 @@ type GeneralInfoCardProps = {
   setDeliveryDateType: Dispatch<SetStateAction<'single' | 'range'>>;
   deliveryDateRange: { from?: Date; to?: Date };
   setDeliveryDateRange: Dispatch<SetStateAction<{ from?: Date; to?: Date }>>;
+  // Personen im Belegkopf (0698): Menge für Positionen je Person / je Person × Nacht.
+  guestCount: number;
+  setGuestCount: Dispatch<SetStateAction<number>>;
 };
 
 // Card „Allgemeine Angaben" (Empfänger + Rechnungsinformationen) + Kopf-Text
 export default function GeneralInfoCard({
+  belegart = 'invoice',
   uid,
   userUid,
   formData,
@@ -234,12 +244,18 @@ export default function GeneralInfoCard({
   setDeliveryDateType,
   deliveryDateRange,
   setDeliveryDateRange,
+  guestCount,
+  setGuestCount,
 }: GeneralInfoCardProps) {
   // Lokale UI-States (lebten vorher im selben JSX-Block)
   const [showAddressAddition, setShowAddressAddition] = useState(false);
   const [deliveryDatePopoverOpen, setDeliveryDatePopoverOpen] = useState(false);
   const t = useTranslations('finance');
   const countryOptions = useCountryOptions();
+  // Beschriftungen je Belegart: Rechnungs- vs. Angebotswortlaut, gleiche Felder.
+  const istAngebot = belegart === 'quote';
+  const l = (rechnung: string, angebot: string) =>
+    t(`generalInfoCard.${istAngebot ? angebot : rechnung}`);
 
   return (
     <>
@@ -630,7 +646,7 @@ export default function GeneralInfoCard({
             <div className="space-y-4">
               <div>
                 <h3 className="mb-4 font-semibold text-gray-900 text-lg">
-                  {t('generalInfoCard.invoiceInformation')}
+                  {l('invoiceInformation', 'quoteInformation')}
                 </h3>
 
                 {/* 2x2 Grid für Rechnungsfelder */}
@@ -639,7 +655,7 @@ export default function GeneralInfoCard({
                   <div className="space-y-2">
                     <div className="flex items-center gap-1">
                       <Label className="font-medium text-gray-700 text-sm">
-                        {t('generalInfoCard.invoiceDate')}
+                        {l('invoiceDate', 'quoteDate')}
                       </Label>
                       <span className="text-red-500">*</span>
                     </div>
@@ -657,11 +673,32 @@ export default function GeneralInfoCard({
                       Aufenthalt/Leistungszeitraum (von–bis, Standard bei
                       Zimmerrechnungen aus Buchungen) */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <Label
-                          className={`cursor-pointer font-medium text-sm ${deliveryDateType === 'single' ? 'text-gray-900' : 'text-gray-500'
-                            }`}
+                    {/* Eine Zeile, immer: Beschriftung links, rechts ein kompakter
+                        Symbol-Umschalter Tag | Zeitraum. Die Textform des Bestands
+                        („Leistungsdatum" · „Aufenthalt / Zeitraum") brach in der
+                        halben Spalte auf schmalen Bildschirmen zweizeilig; die Texte
+                        bleiben als Tooltip und für Screenreader erhalten. */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-1">
+                        <Label className="truncate font-medium text-gray-900 text-sm">
+                          {deliveryDateType === 'single'
+                            ? t('generalInfoCard.serviceDate')
+                            : t('generalInfoCard.stayOrPeriod')}
+                        </Label>
+                        <span className="text-red-500">*</span>
+                      </div>
+                      <div
+                        role="radiogroup"
+                        aria-label={t('generalInfoCard.serviceDate')}
+                        className="inline-flex shrink-0 overflow-hidden rounded-full border border-gray-200"
+                      >
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={deliveryDateType === 'single'}
+                          title={t('generalInfoCard.serviceDate')}
+                          aria-label={t('generalInfoCard.serviceDate')}
+                          className={`px-2 py-1 transition-colors ${deliveryDateType === 'single' ? 'bg-accent text-white' : 'text-gray-500 hover:bg-gray-50'}`}
                           onClick={() => {
                             setDeliveryDateType('single');
                             // Leere servicePeriod und deliveryDateRange wenn Einzeldatum-Modus aktiviert wird
@@ -669,22 +706,24 @@ export default function GeneralInfoCard({
                             setDeliveryDateRange({});
                           }}
                         >
-                          {t('generalInfoCard.serviceDate')}
-                        </Label>
-                        <span className="text-red-500">*</span>
+                          <Icon icon="lucide:calendar" className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={deliveryDateType === 'range'}
+                          title={t('generalInfoCard.stayOrPeriod')}
+                          aria-label={t('generalInfoCard.stayOrPeriod')}
+                          className={`px-2 py-1 transition-colors ${deliveryDateType === 'range' ? 'bg-accent text-white' : 'text-gray-500 hover:bg-gray-50'}`}
+                          onClick={() => {
+                            setDeliveryDateType('range');
+                            // Leere deliveryDate wenn Zeitraum-Modus aktiviert wird
+                            setFormData(prev => ({ ...prev, deliveryDate: '' }));
+                          }}
+                        >
+                          <Icon icon="lucide:calendar-range" className="h-4 w-4" />
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        className={`cursor-pointer font-medium text-sm ${deliveryDateType === 'range' ? 'text-gray-900' : 'text-gray-500'
-                          }`}
-                        onClick={() => {
-                          setDeliveryDateType('range');
-                          // Leere deliveryDate wenn Zeitraum-Modus aktiviert wird
-                          setFormData(prev => ({ ...prev, deliveryDate: '' }));
-                        }}
-                      >
-                        {t('generalInfoCard.stayOrPeriod')}
-                      </button>
                     </div>
 
                     {deliveryDateType === 'single' ? (
@@ -760,7 +799,7 @@ export default function GeneralInfoCard({
                   <div className="space-y-2">
                     <div className="flex items-center gap-1">
                       <Label className="font-medium text-gray-700 text-sm">
-                        {t('generalInfoCard.invoiceNumber')}
+                        {l('invoiceNumber', 'quoteNumber')}
                       </Label>
                       <span className="text-red-500">*</span>
                     </div>
@@ -768,7 +807,7 @@ export default function GeneralInfoCard({
                       <Input
                         placeholder={
                           nextNumberLoading
-                            ? t('generalInfoCard.loadingNextInvoiceNumber')
+                            ? l('loadingNextInvoiceNumber', 'loadingNextQuoteNumber')
                             : nextNumberError
                               ? t('generalInfoCard.loadingError', { error: nextNumberError })
                               : nextInvoiceNumber
@@ -784,7 +823,7 @@ export default function GeneralInfoCard({
                         onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
                         className="bg-gray-50 pr-10 text-gray-600"
                         readOnly
-                        title={t('generalInfoCard.invoiceNumberAutoAssignHint')}
+                        title={l('invoiceNumberAutoAssignHint', 'quoteNumberAutoAssignHint')}
                       />
 
                       <Button
@@ -809,25 +848,47 @@ export default function GeneralInfoCard({
                     </div>
                   </div>
 
-                  {/* Referenznummer */}
-                  <div className="space-y-2">
-                    <Label className="font-medium text-gray-700 text-sm">
-                      {t('generalInfoCard.referenceNumber')}
-                    </Label>
-                    <Input
-                      placeholder={t('generalInfoCard.optional')}
-                      value={formData.customerOrderNumber}
-                      onChange={e =>
-                        setFormData(prev => ({ ...prev, customerOrderNumber: e.target.value }))
-                      }
-                    />
+                  {/* Referenznummer + Personen (0698) in einer Zelle */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="font-medium text-gray-700 text-sm">
+                        {t('generalInfoCard.referenceNumber')}
+                      </Label>
+                      <Input
+                        placeholder={t('generalInfoCard.optional')}
+                        value={formData.customerOrderNumber}
+                        onChange={e =>
+                          setFormData(prev => ({ ...prev, customerOrderNumber: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-medium text-gray-700 text-sm" htmlFor="guest-count">
+                        {t('generalInfoCard.guests')}
+                      </Label>
+                      {/* Leer = 0 = nicht gesetzt; Positionen „je Person" bleiben dann bei ihrer
+                          Menge, statt eine 1 zu erfinden. */}
+                      <Input
+                        id="guest-count"
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={guestCount > 0 ? guestCount : ''}
+                        placeholder={t('generalInfoCard.guestsPlaceholder')}
+                        title={t('generalInfoCard.guestsHint')}
+                        onChange={e => {
+                          const n = parseInt(e.target.value, 10);
+                          setGuestCount(Number.isFinite(n) && n > 0 ? n : 0);
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
                 {/* Zahlungsziel - Ganze Zeile */}
                 <div className="space-y-2">
                   <Label className="font-medium text-gray-700 text-sm">
-                    {t('generalInfoCard.paymentTerm')}
+                    {l('paymentTerm', 'validUntil')}
                   </Label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -863,6 +924,7 @@ export default function GeneralInfoCard({
         onHeadTextChange={html => setFormData(prev => ({ ...prev, headTextHtml: html }))}
         companyId={uid}
         userId={userUid}
+        objectType={istAngebot ? 'QUOTE' : 'INVOICE'}
         getFieldErrorClass={getFieldErrorClass}
       />
     </>

@@ -31,6 +31,8 @@ export type FirmenProfil = {
   // USt-Satz Übernachtung (%) — Pflicht für die automatische Rechnung beim
   // Check-out (Booking→Invoice, 0092); undefined lässt den Wert unangetastet.
   lodgingTaxRate?: number;
+  // Regelsatz des Betriebs (Frühstück, Reinigung, Parkplatz …), 0698.
+  defaultTaxRate?: number;
   // Optional (Register / GF / Bank)
   companyRegister?: string;
   districtCourt?: string;

@@ -7,7 +7,8 @@ import {
   documentTranslations,
 } from './document-translations';
 
-export type { DocumentTranslations };
+export type { DocumentTranslations, DocumentTextKey };
+import type { DocumentTextKey } from './document-translations';
 export { DOCUMENT_LANGUAGES } from './document-translations';
 
 // Die Übersetzungstabellen (24 EU-Sprachen) leben in document-translations.ts;
@@ -27,8 +28,22 @@ export function resolveDocumentLanguage(language?: string | null): string {
 export const useDocumentTranslation = (language: string = 'de') => {
   const t = useMemo(() => {
     const lang = translations[resolveDocumentLanguage(language)] || translations.de;
-    return (key: keyof DocumentTranslations): string => {
+    return (key: DocumentTextKey): string => {
       return lang[key] || translations.de[key] || key;
+    };
+  }, [language]);
+
+  // Aufenthalts-Labels (TEMPLATE_STAY) mit {platzhalter}-Ersetzung.
+  const stay = useMemo(() => {
+    const lang = translations[resolveDocumentLanguage(language)] || translations.de;
+    return (
+      key: keyof DocumentTranslations['stay'],
+      werte: Record<string, string | number> = {},
+    ): string => {
+      const roh = lang.stay?.[key] || translations.de.stay[key] || key;
+      return roh.replace(/\{(\w+)\}/g, (_m, k: string) =>
+        werte[k] === undefined ? `{${k}}` : String(werte[k]),
+      );
     };
   }, [language]);
 
@@ -40,7 +55,7 @@ export const useDocumentTranslation = (language: string = 'de') => {
     [language],
   );
 
-  return { t, dateLocale };
+  return { t, stay, dateLocale };
 };
 
 /**

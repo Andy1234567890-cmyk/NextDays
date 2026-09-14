@@ -545,7 +545,8 @@ class AutomationBase(BaseModel):
     is_active: bool = True
     # Sendezeit in der Zeitzone des Objekts auflösen statt in UTC. Fehlt am Objekt
     # die Zeitzone, wird NICHT geplant (kein stilles Ausweichen auf UTC).
-    use_property_timezone: bool = False
+    # Ohne Wirkung seit 14.09.2026: die Uhrzeit gilt immer in Objekt-Ortszeit.
+    use_property_timezone: bool = True
     # Nur message_received:
     only_first_message: bool = False   # nur die erste Gastnachricht im Thread
     window_days: list[int] = []        # 0=Mo … 6=So; leer = alle Tage

@@ -31,7 +31,8 @@ export type InvoiceTemplate =
   | 'TEMPLATE_ELEGANT'
   | 'TEMPLATE_TECHNICAL'
   | 'TEMPLATE_GEOMETRIC'
-  | 'TEMPLATE_DYNAMIC';
+  | 'TEMPLATE_DYNAMIC'
+  | 'TEMPLATE_STAY';
 
 // Verfügbare PDF-Templates für alle Dokumenttypen
 export const AVAILABLE_TEMPLATES: Array<{
@@ -74,6 +75,12 @@ export const AVAILABLE_TEMPLATES: Array<{
     id: 'TEMPLATE_DYNAMIC',
     name: 'Dynamisches Template',
     description: 'Flexibles Design mit dynamischen Anpassungen',
+    component: PDFTemplateWrapper,
+  },
+  {
+    id: 'TEMPLATE_STAY',
+    name: 'Aufenthalt',
+    description: 'Angebot für Hotel und Ferienobjekt: Bild, Aufenthalt, Preis, Zahlung, Storno',
     component: PDFTemplateWrapper,
   },
 ];

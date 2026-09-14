@@ -469,6 +469,14 @@
       "count": 1
     }
   },
+  "components/finance/DocumentListView.tsx": {
+    "complexity": {
+      "count": 4
+    },
+    "max-lines-per-function": {
+      "count": 2
+    }
+  },
   "components/finance/EmailSendModal.tsx": {
     "complexity": {
       "count": 4
@@ -498,6 +506,17 @@
   },
   "components/finance/ImportXRechnungDialog.tsx": {
     "complexity": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/InlinePreview.tsx": {
+    "complexity": {
+      "count": 1
+    },
+    "max-depth": {
       "count": 1
     },
     "max-lines-per-function": {
@@ -536,6 +555,14 @@
       "count": 2
     },
     "max-depth": {
+      "count": 1
+    },
+    "max-lines-per-function": {
+      "count": 1
+    }
+  },
+  "components/finance/QuoteDetailView.tsx": {
+    "complexity": {
       "count": 1
     },
     "max-lines-per-function": {

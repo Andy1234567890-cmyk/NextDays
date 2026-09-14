@@ -21,9 +21,10 @@ export class InvoiceService {
 
   static async getNextInvoiceNumber(
     companyId: string,
+    belegart: 'invoice' | 'quote' = 'invoice',
   ): Promise<{ formattedNumber: string; sequentialNumber: number }> {
     const result = await api.get<{ formattedNumber: string; sequentialNumber: number }>(
-      `/api/v1/invoices/next-number/${companyId}`,
+      `/api/v1/${belegart === 'quote' ? 'quotes' : 'invoices'}/next-number/${companyId}`,
     );
     return result;
   }

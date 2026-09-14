@@ -8,7 +8,9 @@
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
-export type QuoteLine = { label: string; amount: number };
+// `kind` klassifiziert die Zeile (lodging|surcharge|fee|discount|tax|addon) —
+// der Beleg-Editor leitet daraus Basis und Steuersatz ab (0701).
+export type QuoteLine = { label: string; amount: number; kind?: string | null };
 
 export type Quote = {
   property_id: string;

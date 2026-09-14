@@ -31,13 +31,14 @@ from src.features.guests.identity import (
 )
 
 # Der Nachrichten-Spiegel (`portal_messages`): lesen, nachtragen, Signal setzen.
-from . import anfragen
+from . import anfragen, mail_versand, thread_spiegel
 from .anfragen import AnfragenMixin
 from .anhaenge import AnhangMixin
 from .automationen import AutomationenMixin
 from .errors import InboxError
 from .feld_kontext import FeldKontextMixin
 from .felder import FeldFehlt, rendern, unbekannte_felder
+from .geplante_nachrichten import GeplanteNachrichtenMixin
 from .kennzahlen import KennzahlenMixin
 from .ki_autoantwort import KiAutoantwortMixin
 from .ki_eskalation import KiEskalationMixin
@@ -66,6 +67,8 @@ from .sprachen import (
 from .vorlagen import VorlagenMixin
 
 if TYPE_CHECKING:
+    from src.core.mail import MailService
+
     from .authz import InboxAccess
 
 log = get_logger("nextdays.inbox")
@@ -133,6 +136,7 @@ def _chronologisch(m: InboxMessage) -> tuple[int, datetime]:
 
 class InboxService(
     PlanungMixin,
+    GeplanteNachrichtenMixin,
     VorlagenMixin,
     KiEskalationMixin,
     KiRegelnMixin,
@@ -155,9 +159,13 @@ class InboxService(
         self,
         service_client: Client | None = None,
         channex: ChannexClient | None = None,
+        mail: "MailService | None" = None,
     ) -> None:
         self._db = service_client
         self._channex = channex or ChannexClient()
+        # Bewusst NICHT hier gebaut (s. `mail_versand.dienst`): der Posteingang
+        # entsteht an vielen Stellen, die nie eine Mail senden.
+        self._mail = mail
 
     def health(self) -> SliceHealth:
         return SliceHealth(slice=self.slice_name)
@@ -955,6 +963,7 @@ class InboxService(
     def send_message(
         self, ctx: AuthContext, thread_id: str, message: str,
         *, enforce_reply: bool = True, quelle: str = "manuell",
+        automation_id: str | None = None,
     ) -> InboxMessage:
         """Antwort an den Gast senden.
 
@@ -965,6 +974,18 @@ class InboxService(
         der eine Automail von einer Handnachricht unterscheidbar bleibt: das
         Portal-Echo trägt für beide `sender='property'`. Der Automail-Dispatch
         übergibt `automation`, alle anderen Aufrufer bleiben beim Default.
+
+        ZWEI WEGE zum Gast, und der Thread entscheidet welcher: hinter einem
+        Portal-Thread steht eine Buchung beim Aggregator (Channex-Chat), hinter
+        einem eigenen Thread (Direkt, Website, myBestDays) steht keine — dort
+        ist die E-Mail-Adresse der Buchung der Kanal (`mail_versand`). Ohne
+        diese Weiche war jede Direktbuchung unzustellbar: der Versand lief gegen
+        eine Channex-Buchungs-ID, hinter der nichts steht.
+
+        `automation_id` nennt die Regel, aus der diese Nachricht stammt. Sie
+        wird NUR auf dem Mailweg gebraucht (der Betreff steht an der Regel) und
+        deshalb auch nur dort aufgelöst — ein Portal-Chat hat keinen Betreff,
+        und zwei Abfragen je fälliger Zeile wären im Tick sonst umsonst.
         """
         text = (message or "").strip()
         if not text:
@@ -1030,6 +1051,19 @@ class InboxService(
             self.autoantwort_abbrechen(
                 tenant_id, thread_id, f"Nachricht im Thread ({quelle})"
             )
+        if thread_spiegel.ist_eigener_thread(row):
+            self._mail = mail_versand.dienst(self._mail)
+            gesendet = mail_versand.per_mail_senden(
+                db, tenant_id, customer=self._customer_of(row), text=text,
+                automation_id=automation_id, mail=self._mail,
+            )
+            # Spiegel wie beim Portal-Echo; die `quelle` bleibt der AUSLÖSER
+            # (manuell|automation|ki), nicht der Versandweg — s. `mail_versand`.
+            self._spiegel_schreiben(
+                db, tenant_id, thread_id, cbid, [gesendet], quelle=quelle
+            )
+            self._aus_nachricht_lernen(db, tenant_id, thread_id, row, text, quelle)
+            return gesendet
         try:
             res = self._portal_senden(cbid, row, text)
         except ChannexError as exc:

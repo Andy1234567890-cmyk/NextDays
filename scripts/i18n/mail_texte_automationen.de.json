@@ -1,0 +1,6 @@
+{
+  "automation.mail.betreff": "Nachricht zu Ihrer Buchung",
+  "benachrichtigung.automation_objekt_fehlt": "Das neue Objekt {objekt} ist in diesen Nachrichten-Automatisierungen nicht enthalten: {regeln}. Gäste dieses Objekts bekommen daraus keine Nachrichten, bis das Objekt in der Regel ergänzt wird.",
+  "benachrichtigung.automation_zeitzone_fehlt": "Bei {anzahl} Objekt(en) fehlt die Zeitzone: {objekte}. Nachrichten-Automatisierungen, die in der Ortszeit des Objekts senden sollen, planen dort nichts. Bitte die Zeitzone am Objekt nachtragen.",
+  "benachrichtigung.automation_gast_unerreichbar": "Eine Buchung für {objekt} hat keine E-Mail-Adresse des Gastes. Die Nachrichten-Automatisierungen dieser Buchung können nicht versendet werden. Bitte die Adresse an der Buchung nachtragen, danach werden sie automatisch eingeplant."
+}

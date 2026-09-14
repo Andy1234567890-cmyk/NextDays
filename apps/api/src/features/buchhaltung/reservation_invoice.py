@@ -49,6 +49,9 @@ log = get_logger("nextdays.buchhaltung.reservation_invoice")
 # werden. 'tax' (Abgaben wie Kurtaxe) → 0 %; 'addon' kommt hier nie vor
 # (Invariante oben), wird aber defensiv wie lodging behandelt.
 _ZERO_RATE_KIND = "tax"
+# Snapshot-Zeilen, die den Aufenthalt selbst tragen (booking_offers: "lodging",
+# Direktbuchung: "stay") — sie werden als Nächte × Preis je Nacht fakturiert.
+_STAY_KINDS = frozenset({"lodging", "stay"})
 
 _HUNDRED = Decimal("100")
 
@@ -125,21 +128,82 @@ def _split_gross(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
 
 
 def _line(
-    description: str, gross: Decimal, rate: Decimal, unit: str = "pauschal"
+    description: str,
+    gross: Decimal,
+    rate: Decimal,
+    unit: str = "pauschal",
+    *,
+    basis: str = "per_stay",
+    quantity: Decimal = Decimal("1"),
 ) -> dict:
-    """Eine Rechnungsposition (Beträge als Decimal; quantity ist immer 1 —
-    Mengen stecken bereits im Label, z. B. „Übernachtung (3 Nächte)")."""
+    """Eine Rechnungsposition (Beträge als Decimal).
+
+    Standard ist EINE Zeile mit Menge 1 (Mengen stecken im Label). Mit
+    ``quantity`` > 1 (Übernachtung: Nächte × Preis je Nacht, 0698) wird der
+    Netto-Einzelpreis aus dem Gesamtnetto abgeleitet — nur wenn das ohne Rest
+    aufgeht; sonst bleibt der Aufrufer bei Menge 1, damit Σ Positionen exakt
+    dem vereinbarten Betrag entspricht (GoBD)."""
     net, tax = _split_gross(gross, rate)
+    unit_price = net
+    if quantity > 1:
+        # Der GASTPREIS je Nacht ist die runde Größe (100,00 brutto), nicht der
+        # Nettoanteil. Geht der Bruttobetrag ohne Rest auf die Nächte auf, wird
+        # je Nacht netto/steuer gesplittet; Σ Zeile bleibt exakt der vereinbarte
+        # Bruttobetrag. Sonst bleibt es bei EINER Zeile (Menge 1, pauschal).
+        gross_unit = gross / quantity
+        if _q(gross_unit) * quantity == _q(gross):
+            unit_price, _ = _split_gross(_q(gross_unit), rate)
+            net = _q(unit_price * quantity)
+            tax = _q(gross - net)
+        else:
+            quantity = Decimal("1")
+            basis = "per_stay"
     return {
         "description": description,
-        "quantity": Decimal("1"),
+        "quantity": quantity,
         "unit": unit,
-        "unit_price": net,
+        "basis": basis,
+        "unit_price": unit_price,
         "tax_rate": rate,
         "net_amount": net,
         "tax_amount": tax,
         "gross_amount": _q(gross),
     }
+
+
+def _stay_line(
+    label: str,
+    amount: Decimal,
+    rate: Decimal,
+    nights: int,
+    flat_unit: str,
+    language: str,
+    aufenthalt: dict | None = None,
+) -> dict:
+    """Sammelposition Aufenthalt: als „Nächte × Preis je Nacht" (0698), wenn
+    Nächte bekannt und der Betrag ≠ 0 — sonst eine pauschale Zeile.
+
+    `aufenthalt` trägt Objekt und Zeitraum DIESER Zeile (0702) — auf dem Beleg
+    steht damit „Objekt · Anreise – Abreise" auch ohne Kopfzeitraum."""
+    if nights > 0 and amount != 0:
+        zeile = _line(
+            label, amount, rate, doc_i18n.night_unit(language),
+            basis="per_night", quantity=Decimal(nights),
+        )
+    else:
+        zeile = _line(label, amount, rate, flat_unit)
+    return {**zeile, **(aufenthalt or {})}
+
+
+def _aufenthalt(reservation: dict) -> tuple[str, str, int]:
+    """Anreise, Abreise und Nächte der Buchung (0 Nächte bei fehlenden Daten)."""
+    check_in = str(reservation.get("check_in") or "")
+    check_out = str(reservation.get("check_out") or "")
+    try:
+        nights = (date.fromisoformat(check_out) - date.fromisoformat(check_in)).days
+    except ValueError:
+        nights = 0
+    return check_in, check_out, nights
 
 
 def build_positions(
@@ -203,6 +267,14 @@ def build_positions(
     # Betrag fakturiert — keine erfundene Aufschlüsselung. Auch 0 € ist ein
     # gültiger vereinbarter Preis (Comp-Aufenthalt): der Check-out darf nie an
     # einem 0-Beleg scheitern (Pflicht-Rechnung beim Check-out).
+    check_in, check_out, nights = _aufenthalt(reservation)
+    # Objekt + Zeitraum DIESER Übernachtungszeile (0702) — der Belegkopf trägt
+    # denselben Aufenthalt, die Zeile bleibt aber auch ohne ihn aussagefähig.
+    zeilen_aufenthalt = {
+        "property_id": str(reservation.get("property_id") or "") or None,
+        "check_in": check_in or None,
+        "check_out": check_out or None,
+    }
     breakdown_matches = quote_items and abs(
         items_sum + addons_sum - total_amount
     ) <= Decimal("0.01")
@@ -229,14 +301,14 @@ def build_positions(
                 rate = Decimal("0")
             else:
                 rate = lodging_rate()
-            positions.append(_line(label, gross, rate, unit))
+            if kind in _STAY_KINDS:
+                # Übernachtungszeile des Snapshots: Nächte × Preis je Nacht (0698).
+                positions.append(
+                    _stay_line(label, gross, rate, nights, unit, language, zeilen_aufenthalt)
+                )
+            else:
+                positions.append(_line(label, gross, rate, unit))
     if not positions:
-        check_in = str(reservation.get("check_in") or "")
-        check_out = str(reservation.get("check_out") or "")
-        try:
-            nights = (date.fromisoformat(check_out) - date.fromisoformat(check_in)).days
-        except ValueError:
-            nights = 0
         label = doc_i18n.stay_label(language, property_title, check_in, check_out, nights)
         # Add-ons werden unten IMMER als eigene Positionen fakturiert. Der Sammel-
         # betrag für den Aufenthalt muss daher OHNE den Add-on-Anteil bestimmt
@@ -265,7 +337,9 @@ def build_positions(
         # Beleg). Ohne Add-ons (Comp-Aufenthalt 0 €) MUSS die 0-Position bleiben,
         # damit der Pflicht-Check-out-Beleg nicht leer ist.
         if stay_amount != 0 or addons_sum == 0:
-            positions.append(_line(label, stay_amount, rate, unit))
+            positions.append(
+                _stay_line(label, stay_amount, rate, nights, unit, language, zeilen_aufenthalt)
+            )
 
     # Upsells: eigene Positionen mit Snapshot-Steuersatz (NULL = 0 % ist die
     # dokumentierte Kaufzeitpunkt-Wahrheit aus 0075, kein erfundener Default).
@@ -278,7 +352,10 @@ def build_positions(
         rate = Decimal("0") if is_klein else _q(_dec(addon.get("tax_rate")))
         qty = max(int(addon.get("qty") or 1), 1)
         positions.append(
-            _line(_addon_label(addon.get("name"), qty, language), gross, rate, unit)
+            _line(
+                _addon_label(addon.get("name"), qty, language), gross, rate, unit,
+                basis=str(addon.get("basis") or "per_stay"),
+            )
         )
 
     return positions
@@ -452,6 +529,10 @@ def rebuild_draft_for_reservation(
                         "description": p["description"],
                         "quantity": str(p["quantity"]),
                         "unit": p["unit"],
+                        "basis": p.get("basis"),
+                        "property_id": p.get("property_id"),
+                        "check_in": p.get("check_in"),
+                        "check_out": p.get("check_out"),
                         "unit_price": str(p["unit_price"]),
                         "tax_rate": str(p["tax_rate"]),
                         "discount_percent": "0",
@@ -858,7 +939,10 @@ def preview_for_reservation(db: Client, tenant_id: str, reservation_id: str) -> 
         "customerNumber": (customer.get("customer_number") if customer else "") or "",
         "currency": ctx["currency"],
         "propertyTitle": ctx["property_title"],
+        "propertyId": str(reservation.get("property_id") or ""),
         "stay": {"from": check_in, "to": check_out, "nights": nights},
+        # Personen (Erwachsene + Kinder) für Positionen je Person (0698).
+        "guestCount": int(reservation.get("adults") or 0) + int(reservation.get("children") or 0),
         "paidAmount": float(ctx["paid_amount"]),
         # Dokumentsprache fürs Erstellformular/PDF (Gastsprache, doc_i18n).
         "guestLanguage": ctx["language"],
@@ -868,6 +952,7 @@ def preview_for_reservation(db: Client, tenant_id: str, reservation_id: str) -> 
                 "description": p["description"],
                 "quantity": float(p["quantity"]),
                 "unit": p["unit"],
+                "basis": p.get("basis") or "per_stay",
                 "unitPrice": float(p["unit_price"]),
                 "taxRate": float(p["tax_rate"]),
                 # total = NETTO (quantity*unitPrice), wie es der PDF-Hook
@@ -876,6 +961,11 @@ def preview_for_reservation(db: Client, tenant_id: str, reservation_id: str) -> 
                 # Betragsspalte (ItemsTable rendert item.total) zeigte Brutto,
                 # während die Zwischensumme netto rechnete: Zeilenbetrag ≠ Summe.
                 "total": float(p["net_amount"]),
+                # Aufenthalt der Zeile (0702) — der Editor zeigt Objekt und
+                # Zeitraum direkt an der Übernachtungsposition.
+                "propertyId": p.get("property_id"),
+                "checkIn": p.get("check_in"),
+                "checkOut": p.get("check_out"),
             }
             for p in ctx["positions"]
         ],
@@ -1033,6 +1123,10 @@ def create_from_reservation(
             "description": p["description"],
             "quantity": str(p["quantity"]),
             "unit": p["unit"],
+            "basis": p.get("basis"),
+            "property_id": p.get("property_id"),
+            "check_in": p.get("check_in"),
+            "check_out": p.get("check_out"),
             "unit_price": str(p["unit_price"]),
             "tax_rate": str(p["tax_rate"]),
             "discount_percent": "0",

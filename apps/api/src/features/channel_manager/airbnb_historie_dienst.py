@@ -597,7 +597,31 @@ class AirbnbHistorieDienstMixin:
                 .execute()
             )
             gesetzt += 1
+            # Der Anker „Buchung" ist jetzt da → Automails DIESES Threads sofort
+            # planen (Wurzel 1: der Gegenzustand des gesetzten Zeitpunkts).
+            # Bis 14.09.2026 plante erst der Stundenlauf: die vom Kunden
+            # eingestellte Bestätigung „5 Minuten nach Buchung" ging bei
+            # 23 von 23 Airbnb-Buchungen im Schnitt 13, maximal 60 Minuten zu
+            # spät raus — der Kunde stellt die Zeit ein, nicht wir.
+            self._automails_planen(db, tenant_id, str(zeile["id"]))
         return gesetzt
+
+    @staticmethod
+    def _automails_planen(db: Client, tenant_id: str, thread_id: str) -> None:
+        """Datumsgebundene Automails eines Threads planen — best effort, wie im
+        Feed-Import (`bookings_sync`): ein Planungsfehler kippt die Heilung
+        der übrigen Zeilen nicht, steht aber laut im Log."""
+        try:
+            from src.features.inbox.service import InboxService  # noqa: PLC0415
+
+            InboxService(service_client=db).schedule_automations_for_thread(
+                tenant_id, thread_id
+            )
+        except Exception as exc:  # noqa: BLE001 — Heilung nie fatal
+            log.warning(
+                "automail_schedule_nach_heilung_fehlgeschlagen",
+                tenant_id=tenant_id, thread_id=thread_id, error=str(exc)[:200],
+            )
 
     def airbnb_buchungszeitpunkte_nachziehen(
         self, ctx: AuthContext, property_id: str

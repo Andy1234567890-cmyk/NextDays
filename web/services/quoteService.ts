@@ -2,9 +2,9 @@
 
 import { api } from '@/lib/api-client';
 import { formatCurrency } from '@/lib/currency';
+import { steuersatzErzwingen } from '@/lib/steuer-waehrung';
 import type { TaxRuleType } from '@/types/taxRules';
 import { InventoryService } from './inventoryService';
-import { NumberSequenceService } from './numberSequenceService';
 
 /**
  * QuoteService - Angebotsverwaltung
@@ -21,8 +21,22 @@ export interface QuoteItem {
   unit?: string;
   category?: string;
   inventoryItemId?: string; // Verknüpfung zu Inventar-Artikel
+  // Abrechnungsbasis (0698): pauschal | je Nacht | je Person | je Person×Nacht | je Stück
+  basis?: 'per_stay' | 'per_night' | 'per_guest' | 'per_guest_night' | 'per_unit';
   discountPercent?: number; // Optionaler prozentualer Rabatt je Position
   extendedDescription?: string; // Erweiterte Beschreibung unter der Position
+  // Aufenthalt DIESER Zeile (0702): Objekt und Zeitraum stehen an der
+  // Übernachtungsposition, nicht nur im Belegkopf — ein Beleg über zwei Zimmer
+  // oder zwei Zeiträume war sonst nicht darstellbar.
+  propertyId?: string;
+  /** ISO-Datum (YYYY-MM-DD). */
+  checkIn?: string;
+  /** ISO-Datum (YYYY-MM-DD); muss nach checkIn liegen. */
+  checkOut?: string;
+  /** Zusatzleistung: id der Übernachtungszeile, zu der sie gehört. */
+  parentItemId?: string;
+  /** Nur Anzeige (PDF/Vorschau): Titel des Objekts zu propertyId. */
+  propertyTitle?: string;
 }
 
 export interface Quote {
@@ -38,6 +52,8 @@ export interface Quote {
   customerNumber?: string;
   customerEmail: string;
   customerPhone?: string;
+  /** private|business aus dem Debitor — Person/Organisation im Editor. */
+  customerType?: 'private' | 'business';
   customerAddress?:
     | string
     | {
@@ -54,7 +70,7 @@ export interface Quote {
   updatedAt: Date;
 
   // Status
-  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'cancelled';
+  status: 'draft' | 'sent' | 'accepted' | 'rejected' | 'expired' | 'cancelled' | 'converted';
 
   // Inhalt
   title?: string;
@@ -63,6 +79,18 @@ export interface Quote {
   notes?: string;
   footerText?: string;
   customerOrderNumber?: string; // Referenz / Bestellnummer des Kunden
+  /** Gesetzt, wenn das Angebot der Spiegel eines Kalender-Angebots ist (0699). */
+  bookingOfferId?: string;
+  /** Kopfdaten für Positionen je Nacht/Person (0697/0698). */
+  stayFrom?: string;
+  stayTo?: string;
+  /** Titel des Objekts zu propertyId (Liste/Anzeige). */
+  propertyTitle?: string;
+  guestCount?: number;
+  /** Aufenthaltsangebot (0701): Objekt, Anzahlung, Kontext für TEMPLATE_STAY. */
+  propertyId?: string;
+  depositAmount?: number;
+  stay?: Record<string, unknown> | null;
   servicePeriod?: string;
   // Zusätzliche optionale Felder (Mehr Optionen)
   taxRule?: TaxRuleType;
@@ -118,6 +146,15 @@ export interface Quote {
 
   // Tags
   tags?: string[];
+
+  // Vorlagen-Einstellungen (quotes.design, 0697) — flach wie der Bestand sie liest
+  // (`template` steht bereits oben bei den Metadaten)
+  color?: string;
+  logoUrl?: string | null;
+  logoSize?: number;
+  pageMode?: string;
+  documentSettings?: Record<string, unknown>;
+  sequentialNumber?: number;
 }
 
 export interface QuoteSettings {
@@ -126,8 +163,13 @@ export interface QuoteSettings {
   numberFormat: string; // z.B. "A-{YYYY}-{NNN}"
   currentNumber: number;
   defaultValidityDays: number;
-  defaultTaxRate: number;
-  defaultCurrency: string;
+  // Beide bewusst OPTIONAL: „noch nicht konfiguriert" muss ausdrückbar sein.
+  // Solange sie Pflichtfelder waren, MUSSTE hier ein Wert stehen — und das
+  // war der deutsche Regelsatz 19 % samt EUR, den jeder Betrieb in jedem
+  // Land bekam (Wurzel 4). Fehlt der Wert, fragt der Aufrufer die Stammdaten
+  // des Betriebs; fehlt er auch dort, ist das ein Datenfehler.
+  defaultTaxRate?: number;
+  defaultCurrency?: string;
   emailTemplate: string;
   emailSubject: string;
   terms?: string;
@@ -178,9 +220,10 @@ export class QuoteService {
     quoteData: Omit<Quote, 'id' | 'number' | 'createdAt' | 'updatedAt'>,
   ): Promise<string> {
     try {
-      // Angebotsnummer generieren
-      const number = await QuoteService.generateQuoteNumber(companyId);
-
+      // Die Angebotsnummer vergibt der SERVER beim Speichern (atomar, lückenlos).
+      // Bis zum 11.09.2026 zog der Client sie über einen Endpunkt, den es nicht
+      // gab, und fiel auf `AG-` + vier Ziffern der Uhrzeit zurück — während das
+      // Backend die Nummer gar nicht speicherte.
       const params = new URLSearchParams({ company_id: companyId });
 
       // Items konvertieren
@@ -190,18 +233,36 @@ export class QuoteService {
         quantity: String(item.quantity),
         unit: item.unit || 'Stk',
         unit_price_cents: Math.round(item.unitPrice * 100),
-        tax_rate: String(item.taxRate || 19),
+        // Fail-closed statt `|| 19`: Der deutsche Regelsatz war hier auf jede
+        // Position ohne eigenen Satz geraten, und `||` zog zusätzlich die
+        // legitime 0 einer steuerbefreiten Position auf 19 % hoch.
+        tax_rate: String(
+          steuersatzErzwingen(
+            `Angebot, Position ${index + 1} „${item.description}"`,
+            item.taxRate,
+          ),
+        ),
       }));
 
       const response = await api.post<{ id: string }>(`/api/v1/quotes?${params.toString()}`, {
         customer_id: quoteData.customerId,
         quote_date: quoteData.date.toISOString().split('T')[0],
         valid_until: quoteData.validUntil.toISOString().split('T')[0],
-        tax_rate: String(quoteData.items[0]?.taxRate || 19),
+        tax_rate: String(
+          steuersatzErzwingen(
+            'Angebot, Belegsatz',
+            quoteData.items[0]?.taxRate,
+          ),
+        ),
         notes: quoteData.notes || '',
         internal_notes: quoteData.footerText || '',
         items,
       });
+
+      const number =
+        (response as { quote_number?: string | null }).quote_number ??
+        (response as { quoteNumber?: string | null }).quoteNumber ??
+        '';
 
       // Automatisch Aktivität in Kundenhistorie erstellen
       try {
@@ -241,6 +302,11 @@ export class QuoteService {
         notes: updates.notes,
         internal_notes: updates.footerText,
         pdf_url: updates.pdfUrl,
+        // Workflow-Zeitpunkt und Tags (0697): der Server setzt sent_at nur,
+        // wenn noch keiner steht — die eigene Uhr überschreibt nie den ersten Versand.
+        sentAt: updates.sentAt?.toISOString(),
+        rejectionReason: updates.rejectionReason,
+        tags: updates.tags,
       });
     } catch (error) {
       console.error('[QuoteService] Error updating quote:', error);
@@ -456,20 +522,6 @@ export class QuoteService {
   }
 
   /**
-   * Angebotsnummer generieren (Client-Side)
-   */
-  static async generateQuoteNumber(companyId: string): Promise<string> {
-    try {
-      const result = await NumberSequenceService.getNextNumberForType(companyId, 'Angebot');
-      return result.formattedNumber;
-    } catch (error) {
-      console.error('Fehler beim Generieren der Angebotsnummer:', error);
-      // Fallback
-      return `AG-${Date.now().toString().slice(-4)}`;
-    }
-  }
-
-  /**
    * Angebots-Einstellungen laden
    */
   static async getQuoteSettings(companyId: string): Promise<QuoteSettings> {
@@ -479,8 +531,12 @@ export class QuoteService {
       numberFormat: '{PREFIX}-{YYYY}-{NNN}',
       currentNumber: 0,
       defaultValidityDays: 30,
-      defaultTaxRate: 19,
-      defaultCurrency: 'EUR',
+      // Kein Satz und keine Währung geraten: Beide hängen am Sitzland des
+      // Betriebs (DK 25 % in DKK, LU 17 %, SE 25 %) und stehen in seinen
+      // Stammdaten. Undefiniert lassen ist ehrlich — 19 % und EUR waren es
+      // nicht.
+      defaultTaxRate: undefined,
+      defaultCurrency: undefined,
       emailTemplate: 'Anbei erhalten Sie unser Angebot {NUMBER}.',
       emailSubject: 'Angebot {NUMBER}',
       autoSend: false,
@@ -595,11 +651,18 @@ export class QuoteService {
       quantity: parseFloat(item.quantity) || 0,
       unitPrice: (item.unit_price_cents || 0) / 100,
       total: (item.total_cents || 0) / 100,
+      discountPercent: parseFloat(item.discount_percent) || 0,
+      basis: item.basis || undefined,
       taxRate: parseFloat(item.tax_rate) || 0,
       unit: item.unit || 'Stk',
       category: item.category,
       inventoryItemId: item.inventory_item_id,
-      discountPercent: item.discount_percent,
+      // Aufenthalt der Zeile (0702) — snake_case aus der API in camelCase.
+      propertyId: item.property_id || undefined,
+      propertyTitle: item.property_title || undefined,
+      checkIn: item.check_in || undefined,
+      checkOut: item.check_out || undefined,
+      parentItemId: item.parent_line_id || undefined,
     }));
 
     return {
@@ -610,6 +673,7 @@ export class QuoteService {
       customerName: data.customer_name || data.customerName || '',
       customerEmail: data.customer_email || data.customerEmail || '',
       customerPhone: data.customer_phone || data.customerPhone,
+      customerType: data.customer_type || data.customerType || undefined,
       customerAddress: data.customer_address || data.customerAddress,
       date: toDate(data.quote_date || data.date),
       validUntil: toDate(data.valid_until || data.validUntil),
@@ -630,7 +694,35 @@ export class QuoteService {
       sentAt: data.sent_at ? toDate(data.sent_at) : undefined,
       acceptedAt: data.accepted_at ? toDate(data.accepted_at) : undefined,
       rejectedAt: data.rejected_at ? toDate(data.rejected_at) : undefined,
+      cancelledAt: data.cancelled_at ? toDate(data.cancelled_at) : undefined,
+      rejectionReason: data.rejection_reason || undefined,
       createdBy: data.created_by || data.createdBy || '',
+      // Bestandsfelder aus angebote_bestand.py (0697): Betreff, Referenz,
+      // Kopftext, Kundennummer, Umwandlung, Tags, Vorlage.
+      title: data.title || undefined,
+      customerOrderNumber: data.customer_order_number || undefined,
+      bookingOfferId: data.booking_offer_id || undefined,
+      language: data.language || undefined,
+      stayFrom: data.stay_from || undefined,
+      stayTo: data.stay_to || undefined,
+      guestCount: typeof data.guest_count === 'number' ? data.guest_count : undefined,
+      propertyId: data.property_id || undefined,
+      propertyTitle: data.property_title || undefined,
+      depositAmount: typeof data.deposit_amount === 'number' ? data.deposit_amount : undefined,
+      stay: data.stay ?? null,
+      headTextHtml: data.headTextHtml || data.head_text || undefined,
+      customerNumber: data.customer_number || undefined,
+      taxRule: data.tax_rule || undefined,
+      convertedToInvoice: Boolean(data.converted_invoice_id),
+      invoiceId: data.converted_invoice_id || undefined,
+      tags: Array.isArray(data.tags) ? data.tags : [],
+      template: data.template || undefined,
+      color: data.color || undefined,
+      logoUrl: data.logoUrl ?? undefined,
+      logoSize: typeof data.logoSize === 'number' ? data.logoSize : undefined,
+      pageMode: data.pageMode || undefined,
+      documentSettings: data.documentSettings || undefined,
+      sequentialNumber: data.sequentialNumber || undefined,
     };
   }
 }

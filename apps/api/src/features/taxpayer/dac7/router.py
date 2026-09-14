@@ -39,6 +39,11 @@ from .schemas import (
     TaetigkeitAusgabe,
 )
 from .service import Dac7Error, LaufErgebnis
+from .uebermittlung import (
+    UebermittlungError,
+    ist_eingerichtet,
+    uebermitteln,
+)
 
 router = APIRouter(prefix="/taxpayer/dac7", tags=["taxpayer", "dac7"])
 
@@ -228,7 +233,20 @@ def _vorschau(
         probelauf=probelauf,
         datei_anfang=anfang,
         datei_zeilen=zeilen,
-        datei_inhalt=ergebnis.datei if probelauf else None,
+        # Der VOLLE Dateitext geht in beiden Faellen mit — auch beim
+        # echten Lauf. Nur so kann die Oberflaeche die Meldung als das
+        # Raster zeigen, das sie ist: 89 Spalten, eine Zeile je Satz.
+        #
+        # Hier stand bis zum 11.09.2026 „nur beim Probelauf", begruendet
+        # damit, dass der echte Lauf die Datei ueber `/datei` abrufen
+        # kann. Das stimmt — kostet aber einen zweiten Abruf fuer eine
+        # Anzeige, die der Nutzer ohnehin sofort sehen will, und die
+        # Vorschau zeigte stattdessen Karten statt der Tabelle.
+        #
+        # Kein zusaetzliches Datenrisiko: Die Antwort traegt mit
+        # `anbieter` bereits dieselben Angaben, nur anders sortiert, und
+        # beide Wege stehen unter derselben Capability-Pruefung.
+        datei_inhalt=ergebnis.datei,
         dateipruefung=_dateipruefung_ausgeben(ergebnis.datei),
         meldeart=meldung.meldeart if meldung else "",
         melde_ref_id=meldung.melde_ref_id if meldung else "",
@@ -304,6 +322,14 @@ def datei(
     lauf_id: str,
     ctx: CurrentUser,
     service: Dac7ServiceDep,
+    format: str = Query(
+        default="csv",
+        pattern="^(csv|xml)$",
+        description=(
+            "csv fuer das Meldejahr 2025 (TastSelv Erhverv), "
+            "xml fuer das DPI-XML ab 2026"
+        ),
+    ),
 ) -> PlainTextResponse:
     """Die CSV eines Laufs zum Hochladen bei der Behörde.
 
@@ -313,14 +339,22 @@ def datei(
     auffallen, nicht verborgen bleiben.
     """
     try:
-        inhalt = service.datei_neu_erzeugen(ctx, lauf_id)
+        inhalt = service.datei_neu_erzeugen(ctx, lauf_id, format=format)
     except Dac7Error as exc:
         raise _fehler(exc) from exc
+    ist_xml = format == "xml"
     return PlainTextResponse(
         content=inhalt,
-        media_type="text/csv; charset=utf-8",
+        media_type=(
+            "application/xml; charset=utf-8"
+            if ist_xml
+            else "text/csv; charset=utf-8"
+        ),
         headers={
-            "Content-Disposition": f'attachment; filename="dac7-{lauf_id}.csv"'
+            "Content-Disposition": (
+                f'attachment; filename="dac7-{lauf_id}.'
+                f'{"xml" if ist_xml else "csv"}"'
+            )
         },
     )
 
@@ -360,3 +394,69 @@ def abgeben(
         return MeldelaufAusgabe(**service.abgeben(ctx, lauf_id))
     except Dac7Error as exc:
         raise _fehler(exc) from exc
+
+
+@router.get(
+    "/uebermittlung",
+    dependencies=[Depends(require_permission(Capability.MANAGE_BILLING))],
+)
+def uebermittlung_stand() -> dict:
+    """Ob aus der Oberflaeche heraus uebermittelt werden kann.
+
+    Die Oberflaeche fragt das, um keinen Knopf anzubieten, der nur
+    fehlschlagen kann. Ist die Uebermittlung nicht eingerichtet, bleibt
+    der bisherige Weg: Datei herunterladen und bei der Behoerde
+    hochladen.
+    """
+    return {"eingerichtet": ist_eingerichtet()}
+
+
+@router.post(
+    "/laeufe/{lauf_id}/uebermitteln",
+    dependencies=[Depends(require_permission(Capability.MANAGE_BILLING))],
+)
+async def lauf_uebermitteln(
+    lauf_id: str,
+    ctx: CurrentUser,
+    service: Dac7ServiceDep,
+) -> dict:
+    """Die Meldung eines Laufs an die Empfangsstelle uebermitteln.
+
+    Der Weg, den Skattestyrelsen sehen wollte: Die Datei verlaesst das
+    Haus ueber den Versanddienst, verschluesselt, und die Quittung der
+    Gegenstelle kommt zurueck.
+
+    WAS HIER NICHT PASSIERT: Der Lauf wird NICHT automatisch als
+    abgegeben gekennzeichnet. „Abgegeben" ist die Aussage des Betriebs,
+    dass die Meldung bei der Behoerde liegt — und in der Teststufe liegt
+    sie bei uns. Sie zu setzen, weil eine simulierte Stelle „angenommen"
+    sagte, waere eine Falschaussage im eigenen Datenbestand.
+
+    DER UNKLARE AUSGANG (`angenommen: null`) ist kein Fehler der
+    Schnittstelle, sondern das Ergebnis: Die Antwort kam nicht an, die
+    Datei kann angekommen sein. Deshalb 200 und nicht 502 — und deshalb
+    `wiederholbar: false`.
+    """
+    try:
+        datei = service.datei_neu_erzeugen(ctx, lauf_id)
+    except Dac7Error as exc:
+        raise _fehler(exc) from exc
+
+    try:
+        ergebnis = await uebermitteln(datei, f"dac7-{lauf_id}.csv")
+    except UebermittlungError as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc
+
+    return {
+        "angenommen": ergebnis.angenommen,
+        "quittungsnummer": ergebnis.quittungsnummer,
+        "meldung": ergebnis.meldung,
+        "wiederholbar": ergebnis.wiederholbar,
+        "pruefsumme": ergebnis.pruefsumme,
+        "ziel": ergebnis.ziel,
+        "ist_teststufe": ergebnis.ist_teststufe,
+        "verschluesselt": ergebnis.verschluesselt,
+        "antwort": ergebnis.antwort,
+    }

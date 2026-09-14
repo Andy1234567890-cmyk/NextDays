@@ -32,6 +32,16 @@ from src.features.owner_chat.schemas import (
 
 from . import eigentuemer
 from .authz import InboxAccess
+from .automation_stand import (
+    MAX_NACHRICHTEN,
+    AutomationNachricht,
+    AutomationNachrichtenListe,
+    AutomationStandListe,
+    erneut_alle_fehlgeschlagenen,
+    erneut_einplanen,
+    nachrichten_laden,
+    stand_laden,
+)
 from .fassung_uebersetzen import fassung_uebersetzen
 from .felder import FELDER, FeldFehlt
 from .schemas import (
@@ -535,6 +545,79 @@ def save_ai_settings(
 
 
 # --- Automatisierungen ------------------------------------------------------
+@router.get("/automations/stand", response_model=AutomationStandListe)
+def automations_stand(bundle: _AccessDep) -> AutomationStandListe:
+    """Zustand je Regel: geplant/gesendet/fehlgeschlagen samt letztem Grund.
+
+    Steht VOR `/automations/{automation_id}/…` — sonst nähme FastAPI „stand"
+    als Automation-ID (dieselbe Lehre wie bei `/unread-count`).
+
+    Lesen darf das jeder mit Posteingang-Zugriff (`_AccessDep`): es ist eine
+    Verdichtung DERSELBEN Regeln, die `/automations` ausliefert — derselbe
+    Scope wie die Liste (Wurzel 9). Der Nachrichtentext ist bewusst nicht
+    dabei.
+    """
+    ctx, _access = bundle
+    try:
+        return stand_laden(get_service_client(), ctx)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/automations/{automation_id}/nachrichten",
+    response_model=AutomationNachrichtenListe,
+)
+def automation_nachrichten(
+    automation_id: str,
+    bundle: _AccessDep,
+    limit: Annotated[int, Query(ge=1, le=MAX_NACHRICHTEN)] = 10,
+) -> AutomationNachrichtenListe:
+    """Die jüngsten Protokollzeilen EINER Regel (Zustand, Zeitpunkt, Grund).
+
+    `limit` ist hart gedeckelt (Wurzel 8) — kein offener Bereich, den ein
+    Aufrufer aufziehen kann. Der Scope wird in `nachrichten_laden` über
+    `load_scoped` erzwungen: eine fremde ID ergibt 404, nicht eine leere Liste.
+    """
+    ctx, _access = bundle
+    try:
+        return nachrichten_laden(
+            get_service_client(), ctx, automation_id, limit=limit
+        )
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/automations/nachrichten/{nachricht_id}/erneut",
+    response_model=AutomationNachricht,
+)
+def automation_nachricht_erneut(
+    nachricht_id: str, bundle: _AccessDep
+) -> AutomationNachricht:
+    """Eine fehlgeschlagene/übersprungene Automail erneut einplanen (14.09.2026).
+
+    Der Text wird beim Versand neu gerendert — nachgetragene Werte (Türcode,
+    WLAN) stehen also drin. 'sent' ist ausgeschlossen (Doppelversand, Wurzel 2).
+    """
+    ctx, _access = bundle
+    try:
+        return erneut_einplanen(get_service_client(), ctx, nachricht_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/automations/{automation_id}/erneut-alle")
+def automation_erneut_alle(automation_id: str, bundle: _AccessDep) -> dict:
+    """Alle fehlgeschlagenen Automails EINER Regel erneut einplanen."""
+    ctx, _access = bundle
+    try:
+        anzahl = erneut_alle_fehlgeschlagenen(get_service_client(), ctx, automation_id)
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return {"erneut": anzahl}
+
+
 @router.get("/automations", response_model=AutomationList)
 def list_automations(service: InboxServiceDep, bundle: _AccessDep) -> AutomationList:
     ctx, _access = bundle

@@ -15,6 +15,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 
 from postgrest.exceptions import APIError
+from supabase import Client
 
 from src.core.einheiten import (
     AVAILABILITY_CONFLICT,
@@ -55,6 +56,41 @@ from .schemas import (
 # Sentinel: „kein by_user_id übergeben → nimm ctx.user_id". Getrennt von None,
 # denn None ist ein GÜLTIGER Auslöser-Wert (Gast-Storno: kein users-Eintrag).
 _ACTOR_FROM_CTX = object()
+
+
+def _posteingang_spiegeln(
+    db: Client, tenant_id: str, reservation_id: str, *, quelle: str | None = None
+) -> None:
+    """Die Buchung als Konversation in den Posteingang — und die Automails planen.
+
+    WARUM HIER: Die Nachrichten-Automatisierungen planen ausschließlich über
+    Threads (`inbox.planung`), und Threads lagen bis 09/2026 nur für
+    Portal-Buchungen vor. Eine Direktbuchung — im Kalender erfasst, über einen
+    genehmigten Sperrantrag entstanden oder aus einer Übernahme — bekam deshalb
+    NIE eine Automail. Die Regel stand in der Oberfläche und lief ins Leere.
+
+    Der Aufruf gehört an JEDEN Schreibvorgang, nicht nur ans Anlegen: eine
+    Umbuchung verschiebt den Anker (`replan` rechnet die Zeitpunkte neu) und
+    eine Stornierung ist der Gegenzustand — sie setzt den Thread auf
+    'cancelled', und erst dadurch räumt `_offene_stornieren` die eingeplanten
+    Nachrichten ab (Wurzel 1). Ohne den Storno-Aufruf begrüßte die
+    Anreise-Automail einen Gast, der abgesagt hat.
+
+    `quelle` benennt den Pfad, aus dem die Zeile stammt (sie landet in
+    `raw.source`); ohne Angabe gilt der Kalender-Schreibweg.
+
+    Best effort mit lauter Fehlermeldung — die Buchung ist an dieser Stelle
+    bereits geschrieben und darf am Posteingang nicht mehr scheitern
+    (`spiegeln_best_effort`).
+    """
+    from src.features.inbox import thread_spiegel  # noqa: PLC0415 — Slice-Grenze
+
+    thread_spiegel.spiegeln_best_effort(
+        db,
+        tenant_id,
+        reservation_id,
+        quelle=quelle or thread_spiegel.QUELLE_DIREKT,
+    )
 
 
 class WritesMixin(ReservationsBase):
@@ -662,6 +698,23 @@ class WritesMixin(ReservationsBase):
             )
 
             recompute_guest_aggregates(self._db(), tenant_id, guest_id)
+
+        # Konversation im Posteingang + Automails. Der Sperrantrag ist als
+        # eigene Quelle vermerkt: der Weg dorthin ist ein anderer (ein
+        # Eigentümer hat ihn ausgelöst), und wer später wissen will, warum
+        # dieser Thread ohne Gast dasteht, findet die Antwort an der Zeile.
+        from src.features.inbox import thread_spiegel  # noqa: PLC0415
+
+        _posteingang_spiegeln(
+            self._db(),
+            tenant_id,
+            str(row["id"]),
+            quelle=(
+                thread_spiegel.QUELLE_SPERRANTRAG
+                if block_request_id
+                else thread_spiegel.QUELLE_DIREKT
+            ),
+        )
 
         log.info(
             "reservation_created",
@@ -1362,6 +1415,12 @@ class WritesMixin(ReservationsBase):
             ),
             update_fields.get("currency", current.get("currency")),
         )
+        # Umbuchung = neuer Anker: „3 Tage vor Anreise" meint jetzt einen
+        # anderen Tag. Der Spiegel zieht An-/Abreise am Thread nach und plant
+        # neu; ohne ihn stünde am Gast weiter der ALTE Termin — und die Zeile
+        # trägt Text und Zeitpunkt, nicht die Regel (Wurzel 1).
+        _posteingang_spiegeln(self._db(), tenant_id, reservation_id)
+
         log.info(
             "reservation_moved",
             reservation_id=reservation_id,
@@ -1702,6 +1761,12 @@ class WritesMixin(ReservationsBase):
             recompute_guest_aggregates(
                 self._db(), tenant_id, str(current["guest_id"])
             )
+
+        # Gegenzustand im Posteingang (Wurzel 1): der Thread geht auf
+        # 'cancelled', und erst dadurch nimmt `schedule_automations_for_thread`
+        # die eingeplanten Automails zurück. Ohne diesen Aufruf ginge „Ihre
+        # Anreise ist morgen" an einen Gast, der abgesagt hat.
+        _posteingang_spiegeln(self._db(), tenant_id, reservation_id)
 
         log.info(
             "reservation_cancelled",

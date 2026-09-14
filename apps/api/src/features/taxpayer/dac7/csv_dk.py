@@ -7,7 +7,7 @@ der Baum nur flachgeklopft. Das ist die Trennung, die den Wechsel auf DPI-XML
 Umbau.
 
 FORMATVORGABEN aus der amtlichen Vorlage von Skattestyrelsen:
-  * Trennzeichen `;`, Zeichensatz UTF-8
+  * Trennzeichen `;`, Zeichensatz UTF-8 **mit BOM**
   * 89 Spalten in fester Reihenfolge (siehe `spalten.py`)
   * Datum `DD-MM-YYYY`
   * Beträge GANZZAHLIG, ohne Tausendertrenner
@@ -159,6 +159,7 @@ def _kopf() -> str:
 
 def _anschrift_setzen(zeile: _Zeile, anschrift: Anschrift) -> None:
     """Die Anschriftsspalten füllen — für jeden Zeilentyp dieselben."""
+    zeile.setze("ADDR_FREE", _text(anschrift.freitext))
     zeile.setze("ADDR_STREET", _text(anschrift.strasse))
     zeile.setze("ADDR_BUILDING", _text(anschrift.hausnummer))
     zeile.setze("ADDR_POST_CODE", _text(anschrift.plz))
@@ -323,8 +324,32 @@ def _zeile_vermietung(anbieter: Anbieter, taetigkeit: Vermietung) -> _Zeile:
     return zeile
 
 
+# Byte Order Mark. Sie steht am Anfang der Datei und sagt dem Leser:
+# „das ist UTF-8".
+#
+# WARUM SIE SEIN MUSS — und warum das kein Schönheitsfehler ist:
+# Das Export-Makro der amtlichen Vorlage (`EksporterCSV` in
+# `xl/vbaProject.bin`) speichert mit `FileFormat: xlCSVUTF8`. Genau dieses
+# Excel-Format schreibt UTF-8 MIT BOM; das ist sein Unterschied zum älteren
+# `xlCSV`. Wer die Datei der Behörde nachbaut, muss sie also mit BOM
+# schreiben.
+#
+# Was ohne BOM live passiert (11.09.2026 gemeldet): Excel auf einem
+# deutschen oder dänischen System erkennt `;` nicht als Trennzeichen und
+# legt die ganze Zeile in EINE Spalte. Die Datei sieht dann hochkant aus —
+# 22 Zeilen à einem Feld statt 22 × 89. Der Inhalt ist korrekt, unbrauchbar
+# ist die Ansicht. Genau so wurde es berichtet: „die csv zum download kommt
+# immer noch hochformat".
+#
+# Beide Prüfstellen verkraften sie: Die Empfangsstelle liest `utf-8-sig`
+# (`einreichung._text_lesen`), unsere eigene Dateiprüfung strippt sie
+# (`dateipruefung`, Zeile 489). Die Zeichenkette selbst bleibt unverändert —
+# das BOM kommt erst beim Kodieren dazu.
+_BOM = "\ufeff"
+
+
 def schreiben(meldung: Meldung) -> str:
-    """Die vollständige CSV einer Meldung.
+    """Die vollständige CSV einer Meldung, mit BOM.
 
     Die Reihenfolge ist festgelegt und wiederholbar: Nachricht, Betreiber
     samt Zusatzzeilen, dann je Anbieter seine Zeile, seine Zusatzzeilen und
@@ -341,4 +366,4 @@ def schreiben(meldung: Meldung) -> str:
         for taetigkeit in anbieter.taetigkeiten:
             zeilen.append(_zeile_vermietung(anbieter, taetigkeit))
 
-    return "\n".join([_kopf(), *(z.als_text() for z in zeilen)]) + "\n"
+    return _BOM + "\n".join([_kopf(), *(z.als_text() for z in zeilen)]) + "\n"

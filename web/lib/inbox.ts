@@ -797,6 +797,82 @@ export async function deleteAutomation(id: string): Promise<Result<void>> {
   return call<void>(`/automations/${id}`, { method: "DELETE" });
 }
 
+/**
+ * EINE Regel frisch vom Server — VOR jedem Schreiben.
+ *
+ * `updateAutomation` nimmt den vollen Datensatz. Wer dafür eine Kopie
+ * benutzt, die beim Öffnen des Panels geladen wurde, schreibt jede
+ * zwischenzeitliche Änderung eines Kollegen zurück auf den alten Stand: ein
+ * Haken am Kanal setzt dann nebenbei den Text zurück, den jemand anders
+ * gerade gespeichert hat. Ein Realtime-Abo gäbe es hier nicht als Ausweg —
+ * `message_automation` ist seit 0337 für `authenticated` gesperrt, ein Abo
+ * wäre eine stumme Attrappe (Wurzel 6).
+ *
+ * Bewusst über die Liste und nicht über einen eigenen GET: der Server führt
+ * keinen `/automations/{id}`-Lesepfad, und einen dafür zu erfinden hieße, eine
+ * zweite Ladelogik samt Scope zu pflegen.
+ */
+export async function getAutomation(id: string): Promise<Result<Automation>> {
+  const res = await listAutomations();
+  if (!res.ok) return res;
+  const treffer = res.data.items.find((a) => a.id === id);
+  return treffer
+    ? { ok: true, data: treffer }
+    : { ok: false, error: "Automatisierung nicht gefunden." };
+}
+
+// --- Zustand der Automatisierungen (Versandprotokoll) -------------------------
+/** Was eine Regel bisher getan hat — verdichtet aus `automation_scheduled_message`. */
+export type AutomationStand = {
+  automation_id: string;
+  pending: number;
+  /** Atomarer Claim kurz vor dem Versand; zählt in der Anzeige zu „geplant". */
+  sending: number;
+  sent: number;
+  failed: number;
+  skipped: number;
+  cancelled: number;
+  gesamt: number;
+  /** Grund des jüngsten Fehlschlags; null = keiner (nie ein Ersatztext). */
+  letzter_fehler: string | null;
+  letzter_fehler_am: string | null;
+  /** Frühester geplanter Versand über alle offenen Zeilen. */
+  naechster_versand: string | null;
+};
+
+export type AutomationStandListe = {
+  items: AutomationStand[];
+  total: number;
+  /** Die Obergrenze hat gegriffen — die Zahlen sind dann unvollständig und
+   *  werden in der Oberfläche als solche benannt (Wurzel 4). */
+  gekappt: boolean;
+};
+
+/** Eine Zeile des Versandprotokolls (ohne Nachrichtentext). */
+export type AutomationNachricht = {
+  id: string;
+  status: string;
+  /** Geplanter Zeitpunkt. */
+  send_at: string | null;
+  /** Wann WIR die Zeile zuletzt angefasst haben (Versand, Fehlschlag). Das ist
+   *  unsere Uhr und ausdrücklich kein Fremdereignis (Wurzel 5b). */
+  updated_at: string | null;
+  last_error: string | null;
+};
+
+export async function getAutomationStand(): Promise<Result<AutomationStandListe>> {
+  return call<AutomationStandListe>("/automations/stand");
+}
+
+export async function listAutomationNachrichten(
+  id: string,
+  limit = 10,
+): Promise<Result<{ items: AutomationNachricht[]; total: number }>> {
+  return call<{ items: AutomationNachricht[]; total: number }>(
+    `/automations/${id}/nachrichten?limit=${limit}`,
+  );
+}
+
 // --- Platzhalter (Felder) -----------------------------------------------------
 /** Ein Platzhalter, der in Vorlagen und Automationen benutzt werden kann.
  *  `key` ist sprachneutral und stabil (`{{guest_name}}`); die Beschriftung

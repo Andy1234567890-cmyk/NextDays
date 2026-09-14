@@ -126,6 +126,46 @@ export interface MeldungVorschau {
   dateipruefung: Dateipruefung | null;
 }
 
+/** In welchem Format die Meldedatei abgerufen wird.
+ *
+ *  `csv` für das Meldejahr 2025 (TastSelv Erhverv), `xml` für das
+ *  DPI-XML der OECD ab 2026. Beide beschreiben dieselbe Meldung: Sie
+ *  entstehen aus demselben gerechneten Baum, das eine flachgeklopft, das
+ *  andere verschachtelt. */
+export type Meldeformat = "csv" | "xml";
+
+/**
+ * Was die Empfangsstelle auf eine Übermittlung geantwortet hat.
+ *
+ * `angenommen: null` ist der WICHTIGSTE Fall und kein Fehler: Die Antwort
+ * kam nicht an, die Datei kann die Behörde trotzdem erreicht haben. Wer
+ * das zu „nicht gesendet" verkürzt und erneut sendet, erzeugt eine
+ * Doppelmeldung — und der Vermieter wird doppelt veranlagt. Deshalb
+ * dreiwertig und deshalb `wiederholbar` als eigenes Feld.
+ */
+export interface Uebermittlungsergebnis {
+  /** true angenommen, false zurückgewiesen, null unbekannt. */
+  angenommen: boolean | null;
+  /** Die Quittungsnummer der Gegenstelle, sofern sie eine gab. */
+  quittungsnummer: string | null;
+  /** In ganzen Sätzen, direkt anzeigbar. */
+  meldung: string;
+  /** Ob ein zweiter Versuch fachlich zulässig ist. Bei unbekanntem
+   *  Ausgang NEIN — erst muss geklärt werden, ob die erste Datei ankam. */
+  wiederholbar: boolean;
+  /** SHA-256 des KLARTEXTS — belegt, was eingereicht wurde, unabhängig
+   *  von der Verschlüsselung (jede Verschlüsselung sieht anders aus). */
+  pruefsumme: string;
+  ziel: string;
+  /** Teststufe oder echte Behörde. Steht in JEDER Antwort: Eine Meldung,
+   *  von der niemand weiß, wohin sie ging, ist wertlos. */
+  ist_teststufe: boolean;
+  /** Ob die Nutzdaten verschlüsselt übertragen wurden. */
+  verschluesselt: boolean;
+  /** Die unveränderte Antwort der Gegenstelle — im Streitfall der Beleg. */
+  antwort: Record<string, unknown>;
+}
+
 export type LaufStatus = "entwurf" | "abgegeben" | "ersetzt";
 
 export interface Meldelauf {

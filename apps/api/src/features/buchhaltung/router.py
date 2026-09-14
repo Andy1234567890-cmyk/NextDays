@@ -3,138 +3,40 @@
 Rechnungen + Kunden, tenant-scoped (tenant_id aus dem JWT). Schreibende
 Endpoints erfordern die Berechtigung OWNER_REPORTING (Buchhaltung).
 """
+
 from typing import Annotated
 
 from fastapi import (
     APIRouter,
-    Depends,
     HTTPException,
+    Query,
     Request,
     status,
 )
 
-from src.core.security import AuthContext, CurrentUser
-from src.core.supabase import get_service_client
+from src.core.security import CurrentUser
 from src.core.uploads import read_upload
-from src.features.auth.dependencies import require_granular_permission
-from src.features.auth.granular_permissions import Permission
-from src.features.subscriptions.entitlements import modul_aktiv
 
+from .angebote_bestand import AngeboteBestand
+from .bereiche.versand.dependencies import VersandServiceDep
+from .bereiche.versand.schemas import TextTemplateResponse
+from .bereiche.versand.service import VersandServiceError
+from .bereiche.versand.standardvorlagen import standardvorlagen_anlegen
 from .dependencies import BuchhaltungServiceDep
+from .guards import _profile_read, _profile_write, _read, _write
+from .preisliste import preisliste as _preisliste
 from .schemas import (
     CustomerCreate,
     CustomerResponse,
     CustomerUpdate,
     InvoiceListResponse,
     InvoiceResponse,
-    QuoteCreate,
     QuoteListResponse,
-    QuoteResponse,
-    QuoteUpdate,
     SliceHealth,
 )
-from .service import BuchhaltungError
+from .service import BuchhaltungError, BuchhaltungService
 
 router = APIRouter(prefix="/buchhaltung", tags=["buchhaltung"])
-
-
-def _require_agency_finance(
-    ctx: Annotated[
-        AuthContext, Depends(require_granular_permission(Permission.OWNER_REPORTING))
-    ],
-) -> AuthContext:
-    """Zugang zur AGENTUR-Debitorenbuchhaltung (Kunden/Rechnungen/Nummernkreise
-    des Betriebs).
-
-    Zwei Ebenen: (1) OWNER_REPORTING (staff/cleaner ohne Finanz-Zugang raus).
-    (2) Die owner-Rolle BESITZT OWNER_REPORTING zwar (für ihre eigene
-    Auszahlungs-Abrechnung in owner_statements, dort self-scoped), hat in der
-    tenant-weiten Debitorenbuchhaltung aber NICHTS zu suchen — sie würde sonst
-    Rechnungen/Kunden-PII ALLER Objekte des Tenants sehen und sogar schreiben
-    (§4.2: Owner read-only + nur eigene Daten). Deshalb Owner hier hart mit 403
-    aussperren — die Owner-Finanzsicht ist ausschließlich /owner-statements.
-    """
-    if ctx.role == "owner":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Kein Zugriff auf die Betriebsbuchhaltung.",
-        )
-    return ctx
-
-
-# module_key des kostenpflichtigen Moduls, das diesen Slice freischaltet.
-# Quelle: subscriptions.schemas.MODULE_KEYS / PLAN-stripe-preisliste.md Z. 94.
-BUCHHALTUNG_MODULE_KEY = "modul3_buchhaltung"
-
-
-def _require_buchhaltung_modul(ctx: AuthContext) -> AuthContext:
-    """Ist „Modul 3 — Buchhaltung" für diesen Betrieb gebucht?
-
-    Drei getrennte Dinge (nicht zusammenlegen): Authentifizierung (wer bist du),
-    Autorisierung (`_require_agency_finance`: darf deine Rolle Finanzdaten sehen)
-    und ENTITLEMENT (hat der Betrieb das Modul bezahlt). Dieser Guard prüft nur
-    das Dritte — er ersetzt keinen Rollen-Guard, er kommt zusätzlich.
-
-    Fail-CLOSED (Wurzel 5): ohne Tenant, ohne Zeile oder bei ``active = false``
-    gilt das Modul als nicht gebucht → 402, wie in
-    `pricing.settings_service` für „Dynamische Preise". Eine Quelle für die
-    Antwort: `subscriptions.entitlements.modul_aktiv` — hier keine eigene
-    Abfrage (drei Kopien heißt: eine wird fail-OPEN, ohne dass es auffällt).
-
-    Serverseitig erzwungen, nicht nur im Frontend ausgeblendet
-    (PLAN-stripe-preisliste.md Z. 142-144, Wurzel 3).
-    """
-    if not modul_aktiv(get_service_client(), ctx.tenant_id, BUCHHALTUNG_MODULE_KEY):
-        raise HTTPException(
-            status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail="Buchhaltung ist ein kostenpflichtiges Modul. "
-            "Bitte zuerst unter Erweiterungen aktivieren.",
-        )
-    return ctx
-
-
-def _require_agency_finance_with_modul(
-    ctx: Annotated[AuthContext, Depends(_require_agency_finance)],
-) -> AuthContext:
-    """Rollen-Guard UND Entitlement — in dieser Reihenfolge: erst 403 für die
-    falsche Rolle, dann 402 für den fehlenden Kauf."""
-    return _require_buchhaltung_modul(ctx)
-
-
-# Schreib- UND Leserechte: Agentur-Finanzzugang (OWNER_REPORTING, ohne Owner)
-# PLUS gebuchtes Modul 3 (402, wenn nicht gebucht).
-_write = Annotated[AuthContext, Depends(_require_agency_finance_with_modul)]
-_read = _write
-
-# OHNE Entitlement: das Firmen-/Rechnungsprofil des Betriebs (`companies/me`,
-# Logo, Stripe-Sync) sind KONTO-Stammdaten. Sie liegen historisch in diesem
-# Slice, gehören aber zu Onboarding und /konto (web/lib/firmenprofil.ts) und
-# müssen JEDEM Betrieb offenstehen — hinter Modul 3 gesperrt käme kein
-# Neukunde durch das Onboarding und niemand an seine eigenen Firmendaten.
-# Rollen-Guard bleibt, nur das Entitlement fällt weg.
-_profile_write = Annotated[  # pylint: disable=invalid-name
-    AuthContext, Depends(_require_agency_finance)
-]
-
-
-def _require_company_profile_read(ctx: CurrentUser) -> AuthContext:
-    """Firmen-/Kontaktprofil des Betriebs LESEN (/konto): das sind Konto-
-    Stammdaten, KEIN Debitoren-Finanzeinblick — deshalb eigener Guard statt
-    OWNER_REPORTING (sonst sah der co_admin ein leeres /konto). admin und
-    co_admin dürfen lesen; staff/cleaner (§4.3) und owner (§4.2) bleiben
-    draußen. Schreiben bleibt am Finanz-Guard (admin)."""
-    if ctx.role not in ("admin", "co_admin"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Kein Zugriff auf das Firmenprofil.",
-        )
-    return ctx
-
-
-# Lesen des Firmenprofils (admin+co_admin). Alias-Muster wie _read/_write.
-_profile_read = Annotated[  # pylint: disable=invalid-name
-    AuthContext, Depends(_require_company_profile_read)
-]
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -143,24 +45,75 @@ def health(service: BuchhaltungServiceDep) -> SliceHealth:
 
 
 # --- Kunden -----------------------------------------------------------------
+# Die Query-Parameter der Kundensuche. Als Annotated-Alias, weil drei Routen
+# dieselben Filter annehmen — der Bestand ruft sie unter drei Pfaden auf
+# (`/customers`, `/customers/company/{id}`, historisch `/finance/customers`).
+_Suche = Annotated[str | None, Query(max_length=200)]
+_Limit = Annotated[int | None, Query(ge=1, le=200)]
+
+
 @router.get("/customers")
 def list_customers(
-    ctx: _read, service: BuchhaltungServiceDep
+    ctx: _read,
+    service: BuchhaltungServiceDep,
+    search: _Suche = None,
+    name: _Suche = None,
+    email: _Suche = None,
+    is_supplier: Annotated[bool | None, Query(alias="isSupplier")] = None,
+    limit: _Limit = None,
 ) -> list[dict]:
-    """Kunden/Lieferanten als Array (vom übernommenen Bestand erwartet)."""
+    """Kunden/Lieferanten als Array, serverseitig gefiltert.
+
+    Ohne Parameter alle Kunden des Tenants (wie bisher). `company_id` aus der
+    Abfrage wird bewusst ignoriert — autoritativ ist der Tenant aus dem JWT.
+    """
     try:
-        return service.list_customers_array(ctx)
+        return service.search_customers(
+            ctx,
+            search=search,
+            name=name,
+            email=email,
+            is_supplier=is_supplier,
+            limit=limit,
+        )
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/customers/company/{company_id}")
 def list_customers_for_company(
-    company_id: str, ctx: _read, service: BuchhaltungServiceDep
+    company_id: str,
+    ctx: _read,
+    service: BuchhaltungServiceDep,
+    is_supplier: Annotated[bool | None, Query(alias="isSupplier")] = None,
 ) -> list[dict]:
-    """Kunden eines Unternehmens als Array (Bestands-Pfad)."""
+    """Kunden eines Unternehmens als Array (Bestands-Pfad).
+
+    `?isSupplier=true` wurde bis zum 11.09.2026 stillschweigend ignoriert —
+    die Lieferantenliste zeigte damit alle Kunden.
+    """
     try:
-        return service.list_customers_array(ctx)
+        return service.search_customers(ctx, is_supplier=is_supplier)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/customers/next-number/{company_id}")
+def get_next_customer_number(company_id: str, ctx: _read, service: BuchhaltungServiceDep) -> dict:
+    """Nächste Kundennummer nur ANZEIGEN — vergeben wird beim Anlegen."""
+    try:
+        return service.next_customer_number_preview(ctx)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/customers/{customer_id}")
+def get_customer(customer_id: str, ctx: _read, service: BuchhaltungServiceDep) -> dict:
+    """EIN Kunde. Fehlte bis zum 11.09.2026 — der Bestand rief die Route an
+    drei Stellen auf (Vorbelegung aus der Kontakte-Seite, `customerService`)
+    und bekam 405, weil nur PATCH/DELETE existierten."""
+    try:
+        return service.get_customer(ctx, customer_id)
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -192,12 +145,8 @@ def update_customer(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.delete(
-    "/customers/{customer_id}", status_code=status.HTTP_204_NO_CONTENT
-)
-def delete_customer(
-    customer_id: str, service: BuchhaltungServiceDep, ctx: _write
-) -> None:
+@router.delete("/customers/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_customer(customer_id: str, service: BuchhaltungServiceDep, ctx: _write) -> None:
     try:
         service.delete_customer(ctx, customer_id)
     except BuchhaltungError as exc:
@@ -206,9 +155,7 @@ def delete_customer(
 
 # --- Rechnungen -------------------------------------------------------------
 @router.get("/invoices", response_model=InvoiceListResponse)
-def list_invoices(
-    ctx: _read, service: BuchhaltungServiceDep
-) -> InvoiceListResponse:
+def list_invoices(ctx: _read, service: BuchhaltungServiceDep) -> InvoiceListResponse:
     try:
         return service.list_invoices(ctx)
     except BuchhaltungError as exc:
@@ -242,9 +189,7 @@ async def create_storno_invoice(
     rechnungen den Unique-Index für eine korrigierte Rechnung frei)."""
     payload = await request.json()
     try:
-        return service.create_storno_invoice(
-            ctx, invoice_id, str(payload.get("reason") or "")
-        )
+        return service.create_storno_invoice(ctx, invoice_id, str(payload.get("reason") or ""))
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -378,17 +323,13 @@ async def upload_company_logo(
     """Firmenlogo hochladen (multipart) → URL ins Profil schreiben, Profil zurück."""
     content, content_type = await read_upload(request)
     try:
-        return service.upload_logo(
-            ctx, content, content_type or "application/octet-stream"
-        )
+        return service.upload_logo(ctx, content, content_type or "application/octet-stream")
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.post("/inline-invoice-services")
-async def create_inline_service(
-    request: Request, ctx: _write
-) -> dict:
+async def create_inline_service(request: Request, ctx: _write) -> dict:
     """Inline-Service (Service-Usage-Tracking) — vorerst No-Op-Bestätigung,
     da Analytics ein eigenes Modul ist. Verhindert 404 beim Speichern."""
     return {"ok": True}
@@ -400,29 +341,48 @@ def list_inline_services(ctx: _read) -> list[dict]:
     return []
 
 
-@router.get("/text-templates/{company_id}")
+@router.get("/text-templates/{company_id}", response_model=list[TextTemplateResponse])
 def list_text_templates(
-    company_id: str, ctx: _read, service: BuchhaltungServiceDep
-) -> list[dict]:
-    """Textbausteine (Stub → leer; verhindert den 404-Render-Loop)."""
+    company_id: str,  # noqa: ARG001 — Bestands-Pfad; autoritativ ist der Tenant
+    ctx: _read,
+    versand: VersandServiceDep,
+    category: str | None = None,
+    object_type: Annotated[str | None, Query(alias="objectType")] = None,
+    text_type: Annotated[str | None, Query(alias="textType")] = None,
+    language: str | None = None,
+) -> list[TextTemplateResponse]:
+    """Textvorlagen des Betriebs (Kopf-/Fußtexte). Bis zum 14.09.2026 ein Stub,
+    der IMMER eine leere Liste gab — das Vorlagen-Menü des Editors blieb leer,
+    egal was in `text_templates` stand."""
     try:
-        return service.list_text_templates(ctx)
-    except BuchhaltungError as exc:
+        return versand.list_text_templates(
+            ctx, category=category, object_type=object_type, text_type=text_type, language=language
+        )
+    except VersandServiceError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.get("/text-templates/{company_id}/default")
+@router.get("/text-templates/{company_id}/default", response_model=TextTemplateResponse | None)
 def get_default_text_template(
-    company_id: str, ctx: _read, service: BuchhaltungServiceDep
-) -> dict | None:
-    """Standard-Textbaustein (Stub → null)."""
-    return None
+    company_id: str,  # noqa: ARG001 — Bestands-Pfad
+    ctx: _read,
+    versand: VersandServiceDep,
+    category: str = "DOCUMENT",
+    object_type: Annotated[str, Query(alias="objectType")] = "INVOICE",
+    text_type: Annotated[str, Query(alias="textType")] = "HEAD",
+    language: str | None = None,
+) -> TextTemplateResponse | None:
+    """Standardvorlage einer Art — sprachspezifisch vor sprachneutral."""
+    try:
+        return versand.default_text_template(
+            ctx, category=category, object_type=object_type, text_type=text_type, language=language
+        )
+    except VersandServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/number-sequences")
-def list_number_sequences(
-    ctx: _read, service: BuchhaltungServiceDep
-) -> list[dict]:
+def list_number_sequences(ctx: _read, service: BuchhaltungServiceDep) -> list[dict]:
     """Nummernkreise des Tenants (nur lesen)."""
     try:
         return service.list_number_sequences(ctx)
@@ -442,9 +402,7 @@ def list_number_sequences_for_company(
 
 
 @router.get("/invoices/next-number/{company_id}")
-def get_next_invoice_number(
-    company_id: str, ctx: _read, service: BuchhaltungServiceDep
-) -> dict:
+def get_next_invoice_number(company_id: str, ctx: _read, service: BuchhaltungServiceDep) -> dict:
     """Nächste Rechnungsnummer nur ANZEIGEN (ohne Zähler zu erhöhen)."""
     try:
         return service.next_number_preview(ctx)
@@ -453,9 +411,7 @@ def get_next_invoice_number(
 
 
 @router.get("/users/{user_id}/preferences")
-def get_user_preferences(
-    user_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
-) -> dict:
+def get_user_preferences(user_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep) -> dict:
     """Nutzer-Präferenzen (Stub → leeres Objekt)."""
     try:
         return service.get_user_preferences(ctx)
@@ -464,23 +420,27 @@ def get_user_preferences(
 
 
 @router.patch("/users/{user_id}/preferences")
-async def update_user_preferences(
-    user_id: str, request: Request, ctx: _profile_write
-) -> dict:
+async def update_user_preferences(user_id: str, request: Request, ctx: _profile_write) -> dict:
     """Nutzer-Präferenzen speichern (Stub → bestätigt, persistiert noch nicht)."""
     return {"ok": True}
 
 
 @router.post("/text-templates/{company_id}/initialize")
-async def initialize_text_templates(company_id: str, request: Request, ctx: _write) -> dict:
-    """Standard-Textbausteine initialisieren (Stub → No-Op)."""
-    return {"ok": True}
+def initialize_text_templates(
+    company_id: str,  # noqa: ARG001 — Bestands-Pfad
+    ctx: _write,
+    versand: VersandServiceDep,
+) -> dict:
+    """Standard-Textvorlagen anlegen, falls der Betrieb noch keine hat
+    (Kopf-/Fußtext für Angebot und Rechnung in der Betriebssprache)."""
+    try:
+        return {"ok": True, "angelegt": standardvorlagen_anlegen(versand, ctx)}
+    except VersandServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/invoices/{invoice_id}", response_model=InvoiceResponse)
-def get_invoice(
-    invoice_id: str, ctx: _read, service: BuchhaltungServiceDep
-) -> InvoiceResponse:
+def get_invoice(invoice_id: str, ctx: _read, service: BuchhaltungServiceDep) -> InvoiceResponse:
     try:
         return service.get_invoice(ctx, invoice_id)
     except BuchhaltungError as exc:
@@ -488,9 +448,7 @@ def get_invoice(
 
 
 @router.post("/invoices", status_code=status.HTTP_201_CREATED)
-async def create_invoice(
-    request: Request, service: BuchhaltungServiceDep, ctx: _write
-) -> dict:
+async def create_invoice(request: Request, service: BuchhaltungServiceDep, ctx: _write) -> dict:
     """Rechnung aus dem Buchhaltungs-Bestand speichern (reiches camelCase-
     Payload). Beträge werden serverseitig aus den Positionen berechnet."""
     payload = await request.json()
@@ -516,60 +474,117 @@ async def update_invoice(
 
 
 @router.delete("/invoices/{invoice_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_invoice(
-    invoice_id: str, service: BuchhaltungServiceDep, ctx: _write
-) -> None:
+def delete_invoice(invoice_id: str, service: BuchhaltungServiceDep, ctx: _write) -> None:
     try:
         service.delete_invoice(ctx, invoice_id)
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+# --- Preisliste (Artikelstamm + Zusatzleistungen der Objekte, 0698) --------
+@router.get("/preisliste")
+def get_preisliste(
+    ctx: _read,
+    service: BuchhaltungServiceDep,
+    property_id: Annotated[str | None, Query(alias="propertyId", max_length=64)] = None,
+    language: Annotated[str | None, Query(max_length=8)] = None,
+) -> dict:
+    """„Aus Preisliste“ im Beleg-Editor, aufgebaut wie Hostaways „Prices &
+    Fees“: je Objekt Gebühren, Zusatzleistungen und Abgaben (Kurtaxe), dazu der
+    Artikelstamm des Betriebs. `propertyId` wählt das Objekt; ohne Angabe
+    kommen die Einträge aller Objekte."""
+    if not ctx.tenant_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Kein Mandant.")
+    return _preisliste(
+        service._db,  # noqa: SLF001  # pylint: disable=protected-access
+        ctx.tenant_id,
+        property_id=property_id,
+        sprache=(language or "de")[:2].lower(),
+    )
+
+
 # --- Angebote ---------------------------------------------------------------
+# Zwei Formen, ein Schreibpfad: die Bestands-Routen (`/quotes/company/{id}`,
+# camelCase-PATCH, `convert-to-invoice`) laufen über `angebote_bestand`, das
+# auf `service.create_quote`/`convert_quote_to_invoice` abbildet. Die
+# snake_case-Pydantic-Routen bleiben für Server-Actions/Tests bestehen.
+def _angebote(service: BuchhaltungService) -> AngeboteBestand:
+    return AngeboteBestand(service)
+
+
 @router.get("/quotes", response_model=QuoteListResponse)
-def list_quotes(
-    ctx: _read, service: BuchhaltungServiceDep
-) -> QuoteListResponse:
+def list_quotes(ctx: _read, service: BuchhaltungServiceDep) -> QuoteListResponse:
     try:
         return service.list_quotes(ctx)
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.get("/quotes/{quote_id}", response_model=QuoteResponse)
-def get_quote(
-    quote_id: str, ctx: _read, service: BuchhaltungServiceDep
-) -> QuoteResponse:
+@router.get("/quotes/company/{company_id}")
+def list_quotes_bestand(
+    company_id: str,
+    ctx: _read,
+    service: BuchhaltungServiceDep,
+    status_: Annotated[str | None, Query(alias="status", max_length=20)] = None,
+) -> list[dict]:
+    """Angebote in der Form des Bestands (`quoteService.getQuotes`). `company_id`
+    aus dem Pfad wird ignoriert — autoritativ ist der Tenant aus dem JWT."""
     try:
-        return service.get_quote(ctx, quote_id)
+        return _angebote(service).liste(ctx, status_)
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.post("/quotes", response_model=QuoteResponse, status_code=status.HTTP_201_CREATED)
-def create_quote(
-    req: QuoteCreate, service: BuchhaltungServiceDep, ctx: _write
-) -> QuoteResponse:
+@router.get("/quotes/next-number/{company_id}")
+def get_next_quote_number(company_id: str, ctx: _read, service: BuchhaltungServiceDep) -> dict:
+    """Nächste Angebotsnummer nur ANZEIGEN (ohne Zähler zu erhöhen)."""
     try:
-        return service.create_quote(ctx, req)
+        return service.next_number_preview(ctx, "Angebot")
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.patch("/quotes/{quote_id}", response_model=QuoteResponse)
-def update_quote(
-    quote_id: str, req: QuoteUpdate, service: BuchhaltungServiceDep, ctx: _write
-) -> QuoteResponse:
+@router.get("/quotes/{quote_id}")
+def get_quote(quote_id: str, ctx: _read, service: BuchhaltungServiceDep) -> dict:
+    """Ein Angebot in Bestandsform (Positionen, Kunde, Cents, Zeitstempel,
+    Vorlagen-Einstellungen) — gelesen von Detailansicht, Vorschau und Versand."""
     try:
-        return service.update_quote(ctx, quote_id, req)
+        return _angebote(service).einzeln(ctx, quote_id)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/quotes", status_code=status.HTTP_201_CREATED)
+async def create_quote(request: Request, service: BuchhaltungServiceDep, ctx: _write) -> dict:
+    """Angebot anlegen — aus dem Cent-Payload von `quoteService.createQuote`
+    ODER dem camelCase-Payload des Editors. Beträge, Nummer und §19 rechnet
+    der Server (`service.create_quote`)."""
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=422, detail="Objekt erwartet.")
+    try:
+        return _angebote(service).anlegen(ctx, payload)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/quotes/{quote_id}")
+async def update_quote(
+    quote_id: str, request: Request, service: BuchhaltungServiceDep, ctx: _write
+) -> dict:
+    """Angebot ändern (Bestandsform: Status + Zeitstempel, Texte, Tags,
+    Vorlage, optional Positionen)."""
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=422, detail="Objekt erwartet.")
+    try:
+        return _angebote(service).aendern(ctx, quote_id, payload)
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.delete("/quotes/{quote_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_quote(
-    quote_id: str, service: BuchhaltungServiceDep, ctx: _write
-) -> None:
+def delete_quote(quote_id: str, service: BuchhaltungServiceDep, ctx: _write) -> None:
     try:
         service.delete_quote(ctx, quote_id)
     except BuchhaltungError as exc:
@@ -577,11 +592,31 @@ def delete_quote(
 
 
 @router.post("/quotes/{quote_id}/convert", response_model=InvoiceResponse)
-def convert_quote(
-    quote_id: str, service: BuchhaltungServiceDep, ctx: _write
-) -> InvoiceResponse:
+def convert_quote(quote_id: str, service: BuchhaltungServiceDep, ctx: _write) -> InvoiceResponse:
     """Angebot in eine Rechnung umwandeln."""
     try:
         return service.convert_quote_to_invoice(ctx, quote_id)
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/quotes/{quote_id}/convert-to-invoice")
+def convert_quote_bestand(
+    quote_id: str, service: BuchhaltungServiceDep, ctx: _write
+) -> dict:
+    """Alias des Bestands (`quoteService.convertToInvoice`): liefert
+    `invoice_id` neben der vollen Rechnung."""
+    try:
+        invoice = service.convert_quote_to_invoice(ctx, quote_id)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return {"invoice_id": invoice.id, "invoice": invoice.model_dump(mode="json")}
+
+
+# Die Bereiche (Ausgaben, Mahnwesen, Zahlungen …) hängen sich hier ein — die
+# Liste steht in `bereiche/__init__.py`, damit dreizehn parallel entstehende
+# Bereiche nicht dieselbe Import-Zeile umkämpfen.
+from .bereiche import BEREICHS_ROUTER  # noqa: E402  pylint: disable=wrong-import-position
+
+for _bereich in BEREICHS_ROUTER:
+    router.include_router(_bereich)

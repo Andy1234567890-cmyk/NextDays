@@ -53,8 +53,28 @@ def _anschrift_pruefen(
         bericht.fehler_melden(
             betrifft, "ADDR_COUNTRY", f"unbekannter Ländercode '{anschrift.land}'"
         )
-    if not anschrift.ort:
-        bericht.fehler_melden(betrifft, "ADDR_CITY", "Ort der Anschrift fehlt")
+    # Ort ODER Freitext: `ADDR_FREE` ist der amtliche Ausweg fuer
+    # Anschriften, die strukturiert nicht abbildbar sind (Zellkommentar:
+    # „Obligatorisk hvis de strukturerede adressefelter ikke kan
+    # udfyldes."). Bis hierher verlangte die Pruefung den Ort unbedingt und
+    # wies damit eine Anschrift ab, fuer die die Vorlage eine Loesung
+    # kennt.
+    if not anschrift.ort and not anschrift.freitext:
+        bericht.fehler_melden(
+            betrifft,
+            "ADDR_CITY",
+            "Ort der Anschrift fehlt und es liegt keine Freitextfassung "
+            "(ADDR_FREE) vor",
+        )
+    elif not anschrift.ort:
+        # Die fuenf amtlichen Beispielblaetter setzen `ADDR_CITY` auch dort,
+        # wo `ADDR_FREE` gefuellt ist — der Freitext steht nie allein.
+        bericht.hinweis_melden(
+            betrifft,
+            "ADDR_CITY",
+            "gemeldet wird nur die Freitextfassung; die amtlichen Beispiele "
+            "fuehren den Ort zusaetzlich",
+        )
     if anschrift.art and anschrift.art not in enums.ANSCHRIFTSART:
         bericht.fehler_melden(
             betrifft,

@@ -22,6 +22,15 @@ export interface InvoiceItem {
   unit?: string;
   category?: string;
   inventoryItemId?: string | null;
+  // Aufenthalt DIESER Position (0702): das Dokument zeigt unter einer
+  // Übernachtung „Objekt · Anreise – Abreise"; Zusatzleistungen stehen
+  // eingerückt unter der Übernachtung, an der sie hängen.
+  propertyId?: string | null;
+  /** Nur Anzeige — der Titel wird beim Laden aus property_id aufgelöst. */
+  propertyTitle?: string | null;
+  checkIn?: string | null;
+  checkOut?: string | null;
+  parentItemId?: string | null;
 }
 
 export interface InvoiceData {
@@ -83,6 +92,11 @@ export interface InvoiceData {
   companyPostalCode?: string;
   companyCity?: string;
   companyCountry?: string;
+  // Land des Kunden als EIGENES Feld, nicht nur in der Adresszeile: Die
+  // E-Rechnung braucht den ISO-3166-Code getrennt (BT-40 Käufer, BT-55
+  // Verkäufer) und trug ihn bis zum 10.09.2026 fest als „DE" — womit jede
+  // Auslandsrechnung die Reverse-Charge-Auflösung brach.
+  customerCountry?: string;
   // Bankdaten für Templates
   companyIban?: string;
   companyBic?: string;
@@ -287,7 +301,11 @@ export class GermanInvoiceService {
       amount: originalInvoice.amount || 0,
       tax: originalInvoice.tax || 0,
       total: originalInvoice.total || 0,
-      vatRate: originalInvoice.vatRate || 19,
+      // `?? undefined` statt `|| 19`: Eine Stornorechnung MUSS den Satz der
+      // Ursprungsrechnung tragen. `||` machte aus einer 0-%-Rechnung
+      // (Kleinunternehmer, Reverse Charge, steuerbefreit) beim Stornieren
+      // eine mit 19 % — aus einem korrekten Beleg wurde ein falscher.
+      vatRate: originalInvoice.vatRate ?? undefined,
 
       // Sichere Boolean-Felder
       isSmallBusiness: originalInvoice.isSmallBusiness || false,

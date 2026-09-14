@@ -182,11 +182,13 @@ export function LivePreviewModal({
       try {
         // Lade Kundendaten aus der API nur wenn explizit benötigt
         const encodedName = encodeURIComponent(docData.customerName);
-        const customersResult = await api.get<{ items: Array<Record<string, unknown>> }>(
+        // Array, serverseitig nach Name gefiltert (seit 11.09.2026; vorher
+        // kamen alle Kunden und `[0]` war der alphabetisch erste).
+        const customersResult = await api.get<Array<Record<string, unknown>>>(
           `/api/v1/customers?company_id=${companyId}&name=${encodedName}&limit=1`,
         );
 
-        const customerData = customersResult?.items?.[0];
+        const customerData = customersResult?.[0];
 
         if (customerData) {
           const contactPersons = customerData.contactPersons as
@@ -575,6 +577,74 @@ export function LivePreviewModal({
       {
         value: 'TEMPLATE_DYNAMIC',
         name: t('LivePreviewModal.layout.dynamic'),
+        svg: (
+          <svg
+            viewBox="0 0 72 102"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-full w-full"
+          >
+            <defs>
+              <clipPath id="clip0_663_547">
+                <rect width="100%" height="100%" rx="4" fill="white"></rect>
+              </clipPath>
+            </defs>
+            <g clipPath="url(#clip0_663_547)">
+              <rect width="100%" height="100%" rx="4" fill="white"></rect>
+              <ellipse cx="18" cy="6" rx="54" ry="25" fill="#2BB7C4"></ellipse>
+              <path
+                d="M17.6099 22.594C16.6272 22.594 15.7765 22.3373 15.0579 21.824C14.3539 21.296 13.8112 20.592 13.4299 19.712C13.0632 18.832 12.8799 17.8787 12.8799 16.852C12.8799 15.7373 13.0925 14.74 13.5179 13.86C13.9432 12.98 14.5665 12.2833 15.3879 11.77C16.2239 11.2567 17.2212 11 18.3799 11C18.7172 11 19.1352 11.022 19.6339 11.066C20.1472 11.0953 20.5799 11.1393 20.9319 11.198H22.4059V20.328C22.4059 20.5333 22.4499 20.6947 22.5379 20.812C22.6406 20.9147 22.7872 20.966 22.9779 20.966C23.2272 20.966 23.4252 20.8413 23.5719 20.592L24.8039 21.406C24.6132 21.7727 24.3345 22.066 23.9679 22.286C23.6159 22.4913 23.2346 22.594 22.8239 22.594C22.2812 22.594 21.8119 22.44 21.4159 22.132C21.0345 21.8093 20.8292 21.4353 20.7999 21.01V21.032C20.5505 21.516 20.1325 21.8973 19.5459 22.176C18.9592 22.4547 18.3139 22.594 17.6099 22.594ZM17.7419 20.966C18.3285 20.966 18.8492 20.812 19.3039 20.504C19.7585 20.196 20.1032 19.8073 20.3379 19.338C20.4699 19.0887 20.5432 18.876 20.5579 18.7C20.5872 18.524 20.6019 18.326 20.6019 18.106V12.782L19.6779 12.716C18.9445 12.6573 18.4532 12.628 18.2039 12.628C17.0892 12.628 16.2239 13.024 15.6079 13.816C14.9919 14.608 14.6839 15.6127 14.6839 16.83C14.6839 17.9593 14.9552 18.9347 15.4979 19.756C16.0405 20.5627 16.7885 20.966 17.7419 20.966Z"
+                fill="white"
+              ></path>
+              <line
+                x1="12"
+                y1="43.5"
+                x2="61"
+                y2="43.5"
+                stroke="#060314"
+                strokeOpacity="0.28"
+                strokeWidth="3"
+              ></line>
+              <line
+                x1="12"
+                y1="49.5"
+                x2="61"
+                y2="49.5"
+                stroke="#060314"
+                strokeOpacity="0.28"
+                strokeWidth="3"
+              ></line>
+              <line
+                x1="12"
+                y1="55.5"
+                x2="61"
+                y2="55.5"
+                stroke="#060314"
+                strokeOpacity="0.28"
+                strokeWidth="3"
+              ></line>
+              <line
+                x1="12"
+                y1="61.5"
+                x2="61"
+                y2="61.5"
+                stroke="#060314"
+                strokeOpacity="0.28"
+                strokeWidth="3"
+              ></line>
+              <line x1="12" y1="85.5" x2="24" y2="85.5" stroke="#2BB7C4"></line>
+              <line x1="12" y1="89.5" x2="28" y2="89.5" stroke="#2BB7C4"></line>
+              <line x1="12" y1="93.5" x2="20" y2="93.5" stroke="#2BB7C4"></line>
+              <line x1="40" y1="85.5" x2="52" y2="85.5" stroke="#2BB7C4"></line>
+              <line x1="40" y1="89.5" x2="56" y2="89.5" stroke="#2BB7C4"></line>
+              <line x1="40" y1="93.5" x2="48" y2="93.5" stroke="#2BB7C4"></line>
+            </g>
+          </svg>
+        ),
+      },
+      {
+        value: 'TEMPLATE_STAY',
+        name: t('LivePreviewModal.layout.stay'),
         svg: (
           <svg
             viewBox="0 0 72 102"

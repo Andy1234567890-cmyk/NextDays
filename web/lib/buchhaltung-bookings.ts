@@ -25,9 +25,16 @@ export type InvoicePreviewItem = {
   description: string;
   quantity: number;
   unit: string;
+  // Abrechnungsbasis (0698): Übernachtung je Nacht, Zusatzleistungen wie gekauft.
+  basis?: 'per_stay' | 'per_night' | 'per_guest' | 'per_guest_night' | 'per_unit';
   unitPrice: number;
   taxRate: number;
   total: number;
+  // Aufenthalt DIESER Zeile (0702): Objekt und Zeitraum stehen an der
+  // Übernachtungsposition, nicht nur im Belegkopf.
+  propertyId?: string | null;
+  checkIn?: string | null;
+  checkOut?: string | null;
 };
 
 export type InvoicePreview = {
@@ -52,7 +59,11 @@ export type InvoicePreview = {
   customerNumber: string;
   currency: string;
   propertyTitle: string;
+  // Objekt der Buchung — vorbelegt die Objekt-Auswahl der Preisliste.
+  propertyId?: string;
   stay: { from: string; to: string; nights: number };
+  // Erwachsene + Kinder der Buchung — Vorbelegung „Personen" im Belegkopf.
+  guestCount?: number;
   paidAmount: number;
   // Dokumentsprache = Gastsprache (doc_i18n, 24 EU-Locales; Fallback de).
   guestLanguage: string;

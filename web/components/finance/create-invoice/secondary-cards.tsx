@@ -28,9 +28,11 @@ import { TaxRuleSelector } from '@/components/finance/TaxRuleSelector';
 import { getAllCurrencies } from '@/data/currencies';
 import type { CreateInvoiceFormData } from '@/types/formData';
 
-
 type SecondaryCardsProps = {
   uid: string;
+  userUid: string;
+  /** Belegart: entscheidet, welche Textvorlagen (Angebot/Rechnung) angeboten werden. */
+  belegart?: 'invoice' | 'quote';
   formData: CreateInvoiceFormData;
   setFormData: Dispatch<SetStateAction<CreateInvoiceFormData>>;
   showNet: boolean;
@@ -48,10 +50,16 @@ type SecondaryCardsProps = {
   skontoText: string;
   setSkontoText: Dispatch<SetStateAction<string>>;
   formatCurrency: (amount: number) => string;
+  // Aufenthaltsangebot (0701): Anzahlung bei Annahme — nur im Angebotsmodus,
+  // sitzt bei den Summen, weil sie sich auf den Gesamtbetrag bezieht.
+  depositAmount?: string;
+  setDepositAmount?: (wert: string) => void;
 };
 
 export default function SecondaryCards({
   uid,
+  userUid,
+  belegart = 'invoice',
   formData,
   setFormData,
   showNet,
@@ -69,6 +77,8 @@ export default function SecondaryCards({
   skontoText,
   setSkontoText,
   formatCurrency,
+  depositAmount = '',
+  setDepositAmount,
 }: SecondaryCardsProps) {
   // Lokaler UI-State: Ein-/Ausblenden der weiteren Optionen
   const [showDetailedOptions, setShowDetailedOptions] = useState(false);
@@ -82,7 +92,9 @@ export default function SecondaryCards({
       {/* Fuß-Text (unter Positionen) */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">{t('secondaryCards.footerText.title')}</CardTitle>
+          <CardTitle className="flex items-center">
+            {t('secondaryCards.footerText.title')}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           <Label htmlFor="footerText">{t('secondaryCards.footerText.label')}</Label>
@@ -90,7 +102,8 @@ export default function SecondaryCards({
             value={formData.footerText}
             onChange={(html: string) => setFormData(prev => ({ ...prev, footerText: html }))}
             companyId={uid}
-            objectType="INVOICE"
+            userId={userUid}
+            objectType={belegart === 'quote' ? 'QUOTE' : 'INVOICE'}
             textType="FOOT"
           />
         </CardContent>
@@ -144,7 +157,10 @@ export default function SecondaryCards({
                   <Input
                     value={formData.internalContactPerson}
                     onChange={e =>
-                      setFormData(p => ({ ...p, internalContactPerson: e.target.value }))
+                      setFormData(p => ({
+                        ...p,
+                        internalContactPerson: e.target.value,
+                      }))
                     }
                     placeholder={t('secondaryCards.moreOptions.internalContactPersonPlaceholder')}
                   />
@@ -154,7 +170,12 @@ export default function SecondaryCards({
                   <Label>{t('secondaryCards.moreOptions.deliveryTerms')}</Label>
                   <Input
                     value={formData.deliveryTerms}
-                    onChange={e => setFormData(p => ({ ...p, deliveryTerms: e.target.value }))}
+                    onChange={e =>
+                      setFormData(p => ({
+                        ...p,
+                        deliveryTerms: e.target.value,
+                      }))
+                    }
                     placeholder={t('secondaryCards.moreOptions.deliveryTermsPlaceholder')}
                   />
                 </div>
@@ -163,72 +184,81 @@ export default function SecondaryCards({
                   <Label>{t('secondaryCards.moreOptions.paymentTerms')}</Label>
                   <Input
                     value={formData.paymentTerms}
-                    onChange={e => setFormData(p => ({ ...p, paymentTerms: e.target.value }))}
+                    onChange={e =>
+                      setFormData(p => ({
+                        ...p,
+                        paymentTerms: e.target.value,
+                      }))
+                    }
                     placeholder={t('secondaryCards.moreOptions.paymentTermsPlaceholder')}
                   />
                 </div>
 
-                {/* Skonto-Einstellungen */}
-                <div className="space-y-2 border-t pt-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="font-medium">{t('secondaryCards.skonto.title')}</Label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-600 text-xs">{t('secondaryCards.skonto.enable')}</span>
-                      <Switch checked={skontoEnabled} onCheckedChange={setSkontoEnabled} />
+                {/* Skonto-Einstellungen — nur Rechnungen; ein Angebot kennt kein Skonto */}
+                {belegart !== 'quote' && (
+                  <div className="space-y-2 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-medium">{t('secondaryCards.skonto.title')}</Label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-600 text-xs">
+                          {t('secondaryCards.skonto.enable')}
+                        </span>
+                        <Switch checked={skontoEnabled} onCheckedChange={setSkontoEnabled} />
+                      </div>
                     </div>
+                    {skontoEnabled && (
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        <div className="space-y-1">
+                          <Label>{t('secondaryCards.skonto.days')}</Label>
+                          <Input
+                            type="number"
+                            min={1}
+                            value={skontoDays ?? ''}
+                            onChange={e => {
+                              const v = parseInt(e.target.value, 10);
+                              setSkontoDays(Number.isFinite(v) ? Math.max(1, v) : undefined);
+                            }}
+                            placeholder={t('secondaryCards.skonto.daysPlaceholder')}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>{t('secondaryCards.skonto.percentage')}</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            step={0.1}
+                            value={skontoPercentage ?? ''}
+                            onChange={e => {
+                              const v = parseFloat(e.target.value);
+                              setSkontoPercentage(Number.isFinite(v) ? Math.max(0, v) : undefined);
+                            }}
+                            placeholder={t('secondaryCards.skonto.percentagePlaceholder')}
+                          />
+                        </div>
+                        <div className="space-y-1 md:col-span-1">
+                          <Label>{t('secondaryCards.skonto.textLabel')}</Label>
+                          <Input
+                            value={skontoText}
+                            onChange={e => setSkontoText(e.target.value)}
+                            placeholder={t('secondaryCards.skonto.textPlaceholder')}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {skontoEnabled && (
+                      <div className="text-gray-500 text-xs">
+                        {t('secondaryCards.skonto.previewLabel')}{' '}
+                        {skontoText?.trim() ||
+                          (skontoDays && skontoPercentage
+                            ? t('secondaryCards.skonto.previewText', {
+                                days: skontoDays,
+                                percentage: skontoPercentage,
+                              })
+                            : '—')}
+                      </div>
+                    )}
                   </div>
-                  {skontoEnabled && (
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                      <div className="space-y-1">
-                        <Label>{t('secondaryCards.skonto.days')}</Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          value={skontoDays ?? ''}
-                          onChange={e => {
-                            const v = parseInt(e.target.value, 10);
-                            setSkontoDays(Number.isFinite(v) ? Math.max(1, v) : undefined);
-                          }}
-                          placeholder={t('secondaryCards.skonto.daysPlaceholder')}
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label>{t('secondaryCards.skonto.percentage')}</Label>
-                        <Input
-                          type="number"
-                          min={0}
-                          step={0.1}
-                          value={skontoPercentage ?? ''}
-                          onChange={e => {
-                            const v = parseFloat(e.target.value);
-                            setSkontoPercentage(Number.isFinite(v) ? Math.max(0, v) : undefined);
-                          }}
-                          placeholder={t('secondaryCards.skonto.percentagePlaceholder')}
-                        />
-                      </div>
-                      <div className="space-y-1 md:col-span-1">
-                        <Label>{t('secondaryCards.skonto.textLabel')}</Label>
-                        <Input
-                          value={skontoText}
-                          onChange={e => setSkontoText(e.target.value)}
-                          placeholder={t('secondaryCards.skonto.textPlaceholder')}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  {skontoEnabled && (
-                    <div className="text-gray-500 text-xs">
-                      {t('secondaryCards.skonto.previewLabel')}{' '}
-                      {skontoText?.trim() ||
-                        (skontoDays && skontoPercentage
-                          ? t('secondaryCards.skonto.previewText', {
-                              days: skontoDays,
-                              percentage: skontoPercentage,
-                            })
-                          : '—')}
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               {/* Umsatzsteuerregelung */}
@@ -258,22 +288,22 @@ export default function SecondaryCards({
             </li>
             {!showNet && taxGrouped.length > 0
               ? // SevDesk-style: Show multiple tax rates
-              taxGrouped
-                .filter(tax => tax.taxAmount > 0)
-                .map((tax, index) => (
-                  <li key={index} className="flex justify-between border-b py-2">
-                    <span>{t('secondaryCards.totals.vat', { rate: tax.rate })}</span>
-                    <span>{formatCurrency(tax.taxAmount)}</span>
-                  </li>
-                ))
+                taxGrouped
+                  .filter(tax => tax.taxAmount > 0)
+                  .map((tax, index) => (
+                    <li key={index} className="flex justify-between border-b py-2">
+                      <span>{t('secondaryCards.totals.vat', { rate: tax.rate })}</span>
+                      <span>{formatCurrency(tax.taxAmount)}</span>
+                    </li>
+                  ))
               : // Fallback: Single tax rate display
-              !showNet &&
-              taxRate > 0 && (
-                <li className="flex justify-between border-b py-2">
-                  <span>{t('secondaryCards.totals.vat', { rate: taxRate })}</span>
-                  <span>{formatCurrency(vat)}</span>
-                </li>
-              )}
+                !showNet &&
+                taxRate > 0 && (
+                  <li className="flex justify-between border-b py-2">
+                    <span>{t('secondaryCards.totals.vat', { rate: taxRate })}</span>
+                    <span>{formatCurrency(vat)}</span>
+                  </li>
+                )}
             <li className="flex justify-between py-2">
               <span className="font-semibold text-lg">
                 {showNet
@@ -284,6 +314,32 @@ export default function SecondaryCards({
                 {formatCurrency(showNet ? subtotal : grandTotal)}
               </span>
             </li>
+            {belegart === 'quote' && setDepositAmount && (
+              <>
+                <li className="flex items-center justify-between gap-4 border-t py-2">
+                  <Label className="font-medium text-gray-700 text-sm" htmlFor="angebot-anzahlung">
+                    {t('generalInfoCard.deposit')}
+                  </Label>
+                  <Input
+                    id="angebot-anzahlung"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    className="w-48 text-right"
+                    value={depositAmount}
+                    placeholder={t('generalInfoCard.depositPlaceholder')}
+                    title={t('generalInfoCard.depositHint')}
+                    onChange={e => setDepositAmount(e.target.value)}
+                  />
+                </li>
+                {depositAmount.trim() !== '' && Number.isFinite(Number(depositAmount)) && (
+                  <li className="flex justify-between py-2 text-muted-foreground">
+                    <span>{t('secondaryCards.totals.remainingBeforeArrival')}</span>
+                    <span>{formatCurrency(Math.max(0, grandTotal - Number(depositAmount)))}</span>
+                  </li>
+                )}
+              </>
+            )}
           </ul>
         </CardContent>
       </Card>

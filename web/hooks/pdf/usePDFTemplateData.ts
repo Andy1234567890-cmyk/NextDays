@@ -25,6 +25,12 @@ interface ExtendedDocumentData extends InvoiceData {
   invoiceDate?: string;
   quoteDate?: string;
   quoteNumber?: string;
+  // Aufenthaltsangebot (0701): Kontext + Kopfdaten für TEMPLATE_STAY.
+  stay?: Record<string, unknown> | null;
+  stayFrom?: string | null;
+  stayTo?: string | null;
+  guestCount?: number | null;
+  depositAmount?: number | null;
   customerTaxNumber?: string;
   customerCompany?: string;
   customerFax?: string;
@@ -744,7 +750,10 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
       documentNumber:
         documentData.documentNumber || documentData.number || documentData.invoiceNumber || '',
       quoteNumber: documentData.quoteNumber || '',
-      quoteDate: documentData.quoteDate || documentData.validUntil || '',
+      // Angebotsdatum = Ausstellungsdatum. Bis zum 14.09.2026 fiel das Feld auf
+      // `validUntil` zurück und die Vorschau zeigte „Datum: <Gültig bis>" —
+      // ein aus taskilo übernommener Fehler. „Gültig bis" hat sein eigenes Feld.
+      quoteDate: documentData.quoteDate || documentData.date || documentData.issueDate || '',
       invoiceDate,
       dueDate,
       validUntil: dueDate, // Für Template-Kompatibilität - bereits formatiert
@@ -753,6 +762,14 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
       title: documentData.title || '', // Betreff für Stornorechnungen
       originalInvoiceNumber: documentData.originalInvoiceNumber || '', // Original-Rechnungsnummer bei Storno
       stornoNumber: documentData.stornoNumber || '', // Storno-Nummer
+
+      // Aufenthaltsangebot (TEMPLATE_STAY, 0701): Kontext + Kopfdaten unverändert
+      // durchreichen — die Vorlage formatiert selbst in der Dokumentsprache.
+      stay: documentData.stay ?? null,
+      stayFrom: documentData.stayFrom ?? null,
+      stayTo: documentData.stayTo ?? null,
+      guestCount: typeof documentData.guestCount === 'number' ? documentData.guestCount : null,
+      depositAmount: typeof documentData.depositAmount === 'number' ? documentData.depositAmount : null,
 
       // Kunden-Zusatzdaten
       customerOrderNumber, // Referenznummer / Bestellnummer des Kunden

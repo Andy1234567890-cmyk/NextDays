@@ -121,6 +121,8 @@ def _resolver(
     # der manuelle Tagespreis nach dem Abschalten wieder greift).
     aktiv = dp_enabled if dp_enabled is not None else bool(dynamic)
     tables: dict[str, list[dict]] = {
+        # Objektwährung (0161) — die EINZIGE Währungsquelle des Quotes (0704).
+        "properties": [{"id": "p", "currency": "EUR"}],
         "rate_plans": [{"base_price": base, "currency": "EUR"}] if base is not None else [],
         "price_overrides": overrides or [],
         "property_pricing_config": [config] if config else [],
@@ -292,10 +294,11 @@ def test_effective_base_when_config_table_missing() -> None:
 
 
 def test_quote_rate_plan_prices_and_currency_win() -> None:
-    # Hotel: mit rate_plan_id bepreist der Quote DIESEN Plan — Basispreis,
-    # dessen Datumspreise UND dessen Währung (sie ist die Verkaufs-Wahrheit,
-    # config.currency darf sie nicht verdrängen).
+    # Hotel: mit rate_plan_id bepreist der Quote DIESEN Plan — Basispreis und
+    # dessen Datumspreise. Die Währung ist die des OBJEKTS (0704): Ratenplan
+    # und config dürfen sie nicht verdrängen.
     tables = {
+        "properties": [{"id": "p", "currency": "USD"}],
         "rate_plans": [{"base_price": 80, "currency": "USD"}],
         "price_overrides": [],
         "property_pricing_config": [{"currency": "EUR"}],

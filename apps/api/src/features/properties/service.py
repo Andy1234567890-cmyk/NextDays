@@ -18,6 +18,7 @@ from src.core.security import AuthContext
 from src.core.supabase import load_scoped, public_storage_url
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.auth.staff_scope import is_staff, staff_property_ids
+from src.features.inbox.objekt_zuweisung import neues_objekt_einordnen_still
 from src.features.properties.verkaufsfertig import verkaufsfertig_pruefen
 from src.jobs.queue import (
     enqueue,
@@ -404,6 +405,7 @@ class PropertiesService(
             raise PropertyError("Objekt konnte nicht angelegt werden.", status_code=500)
         row = res.data[0]
         log.info("property_created", tenant_id=tenant_id, property_id=row["id"])
+        neues_objekt_einordnen_still(self._db, tenant_id, str(row["id"]))
         # KEIN Channex-Sync hier. Ein neu angelegtes Objekt ist immer ein Entwurf
         # (oben erzwungen) und geht die Portale nichts an, solange es nicht
         # veröffentlicht ist. Übertragen wird in publish() — dort blockierend, weil
@@ -1313,12 +1315,9 @@ class PropertiesService(
                 "Objekt konnte nicht dupliziert werden.", status_code=500
             )
         new_row = res.data[0]
-        log.info(
-            "property_duplicated",
-            tenant_id=tenant_id,
-            source_property_id=property_id,
-            property_id=new_row["id"],
-        )
+        neues_objekt_einordnen_still(self._db, tenant_id, str(new_row["id"]))
+        log.info("property_duplicated", tenant_id=tenant_id, source_property_id=property_id,
+                 property_id=new_row["id"])
         # Wie bei create(): kein Channex-Sync. Die Kopie ist ein Entwurf
         # (oben gesetzt) und geht erst beim Veröffentlichen an die Portale.
         return PropertyResponse(**_row(new_row))
@@ -1482,7 +1481,6 @@ class PropertiesService(
             "id", photo_id
         ).eq("tenant_id", tenant_id).execute()
         log.info("accessibility_photo_deleted", photo_id=photo_id)
-
 
 
 def _photo_row(r: dict) -> dict:

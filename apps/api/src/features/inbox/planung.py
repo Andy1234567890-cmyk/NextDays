@@ -13,6 +13,8 @@ import re
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from httpx import HTTPError
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -20,9 +22,10 @@ from src.core.security import AuthContext
 from src.features.notification_settings.betriebsmeldungen import melde_zustellproblem
 from src.jobs import worker_verlauf
 
+from . import thread_spiegel
 from .ausloeser import DATUMS_TRIGGER, anker_von, versatz_normieren
 from .errors import InboxError
-from .schemas import BulkUpdateResult, ScheduledMessage, ScheduledMessageList
+from .objekt_zuweisung import melde_fehlende_zeitzonen, melde_gast_unerreichbar
 from .sprachen import fassung_waehlen, standardsprache
 from .zeit import zeitzone as _zeitzone
 
@@ -67,13 +70,37 @@ NEUPLANUNG_MAX_THREADS = 2000
 THREAD_COLS = (
     "id, tenant_id, property_map_id, property_id, ota_name, arrival_date, "
     "departure_date, booked_at, status, "
-    "gast_sprache:customer->>language, gast_sprache_raw:raw->customer->>language"
+    "gast_sprache:customer->>language, gast_sprache_raw:raw->customer->>language, "
+    # Fuer die Mail-Weiche (thread_spiegel.ist_eigener_thread) und die Frage,
+    # ob der Gast ueberhaupt erreichbar ist — zwei Skalare, nicht `raw` (s. o.).
+    "quelle:raw->>source, gast_mail:customer->>mail"
 )
 
 # Zustände einer geplanten Automail, die eine Neuplanung überschreiben DARF.
 # 'sent'/'sending' sind unantastbar (sonst Doppelversand, Wurzel 2), 'failed'
 # trägt einen Fehlertext, den ein stiller Neuversuch verdecken würde.
 UEBERSCHREIBBAR = ("pending", "skipped", "cancelled")
+
+# WARUM eine Automail nicht (mehr) rausgeht. Der Wert steht in `last_error` —
+# derselben Spalte, in der auch ein Versandfehler landet.
+#
+# Bis 09/2026 blieb sie bei jedem 'skipped' NULL. Das war der stille Teil des
+# Systems: eine Regel, die für 200 Buchungen nichts verschickt, sah in der
+# Tabelle exakt so aus wie eine, die gerade erst angelegt wurde. Wer wissen
+# wollte, warum sein Gast nichts bekommt, hatte KEINE Antwort — und die drei
+# häufigsten Ursachen verlangen drei völlig verschiedene Handgriffe (Zeitzone
+# am Objekt nachtragen, Vorlage füllen, gar nichts tun).
+#
+# Bewusst kurze Kürzel und keine Sätze: die Oberfläche formuliert, der Server
+# kennt die Sprache des Betrachters nicht (dieselbe Regel wie bei
+# `InboxMessage.event_detail`).
+GRUND_NACHZUEGLER = "nachzuegler"  # Der Zeitpunkt liegt über NACHZUEGLER_STUNDEN zurück.
+GRUND_ANKER_VOR_BUCHUNG = "anker_vor_buchung"  # Zeitpunkt lag VOR der Buchung
+GRUND_ZEITZONE_FEHLT = "zeitzone_fehlt"  # Regel verlangt Ortszeit, das Objekt hat keine hinterlegt.
+GRUND_KEIN_TEXT = "kein_text"  # Vorlage/Fassung leer oder gelöscht — es gibt nichts zu senden.
+GRUND_ANKER_FEHLT = "anker_fehlt"  # kein booked_at oder Uhrzeit unbrauchbar
+GRUND_KEINE_GASTADRESSE = "keine_gastadresse"  # eigener Thread ohne Gast-Mail
+
 
 
 class PlanungMixin:
@@ -86,218 +113,6 @@ class PlanungMixin:
     _AUTOMATION_COLS: str
     # Aus `VorlagenMixin` — beide sind Teil desselben `InboxService`.
     _felder_pruefen: Any
-
-    # --- Geplante Nachrichten ----------------------------------------------
-    def schedule_message(
-        self, ctx: AuthContext, thread_id: str, body: str, send_at: str
-    ) -> ScheduledMessage:
-        text = (body or "").strip()
-        if not text:
-            raise InboxError("Nachricht darf nicht leer sein.", status_code=422)
-        if not (send_at or "").strip():
-            raise InboxError("Zeitpunkt fehlt.", status_code=422)
-        # Platzhalter JETZT prüfen, solange der Autor davorsitzt. Beim Versand
-        # bleibt ein unbekannter Schlüssel bewusst stehen (`rendern` ersetzt nur,
-        # was der Katalog kennt) — ein getipptes `{{guest_nmae}}` ginge also
-        # wörtlich an den Gast. Vorlagen und Automationen prüfen an dieser Stelle
-        # längst; der geplante Einzelversand war der letzte ungeprüfte Weg.
-        self._felder_pruefen(text)
-        db, tenant_id, _row, access = self._load_thread_scoped(ctx, thread_id)
-        # Geplant = später ausgehende Nachricht → gleiche Reply-Berechtigung.
-        if not access.can_reply:
-            raise InboxError("Keine Berechtigung zum Senden.", status_code=403)
-        ins = (
-            db.table("inbox_scheduled_message")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "thread_id": thread_id,
-                    "body": text,
-                    "send_at": send_at,
-                    "status": "pending",
-                }
-            )
-            .execute()
-        ).data
-        s = ins[0] if ins else {}
-        # Sekundengenauen Timer sofort setzen (kein Warten auf Cron-Tick).
-        from . import scheduler
-        if s.get("id"):
-            scheduler.schedule(s["id"], s.get("send_at") or send_at)
-        return ScheduledMessage(
-            id=s.get("id"), thread_id=thread_id, body=text,
-            send_at=s.get("send_at") or send_at, status=s.get("status") or "pending",
-        )
-
-    def list_scheduled(self, ctx: AuthContext, thread_id: str) -> ScheduledMessageList:
-        """Anstehende geplante Nachrichten einer Konversation."""
-        db, tenant_id, _row, _access = self._load_thread_scoped(ctx, thread_id)
-        res = (
-            db.table("inbox_scheduled_message")
-            .select("id, thread_id, body, send_at, status")
-            .eq("tenant_id", tenant_id)
-            .eq("thread_id", thread_id)
-            .eq("status", "pending")
-            .order("send_at")
-            .execute()
-        )
-        items = [
-            ScheduledMessage(
-                id=s["id"], thread_id=s["thread_id"], body=s.get("body") or "",
-                send_at=s.get("send_at"), status=s.get("status") or "pending",
-            )
-            for s in (res.data or [])
-        ]
-        return ScheduledMessageList(items=items, total=len(items))
-
-    def cancel_scheduled(self, ctx: AuthContext, scheduled_id: str) -> None:
-        db, tenant_id = self._require(ctx)
-        # Zugehörige geplante Nachricht laden, um ihren Thread zu ermitteln — und
-        # den Thread-Scope (assigned-only) durchsetzen. Ohne diese Prüfung könnte
-        # ein Nutzer ohne INBOX_VIEW_ALL eine geplante Nachricht in einem fremd
-        # zugewiesenen Thread stornieren, den er selbst gar nicht sehen darf
-        # (list_scheduled erzwingt den Scope korrekt, cancel_scheduled bislang nicht).
-        row = (
-            db.table("inbox_scheduled_message")
-            .select("id, thread_id")
-            .eq("tenant_id", tenant_id)
-            .eq("id", scheduled_id)
-            .limit(1)
-            .execute()
-        ).data
-        if not row:
-            raise InboxError("Geplante Nachricht nicht gefunden.", status_code=404)
-        # Wirft 404, wenn der Nutzer den Thread laut Scope nicht sehen darf.
-        self._load_thread_scoped(ctx, row[0]["thread_id"])
-        db.table("inbox_scheduled_message").update({"status": "cancelled"}).eq(
-            "tenant_id", tenant_id
-        ).eq("id", scheduled_id).eq("status", "pending").execute()
-        # Laufenden Timer stoppen.
-        from . import scheduler
-        scheduler.cancel(scheduled_id)
-
-    # --- Massenaktualisierung ----------------------------------------------
-    def bulk_update(
-        self, ctx: AuthContext, action: str, before: str
-    ) -> BulkUpdateResult:
-        """Threads mit letzter Aktivität ≤ `before` als gelesen/archiviert.
-
-        „Letzte Aktivität" ist ein FREMDereignis (Wurzel 5b): die jüngste
-        Nachricht beim Portal (`last_message_at`), sonst der Buchungszeitpunkt
-        (`booked_at`) — genau die beiden Werte, aus denen `list_threads` die
-        angezeigte Zeit baut. Gefiltert wurde hier vorher `updated_at`, also
-        UNSERE Schreibzeit. Das war nicht nur die falsche Bedeutung, es machte
-        die Funktion wirkungslos: der Journal-Tick schreibt `channex_booking`
-        laufend, live standen deshalb alle neun offenen Threads auf
-        `updated_at = heute` und „alles vor dem 01.08. als gelesen" traf keinen
-        einzigen davon.
-
-        Ein Thread ohne beide Zeitpunkte bleibt unberührt — ohne Aktivität gibt
-        es kein „vor diesem Tag", und ein geratenes Datum wäre ein erfundener
-        Wert (Wurzel 4).
-
-        Gilt nur für die AKTIVE Ansicht: eine Massenaktion ist zum Aufräumen des
-        Posteingangs da. Ohne diese Grenze hätte `archived` Threads aus dem
-        Papierkorb ins Archiv zurückgeholt.
-        """
-        db, tenant_id = self._require(ctx)
-        access = self.access(ctx)
-        if action == "read":
-            # `read_at` gehört ZWINGEND dazu (Wurzel 1): ohne den Zeitpunkt hat
-            # der abgeleitete Lesestand keinen Vergleichswert, und der Thread
-            # hängt an einem nackten Flag (s. `_ist_gelesen`).
-            patch = {"is_read": True, "read_at": datetime.now(UTC).isoformat()}
-        elif action == "archived":
-            patch = {"is_archived": True, "inbox_status": "archived"}
-        else:
-            raise InboxError("Unbekannte Aktion.", status_code=422)
-        if not (before or "").strip():
-            raise InboxError("Datum fehlt.", status_code=422)
-        # `before` ist ein Tag (YYYY-MM-DD) → einschließlich des ganzen Tages.
-        upper = f"{before[:10]}T23:59:59Z"
-        query = (
-            db.table("channex_booking")
-            .update(patch)
-            .eq("tenant_id", tenant_id)
-            .eq("inbox_status", "active")
-            .or_(
-                f"last_message_at.lte.{upper},"
-                f"and(last_message_at.is.null,booked_at.lte.{upper})"
-            )
-        )
-        # Scope: assigned-only-Nutzer dürfen nur ihre eigenen Threads massen-ändern.
-        if access.scope == "assigned":
-            query = query.eq("assigned_user_id", ctx.user_id)
-        rows = query.execute().data or []
-        return BulkUpdateResult(updated=len(rows))
-
-    # --- Interner Cron: fällige geplante Nachrichten versenden -------------
-    def dispatch_due_scheduled(self) -> dict:
-        """Über ALLE Tenants: fällige (send_at ≤ jetzt) pending-Nachrichten
-        versenden. Kein JWT — via internem Cron-Endpoint aufgerufen."""
-
-        if self._db is None:
-            raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
-        db = self._db
-        now = datetime.now(UTC).isoformat()
-        # Verwaiste 'sending'-Zeilen (Prozess starb nach Claim, vor 'sent'/'failed')
-        # wieder freigeben, damit sie in diesem Tick als fällig neu versendet werden
-        # und nicht für immer verloren bleiben. Frist deutlich über realer
-        # Versanddauer, damit ein aktiver Versand nicht doppelt läuft (updated_at
-        # per DB-Trigger beim Claim gesetzt).
-        from . import scheduler  # noqa: PLC0415 — Zirkularität (scheduler↔service)
-
-        reap_cutoff = (
-            datetime.now(UTC)
-            - timedelta(minutes=scheduler.SENDING_REAP_MINUTES)
-        ).isoformat()
-        reaped = (
-            db.table("inbox_scheduled_message")
-            .update({"status": "pending"})
-            .eq("status", "sending")
-            .lt("updated_at", reap_cutoff)
-            .execute()
-        ).data or []
-        if reaped:
-            log.warning("dispatch_reaped_stuck_sending", count=len(reaped))
-        due = (
-            db.table("inbox_scheduled_message")
-            .select("id, tenant_id, thread_id, body")
-            .eq("status", "pending")
-            .lte("send_at", now)
-            .limit(200)
-            .execute()
-        ).data or []
-        sent = 0
-        failed = 0
-        for s in due:
-            # ATOMARES CLAIM: der In-App-Timer (scheduler._send_now) verarbeitet
-            # dieselben pending-Zeilen. Nur wer die Zeile per UPDATE ...
-            # WHERE status='pending' auf 'sending' flippt, darf senden — sonst
-            # Doppelversand. Leere Rückgabe = anderer Pfad war schneller.
-            claimed = (
-                db.table("inbox_scheduled_message")
-                .update({"status": "sending"})
-                .eq("id", s["id"])
-                .eq("status", "pending")
-                .execute()
-            ).data
-            if not claimed:
-                continue
-            try:
-                ctx = AuthContext(user_id="cron", tenant_id=s["tenant_id"])
-                self.send_message(ctx, s["thread_id"], s["body"], enforce_reply=False)
-                db.table("inbox_scheduled_message").update(
-                    {"status": "sent"}
-                ).eq("id", s["id"]).execute()
-                sent += 1
-            except Exception as exc:  # noqa: BLE001 — Cron darf nicht abbrechen
-                # Transiente Störung → zurück auf 'pending' (s. _fehlerzustand).
-                db.table("inbox_scheduled_message").update(
-                    self._fehlerzustand(exc)
-                ).eq("id", s["id"]).execute()
-                failed += 1
-        return {"sent": sent, "failed": failed, "considered": len(due)}
 
     # -- Automail-Planung (Trigger-Engine) -------------------------------------
     #
@@ -730,11 +545,18 @@ class PlanungMixin:
     @staticmethod
     def _einplanen(
         db: Client, tenant_id: str, automation: dict, thread_id: str,
-        body: str, send_at: datetime, *, status: str = "pending",
+        body: str, send_at: datetime,
+        *, zustand: tuple[str, str | None] = ("pending", None),
         wiederbeleben: bool = True,
     ) -> None:
         """Eine geplante Automail je (Automation, Thread) schreiben ODER
         aktualisieren — aber NIE eine, die schon raus ist.
+
+        `zustand` ist das Paar (Status, Grund) aus `_versandstatus` — bewusst
+        EIN Argument: die beiden gehören zusammen und werden nie getrennt
+        gesetzt. Getrennt geführt wäre der Grund irgendwann ohne seinen Status
+        geschrieben worden (oder umgekehrt), und die Zeile trüge dann ein
+        „skipped" ohne Erklärung — genau der Zustand, den der Grund behebt.
 
         Kein blindes Upsert: eine Neuplanung darf einen bereits versendeten
         Eintrag nicht auf 'pending' zurücksetzen, sonst ginge dieselbe Nachricht
@@ -756,6 +578,7 @@ class PlanungMixin:
         Abwesenheitsantwort ein zweites Mal. Der Unique-Index schützt gegen zwei
         ZEILEN, nicht gegen zweimal SENDEN über dieselbe Zeile.
         """
+        status, grund = zustand
         zustaende = (
             UEBERSCHREIBBAR
             if wiederbeleben
@@ -768,7 +591,11 @@ class PlanungMixin:
                     "body": body,
                     "send_at": send_at.isoformat(),
                     "status": status,
-                    "last_error": None,
+                    # Der Grund gehört zum Status: eine Zeile, die gerade
+                    # 'skipped' wird, ohne ihn zurückzusetzen, behielte den
+                    # alten Text; eine, die wieder 'pending' wird, muss ihn
+                    # verlieren (Wurzel 1 — beide Richtungen).
+                    "last_error": grund,
                 }
             )
             .eq("tenant_id", tenant_id)
@@ -788,10 +615,17 @@ class PlanungMixin:
                     "body": body,
                     "send_at": send_at.isoformat(),
                     "status": status,
+                    "last_error": grund,
                 }
             ).execute()
-        except Exception as exc:  # noqa: BLE001 — nur der Dublettenfall ist ok
-            if "23505" not in str(exc):
+        except APIError as exc:
+            # Die Dublette wird am CODE erkannt, nicht am Text: `str(exc)`
+            # enthält bei postgrest-py die Meldung des Servers, und ob dort
+            # „23505" vorkommt, ist eine Eigenschaft der Fehlerformatierung —
+            # keine Zusage. Ein Treffer im freien Text wäre zudem in beide
+            # Richtungen falsch (eine Meldung, die „23505" nur zitiert, gilt als
+            # Dublette; ein Konflikt ohne die Ziffern im Text wird geworfen).
+            if exc.code != "23505":
                 raise
             # Es gibt bereits eine Zeile in einem unantastbaren Zustand
             # (sent/sending/failed). Genau so soll es sein.
@@ -802,8 +636,8 @@ class PlanungMixin:
         jetzt: datetime,
         *,
         gebucht_am: datetime | None = None,
-    ) -> str:
-        """'pending' (geht raus) oder 'skipped' (geht nicht mehr raus).
+    ) -> tuple[str, str | None]:
+        """('pending', None) — geht raus — oder ('skipped', Grund).
 
         ZWEI Gründe, aus denen ein Zeitpunkt nicht mehr einzuhalten ist. Sie
         sehen sich ähnlich, sind aber verschieden, und der zweite fehlte:
@@ -839,16 +673,22 @@ class PlanungMixin:
         Ersatzzeitpunkt (Wurzel 4).
         """
         if send_at < jetzt - timedelta(hours=NACHZUEGLER_STUNDEN):
-            return "skipped"
+            return "skipped", GRUND_NACHZUEGLER
         if gebucht_am is not None and send_at < gebucht_am:
-            return "skipped"
-        return "pending"
+            return "skipped", GRUND_ANKER_VOR_BUCHUNG
+        return "pending", None
 
     @staticmethod
     def _stilllegen(
-        db: Client, tenant_id: str, automation: dict, thread_id: str
+        db: Client, tenant_id: str, automation: dict, thread_id: str, grund: str
     ) -> None:
         """Anstehende Zeile auf 'skipped' setzen, solange nicht gerechnet werden kann.
+
+        `grund` wandert nach `last_error` und ist einer der `GRUND_*`-Werte.
+        Ohne ihn stand dort NULL, und „skipped" war eine Aussage ohne Inhalt:
+        weder der Betrieb noch der nächste Leser konnte unterscheiden, ob die
+        Nachricht zu spät war, die Vorlage leer oder dem Objekt die Zeitzone
+        fehlt — drei Fälle mit drei völlig verschiedenen Handgriffen.
 
         Der Mittelweg zwischen den beiden falschen Antworten. Stornieren wäre
         endgültig — die Regel gilt ja weiter, sie ist nur gerade nicht
@@ -864,15 +704,16 @@ class PlanungMixin:
         Vorlage wieder gefüllt ist, hebt die nächste Planung die Zeile zurück
         auf 'pending' mit frischen Werten.
         """
-        db.table("automation_scheduled_message").update({"status": "skipped"}).eq(
-            "tenant_id", tenant_id
-        ).eq("automation_id", automation["id"]).eq("thread_id", thread_id).eq(
-            "status", "pending"
-        ).execute()
+        db.table("automation_scheduled_message").update(
+            {"status": "skipped", "last_error": grund}
+        ).eq("tenant_id", tenant_id).eq("automation_id", automation["id"]).eq(
+            "thread_id", thread_id
+        ).eq("status", "pending").execute()
 
     def _plan_thread(
         self, db: Client, tenant_id: str, th: dict, property_id: str | None,
         zeitzone: str | None, automations: list[dict], jetzt: datetime,
+        *, ohne_zeitzone: set[str] | None = None,
     ) -> set[str]:
         """Alle passenden Automails EINES Threads planen.
 
@@ -886,6 +727,12 @@ class PlanungMixin:
         ein kurzzeitig fehlendes Mapping (Kanal neu verbunden) nahm so sämtliche
         Automails der Buchung zurück, und was in der Lücke fällig gewesen wäre,
         war endgültig weg.
+
+        `ohne_zeitzone` sammelt (wenn übergeben) die Objekte, an denen eine
+        Regel mit Ortszeit-Pflicht nichts planen konnte. Der Aufrufer macht
+        daraus EINE Glocke je Betrieb — ein Log-Eintrag je Buchung erreicht den
+        Betrieb nie, und genau dort lag die Ursache monatelang (Wurzel 5:
+        stille Stelle laut machen).
         """
         thread_id = str(th["id"])
         # Eine stornierte Buchung bekommt keine Post mehr. Ohne diese Zeile ging
@@ -897,21 +744,35 @@ class PlanungMixin:
         # für alle Regeln derselbe ist.
         gebucht = self._ankerzeit("booking", th)
         gebucht_am = gebucht[2] if gebucht else None
+        # Eigener Thread ohne Gast-Mail: alle passenden Regeln mit Grund
+        # stilllegen, EINE Glocke je Thread statt je Regel (14.09.2026).
+        unerreichbar = thread_spiegel.ist_eigener_thread(
+            {"raw": {"source": th.get("quelle")}, "ota_name": th.get("ota_name")}
+        ) and not str(th.get("gast_mail") or "").strip()
         geplant: set[str] = set()
         for a in automations:
             if not self._automation_matches(a, property_id, th.get("ota_name")):
                 continue
-            if a.get("use_property_timezone") and not zeitzone:
-                # Lieber nicht planen als in der falschen Zeitzone: der Betrieb
-                # hat Ortszeit AUSDRÜCKLICH verlangt, still auf UTC auszuweichen
-                # wäre ein erfundener Wert (Wurzel 4).
+            if unerreichbar:
+                self._stilllegen(db, tenant_id, a, thread_id, GRUND_KEINE_GASTADRESSE)
+                geplant.add(str(a["id"]))
+                continue
+            # Uhrzeit IMMER in Objekt-Ortszeit (14.09.2026; vorher galt ohne
+            # Schalter UTC: 06:00 eingestellt, 08:00 dänischer Zeit gesendet).
+            # Ohne Zeitzone kein Plan (Glocke); Minuten/Stunden ab Buchung
+            # brauchen keine.
+            if not zeitzone and (a.get("offset_unit") or "days") == "days":
                 log.warning(
                     "automation_ohne_objekt_zeitzone",
                     tenant_id=tenant_id,
                     automation_id=a["id"],
                     property_id=str(property_id) if property_id else None,
                 )
-                self._stilllegen(db, tenant_id, a, thread_id)
+                if ohne_zeitzone is not None and property_id:
+                    ohne_zeitzone.add(str(property_id))
+                self._stilllegen(
+                    db, tenant_id, a, thread_id, GRUND_ZEITZONE_FEHLT
+                )
                 geplant.add(str(a["id"]))
                 continue
             body = self._automation_body(
@@ -924,7 +785,7 @@ class PlanungMixin:
                     tenant_id=tenant_id,
                     automation_id=a["id"],
                 )
-                self._stilllegen(db, tenant_id, a, thread_id)
+                self._stilllegen(db, tenant_id, a, thread_id, GRUND_KEIN_TEXT)
                 geplant.add(str(a["id"]))
                 continue
             # Anker UND Vorzeichen aus dem Auslöser ableiten, nicht aus den
@@ -947,25 +808,89 @@ class PlanungMixin:
                 versatz,
                 a.get("send_time"),
                 th,
-                timezone_name=zeitzone if a.get("use_property_timezone") else None,
+                timezone_name=zeitzone,
                 offset_unit=a.get("offset_unit") or "days",
                 offset_value=versatz,
             )
             if send_at is None:
                 # Anker fehlt (Buchung ohne booked_at) oder die Uhrzeit ist
                 # unbrauchbar — ein Datenproblem, keine Aussage über die
-                # Zuweisung.
-                self._stilllegen(db, tenant_id, a, thread_id)
+                # Zuweisung. LAUT, wie die Nachbarfälle: bis 09/2026 war das
+                # der einzige Zweig ohne Log-Zeile, und genau er trifft jede
+                # Buchung ohne `booked_at` — die häufigste Ursache dafür, dass
+                # eine korrekt eingerichtete Regel nichts tut.
+                log.warning(
+                    "automation_ohne_zeitpunkt",
+                    tenant_id=tenant_id,
+                    automation_id=a["id"],
+                    thread_id=thread_id,
+                    anchor=anker_von(trigger) if trigger else a.get("anchor"),
+                )
+                self._stilllegen(db, tenant_id, a, thread_id, GRUND_ANKER_FEHLT)
                 geplant.add(str(a["id"]))
                 continue
+            send_at = self._ins_zeitfenster(a, send_at, zeitzone)
+            self._uhrzeit_kontrollieren(a, send_at, zeitzone, tenant_id)
             self._einplanen(
                 db, tenant_id, a, thread_id, body, send_at,
-                status=self._versandstatus(
+                zustand=self._versandstatus(
                     send_at, jetzt, gebucht_am=gebucht_am
                 ),
             )
             geplant.add(str(a["id"]))
+        if unerreichbar and geplant:
+            melde_gast_unerreichbar(db, tenant_id, thread_id, property_id)
         return geplant
+
+    @staticmethod
+    def _uhrzeit_kontrollieren(
+        a: dict, send_at: datetime, zeitzone: str | None, tenant_id: str
+    ) -> None:
+        """Selbstkontrolle bei JEDER Planung: geplante Ortszeit == eingestellte
+        Uhrzeit (sonst ERROR-Log; 14.09.2026: 06:00 eingestellt, 08:00 geplant).
+        Live-Gegenprobe: scripts/diagnose/automail-uhrzeit-pruefen.sh."""
+        soll = str(a.get("send_time") or "")[:5]
+        if not soll or (a.get("offset_unit") or "days") != "days" or not zeitzone:
+            return
+        ist = send_at.astimezone(_zeitzone(zeitzone)).strftime("%H:%M")
+        fenster = str(a.get("window_from") or "")[:5]
+        if ist not in (soll, fenster):
+            log.error(
+                "automail_uhrzeit_abweichung",
+                tenant_id=tenant_id, automation_id=a.get("id"),
+                eingestellt=soll, geplant_lokal=ist, zeitzone=zeitzone,
+            )
+
+    @staticmethod
+    def _ins_zeitfenster(
+        automation: dict, send_at: datetime, zeitzone: str | None
+    ) -> datetime:
+        """Zeitpunkt auf den nächsten Fensterbeginn schieben (window_*).
+
+        Galt bis 09/2026 nur für die Abwesenheitsantwort; für Datums-Regeln war
+        das Feld eine Attrappe. Verschoben wird NUR nach vorn (nie vor den
+        Anker), bewertet in Objekt-Ortszeit, höchstens eine Woche weit; ohne
+        Treffer bleibt der Zeitpunkt (kein erfundener, Wurzel 4)."""
+        if not (automation.get("window_days") or automation.get("window_from")):
+            return send_at
+        zone = _zeitzone(zeitzone) if zeitzone else UTC
+        lokal = send_at.astimezone(zone)
+        if PlanungMixin._im_zeitfenster(automation, lokal):
+            return send_at
+        von = str(automation.get("window_from") or "00:00")[:5]
+        gelesen = PlanungMixin._uhrzeit(von)
+        if gelesen is None:
+            return send_at
+        hh, mm = gelesen
+        for tag in range(8):
+            kandidat = (lokal + timedelta(days=tag)).replace(
+                hour=hh, minute=mm, second=0, microsecond=0
+            )
+            if kandidat >= lokal and PlanungMixin._im_zeitfenster(
+                automation, kandidat
+            ):
+                return kandidat.astimezone(UTC)
+        return send_at
 
     def schedule_automations_for_thread(self, tenant_id: str, thread_id: str) -> int:
         """Datumsgebundene Automails für EINEN Thread planen — der Weg beim
@@ -1078,6 +1003,7 @@ class PlanungMixin:
         alle_ids = {str(a["id"]) for a in automations}
         geplant_gesamt = 0
         fehler = 0
+        ohne_zeitzone: set[str] = set()
         for th in threads:
             # Je Thread abgesichert: ohne diesen Rahmen riss EINE unbrauchbare
             # Zeile die gesamte Neuplanung des Betriebs ab — samt der danach
@@ -1088,7 +1014,8 @@ class PlanungMixin:
             try:
                 property_id, zeitzone = self._objekt_zum_thread(db, tenant_id, th)
                 geplant = self._plan_thread(
-                    db, tenant_id, th, property_id, zeitzone, automations, jetzt
+                    db, tenant_id, th, property_id, zeitzone, automations,
+                    jetzt, ohne_zeitzone=ohne_zeitzone,
                 )
             except Exception as exc:  # noqa: BLE001 — ein Thread kippt nicht alle
                 fehler += 1
@@ -1116,16 +1043,37 @@ class PlanungMixin:
         # Minuten-Tick raus — eine Neuplanung dazwischen (stündlich, und bei
         # JEDEM Speichern einer Automation) löschte sie vorher weg, endgültig:
         # der Unique-Index lässt je Thread nur einen Versuch zu.
+        regeln = (
+            db.table("message_automation")
+            .select("id, trigger")
+            .eq("tenant_id", tenant_id)
+            .execute()
+        ).data or []
         stillgelegt = {
             str(r["id"])
-            for r in (
-                db.table("message_automation")
-                .select("id")
+            for r in regeln
+            if str(r.get("trigger") or "") in DATUMS_TRIGGER
+        } - alle_ids
+        # Und die GELÖSCHTEN: eine Regel, die es nicht mehr gibt, taucht in
+        # keiner der beiden Mengen oben auf — ihre eingeplanten Nachrichten
+        # blieben deshalb auf 'pending' stehen und gingen weiter raus, obwohl
+        # der Betrieb die Regel entfernt hat. Genau das Gegenteil dessen, was
+        # das Löschen bedeutet (Wurzel 1). Geprüft wird gegen ALLE Regeln des
+        # Betriebs, nicht nur die datumsgebundenen: eine aktive
+        # `message_received`-Regel darf ihre Quittung behalten.
+        vorhanden = {str(r["id"]) for r in regeln}
+        stillgelegt |= {
+            str(z["automation_id"])
+            for z in (
+                db.table("automation_scheduled_message")
+                .select("automation_id")
                 .eq("tenant_id", tenant_id)
-                .in_("trigger", list(DATUMS_TRIGGER))
+                .eq("status", "pending")
+                .limit(NEUPLANUNG_MAX_THREADS)
                 .execute()
             ).data or []
-        } - alle_ids
+            if str(z.get("automation_id") or "") not in vorhanden
+        }
         if stillgelegt:
             storniert += len(
                 (
@@ -1147,6 +1095,7 @@ class PlanungMixin:
             .lt("send_at", (jetzt - timedelta(hours=NACHZUEGLER_STUNDEN)).isoformat())
             .execute()
         ).data or []
+        melde_fehlende_zeitzonen(db, tenant_id, ohne_zeitzone, jetzt)
         return {
             "threads": len(threads),
             "geplant": geplant_gesamt,
@@ -1159,7 +1108,17 @@ class PlanungMixin:
 
         Fängt alles ab, was zwischen zwei Planungen passiert sein kann, ohne dass
         jemand die Regel angefasst hat: eine Buchung wurde umgebucht, storniert,
-        oder ein Objekt hat seine Zeitzone bekommen."""
+        oder ein Objekt hat seine Zeitzone bekommen.
+
+        ZWEI Quellen für die Tenant-Liste, und die zweite fehlte: Wer seine
+        letzte Datums-Regel LÖSCHT, verschwindet aus `message_automation` — und
+        damit aus diesem Lauf. Seine bereits eingeplanten Automails blieben auf
+        'pending' stehen und gingen weiter raus, denn der Versand kennt nur die
+        Zeile, nicht die Regel. Genau das Gegenteil dessen, was der Betrieb mit
+        dem Löschen gesagt hat (Wurzel 1: der Gegenzustand gehört mitgepflegt).
+        Deshalb kommen die Betriebe mit offenen Zeilen dazu; `replan_tenant`
+        findet für sie keine aktive Regel mehr und storniert sie über den
+        `stillgelegt`-Zweig."""
         if self._db is None:
             raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
         rows = (
@@ -1168,7 +1127,17 @@ class PlanungMixin:
             .in_("trigger", list(DATUMS_TRIGGER))
             .execute()
         ).data or []
-        tenants = sorted({str(r["tenant_id"]) for r in rows})
+        offen = (
+            self._db.table("automation_scheduled_message")
+            .select("tenant_id")
+            .eq("status", "pending")
+            .limit(NEUPLANUNG_MAX_THREADS)
+            .execute()
+        ).data or []
+        tenants = sorted(
+            {str(r["tenant_id"]) for r in rows}
+            | {str(r["tenant_id"]) for r in offen if r.get("tenant_id")}
+        )
         gesamt = {
             "tenants": 0, "threads": 0, "geplant": 0, "storniert": 0,
             # Zwei getrennte Zähler: `fehler` sind einzelne Threads, die der
@@ -1292,8 +1261,23 @@ class PlanungMixin:
         return planned
 
     def dispatch_due_automations(self) -> dict:
-        """Über ALLE Tenants: fällige (send_at ≤ jetzt) pending Automails versenden.
-        Kein JWT — via internem Cron-Endpoint. Versand über send_message (Channex)."""
+        """Über ALLE Tenants: fällige pending Automails versenden.
+
+        Fällig heißt hier ZWEISEITIG: `send_at ≤ jetzt` UND nicht älter als
+        `NACHZUEGLER_STUNDEN`. Die untere Schranke stand bis 09/2026 nur im
+        Docstring von `_fehlerzustand` („der Versand liest nur, was jünger als
+        NACHZUEGLER_STUNDEN ist") — im Code gab es sie nicht. Sie hing allein
+        an `replan_tenant`, das stündlich läuft: fiel der Neuplanungs-Lauf aus
+        oder kam eine Zeile zwischen zwei Läufen zu spät, ging „Ihre Anreise ist
+        in 3 Tagen" an jemanden, der gestern abgereist ist. Eine Grenze, die nur
+        im Kommentar steht, ist keine.
+
+        Was älter ist, wird VORHER auf 'skipped' gesetzt statt bloß übergangen:
+        sonst stünde die Zeile für immer auf 'pending' und würde in jedem Tick
+        neu gelesen.
+
+        Kein JWT — via internem Cron-Endpoint. Versand über `send_message`
+        (Channex-Chat oder E-Mail, je nach Thread)."""
 
         if self._db is None:
             raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
@@ -1320,10 +1304,23 @@ class PlanungMixin:
         ).data or []
         if reaped:
             log.warning("automail_reaped_stuck_sending", count=len(reaped))
+        grenze = (
+            datetime.now(UTC) - timedelta(hours=NACHZUEGLER_STUNDEN)
+        ).isoformat()
+        nachzuegler = (
+            db.table("automation_scheduled_message")
+            .update({"status": "skipped", "last_error": GRUND_NACHZUEGLER})
+            .eq("status", "pending")
+            .lt("send_at", grenze)
+            .execute()
+        ).data or []
+        if nachzuegler:
+            log.warning("automail_nachzuegler_uebersprungen", count=len(nachzuegler))
         due = (
             db.table("automation_scheduled_message")
-            .select("id, tenant_id, thread_id, body, send_at")
+            .select("id, tenant_id, thread_id, body, send_at, automation_id")
             .eq("status", "pending")
+            .gte("send_at", grenze)
             .lte("send_at", now)
             # Überfälligstes zuerst: ohne Sortierung ist die Auswahl bei einem
             # Rückstau über 200 Zeilen beliebig, und die älteste Nachricht kann
@@ -1365,6 +1362,9 @@ class PlanungMixin:
                 self.send_message(
                     ctx, s["thread_id"], s["body"],
                     enforce_reply=False, quelle="automation",
+                    # Nur der E-Mail-Weg braucht sie (Betreff an der Regel);
+                    # der Portal-Chat hat keinen Betreff und löst sie nie auf.
+                    automation_id=str(s.get("automation_id") or "") or None,
                 )
                 db.table("automation_scheduled_message").update(
                     {"status": "sent"}
@@ -1456,9 +1456,27 @@ class PlanungMixin:
 
         Damit ein fehlendes Feld nicht ewig kreist, gilt die Nachzügler-Grenze:
         `dispatch_due_automations` liest nur, was jünger als
-        NACHZUEGLER_STUNDEN ist, und `replan_tenant` storniert Älteres. Der
-        Neuversuch läuft also höchstens bis dahin — genau das Fenster, in dem
-        eine Nachpflege den Gast noch erreicht.
+        NACHZUEGLER_STUNDEN ist (seit 09/2026 auch im Code, nicht nur hier im
+        Text), und `replan_tenant` storniert Älteres. Der Neuversuch läuft also
+        höchstens bis dahin — genau das Fenster, in dem eine Nachpflege den Gast
+        noch erreicht.
+
+        DRITTE Korrektur (09/2026): Ein Fehler OHNE `status_code` ist kein
+        Urteil über die Nachricht. `APIError` (PostgREST) und `HTTPError`
+        (Netz) tragen keinen — sie fielen deshalb in „endgültig" und löschten
+        eine Automail, weil die DB für eine Sekunde weg war. Das ist derselbe
+        Fehler wie bei den 5xx oben, nur eine Etage tiefer. Sie gelten jetzt als
+        vorübergehend.
+
+        EHRLICHE GRENZE, kein erfundener Zähler: Es gibt KEINE Spalte
+        `versuche`. Wie oft ein Neuversuch schon gelaufen ist, weiß dieser Code
+        also nicht, und er erfindet es auch nicht. Begrenzt wird der Kreislauf
+        allein durch die Zeit (Nachzügler-Grenze): eine dauerhaft kippende Zeile
+        wird höchstens NACHZUEGLER_STUNDEN lang neu versucht — bei einem
+        Minuten-Tick sind das viele Versuche, und jeder davon schreibt eine
+        Verlaufszeile. Wer das enger fassen will, braucht eine Zählspalte; sie
+        hier aus `last_error` zusammenzureimen wäre ein Wert, der wie eine
+        Messung aussieht und keine ist (Wurzel 4).
         """
         from src.features.channel_manager.channex_client import (  # noqa: PLC0415
             ChannexBudgetExhausted,
@@ -1467,9 +1485,12 @@ class PlanungMixin:
         from .felder import FeldFehlt  # noqa: PLC0415 — Zirkularität vermeiden
 
         status_code = getattr(exc, "status_code", None)
-        transient = isinstance(exc, (ChannexBudgetExhausted, FeldFehlt)) or (
-            isinstance(status_code, int)
-            and (status_code == 429 or status_code >= 500)
+        transient = (
+            isinstance(exc, (ChannexBudgetExhausted, FeldFehlt, APIError, HTTPError))
+            or (
+                isinstance(status_code, int)
+                and (status_code == 429 or status_code >= 500)
+            )
         )
         return {
             "status": "pending" if transient else "failed",

@@ -157,6 +157,12 @@ proposals, …) — noch zu kartieren.
 ---
 
 ## Status & nächste Schritte
+
+> **Stand vom 11.09.2026:** Der tatsächliche Übernahmestand (63 von 325 Dateien,
+> 13 Aufrufe ins Leere, fehlende Bibliotheken, Doku-Drift) steht in
+> [buchhaltung/TASKILO-FINANZ-BESTAND-2026-09-11.md](buchhaltung/TASKILO-FINANZ-BESTAND-2026-09-11.md).
+> Dieses Dokument beschreibt den Plan vom 18.06.2026.
+
 - [x] Komplett-Inventur Frontend-Komponenten (612) + Routen (242)
 - [ ] Root-`.tsx` (103) einzeln einordnen (Buchhaltung/Marktplatz/HR/Basis/raus)
 - [ ] HR- + Marktplatz-DB-Tabellen kartieren

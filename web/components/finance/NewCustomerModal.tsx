@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { currencySymbol, formatCurrency } from '@/lib/currency';
+import { WAEHRUNGS_CODES } from '@/lib/steuer-waehrung';
 import { type NumberSequence, NumberSequenceService } from '@/services/numberSequenceService';
 import { validateVATNumber } from '@/utils/vatValidation';
 import NewCategoryModal from './NewCategoryModal';
@@ -324,7 +325,8 @@ export default function NewCustomerModal({
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('overview');
   const [formData, setFormData] = useState<ExtendedFormData>(DEFAULT_FORM_DATA);
   const [contacts, setContacts] = useState<ContactPerson[]>([]);
-  const [_nextCustomerNumber, setNextCustomerNumber] = useState('KD-001');
+  // Leer, bis der Server die Vorschau liefert — keine erfundene 'KD-001' (Wurzel 4).
+  const [_nextCustomerNumber, setNextCustomerNumber] = useState('');
   const [_currentNumberSequence, _setCurrentNumberSequence] = useState<NumberSequence | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   // Eigene Kundenkategorien: es gibt im Backend noch keinen Endpunkt dafür (der
@@ -374,56 +376,28 @@ export default function NewCustomerModal({
     [],
   );
 
+  // Vorschau der nächsten Kundennummer. Die endgültige Nummer vergibt der
+  // Server beim Speichern — schickt das Modal genau diese Vorschau mit, zieht
+  // er atomar die nächste; ändert der Nutzer sie von Hand, bleibt seine.
+  //
+  // Bis zum 11.09.2026 standen hier ZWEI Ersatzwert-Zweige, die aus der Uhrzeit
+  // eine Kundennummer bauten (`KD-091119`), sobald der Server nicht antwortete
+  // oder den Typ nicht kannte — und er kannte ihn nie, weil die Antwort eine
+  // andere Form hatte. Kein Ersatzwert mehr (Wurzel 4): Fehlt die Vorschau,
+  // bleibt das Feld leer und der Server vergibt beim Speichern.
   const generateNextCustomerNumber = useCallback(async () => {
+    if (!companyId) return;
     try {
-      if (!companyId) return;
-
-      // Synchronisation läuft im Hintergrund - Berechtigungsfehler sind normal in Development
-      Promise.all([
-        NumberSequenceService.syncSequenceWithRealData(companyId, 'Kunde'),
-        NumberSequenceService.syncSequenceWithRealData(companyId, 'Lieferant'),
-        NumberSequenceService.syncSequenceWithRealData(companyId, 'Partner'),
-        NumberSequenceService.syncSequenceWithRealData(companyId, 'Interessenten'),
-      ]).catch(() => {
-        // Stille Behandlung - Berechtigungsfehler sind in Development normal
-      });
-      // Versuche bestehende Sequenzen zu laden
-      const sequences = await NumberSequenceService.getNumberSequences(companyId);
-      const customerSequence = sequences.find(seq => seq.type === 'Kunde');
-
-      if (customerSequence?.nextNumber) {
-        const previewNumber = NumberSequenceService.formatNumber(
-          customerSequence.nextNumber,
-          customerSequence.format,
-        );
-        setNextCustomerNumber(previewNumber);
-        handleInputChange('customerNumber', previewNumber);
-      } else {
-        // Intelligenter Fallback basierend auf aktueller Zeit
-        const now = new Date();
-        const timeId =
-          `${now.getFullYear().toString().slice(-2)}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`.slice(
-            -6,
-          );
-        const fallbackNumber = `KD-${timeId}`;
-
-        setNextCustomerNumber(fallbackNumber);
-        handleInputChange('customerNumber', fallbackNumber);
-      }
+      const result = await NumberSequenceService.getNextNumberForType(companyId, 'Kunde');
+      setNextCustomerNumber(result.formattedNumber);
+      handleInputChange('customerNumber', result.formattedNumber);
     } catch (error) {
-      console.error('❌ Fehler beim Generieren der Kundennummer:', error);
-
-      // Ultimativer Fallback: Timestamp-basiert
-      const timestamp = Date.now();
-      const shortId = timestamp.toString().slice(-6);
-      const emergencyNumber = `KD-${shortId}`;
-
-      setNextCustomerNumber(emergencyNumber);
-      handleInputChange('customerNumber', emergencyNumber);
-
-      console.warn(`⚠️ Emergency Fallback Kundennummer: ${emergencyNumber}`);
+      console.error('Vorschau der Kundennummer nicht verfügbar:', error);
+      setNextCustomerNumber('');
+      handleInputChange('customerNumber', '');
+      toast.error(t('NewCustomerModal.numberGenerationError', { type: 'Kunde' }));
     }
-  }, [companyId, handleInputChange]);
+  }, [companyId, handleInputChange, t]);
 
   useEffect(() => {
     if (open) {
@@ -516,27 +490,7 @@ export default function NewCustomerModal({
         return;
       }
 
-      const fallbackNumbers = {
-        Kunde: 'KD-001',
-        Lieferant: 'LF-001',
-        Partner: 'PA-001',
-        Interessenten: 'IN-001',
-      };
-
-      const sequences = await NumberSequenceService.getNumberSequences(companyId);
-      const sequence = sequences.find(seq => seq.type === type);
-
-      if (!sequence) {
-        const fallbackNumber =
-          fallbackNumbers[type as keyof typeof fallbackNumbers] || `${type}-001`;
-        setFormData(prev => ({
-          ...prev,
-          customerNumber: fallbackNumber,
-        }));
-        toast.info(t('NewCustomerModal.numberSequenceAutoCreate', { type }));
-        return;
-      }
-
+      // Vorschau für den gewählten Typ; der Server kennt alle vier Kreise.
       const result = await NumberSequenceService.getNextNumberForType(companyId, type);
       setFormData(prev => ({
         ...prev,
@@ -1593,10 +1547,21 @@ export default function NewCustomerModal({
                         <SelectValue placeholder={t('NewCustomerModal.currencyPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="EUR">EUR ({currencySymbol("EUR")})</SelectItem>
-                        <SelectItem value="USD">USD ({currencySymbol("USD")})</SelectItem>
-                        <SelectItem value="GBP">GBP ({currencySymbol("GBP")})</SelectItem>
-                        <SelectItem value="CHF">CHF</SelectItem>
+                        {/* Waehrungsauswahl aus der EINEN Quelle
+                            (lib/steuer-waehrung: aus LAENDER abgeleitet plus
+                            Zusatzcodes). Vorher standen hier vier fest
+                            eingetippte Codes — ein daenischer oder polnischer
+                            Kunde liess sich damit gar nicht anlegen (Wurzel 4).
+                            Das Symbol kommt aus currencySymbol und bleibt leer,
+                            wenn Intl keines kennt (z. B. CHF). */}
+                        {WAEHRUNGS_CODES.map(code => {
+                          const symbol = currencySymbol(code);
+                          return (
+                            <SelectItem key={code} value={code}>
+                              {symbol && symbol !== code ? `${code} (${symbol})` : code}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </div>

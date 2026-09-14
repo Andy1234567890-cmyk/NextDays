@@ -3,6 +3,10 @@
 import { documentTranslations } from '@/hooks/pdf/document-translations';
 import { resolveDocumentLanguage } from '@/hooks/pdf/useDocumentTranslation';
 import { api } from '@/lib/api-client';
+
+// Der Textvorlagen-Slice hängt unter /api/v1/buchhaltung/… (bereiche/versand).
+// Bis zum 14.09.2026 rief dieser Dienst /api/v1/text-templates — 404, und die
+// Vorlagen-Menüs in Kopf- und Fußtext blieben still leer.
 import { currencySymbol, formatCurrency } from '@/lib/currency';
 import type { TextTemplate } from '@/types/textTemplates';
 
@@ -44,7 +48,7 @@ export class TextTemplateService {
         throw new Error('companyId ist erforderlich');
       }
 
-      return await api.post<TextTemplate>(`/api/v1/text-templates/${companyId}`, templateData);
+      return await api.post<TextTemplate>(`/api/v1/buchhaltung/text-templates/${companyId}`, templateData);
     } catch (error) {
       console.error('Fehler beim Erstellen der Textvorlage:', error);
       throw new Error('Fehler beim Erstellen der Textvorlage', { cause: error });
@@ -60,7 +64,7 @@ export class TextTemplateService {
     templateData: Partial<Omit<TextTemplate, 'id' | 'createdAt' | 'updatedAt'>>,
   ): Promise<void> {
     try {
-      await api.patch(`/api/v1/text-templates/${companyId}/${templateId}`, templateData);
+      await api.patch(`/api/v1/buchhaltung/text-templates/${companyId}/${templateId}`, templateData);
     } catch (error) {
       console.error('Fehler beim Aktualisieren der Textvorlage:', error);
       throw new Error('Fehler beim Aktualisieren der Textvorlage', { cause: error });
@@ -72,7 +76,7 @@ export class TextTemplateService {
    */
   static async deleteTextTemplate(companyId: string, templateId: string): Promise<void> {
     try {
-      await api.delete(`/api/v1/text-templates/${companyId}/${templateId}`);
+      await api.delete(`/api/v1/buchhaltung/text-templates/${companyId}/${templateId}`);
     } catch (error) {
       console.error('Fehler beim Löschen der Textvorlage:', error);
       throw new Error('Fehler beim Löschen der Textvorlage', { cause: error });
@@ -84,7 +88,7 @@ export class TextTemplateService {
    */
   static async getTextTemplates(companyId: string): Promise<TextTemplate[]> {
     try {
-      return await api.get<TextTemplate[]>(`/api/v1/text-templates/${companyId}`);
+      return await api.get<TextTemplate[]>(`/api/v1/buchhaltung/text-templates/${companyId}`);
     } catch (error) {
       console.error('Fehler beim Laden der Textvorlagen:', error);
       throw new Error('Fehler beim Laden der Textvorlagen', { cause: error });
@@ -102,7 +106,7 @@ export class TextTemplateService {
     try {
       const params = new URLSearchParams({ objectType });
       if (textType) params.append('textType', textType);
-      return await api.get<TextTemplate[]>(`/api/v1/text-templates/${companyId}?${params}`);
+      return await api.get<TextTemplate[]>(`/api/v1/buchhaltung/text-templates/${companyId}?${params}`);
     } catch (error) {
       console.error('Fehler beim Laden der gefilterten Textvorlagen:', error);
       throw new Error('Fehler beim Laden der gefilterten Textvorlagen', { cause: error });
@@ -120,7 +124,7 @@ export class TextTemplateService {
     try {
       const params = new URLSearchParams({ category: 'EMAIL', objectType });
       if (textType) params.append('textType', textType);
-      return await api.get<TextTemplate[]>(`/api/v1/text-templates/${companyId}?${params}`);
+      return await api.get<TextTemplate[]>(`/api/v1/buchhaltung/text-templates/${companyId}?${params}`);
     } catch (error) {
       console.error('Fehler beim Laden der E-Mail-Textvorlagen:', error);
       throw new Error('Fehler beim Laden der E-Mail-Textvorlagen', { cause: error });
@@ -137,7 +141,7 @@ export class TextTemplateService {
   ): Promise<TextTemplate | null> {
     try {
       const params = new URLSearchParams({ objectType, textType });
-      return await api.get<TextTemplate>(`/api/v1/text-templates/${companyId}/default?${params}`);
+      return await api.get<TextTemplate>(`/api/v1/buchhaltung/text-templates/${companyId}/default?${params}`);
     } catch (error) {
       console.error('Fehler beim Laden der Standard-Textvorlage:', error);
       return null;
@@ -150,7 +154,7 @@ export class TextTemplateService {
   static async initializeTemplatesForNewCompany(companyId: string, userId: string): Promise<void> {
     try {
       console.log(`🚀 Initializing default templates for company: ${companyId}`);
-      await api.post(`/api/v1/text-templates/${companyId}/initialize`, { userId });
+      await api.post(`/api/v1/buchhaltung/text-templates/${companyId}/initialize`, { userId });
       console.log(`✅ Templates initialized for ${companyId}`);
     } catch (error) {
       console.error('Fehler beim Erstellen der Standard-Textvorlagen:', error);

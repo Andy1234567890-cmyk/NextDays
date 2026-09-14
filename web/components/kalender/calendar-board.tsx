@@ -65,6 +65,8 @@ import {
 } from "@/lib/reservations";
 import { toast } from "sonner";
 import { useRealtime } from "@/lib/use-realtime";
+import { listOffers } from "@/lib/booking-offers";
+import { type BookingOffer, OFFEN_STATUSES } from "@/lib/booking-offers-meta";
 
 export type Prop = {
   id: string;
@@ -99,6 +101,21 @@ const ROW_H = 3.5; // rem Zeilenhöhe (kompakter — mehr Objekte pro Bildschirm
 // Mitte des Abreisetags). EINE Quelle für Balken-Rendering UND Geister-Vorschau,
 // damit beide denselben Wechseltag optisch teilen (kein zweites verstreutes 0.5).
 const HALF_DAY = 0.5;
+
+// Angebots-Balken (0586): Zustände, die im Kalender sichtbar sind. Ein Angebot
+// reserviert NICHTS (Slice-Kopf booking_offers/service.py) — bis 13.09.2026
+// war es deshalb im Kalender unsichtbar, der Betrieb sah nach „Reservierung
+// mit Angebot" eine leere Zeile und hielt das Anlegen für gescheitert.
+// Sichtbar sind Entwurf, verschickt, geöffnet, zugesagt (Zahlung läuft);
+// bezahlt wird zur Buchung, abgelehnt/abgelaufen/zurückgezogen verschwinden.
+const OFFER_BAR_STATUSES: ReadonlySet<string> = new Set([
+  "draft",
+  ...OFFEN_STATUSES,
+  "accepted",
+]);
+// Gestrichelt und ohne Kanalfarbe: darf nie wie eine feste Buchung aussehen.
+const OFFER_BAR =
+  "border-2 border-dashed border-amber-500 bg-amber-50/90 text-amber-900 dark:bg-amber-950/60 dark:text-amber-100";
 
 
 // Durchgehende Timeline: Bereich vom 1. Januar des LAUFENDEN Jahres bis Ende des
@@ -602,6 +619,70 @@ function segmentLabel(
   return guest || channelLabelLoose(seg.reservation?.ota_name) || channelLabel(seg.source);
 }
 
+// Angebots-Balken (0586): gestrichelt, blockieren nichts, liegen im DOM VOR
+// den Buchungsbalken — wird der Zeitraum zwischenzeitlich verkauft, malt die
+// Buchung darüber. Klick springt in die Angebotsliste zum Eintrag. Ein
+// Angebot reserviert NICHTS (Slice-Kopf booking_offers/service.py); bis zum
+// 13.09.2026 war es deshalb im Kalender unsichtbar, und der Betrieb hielt das
+// Anlegen für gescheitert.
+function AngebotsBalken({
+  offers,
+  start,
+  dayCount,
+  dragging,
+  t,
+  tAngebote,
+}: {
+  offers: BookingOffer[] | undefined;
+  start: Date | null;
+  dayCount: number;
+  dragging: boolean;
+  t: ReturnType<typeof useTranslations<"calendar">>;
+  tAngebote: ReturnType<typeof useTranslations<"angebote">>;
+}) {
+  if (!start || !offers) return null;
+  return (
+    <>
+      {offers.map((o) => {
+        const von = Math.round((new Date(o.check_in).getTime() - start.getTime()) / 86_400_000);
+        const bis = von + o.nights; // exklusiv
+        const lo = Math.max(von, 0);
+        const hi = Math.min(bis, dayCount);
+        if (hi <= lo) return null;
+        // Halbtags-Logik wie bei Buchungen: Anreise ab Tagesmitte, Abreise bis Tagesmitte.
+        const leftPad = von >= 0 ? HALF_DAY : 0;
+        const widthCols = hi - lo - leftPad + (bis <= dayCount ? HALF_DAY : 0);
+        const statusText = tAngebote(`status.${o.status}`);
+        const title = [
+          t("calendarBoard.offer"),
+          o.guest_name,
+          statusText,
+          t("calendarBoard.nightsCount", { count: o.nights }),
+        ].join(" · ");
+        return (
+          <Link
+            key={`offer-${o.id}`}
+            href={`/reservierungen/angebote?angebot=${o.id}`}
+            title={title}
+            data-offer-id={o.id}
+            onMouseDown={(ev) => ev.stopPropagation()}
+            className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium hover:ring-2 hover:ring-amber-400/50 ${OFFER_BAR} ${dragging ? "pointer-events-none" : ""}`}
+            style={{
+              left: `calc(${lo + leftPad} * ${COL}rem + 0.25rem)`,
+              width: `calc(${widthCols} * ${COL}rem - 0.5rem)`,
+              height: "1.75rem",
+            }}
+          >
+            <Icon icon="ph:paper-plane-tilt" className="size-3 shrink-0" />
+            <span className="truncate">{o.guest_name}</span>
+            <span className="ml-auto shrink-0 text-[0.65rem] opacity-80">{statusText}</span>
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 export function CalendarBoard({
   properties,
   viewSwitcher,
@@ -627,6 +708,7 @@ export function CalendarBoard({
   einzelobjekt?: boolean;
 }) {
   const t = useTranslations("calendar");
+  const tAngebote = useTranslations("angebote");
   const locale = useLocale();
   const { typeOptionsFor } = usePropertyLabels();
   const { channelLabel, statusLabel } = useCalendarLabels();
@@ -657,6 +739,9 @@ export function CalendarBoard({
   // MOVE entfernt+fügt atomar ein). Die Tag→Buchung-Map für das Segment-Rendering
   // wird beim Rendern pro Objekt aus dieser Liste abgeleitet (reservationsByDay).
   const [resByProp, setResByProp] = useState<Record<string, Reservation[]>>({});
+  // Offene Angebote je Objekt (0586) — eigene Ebene, KEINE Belegung: sie
+  // sperren nichts und fließen nicht in Auslastung/Segmente ein.
+  const [offersByProp, setOffersByProp] = useState<Record<string, BookingOffer[]>>({});
   // Aktuell geöffnetes Buchungsdetail (per Klick auf einen Balken).
   // Geöffnetes Buchungsdetail: nur die Reservierungs-ID (Slider lädt die Daten).
   // Startwert aus `?reservation=<id>`: der Deep-Link wird aus Posteingang und
@@ -1467,6 +1552,23 @@ export function CalendarBoard({
     setResByProp(byProp);
   }, []);
 
+  // Offene Angebote laden (ein Aufruf, Filter clientseitig: der Endpunkt kennt
+  // nur EINEN Status je Abfrage). Fehler bleiben sichtbar in der Konsole, die
+  // Balken fehlen dann — statt still leer zu wirken (Wurzel 5).
+  const loadOffers = useCallback(async () => {
+    const res = await listOffers({ limit: 200 });
+    if (!res.ok) {
+      console.error("kalender_angebote_laden_fehlgeschlagen", res.error);
+      return;
+    }
+    const byProp: Record<string, BookingOffer[]> = {};
+    for (const o of res.data.items) {
+      if (!OFFER_BAR_STATUSES.has(o.status)) continue;
+      (byProp[o.property_id] ??= []).push(o);
+    }
+    setOffersByProp(byProp);
+  }, []);
+
   // Tagesdaten (Status/Preis/Min-Stay/CTA-CTD) für ein Index-Fenster laden und
   // additiv in die State-Maps mergen. `replace` löscht vorher die alten Tagesdaten
   // (für Realtime-Reload des geladenen Bereichs), sonst wird nur ergänzt.
@@ -1642,6 +1744,7 @@ export function CalendarBoard({
     if (!start || properties.length === 0) return;
     const myToken = ++prefetchToken.current;
     void loadReservations();
+    void loadOffers();
     // Begrenztes Vorlauf-Fenster um heute (statt des ganzen Jahres). Alles
     // außerhalb lädt der Scroll-Handler (ensureLoaded) bei Bedarf nach.
     const loFrom = Math.max(0, todayIndex - PREFETCH_BEHIND_DAYS);
@@ -1760,6 +1863,8 @@ export function CalendarBoard({
   const interacting = !!barDrag || !!drag || !!sel;
   useRealtime({ table: "price_overrides", onChange: load, enabled: !interacting });
   useRealtime({ table: "stop_sell", onChange: load, enabled: !interacting });
+  // Angebote: Gast öffnet/sagt zu/zahlt ohne unser Zutun → Balken folgt live.
+  useRealtime({ table: "booking_offers", onChange: loadOffers, enabled: !interacting });
   // Preisänderungen live: Basispreis (rate_plans) + Pricing-Konfig
   // (property_pricing_config) fließen über den Resolver in die Tagespreise →
   // im Objekt geänderte Preise erscheinen sofort im Kalender (kein Reload).
@@ -2483,6 +2588,16 @@ export function CalendarBoard({
                         );
                       })()}
 
+                      {/* Angebots-Balken (0586): eigene Ebene, siehe AngebotsBalken. */}
+                      <AngebotsBalken
+                        offers={offersByProp[p.id]}
+                        start={start}
+                        dayCount={dates.length}
+                        dragging={!!barDrag}
+                        t={t}
+                        tAngebote={tAngebote}
+                      />
+
                       {/* Balken über belegte/gesperrte Zeiträume. Gebuchte Balken
                         zeigen den Gastnamen + Kanal-Icon und sind klickbar
                         (Detail-Popover). */}
@@ -2975,7 +3090,10 @@ export function CalendarBoard({
         <AngebotsWizard
           open
           onClose={() => setAngebot(null)}
-          onSaved={() => load()}
+          onSaved={() => {
+            void load();
+            void loadOffers();
+          }}
           properties={properties.map((p) => ({ id: p.id, title: p.title }))}
           initialPropertyId={angebot.pid}
           checkIn={angebot.checkIn}

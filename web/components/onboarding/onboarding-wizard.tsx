@@ -33,6 +33,8 @@ import {
   rechtsformLabel,
   rechtsformenFuerLand,
   hatRegistergericht,
+  hatSeparateSteuernummer,
+  regionLabelKeyFuerLand,
   vatBeispielFuerLand,
 } from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";
@@ -72,6 +74,9 @@ export function OnboardingWizard({
   // Betriebsart-Labels/Hints: gleicher Namespace wie der Konto-Abschnitt
   // (bereits in allen 24 Sprachen gepflegt).
   const tAcc = useTranslations("accommodationType");
+  // Die Bezeichnung der Verwaltungsebene wählt das LAND, übersetzt wird sie in
+  // der Sprache des Nutzers — zwei verschiedene Fragen (siehe lib/laender.ts).
+  const tRegion = useTranslations("regionLabel");
   const [pending, startTransition] = useTransition();
 
   // Startschritt anhand des gespeicherten Fortschritts wählen (Wiederaufnahme).
@@ -118,7 +123,7 @@ export function OnboardingWizard({
     email: loginEmail ?? undefined,
     // Firmenname mit dem Betriebsnamen aus der Registrierung vorbelegen
     // (editierbar). Beides ist derselbe Betrieb; ihn zweimal abzufragen
-    // wirkt, als waere die erste Eingabe verloren gegangen.
+    // wirkt, als wäre die erste Eingabe verloren gegangen.
     companyName: initialTenantName ?? undefined,
     // Stripe-Kontotyp: Default „Einzelperson" (entspricht dem DB-Default
     // tenant_billing_profile.account_type='individual'). Geburtsdatum bleibt leer
@@ -175,6 +180,10 @@ export function OnboardingWizard({
   const land = firma.companyCountry ?? "DE";
   const rechtsformen = rechtsformenFuerLand(land);
   const befreiung = befreiungFuerLand(land);
+  // Was die Maske zeigt, entscheidet der FIRMENSITZ, nicht die UI-Sprache —
+  // dasselbe Prinzip wie das DATEV-Gate in `lib/laender-funktionen.ts` und wie
+  // unter /konto. `null` heisst: dieses Land kennt die Ebene nicht.
+  const regionKey = regionLabelKeyFuerLand(land);
   // Land ohne nationales Befreiungsregime (z. B. ES): keine Checkbox.
   const kleinunternehmerMoeglich = befreiung.exists;
   // Checkbox-Text + Hinweis in UI-Sprache; mit Regime-Name, falls vorhanden.
@@ -195,7 +204,16 @@ export function OnboardingWizard({
         prev.legalForm && formen.includes(prev.legalForm)
           ? prev.legalForm
           : formen[0];
-      return { ...prev, companyCountry: code, legalForm };
+      // Wurzel 1 — jede Aktion hat einen Gegenzustand: Felder, die es im NEUEN
+      // Land nicht gibt, verschwinden aus der Maske. Ihr alter Wert darf nicht
+      // unsichtbar weitergespeichert werden, sonst trägt ein dänisches Profil
+      // weiter ein „Amtsgericht Charlottenburg", das niemand mehr sieht und
+      // keiner mehr loeschen kann.
+      const next = { ...prev, companyCountry: code, legalForm };
+      if (!regionLabelKeyFuerLand(code)) next.companyState = "";
+      if (!hatSeparateSteuernummer(code)) next.taxNumber = "";
+      if (!hatRegistergericht(code)) next.districtCourt = "";
+      return next;
     });
   }
 
@@ -220,6 +238,14 @@ export function OnboardingWizard({
         if (!next.legalForm || !formen.includes(next.legalForm)) {
           next.legalForm = formen[0];
         }
+        // Wurzel 1, auch auf diesem Weg: Places liefert bei einer dänischen
+        // Adresse eine `state`-Komponente („Region Hovedstaden"), die oben
+        // gerade nach `companyState` geschrieben wurde. Kennt das Land die
+        // Ebene nicht, gehört der Wert nicht in die Stammdaten — sonst steht
+        // dort ein Feld, das die Maske nicht mehr anzeigt.
+        if (!regionLabelKeyFuerLand(a.country)) next.companyState = "";
+        if (!hatSeparateSteuernummer(a.country)) next.taxNumber = "";
+        if (!hatRegistergericht(a.country)) next.districtCourt = "";
       }
       return next;
     });
@@ -530,13 +556,21 @@ export function OnboardingWizard({
               />
             </Field>
 
-            <Field className="sm:col-span-6" label={t("company.state")}>
-              <Input
-                value={firma.companyState ?? ""}
-                onChange={(e) => setF("companyState", e.target.value)}
-                placeholder={t("company.statePlaceholder")}
-              />
-            </Field>
+            {/* Verwaltungsebene unterhalb des Staates — nur wo es sie gibt,
+                und mit dem Begriff DIESES Landes (Bundesland/Kanton/Provinz/
+                Grafschaft/Region). Vorher hiess das Feld in allen 24 Sprachen
+                „Bundesland / Region" mit dem deutschen Beispiel „z. B. Bayern";
+                ein dänischer Betrieb las damit ein Beispiel fuer eine Ebene,
+                die in seiner Anschrift gar nicht vorkommt. Kein Platzhalter
+                mehr — ein Beispiel je Land wäre 30 erfundene Werte. */}
+            {regionKey && (
+              <Field className="sm:col-span-6" label={tRegion(regionKey)}>
+                <Input
+                  value={firma.companyState ?? ""}
+                  onChange={(e) => setF("companyState", e.target.value)}
+                />
+              </Field>
+            )}
             <Field className="sm:col-span-6" label={t("company.website")}>
               <Input
                 value={firma.website ?? ""}
@@ -588,16 +622,26 @@ export function OnboardingWizard({
                   autoComplete="nd-vatId"
                 value={firma.vatId ?? ""}
                   onChange={(e) => setF("vatId", e.target.value)}
-                  placeholder={`z. B. ${vatBeispielFuerLand(land)}`}
+                  // Nur das Beispiel selbst, ohne deutsches „z. B." davor:
+                  // der Präfix stand hier fest auf Deutsch und erschien so in
+                  // allen 24 Sprachen. Gleiche Form wie unter /konto.
+                  placeholder={vatBeispielFuerLand(land)}
                 />
               </Field>
-              <Field className="sm:col-span-6" label={t("company.taxNumber")}>
-                <Input
-                  autoComplete="nd-taxNumber"
-                value={firma.taxNumber ?? ""}
-                  onChange={(e) => setF("taxNumber", e.target.value)}
-                />
-              </Field>
+              {/* Steuernummer NEBEN der USt-IdNr. gibt es nicht ueberall: in
+                  DK ist CVR = SE = TIN und die USt-IdNr. dieselbe Zahl mit
+                  „DK" davor, in FI/GR ebenso (Denylist in lib/laender.ts).
+                  Dort bliebe das Feld dauerhaft leer und sähe im Onboarding
+                  aus wie eine übersprungene Pflichtangabe. */}
+              {hatSeparateSteuernummer(land) && (
+                <Field className="sm:col-span-6" label={t("company.taxNumber")}>
+                  <Input
+                    autoComplete="nd-taxNumber"
+                    value={firma.taxNumber ?? ""}
+                    onChange={(e) => setF("taxNumber", e.target.value)}
+                  />
+                </Field>
+              )}
             </div>
           )}
 

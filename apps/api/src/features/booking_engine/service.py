@@ -628,16 +628,7 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
         # ausdrücklich anbietet. Best effort: die Buchung ist committet und darf
         # an einem Posteingangs-Fehler nicht mehr scheitern.
         self._posteingang_thread_anlegen(
-            tenant_id=tenant_id,
-            reservation=row,
-            property_id=req.property_id,
-            check_in=req.check_in.isoformat(),
-            check_out=req.check_out.isoformat(),
-            guest_id=str(guest_id) if guest_id else None,
-            status=reservation_status,
-            name=" ".join(
-                t for t in (req.contact.first_name, req.contact.last_name) if t
-            ).strip(),
+            tenant_id=tenant_id, reservation_id=str(row["id"])
         )
 
         # Planmäßige Aufgaben (Anreise-Check, Endreinigung …) aus den Regeln
@@ -677,92 +668,29 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
         )
 
     def _posteingang_thread_anlegen(
-        self, *, tenant_id: str, reservation: dict, property_id: str,
-        check_in: str, check_out: str, guest_id: str | None, status: str,
-        name: str,
+        self, *, tenant_id: str, reservation_id: str
     ) -> None:
         """Marktplatz-Buchung → Konversation im Posteingang + Automails planen.
 
-        Der Posteingang führt seine Konversationen in `channex_booking`. Der
-        Name ist historisch (die Tabelle entstand für den Channex-Feed), der
-        Inhalt ist es nicht: sie ist der Thread-Speicher für JEDEN Kanal. Eine
-        myBestDays-Buchung gehört deshalb ebenso hinein wie eine von Booking.com
-        — sonst hat der Gast keine Konversation, der Betrieb sieht ihn nicht im
-        Posteingang, und keine einzige Automation greift.
+        Der Aufbau der Thread-Zeile steht seit 09/2026 in
+        `inbox.thread_spiegel` — EINE Stelle für alle Kanäle. Vorher stand er
+        hier, und er war damit der einzige Kanal mit einem Thread: eine
+        Direktbuchung bekam keinen, weil niemand diesen Block noch einmal
+        abschrieb. Wer ihn hier wieder einbaut, hat zwei Wahrheiten über
+        dieselbe Zeile (Wurzel 1).
 
-        `channex_booking_id` trägt die ID der Reservierung: die Spalte ist der
-        Dedup-Schlüssel (UNIQUE), und für eine Buchung ohne Aggregator ist die
-        eigene Reservierungs-ID die stabile Kennung. Der Upsert macht den Aufruf
-        wiederholbar (Wurzel 2) — ein Retry legt keine zweite Konversation an.
-
-        `booked_at` ist hier zulässigerweise unsere Uhr: bei einer Buchung auf
-        dem EIGENEN Marktplatz sind unser Zeitpunkt und der des Portals
-        dasselbe Ereignis — anders als bei einer OTA-Buchung, wo `created_at`
-        nur unsere Verarbeitung beschreibt (Wurzel 5b).
+        Best effort: die Buchung ist committet und darf an einem
+        Posteingangs-Fehler nicht mehr scheitern; der Fehler wird im Spiegel
+        laut protokolliert.
         """
-        db = self._db()
-        try:
-            # `reservations.total_amount` ist ein Dezimalbetrag, die Thread-
-            # Spalte führt CENT. Ohne Umrechnung stünde im Posteingang das
-            # Hundertfache — lieber gar kein Betrag als ein falscher (Wurzel 4).
-            betrag = reservation.get("total_amount")
-            cents = round(float(betrag) * 100) if betrag is not None else None
-            zeile = {
-                "tenant_id": tenant_id,
-                "channex_booking_id": str(reservation["id"]),
-                "property_id": property_id,
-                "guest_id": guest_id,
-                "ota_name": "myBestDays",
-                "status": "cancelled" if status == "cancelled" else "new",
-                "arrival_date": check_in,
-                "departure_date": check_out,
-                "amount_cents": cents,
-                "currency": reservation.get("currency"),
-                "booked_at": reservation.get("created_at"),
-                "customer": {
-                    "name": name,
-                    "mail": reservation.get("guest_email") or "",
-                    "phone": reservation.get("guest_phone") or "",
-                    # Sprache des Gastes — der Schlüssel, an dem die
-                    # Nachrichten-Automatisierung ihre Sprachfassung wählt
-                    # (`inbox/sprachen.fassung_waehlen`). Ohne ihn bekam
-                    # ausgerechnet unser EIGENER Marktplatz als einziger Kanal
-                    # keine Gastsprache mit — Booking.com und Airbnb liefern
-                    # sie, myBestDays nicht — und jeder Gast von dort landete
-                    # auf der Standardsprache des Betriebs.
-                    #
-                    # Nur, wenn die Reservierung wirklich eine trägt: fehlt
-                    # sie, bleibt das Feld weg, statt eine Sprache zu behaupten
-                    # (Wurzel 4). `_customer_of` im Posteingang wirft leere
-                    # Werte ohnehin nicht weg, sondern lässt die rohe Payload
-                    # gewinnen — ein "" würde dort als gesetzt gelten.
-                    **(
-                        {"language": reservation["guest_language"]}
-                        if reservation.get("guest_language")
-                        else {}
-                    ),
-                },
-                "raw": {"source": "booking_engine"},
-            }
-            upserted = (
-                db.table("channex_booking")
-                .upsert(zeile, on_conflict="channex_booking_id")
-                .execute()
-            ).data or []
-            if not upserted:
-                return
-            from src.features.inbox.service import InboxService  # noqa: PLC0415
+        from src.features.inbox import thread_spiegel  # noqa: PLC0415
 
-            InboxService(service_client=db).schedule_automations_for_thread(
-                tenant_id, str(upserted[0]["id"])
-            )
-        except Exception as exc:  # noqa: BLE001 — Buchung ist schon committet
-            log.error(
-                "public_booking_posteingang_failed",
-                tenant_id=tenant_id,
-                reservation_id=str(reservation.get("id")),
-                error=str(exc),
-            )
+        thread_spiegel.spiegeln_best_effort(
+            self._db(),
+            tenant_id,
+            reservation_id,
+            quelle=thread_spiegel.QUELLE_BOOKING_ENGINE,
+        )
 
     def _verified_reservation(self, reservation_id: str, email: str) -> dict:
         """Reservierung laden + leichte Verifikation über die Gast-E-Mail.

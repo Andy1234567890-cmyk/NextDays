@@ -16,18 +16,38 @@
 //
 // Der Auslöser „Nachricht empfangen" (Abwesenheitsantwort) fällt aus diesem
 // Raster: er hängt an keinem Datum der Reservierung, sondern am Eingang einer
-// Gastnachricht. Deshalb blendet das Formular für ihn den Zeitplan aus und
-// zeigt stattdessen das Zeitfenster, in dem er feuern darf.
+// Gastnachricht. Deshalb blendet das Formular für ihn den Zeitplan aus.
+//
+// DAS ZEITFENSTER GILT FÜR JEDEN AUSLÖSER (14.09.2026). Es beschreibt die
+// Zeiten, in denen GESENDET werden darf — nicht die Zeiten, in denen der
+// Auslöser feuert. Bei „Nachricht empfangen" fällt beides zusammen; bei einem
+// datumsgebundenen Auslöser verschiebt es einen Versand, der außerhalb läge,
+// auf den nächsten Fensterbeginn. Vorher hing es allein an „Nachricht
+// empfangen", und eine Anreise-Automail um 03:00 ließ sich nicht verhindern.
+// „Nur erste Nachricht" bleibt dagegen auf „Nachricht empfangen" beschränkt:
+// bei einem Datums-Auslöser gibt es keine Gastnachricht, auf die es sich
+// beziehen könnte — der Server weist es dort ab.
 import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@nextdays/ui/dialog";
 import { Input } from "@nextdays/ui/input";
 import { MultiSelect } from "@nextdays/ui/multi-select";
 import { InfoHinweis } from "@nextdays/ui/info-hinweis";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { type ComposerGriff } from "@/components/inbox/composer-editor";
+import {
+  AutomationStandChips,
+  AutomationStandFehler,
+} from "@/components/inbox/automation-stand-chips";
 import {
   FassungFelder,
   GRUNDFASSUNG,
@@ -39,17 +59,22 @@ import {
   istTagesTrigger,
   AUTOMATION_KANAELE,
   ankerVon,
+  ausloeserUndZeitplan,
+  nichtAbgedeckt,
   richtungVon,
 } from "@/lib/automation-phasen";
 import {
   type Automation,
   type AutomationOffsetUnit,
+  type AutomationStand,
   type AutomationText,
   type AutomationTrigger,
   type MessageLanguage,
   type MessageTemplate,
   createAutomation,
   deleteAutomation,
+  getAutomation,
+  getAutomationStand,
   listAutomations,
   listAvailableLanguages,
   listMessageLanguages,
@@ -57,6 +82,7 @@ import {
   updateAutomation,
 } from "@/lib/inbox";
 import { listProperties } from "@/lib/properties";
+import { formatDateTime } from "@/lib/utils";
 
 const TRIGGERS: AutomationTrigger[] = AUSLOESER_REIHENFOLGE;
 // Vorbelegte Uhrzeit fuer „Am Anreisetag"/„Am Abreisetag" (0515). Ueberschreibbar
@@ -78,6 +104,7 @@ const LEER = { subject: "", body: "" };
 export function AutomationsTab() {
   const t = useTranslations("inbox");
   const tGemein = useTranslations("common");
+  const locale = useLocale();
   const [items, setItems] = useState<Automation[]>([]);
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [props, setProps] = useState<Prop[]>([]);
@@ -114,7 +141,6 @@ export function AutomationsTab() {
   // unverändert „06:00" — der Fehler war an der Oberfläche nicht zu sehen.
   // Fehlt am Objekt die Zeitzone, wird nicht geplant; das ist der sichtbare
   // Fehler und damit besser als eine stille Verschiebung um den UTC-Offset.
-  const [ortszeit, setOrtszeit] = useState(true);
   // Nur „Nachricht empfangen":
   const [nurErste, setNurErste] = useState(false);
   const [fensterTage, setFensterTage] = useState<number[]>([]);
@@ -122,6 +148,13 @@ export function AutomationsTab() {
   const [fensterBis, setFensterBis] = useState("");
   // null = Formular legt an, sonst wird diese Regel gespeichert.
   const [bearbeitetId, setBearbeitetId] = useState<string | null>(null);
+  // Zustand je Regel (Versandprotokoll). `undefined` = noch nicht geladen —
+  // die Chips bleiben dann weg, statt vier Nullen zu behaupten.
+  const [stand, setStand] = useState<Record<string, AutomationStand>>({});
+  const [standGekappt, setStandGekappt] = useState(false);
+  // Regel, für die die Löschbestätigung offensteht (nie `confirm()`: der
+  // Browserdialog lässt sich weder gestalten noch übersetzen).
+  const [loeschKandidat, setLoeschKandidat] = useState<Automation | null>(null);
   const editorGriff = useRef<ComposerGriff | null>(null);
   const formularRef = useRef<HTMLDivElement | null>(null);
 
@@ -139,12 +172,13 @@ export function AutomationsTab() {
    *  Live liefen fünf Regeln und verschickten Post, während dieser Reiter
    *  behauptete, es gäbe keine. */
   async function load() {
-    const [a, tpl, p, spr, kat] = await Promise.all([
+    const [a, tpl, p, spr, kat, st] = await Promise.all([
       listAutomations(),
       listTemplates(),
       listProperties(),
       listMessageLanguages(),
       listAvailableLanguages(),
+      getAutomationStand(),
     ]);
     if (a.ok) setItems(a.data.items);
     if (tpl.ok) setTemplates(tpl.data.items);
@@ -155,7 +189,13 @@ export function AutomationsTab() {
         Object.fromEntries(kat.data.items.map((o) => [o.code, o.name])),
       );
     }
-    const fehler = [a, tpl, p, spr, kat]
+    if (st.ok) {
+      setStand(
+        Object.fromEntries(st.data.items.map((s) => [s.automation_id, s])),
+      );
+      setStandGekappt(st.data.gekappt);
+    }
+    const fehler = [a, tpl, p, spr, kat, st]
       .filter((r) => !r.ok)
       .map((r) => (r as { error: string }).error);
     setLadefehler(fehler.length ? [...new Set(fehler)].join(" · ") : null);
@@ -190,7 +230,6 @@ export function AutomationsTab() {
     setTemplateId("");
     setFassungen({ [GRUNDFASSUNG]: LEER });
     setAktiveSprache(GRUNDFASSUNG);
-    setOrtszeit(true);
     setNurErste(false);
     setFensterTage([]);
     setFensterVon("");
@@ -224,7 +263,6 @@ export function AutomationsTab() {
     }
     setFassungen(geladen);
     setAktiveSprache(GRUNDFASSUNG);
-    setOrtszeit(a.use_property_timezone);
     setNurErste(a.only_first_message);
     setFensterTage(a.window_days);
     setFensterVon(a.window_from ?? "");
@@ -234,6 +272,13 @@ export function AutomationsTab() {
   }
 
   const grundfassung = fassungen[GRUNDFASSUNG] ?? LEER;
+
+  /** ISO-Zeitstempel in der Sprache des Nutzers. Leerer/ungültiger Wert bleibt
+   *  leer — „Invalid Date" wäre schlimmer als gar keine Angabe. */
+  function zeitpunktText(iso: string): string {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? "" : formatDateTime(iso, locale);
+  }
 
   /** Sprachfassungen für die API. Leere Reiter fallen weg — eine leere Fassung
    *  darf die Grundfassung nicht verdrängen (der Server verwirft sie ohnehin). */
@@ -249,7 +294,11 @@ export function AutomationsTab() {
       setError(t("autoNameRequired"));
       return;
     }
-    if (beiNachricht && Boolean(fensterVon) !== Boolean(fensterBis)) {
+    // Das Zeitfenster gilt für JEDEN Auslöser (14.09.2026) — bei den
+    // datumsgebundenen verschiebt es den Versand auf den nächsten
+    // Fensterbeginn. Die Vollständigkeitsprüfung gilt deshalb ebenfalls für
+    // alle, nicht mehr nur für „Nachricht empfangen".
+    if (Boolean(fensterVon) !== Boolean(fensterBis)) {
       setError(t("autoWindowIncomplete"));
       return;
     }
@@ -283,38 +332,68 @@ export function AutomationsTab() {
       // ginge eine gelöschte Fassung weiter an Gäste dieser Sprache raus).
       texts: sprachfassungen(),
       is_active: bestand?.is_active ?? true,
-      use_property_timezone: ortszeit,
-      // Die Fenster-Felder gelten nur für „Nachricht empfangen"; bei den
-      // datumsgebundenen Auslösern würden gespeicherte Reste sonst still
-      // mitwandern, wenn jemand den Auslöser später umstellt.
+      // Immer Ortszeit des Objekts (14.09.2026) — der Kunde stellt die Uhrzeit ein.
+      use_property_timezone: true,
+      // „Nur erste Nachricht" gibt es NUR bei „Nachricht empfangen" — bei
+      // einem Datums-Auslöser gibt es keine Nachricht, auf die es sich
+      // beziehen könnte (der Server weist es dort ab). Ein gespeicherter Rest
+      // wanderte sonst still mit, wenn jemand den Auslöser später umstellt.
       only_first_message: beiNachricht ? nurErste : false,
-      window_days: beiNachricht ? fensterTage : [],
-      window_from: beiNachricht ? fensterVon || null : null,
-      window_to: beiNachricht ? fensterBis || null : null,
+      // Das Fenster dagegen gilt für alle Auslöser.
+      window_days: fensterTage,
+      window_from: fensterVon || null,
+      window_to: fensterBis || null,
     };
     start(async () => {
       const res = bearbeitetId
         ? await updateAutomation(bearbeitetId, eingabe)
         : await createAutomation(eingabe);
       if (res.ok) {
+        // ERFOLG WIRD GEMELDET: das Formular leerte sich zwar, aber das sieht
+        // aus wie ein Abbruch — der Betrieb speicherte deshalb zweimal.
+        toast.success(bearbeitetId ? t("autoSaved") : t("autoCreated"));
         zuruecksetzen();
         await load();
       } else {
         setError(res.error);
+        toast.error(res.error);
       }
     });
   }
 
+  /** Aktiv/pausiert umschalten. Der Rückgabewert wurde bis zum 14.09.2026
+   *  NICHT geprüft: ein 403 („keine Berechtigung") sah aus wie ein Erfolg, der
+   *  Schalter sprang beim Neuladen nur wieder zurück (Wurzel 5). */
   function toggle(a: Automation) {
     start(async () => {
-      await updateAutomation(a.id, { ...a, is_active: !a.is_active });
+      // Regel FRISCH holen: `updateAutomation` schickt den vollen Datensatz,
+      // und `a` stammt aus der zuletzt geladenen Liste. Mit der Kopie zu
+      // schreiben machte jede zwischenzeitliche Änderung rückgängig — ein
+      // Klick auf „pausieren" setzte dann nebenbei den Text zurück.
+      const frisch = await getAutomation(a.id);
+      if (!frisch.ok) {
+        toast.error(frisch.error);
+        return;
+      }
+      const res = await updateAutomation(a.id, {
+        ...frisch.data,
+        is_active: !frisch.data.is_active,
+      });
+      if (res.ok) {
+        toast.success(frisch.data.is_active ? t("autoPausedDone") : t("autoActivated"));
+      } else {
+        toast.error(res.error);
+      }
       await load();
     });
   }
 
   function remove(id: string) {
+    setLoeschKandidat(null);
     start(async () => {
-      await deleteAutomation(id);
+      const res = await deleteAutomation(id);
+      if (res.ok) toast.success(t("autoDeleted"));
+      else toast.error(res.error);
       // Sonst zeigte das Formular weiter eine Regel, die es nicht mehr gibt,
       // und „Speichern" liefe in ein 404.
       if (bearbeitetId === id) zuruecksetzen();
@@ -322,50 +401,10 @@ export function AutomationsTab() {
     });
   }
 
-  // Lesbare Zeitplan-Zeile: „3 Tage vor Anreise · 07:45".
-  function scheduleLabel(a: Automation): string {
-    if (a.trigger === "message_received") {
-      const fenster =
-        a.window_from && a.window_to ? `${a.window_from}–${a.window_to}` : t("autoAlways");
-      const tage =
-        a.window_days.length > 0
-          ? ` · ${a.window_days.map((d) => t(`autoDay_${d}` as never)).join(", ")}`
-          : "";
-      return `${fenster}${tage}`;
-    }
-    // Rückfall auf die Tages-Sicht, solange ein Server die 0303-Felder noch
-    // nicht liefert — sonst steht dort `autoUnit_undefined` (MISSING_MESSAGE).
-    const versatz = a.offset_value ?? a.offset_days ?? 0;
-    const abs = Math.abs(versatz);
-    const dir = versatz < 0 ? t("autoBefore") : t("autoAfter");
-    const anchorLabel = t(`autoAnchor_${a.anchor}` as never) ?? a.anchor;
-    // Ohne Haken gilt UTC — das MUSS dastehen. „06:00" ohne Zusatz liest jeder
-    // als sechs Uhr vor Ort; für den dänischen Beta-Betrieb war es 08:00
-    // Ortszeit, und niemand konnte das an der Zeile ablesen (Wurzel 4: kein
-    // stiller Ersatzwert, hier keine stille Ersatz-Zeitzone).
-    const zone = ` (${a.use_property_timezone ? t("autoLocalTime") : "UTC"})`;
-    const time = a.send_time ? ` · ${a.send_time}${zone}` : "";
-    // Versatz 0 heißt „am Tag des Ankers" — nicht davor. Der nackte Ankername
-    // ergab zusammen mit dem Auslöser-Etikett davor die widersprüchliche Zeile
-    // „Vor Anreise · Anreise · 06:00"; der Betrieb las daraus, die Nachricht
-    // gehe VOR dem Anreisetag raus, und meldete das als Fehler.
-    if (abs === 0) return `${t("autoOnDayOf", { anchor: anchorLabel })}${time}`;
-    const einheitLabel = t(`autoUnit_${a.offset_unit ?? "days"}` as never);
-    return `${abs} ${einheitLabel} ${dir} ${anchorLabel}${time}`;
-  }
-
-  /** Die ganze Zeile unter dem Namen: Auslöser · Zeitplan.
-   *
-   *  Bei Versatz 0 steht das Auslöser-Etikett NICHT davor: „Vor Anreise" und
-   *  „Am Tag der Anreise" widersprechen sich im selben Satz. Der Zeitplan sagt
-   *  dort schon alles. */
-  function ausloeserUndZeitplan(a: Automation): string {
-    const zeitplan = scheduleLabel(a);
-    const versatz = a.offset_value ?? a.offset_days ?? 0;
-    if (a.trigger !== "message_received" && versatz === 0) return zeitplan;
-    const ausloeser = t(`autoTrigger_${a.trigger}` as never) ?? a.trigger;
-    return `${ausloeser} · ${zeitplan}`;
-  }
+  // Zeitplan-Zeile und „nicht abgedeckt" kommen aus `lib/automation-phasen` —
+  // dieselbe Rechnung wie im Panel. Vorher stand beides zweimal da und war
+  // bereits auseinandergelaufen: der Tab zeigte die Wochentage des Fensters,
+  // das Panel den Auslösernamen, und keiner beides.
 
   function assignLabel(a: Automation): string {
     const houses =
@@ -422,6 +461,14 @@ export function AutomationsTab() {
         {ladefehler && (
           <p className="mb-3 text-sm text-destructive">{ladefehler}</p>
         )}
+        {/* Die Obergrenze hat gegriffen — die Zahlen sind dann ein Ausschnitt.
+            Sie stillschweigend als Gesamtzahl zu zeigen wäre eine
+            Falschaussage (Wurzel 4). */}
+        {standGekappt && (
+          <p className="mb-3 text-xs text-muted-foreground">
+            {t("autoStandCapped")}
+          </p>
+        )}
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("autoEmpty")}</p>
         ) : (
@@ -437,11 +484,22 @@ export function AutomationsTab() {
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="font-medium">{a.name}</span>
                   <span className="text-sm text-muted-foreground">
-                    {ausloeserUndZeitplan(a)}
+                    {ausloeserUndZeitplan(a, t)}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {assignLabel(a)}
                   </span>
+                  {/* Zustand aus dem Versandprotokoll: was ist geplant,
+                      gesendet, fehlgeschlagen? Ohne diese Zeile sah eine Regel,
+                      die seit Wochen scheitert, aus wie eine, die zustellt. */}
+                  <AutomationStandChips
+                    stand={stand[a.id]}
+                    zeitpunktText={zeitpunktText}
+                  />
+                  <AutomationStandFehler
+                    stand={stand[a.id]}
+                    zeitpunktText={zeitpunktText}
+                  />
                   {/* WOHER DER TEXT KOMMT, an der Regel selbst. Die Liste nannte
                       Auslöser, Zeitplan und Zuweisung — nur nicht die Quelle des
                       Wortlauts. Wer eine Sprachfassung sucht, suchte sie
@@ -450,6 +508,20 @@ export function AutomationsTab() {
                     <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                       {textquelle(a)}
                     </span>
+                    {/* Feste Objektliste altert still: ein neu angelegtes Haus
+                        fiel aus jeder Regel mit Liste. Dieselbe Rechnung wie
+                        im Panel (`nichtAbgedeckt`) — sie gehört an BEIDE
+                        Oberflächen, nicht nur an die eine. */}
+                    {nichtAbgedeckt(a, props) > 0 && (
+                      <span
+                        className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-900"
+                        title={t("autoHousesUncoveredHint")}
+                      >
+                        {t("autoHousesUncovered", {
+                          count: nichtAbgedeckt(a, props),
+                        })}
+                      </span>
+                    )}
                     {fehlendeSprachen(a).map((code) => (
                       <span
                         key={code}
@@ -488,7 +560,7 @@ export function AutomationsTab() {
                   size="icon"
                   aria-label={t("autoDelete")}
                   title={t("autoDelete")}
-                  onClick={() => remove(a.id)}
+                  onClick={() => setLoeschKandidat(a)}
                 >
                   <Icon icon="ph:trash" className="size-4" />
                 </Button>
@@ -545,60 +617,7 @@ export function AutomationsTab() {
           ))}
         </NativeSelect>
 
-        {beiNachricht ? (
-          <>
-            {/* Abwesenheitsantwort: kein Zeitplan, sondern ein Zeitfenster, in
-                dem der Auslöser feuern darf. Hier trägt man die GESCHLOSSENEN
-                Zeiten ein, nicht die Bürozeiten. */}
-            <label className="text-sm font-medium">{t("autoWindow")}</label>
-            <p className="-mt-1 text-xs text-muted-foreground">{t("autoWindowHint")}</p>
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                type="time"
-                value={fensterVon}
-                onChange={(e) => setFensterVon(e.target.value)}
-                aria-label={t("autoWindowFrom")}
-              />
-              <Input
-                type="time"
-                value={fensterBis}
-                onChange={(e) => setFensterBis(e.target.value)}
-                aria-label={t("autoWindowTo")}
-              />
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {WOCHENTAGE.map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  aria-pressed={fensterTage.includes(d)}
-                  onClick={() =>
-                    setFensterTage((prev) =>
-                      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d],
-                    )
-                  }
-                  className={
-                    "rounded-full border px-2.5 py-1 text-xs " +
-                    (fensterTage.includes(d)
-                      ? "border-accent bg-accent text-accent-foreground"
-                      : "border-border text-muted-foreground hover:border-accent")
-                  }
-                >
-                  {t(`autoDay_${d}` as never)}
-                </button>
-              ))}
-            </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={nurErste}
-                onChange={(e) => setNurErste(e.target.checked)}
-                className="size-4 accent-[var(--accent)]"
-              />
-              {t("autoOnlyFirst")}
-            </label>
-          </>
-        ) : (
+        {!beiNachricht && (
           <>
             {/* Zeitplan: Betrag · Einheit. Richtung und Anker stehen im
                 Auslöser darüber — hier ein zweites Mal wählbar, konnten sie ihm
@@ -664,19 +683,78 @@ export function AutomationsTab() {
                 {t("autoWithoutTimeHint")}
               </p>
             )}
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={ortszeit}
-                onChange={(e) => setOrtszeit(e.target.checked)}
-                className="size-4 accent-[var(--accent)]"
-              />
-              {t("autoPropertyTimezone")}
-            </label>
             <p className="-mt-1 text-xs text-muted-foreground">
-              {t("autoPropertyTimezoneHint")}
+              {t("autoPropertyTimezoneAlways")}
             </p>
           </>
+        )}
+
+        {/* ZEITFENSTER — für JEDEN Auslöser (14.09.2026).
+            Es beschreibt die Zeiten, in denen GESENDET werden darf. Bei
+            „Nachricht empfangen" entscheidet es, wann die Abwesenheitsantwort
+            feuert; bei den datumsgebundenen Auslösern verschiebt es einen
+            Versand, der außerhalb läge, auf den nächsten Fensterbeginn.
+            Vorher war es allein an „Nachricht empfangen" gebunden — eine
+            Anreise-Automail um 03:00 ließ sich damit nicht verhindern. */}
+        <div className="flex items-center gap-1.5">
+          <label className="text-sm font-medium">{t("autoWindow")}</label>
+          <InfoHinweis
+            titel={t("autoWindow")}
+            text={t("autoWindowHint")}
+            ariaLabel={tGemein("explain", { label: t("autoWindow") })}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="time"
+            value={fensterVon}
+            onChange={(e) => setFensterVon(e.target.value)}
+            aria-label={t("autoWindowFrom")}
+          />
+          <Input
+            type="time"
+            value={fensterBis}
+            onChange={(e) => setFensterBis(e.target.value)}
+            aria-label={t("autoWindowTo")}
+          />
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {WOCHENTAGE.map((d) => (
+            <button
+              key={d}
+              type="button"
+              aria-pressed={fensterTage.includes(d)}
+              onClick={() =>
+                setFensterTage((prev) =>
+                  prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d],
+                )
+              }
+              className={
+                "rounded-full border px-2.5 py-1 text-xs " +
+                (fensterTage.includes(d)
+                  ? "border-accent bg-accent text-accent-foreground"
+                  : "border-border text-muted-foreground hover:border-accent")
+              }
+            >
+              {t(`autoDay_${d}` as never)}
+            </button>
+          ))}
+        </div>
+
+        {/* „Nur erste Nachricht" gibt es NUR bei „Nachricht empfangen": bei
+            einem Datums-Auslöser gibt es keine Gastnachricht, auf die es sich
+            beziehen könnte — der Server weist es dort ab. Ein Haken, den der
+            Server verwirft, ist eine Zusage, die niemand einhält (Wurzel 4). */}
+        {beiNachricht && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={nurErste}
+              onChange={(e) => setNurErste(e.target.checked)}
+              className="size-4 accent-[var(--accent)]"
+            />
+            {t("autoOnlyFirst")}
+          </label>
         )}
 
         {/* Zuweisung Unterkünfte (durchsuchbar; leer = alle) */}
@@ -724,10 +802,12 @@ export function AutomationsTab() {
                 Nachricht beim Gast. Wer das ändern will, braucht zuerst eine
                 eigene `message_html`-Spalte samt Ableitung im Backend.
 
-                OHNE BETREFF: der Betreff gilt nur für E-Mail, und eine Regel
-                ohne Vorlage geht heute ausschließlich in den Portal-Chat. Ein
-                Feld, das nichts bewirkt, gehört nicht in die Maske — der
-                Betreff der Vorlage steht im Vorlagen-Editor. */}
+                MIT BETREFF (14.09.2026): Er wird für den E-Mail-Weg gebraucht.
+                Eine Regel geht nicht mehr ausschließlich in den Portal-Chat —
+                Direkt-, Website- und myBestDays-Buchungen haben keinen
+                Portal-Chat, dort ist E-Mail der Versandweg, und eine Mail ohne
+                Betreff kommt als leere Zeile an. Die Einschränkung („Portale
+                zeigen keinen Betreff") steht am ℹ-Symbol des Feldes. */}
             <SprachReiter
               sprachen={sprachen}
               aktiv={aktiveSprache}
@@ -748,7 +828,8 @@ export function AutomationsTab() {
               // Dokument selbst; s. Vorlagen-Tab).
               key={aktiveSprache}
               format="text"
-              mitBetreff={false}
+              mitBetreff
+              betreffHinweis={t("autoSubjectHint")}
               fassung={fassungen[aktiveSprache] ?? LEER}
               onChange={(f) =>
                 setFassungen((prev) => ({ ...prev, [aktiveSprache]: f }))
@@ -781,6 +862,39 @@ export function AutomationsTab() {
           </Button>
         </div>
       </div>
+
+      {/* Löschen ist nicht umkehrbar und nimmt bereits eingeplante Nachrichten
+          mit (ON DELETE CASCADE auf `automation_scheduled_message`). Deshalb
+          eine Rückfrage — aber KEIN `window.confirm`: der lässt sich weder
+          übersetzen noch gestalten und steht in keiner Sprache des Betriebs. */}
+      <Dialog
+        open={loeschKandidat !== null}
+        onOpenChange={(o) => !o && setLoeschKandidat(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogTitle>{t("autoDeleteConfirmTitle")}</DialogTitle>
+          <DialogDescription>
+            {t("autoDeleteConfirmText", { name: loeschKandidat?.name ?? "" })}
+          </DialogDescription>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setLoeschKandidat(null)}
+            >
+              {t("autoCancel")}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={pending}
+              onClick={() => loeschKandidat && remove(loeschKandidat.id)}
+            >
+              {t("autoDelete")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

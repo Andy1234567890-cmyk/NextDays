@@ -52,6 +52,10 @@ export class AutoEInvoiceService {
               companyVatId: invoiceData.companyVatId,
               email: invoiceData.companyEmail,
               phoneNumber: invoiceData.companyPhone,
+              // Land des Betriebs durchreichen: das XML trug es bis 10.09.2026
+              // fest als „DE", was bei jedem nicht-deutschen Betrieb eine
+              // Falschangabe im rechtsverbindlichen Beleg war.
+              companyCountry: invoiceData.companyCountry,
             },
             tseData,
           );
@@ -70,6 +74,10 @@ export class AutoEInvoiceService {
               companyVatId: invoiceData.companyVatId,
               email: invoiceData.companyEmail,
               phoneNumber: invoiceData.companyPhone,
+              // Land des Betriebs durchreichen: das XML trug es bis 10.09.2026
+              // fest als „DE", was bei jedem nicht-deutschen Betrieb eine
+              // Falschangabe im rechtsverbindlichen Beleg war.
+              companyCountry: invoiceData.companyCountry,
             },
           );
         }

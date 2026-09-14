@@ -1493,6 +1493,22 @@ Per Coolify-Scheduled-Task / crontab regelmäßig aufrufen, analog zu
   -H "X-Internal-Cron-Secret: $INTERNAL_CRON_SECRET"
 ```
 
+**Auch `/dispatch-scheduled` ist nicht der Betriebsweg.** Geplante
+Nachrichten versendet der sekundengenaue In-App-Scheduler
+(`apps/api/src/features/inbox/scheduler.py`): er setzt beim Planen und beim
+App-Start je Nachricht einen Timer exakt auf `send_at`. Der Endpunkt oben ist
+das Sicherheitsnetz für Timer, die ein harter Crash verloren hat, und der Weg
+für manuelles Anstoßen — dieselbe Rolle wie `/dispatch-automations` direkt
+darunter (dort versendet der Worker-Tick `_automails_tick`).
+
+Wer die Cron-Zeile einträgt, hat also einen ZWEITEN fälligen Weg auf dieselben
+Zeilen. Doppelversand entsteht daraus nicht: beide Pfade claimen vor dem Senden
+(bedingtes `status='pending' → 'sending'`), wer die Zeile nicht trifft, sendet
+nicht. Verlassen sollte man sich auf die Cron-Zeile trotzdem nicht — eine, die
+nur in dieser Doku stand, hielt 8 Automails 13 Tage lang zurück, ohne dass
+irgendwo ein Fehler sichtbar wurde (07.08.2026, `crontab -l` auf dem Server
+leer).
+
 **Automails laufen über den WORKER, nicht über Cron.** Der Tick
 `_automails_tick` (`apps/api/src/worker.py`, minütlich) versendet fällige
 Automails über alle Tenants. Der Endpunkt

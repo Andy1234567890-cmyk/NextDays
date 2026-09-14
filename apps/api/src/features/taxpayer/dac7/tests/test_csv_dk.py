@@ -83,7 +83,16 @@ def _meldung(**felder: object) -> Meldung:
 
 
 def _zeilen(text: str) -> list[list[str]]:
-    return [z.split(";") for z in text.rstrip("\n").split("\n")]
+    """Die Datei in Felder zerlegen — wie jeder echte Leser.
+
+    `lstrip("\ufeff")` zieht die BOM ab: Sie steht VOR der Kopfzeile und
+    ist kein Teil der ersten Spalte. Jeder Leser der Datei entfernt sie
+    ebenso — die Empfangsstelle beim Dekodieren mit `utf-8-sig`, unsere
+    Dateipruefung ausdruecklich. Ein Test, der sie in `ROW_TYPE`
+    hineinrechnet, pruefte etwas, das nirgends passiert.
+    """
+    ohne_bom = text.lstrip("\ufeff")
+    return [z.split(";") for z in ohne_bom.rstrip("\n").split("\n")]
 
 
 def _feld(zeile: list[str], spalte: str) -> str:
@@ -91,6 +100,23 @@ def _feld(zeile: list[str], spalte: str) -> str:
 
 
 class TestAufbau:
+    def test_datei_beginnt_mit_bom(self) -> None:
+        """UTF-8 MIT BOM — so exportiert die amtliche Vorlage selbst.
+
+        Ihr Makro `EksporterCSV` (in `xl/vbaProject.bin`) speichert mit
+        `FileFormat: xlCSVUTF8`, und genau dieses Excel-Format schreibt
+        die BOM; das ist sein Unterschied zum aelteren `xlCSV`.
+
+        Warum das ein eigener Test ist: Die BOM faellt still weg, wenn
+        jemand den Serialisierer umbaut — JEDER Leser strippt sie, also
+        bleibt jeder andere Test gruen. Sichtbar wird ihr Fehlen erst in
+        Excel: Ohne sie erkennt es auf einem deutschen oder daenischen
+        System das `;` nicht als Trennzeichen und legt die ganze Zeile in
+        EINE Spalte. Die Datei sieht dann hochkant aus (live gemeldet am
+        11.09.2026).
+        """
+        assert schreiben(_meldung()).startswith("\ufeff")
+
     def test_kopfzeile_ist_die_spaltenliste(self) -> None:
         assert _zeilen(schreiben(_meldung()))[0] == list(SPALTEN)
 
