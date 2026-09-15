@@ -280,7 +280,15 @@ def _luecken_ergaenzen(
         aid = _text(z.get("automation_id"))
         th = threads.get(str(z.get("thread_id") or ""), {})
         pid = _text(th.get("property_id"))
-        if not aid or not pid:
+        felder = fehlende_felder_aus(z.get("last_error"))
+        # NUR Platzhalter-Fehler werden zu einer Objekt-Lücke. `fehl` enthält
+        # bewusst ALLE Fehlschläge (die Buchung braucht auch ein „Forbidden",
+        # um den Aufenthalt zu prüfen) — ohne diese Zeile stünde ein Objekt
+        # OHNE Felder in der Liste, und die Oberfläche machte daraus den Satz
+        # „Die Angaben stehen inzwischen", obwohl es nie um eine Angabe ging
+        # (live gesehen am 15.09.2026: „Sommerhus Hjejlevej 1×" unter einem
+        # Satz über fehlende Angaben, der Fehler war ein 403 von Booking.com).
+        if not aid or not pid or not felder:
             continue
         luecke = je_regel.setdefault(aid, {}).setdefault(
             pid,
@@ -288,7 +296,7 @@ def _luecken_ergaenzen(
         )
         luecke.anzahl += 1
         heute = leer.get(pid, set())
-        for feld in fehlende_felder_aus(z.get("last_error")):
+        for feld in felder:
             if feld not in luecke.felder:
                 luecke.felder.append(feld)
             if feld in heute and feld not in luecke.heute_leer:

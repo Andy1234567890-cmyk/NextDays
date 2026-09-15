@@ -418,3 +418,29 @@ def test_stand_haelt_fehlschlag_ohne_buchung_offen() -> None:
     )
     (eintrag,) = stand_laden(db, _CTX).items
     assert eintrag.erledigt is False
+
+
+def test_stand_macht_aus_einem_portal_fehler_keine_objekt_luecke() -> None:
+    """Ein 403 des Portals ist keine fehlende Angabe.
+
+    Live am 15.09.2026: „Sommerhus Hjejlevej 1×" stand ohne ein einziges Feld
+    unter dem Satz „Die Angaben stehen inzwischen" — der Fehler war ein
+    Forbidden von Booking.com. `fehl` enthält solche Zeilen bewusst (die
+    Buchung entscheidet, ob der Aufenthalt vorbei ist), sie dürfen aber keine
+    Lücke erzeugen.
+    """
+    db = _DB(
+        [{"id": "a1", "tenant_id": "t1"}],
+        [
+            _zeile(id="s1", status="failed", thread_id="b1", last_error="Forbidden",
+                   updated_at="2026-09-15T05:27:37+00:00"),
+        ],
+        channex_booking=[
+            {"id": "b1", "tenant_id": "t1", "property_id": "p1",
+             "departure_date": "2099-01-01"},
+        ],
+        properties=[{"id": "p1", "tenant_id": "t1", "title": "Sommerhus Hjejlevej"}],
+    )
+    (eintrag,) = stand_laden(db, _CTX).items
+    assert eintrag.luecken == []
+    assert eintrag.letzter_fehler == "Forbidden"
