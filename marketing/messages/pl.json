@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalacja",
+          "titel": "Deeskalacja",
           "heading": "Gdy sytuacja staje się krytyczna, nie odpowiada — wzywa Cię.",
           "text": "Jeśli gość jest zirytowany lub wymienia jedno z Twoich słów kluczowych („brak ciepłej wody”, „zalanie”), AI nic nie wysyła. Zgłasza przebieg, a ten pozostaje otwarty, dopóki ktoś go nie rozwiąże.",
           "punkte": {

@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalacija",
+          "titel": "Deeskalacija",
           "heading": "Kada postane kritično, ne odgovara — poziva vas.",
           "text": "Ako se gost uznemiri ili spomene neku od vaših ključnih riječi („nema tople vode“, „oštećenje vodom“), umjetna inteligencija ništa ne šalje. Prijavljuje tijek, a on ostaje otvoren dok ga netko ne riješi.",
           "punkte": {

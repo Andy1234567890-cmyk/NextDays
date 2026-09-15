@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eszkaláció",
+          "titel": "Deeszkaláció",
           "heading": "Ha kritikusra fordul a helyzet, nem válaszol – Önt hívja.",
           "text": "Ha egy vendég bosszús lesz, vagy az Ön kulcsszavait említi („nincs meleg víz”, „vízkár”), az AI nem küld semmit. Jelenti az eseményt, és az nyitva marad, amíg valaki el nem intézi.",
           "punkte": {

@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Escaladare",
+          "titel": "Dezescaladare",
           "heading": "Când devine critic, nu răspunde – vă cheamă pe dumneavoastră.",
           "text": "Dacă un oaspete devine supărat sau menționează unul dintre cuvintele dumneavoastră cheie („fără apă caldă”, „daune cauzate de apă”), AI-ul nu trimite nimic. Raportează conversația, iar aceasta rămâne deschisă până când cineva o rezolvă.",
           "punkte": {

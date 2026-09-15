@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Escala",
+          "titel": "Desescalada",
           "heading": "Quando a situação fica crítica, ela não responde — ela te chama.",
           "text": "Se um hóspede ficar irritado ou mencionar uma de suas palavras-chave (\"sem água quente\", \"danos por água\"), a IA não envia nada. Ela relata o histórico, e ele permanece aberto até que alguém o resolva.",
           "punkte": {

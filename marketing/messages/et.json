@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalatsioon",
+          "titel": "Deeskalatsioon",
           "heading": "Kui olukord muutub kriitiliseks, ei vasta see – see kutsub teid.",
           "text": "Kui külaline on ärritunud või nimetab ühte teie märksõnadest („pole sooja vett“, „veekahjustus“), ei saada AI midagi. See teatab käigust ja see jääb avatuks, kuni keegi selle lahendab.",
           "punkte": {

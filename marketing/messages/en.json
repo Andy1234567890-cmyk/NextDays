@@ -1422,7 +1422,7 @@
           }
         },
         "eskalation": {
-          "titel": "Escalation",
+          "titel": "De-escalation",
           "heading": "If it gets critical, it doesn't answer — it calls you.",
           "text": "If a guest becomes angry or mentions one of your keywords (\"no hot water\", \"water damage\"), the AI sends nothing. It reports the conversation, and it remains open until someone resolves it.",
           "punkte": {

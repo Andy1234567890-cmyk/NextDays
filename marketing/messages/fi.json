@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalaatio",
+          "titel": "Deeskalaatio",
           "heading": "Kun tilanne kriisiytyy, se ei vastaa – se hakee sinut.",
           "text": "Jos vieras ärsyyntyy tai mainitsee jonkin avainsanasi (”ei lämmintä vettä”, ”vesivahinko”), tekoäly ei lähetä mitään. Se ilmoittaa tapahtumasta, ja se pysyy avoimena, kunnes joku hoitaa sen.",
           "punkte": {

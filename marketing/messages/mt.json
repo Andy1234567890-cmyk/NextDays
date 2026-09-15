@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalazzjoni",
+          "titel": "De-eskalazzjoni",
           "heading": "Meta l-affarijiet isiru kritiċi, ma twieġebx — iġġibek.",
           "text": "Jekk klijent jirrabja jew isemmi waħda mill-kliem kjavi tiegħek (“l-ebda ilma sħun”, “ħsara mill-ilma”), l-AI ma tibgħat xejn. Tirrapporta l-istorja, u din tibqa' miftuħa sakemm xi ħadd isolviha.",
           "punkte": {

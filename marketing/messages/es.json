@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Escalada",
+          "titel": "Desescalada",
           "heading": "Cuando la situación se vuelve crítica, no responde — le avisa a usted.",
           "text": "Si un huésped se molesta o menciona una de sus palabras clave (\"no hay agua caliente\", \"daños por agua\"), la IA no envía nada. Informa del historial, y este permanece abierto hasta que alguien lo resuelve.",
           "punkte": {

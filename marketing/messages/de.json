@@ -1422,7 +1422,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalation",
+          "titel": "Deeskalation",
           "heading": "Wenn es kritisch wird, antwortet sie nicht — sie holt dich.",
           "text": "Wird ein Gast verärgert oder nennt er eines deiner Stichwörter („kein warmes Wasser“, „Wasserschaden“), sendet die KI nichts. Sie meldet den Verlauf, und der bleibt offen, bis jemand ihn erledigt.",
           "punkte": {

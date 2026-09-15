@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalácia",
+          "titel": "Deeskalácia",
           "heading": "Keď sa situácia stane kritickou, neodpovie – zavolá vás.",
           "text": "Ak sa hosť nahnevá alebo spomenie jedno z vašich kľúčových slov („žiadna teplá voda“, „poškodenie vodou“), AI nič neodošle. Nahlási priebeh a ten zostane otvorený, kým ho niekto nevyrieši.",
           "punkte": {

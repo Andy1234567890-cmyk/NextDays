@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalācija",
+          "titel": "Deeskalācija",
           "heading": "Kad kļūst kritiski, tā neatbild — tā jūs izsauc.",
           "text": "Ja viesis kļūst neapmierināts vai nosauc kādu no jūsu atslēgvārdiem („nav silta ūdens“, „ūdens bojājumi“), AI neko nesūta. Tā ziņo par notikumu, un tas paliek atvērts, līdz kāds to atrisina.",
           "punkte": {

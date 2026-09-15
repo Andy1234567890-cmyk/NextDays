@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalacija",
+          "titel": "Deeskalacija",
           "heading": "Ko postane kritično, ne odgovori – pokliče vas.",
           "text": "Če gost postane jezen ali omeni eno od vaših ključnih besed (»ni tople vode«, »poškodba zaradi vode«), umetna inteligenca ne pošlje ničesar. Poroča o poteku, in ta ostane odprt, dokler ga nekdo ne reši.",
           "punkte": {

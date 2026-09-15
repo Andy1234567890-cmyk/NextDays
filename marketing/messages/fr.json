@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Escalade",
+          "titel": "Désescalade",
           "heading": "Si la situation devient critique, elle ne répond pas — elle vous alerte.",
           "text": "Si un client est en colère ou mentionne l'un de vos mots-clés (« pas d'eau chaude », « dégât des eaux »), l'IA n'envoie rien. Elle signale l'historique, et celui-ci reste ouvert jusqu'à ce que quelqu'un le traite.",
           "punkte": {

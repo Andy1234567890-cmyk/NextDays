@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Escalatie",
+          "titel": "De-escalatie",
           "heading": "Als het kritiek wordt, antwoordt het niet — het haalt u erbij.",
           "text": "Als een gast geïrriteerd raakt of een van uw trefwoorden noemt („geen warm water“, „waterschade“), verstuurt de AI niets. Het meldt het verloop, en dat blijft open totdat iemand het afhandelt.",
           "punkte": {

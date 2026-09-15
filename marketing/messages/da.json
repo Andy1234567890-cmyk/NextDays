@@ -1422,7 +1422,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalation",
+          "titel": "Deeskalation",
           "heading": "Når det bliver kritisk, svarer den ikke – den henter dig.",
           "text": "Hvis en gæst bliver vred, eller nævner et af dine søgeord („intet varmt vand“, „vandskade“), sender AI'en intet. Den rapporterer forløbet, og det forbliver åbent, indtil nogen løser det.",
           "punkte": {

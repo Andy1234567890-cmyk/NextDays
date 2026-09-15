@@ -1582,7 +1582,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalacija",
+          "titel": "Deeskalacija",
           "heading": "Kai situacija tampa kritiška, ji neatsako – ji jus iškviečia.",
           "text": "Jei svečias supyksta arba paminėja vieną iš jūsų raktinių žodžių („nėra karšto vandens“, „vandens žala“), AI nieko nesiunčia. Ji praneša apie eigą, ir ji lieka atvira, kol kas nors ją išsprendžia.",
           "punkte": {

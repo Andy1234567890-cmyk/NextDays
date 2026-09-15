@@ -1422,7 +1422,7 @@
           }
         },
         "eskalation": {
-          "titel": "Eskalering",
+          "titel": "Deeskalering",
           "heading": "När det blir kritiskt svarar den inte – den hämtar dig.",
           "text": "Om en gäst blir irriterad eller nämner ett av dina nyckelord (\"inget varmvatten\", \"vattenskada\"), skickar AI inget. Den rapporterar händelseförloppet, och det förblir öppet tills någon åtgärdar det.",
           "punkte": {
