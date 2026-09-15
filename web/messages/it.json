@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Ultimo errore il {zeit}. I dati sono stati aggiornati, ma il messaggio non è stato inviato:",
     "autoStandFehlerGrund": "Ultimo errore il {zeit}:",
-    "langClearEmptyHint": "Non esiste una versione di questo modello in {sprache} — qui non c'è nulla da eliminare. È possibile rimuovere la lingua stessa in „Gestisci lingue“."
+    "langClearEmptyHint": "Non esiste una versione di questo modello in {sprache} — qui non c'è nulla da eliminare. È possibile rimuovere la lingua stessa con l'icona del cestino accanto."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp non è ancora collegato. Inserisci le credenziali (Meta Cloud API) nelle impostazioni del server per attivare l'invio.",

@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Utolsó sikertelen próbálkozás: {zeit}. Az adatok időközben frissültek – az üzenet sosem került kiküldésre:",
     "autoStandFehlerGrund": "Utolsó sikertelen próbálkozás: {zeit}",
-    "langClearEmptyHint": "Ehhez a sablonhoz nincs {sprache} nyelvű változat – itt nincs mit törölni. Magát a nyelvet a „Nyelvek kezelése” menüpont alatt távolíthatja el."
+    "langClearEmptyHint": "Ehhez a sablonhoz nincs {sprache} nyelvű változat – itt nincs mit törölni. Magát a nyelvet a mellette lévő kukával távolíthatja el."
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

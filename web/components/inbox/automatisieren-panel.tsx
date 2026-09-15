@@ -1129,6 +1129,15 @@ function InhaltBearbeiten({
             setSprachen(liste);
             setAktiv(code);
           }}
+          onSpracheEntfernt={(liste, code) => {
+            setSprachen(liste);
+            setAktiv((vorher) => (vorher === code ? GRUNDFASSUNG : vorher));
+            setFassungen((prev) => {
+              const rest = { ...prev };
+              delete rest[code];
+              return rest;
+            });
+          }}
         />
         {aktiv === GRUNDFASSUNG && sprachen.length > 0 && (
           <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>

@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Paskutinis nepavykęs bandymas {zeit}. Duomenys dabar yra – pranešimas niekada nebuvo išsiųstas:",
     "autoStandFehlerGrund": "Paskutinis nepavykęs bandymas {zeit}:",
-    "langClearEmptyHint": "Šiam šablonui nėra versijos {sprache} – čia nieko nereikia ištrinti. Pačią kalbą galite pašalinti skiltyje „Tvarkyti kalbas“."
+    "langClearEmptyHint": "Šiam šablonui nėra versijos {sprache} kalba – čia nieko neištrinama. Pačią kalbą pašalinkite naudodami šalia esančią šiukšliadėžę."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

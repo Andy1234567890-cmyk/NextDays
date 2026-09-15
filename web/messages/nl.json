@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Laatste mislukte poging op {zeit}. De gegevens zijn nu beschikbaar — het bericht is nooit verzonden:",
     "autoStandFehlerGrund": "Laatst mislukt op {zeit}:",
-    "langClearEmptyHint": "Er is geen versie van deze sjabloon in het {sprache} – hier is niets te verwijderen. U verwijdert de taal zelf onder „Talen beheren“."
+    "langClearEmptyHint": "Er is geen versie van deze sjabloon in het {sprache} – hier is niets te verwijderen. U verwijdert de taal zelf met de prullenbak ernaast."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is nog niet verbonden. Voer de inloggegevens (Meta Cloud API) in de serverinstellingen in, dan is verzending actief.",

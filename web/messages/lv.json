@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Pēdējā neveiksme: {zeit}. Dati ir atjaunināti — ziņojums netika nosūtīts:",
     "autoStandFehlerGrund": "Pēdējā neveiksme: {zeit}",
-    "langClearEmptyHint": "Šai veidnei nav versijas valodā {sprache} — šeit nav ko dzēst. Pašu valodu varat noņemt sadaļā “Valodu pārvaldība”."
+    "langClearEmptyHint": "Šai veidnei nav versijas valodā {sprache} — šeit nav ko dzēst. Pašu valodu varat noņemt ar blakus esošo atkritumu tvertni."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",

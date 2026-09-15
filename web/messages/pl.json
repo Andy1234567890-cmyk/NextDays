@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Ostatnia nieudana próba: {zeit}. Dane są już dostępne — wiadomość nigdy nie została wysłana:",
     "autoStandFehlerGrund": "Ostatnia nieudana próba: {zeit}",
-    "langClearEmptyHint": "Brak wersji tego szablonu w języku {sprache} — nie ma tu nic do usunięcia. Język można usunąć w sekcji „Zarządzaj językami”."
+    "langClearEmptyHint": "Brak wersji dla tego szablonu w języku {sprache} — nie ma tu nic do usunięcia. Sam język można usunąć za pomocą ikony kosza obok."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",

@@ -822,6 +822,17 @@ export function AutomationsTab() {
                 setSprachen(liste);
                 setAktiveSprache(code);
               }}
+              onSpracheEntfernt={(liste, code) => {
+                setSprachen(liste);
+                setAktiveSprache((vorher) =>
+                  vorher === code ? GRUNDFASSUNG : vorher,
+                );
+                setFassungen((prev) => {
+                  const rest = { ...prev };
+                  delete rest[code];
+                  return rest;
+                });
+              }}
             />
             {aktiveSprache === GRUNDFASSUNG && sprachen.length > 0 && (
               <p className="text-xs text-muted-foreground">{t("langBaseHint")}</p>

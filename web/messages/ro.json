@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Ultima eroare la {zeit}. Datele sunt acum disponibile — mesajul nu a fost trimis niciodată:",
     "autoStandFehlerGrund": "Ultima eroare la {zeit}:",
-    "langClearEmptyHint": "Nu există o versiune a acestui șablon în {sprache} — nu este nimic de șters aici. Puteți elimina limba însăși în „Gestionare limbi”."
+    "langClearEmptyHint": "Nu există o versiune a acestui șablon în {sprache} — nu este nimic de șters aici. Puteți elimina limba însăși cu pictograma coș de gunoi de lângă ea."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

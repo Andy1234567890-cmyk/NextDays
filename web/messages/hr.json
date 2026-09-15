@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Zadnji neuspjeh u {zeit}. Podaci su sada dostupni — poruka nikada nije poslana:",
     "autoStandFehlerGrund": "Zadnji neuspjeh u {zeit}:",
-    "langClearEmptyHint": "Ne postoji verzija ovog predloška na jeziku {sprache} – ovdje nema ništa za brisanje. Jezik možete ukloniti pod „Upravljanje jezicima“."
+    "langClearEmptyHint": "Ne postoji verzija ovog predloška na jeziku {sprache} – ovdje nema ništa za brisanje. Jezik možete ukloniti pomoću ikone koša za smeće pored."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",

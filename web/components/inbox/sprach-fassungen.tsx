@@ -68,6 +68,7 @@ import { FeldDialogKnopf } from "@/components/inbox/feld-picker";
 import {
   type MessageLanguage,
   addMessageLanguage,
+  removeMessageLanguage,
   translateFassung,
 } from "@/lib/inbox";
 
@@ -97,6 +98,7 @@ export function SprachReiter({
   fassungen,
   namen,
   onSpracheHinzugefuegt,
+  onSpracheEntfernt,
   onFassungLeeren,
 }: {
   sprachen: MessageLanguage[];
@@ -113,6 +115,19 @@ export function SprachReiter({
   onSpracheHinzugefuegt?: (
     sprachen: MessageLanguage[],
     neuerCode: string,
+  ) => void;
+  /** Die Sprache soll beim BETRIEB weg (der Papierkorb am Reiter) — samt
+   *  ihren Texten in allen Vorlagen und Regeln. Der Aufrufer übernimmt die
+   *  neue Liste und schaltet weg, falls der offene Reiter betroffen war.
+   *
+   *  Warum das auch HIER sitzt und nicht nur in „Sprachen verwalten": wer eine
+   *  Sprache loswerden will, merkt es beim Pflegen der Vorlagen — dort steht
+   *  sie ihm im Weg. „ich kann trotzdem die Sprache nicht löschen (Vorlagen!)"
+   *  (15.09.2026). Der Weg über einen anderen Reiter ist gefunden, wenn man
+   *  ihn kennt; hier ist er da, wo die Frage entsteht. */
+  onSpracheEntfernt?: (
+    sprachen: MessageLanguage[],
+    entfernterCode: string,
   ) => void;
   /** Diese Sprachfassung soll weg (das X am Reiter). Der Aufrufer leert sie in
    *  seinem `fassungen`-Zustand; entfernt wird sie beim Speichern, weil der
@@ -191,6 +206,28 @@ export function SprachReiter({
     onFassungLeeren?.(code);
   }
 
+  /** Der Papierkorb am Reiter: die Sprache beim BETRIEB entfernen. Wirkt
+   *  sofort (eigener Endpunkt), anders als das X — deshalb nennt der Dialog
+   *  die Tragweite: alle Vorlagen und Regeln verlieren ihre Texte in dieser
+   *  Sprache. */
+  async function spracheEntfernen(code: string, label: string) {
+    if (pending) return;
+    if (!window.confirm(`${t("langRemove")} — ${t("langRemoveHint")}`)) return;
+    setFehler(null);
+    setPending(true);
+    const res = await removeMessageLanguage(code);
+    setPending(false);
+    if (!res.ok) {
+      setFehler(res.error);
+      return;
+    }
+    // Diagnose (Nutzerregel „Debugging immer einbauen"): anders als das X
+    // wirkt dies sofort und betrifft ALLE Vorlagen — bleibt der Reiter
+    // stehen, sagt diese Zeile, ob der Aufruf durchlief.
+    console.warn("[inbox] Sprache beim Betrieb entfernt", { sprache: code, label });
+    onSpracheEntfernt?.(res.data.items, code);
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-1 border-b border-border">
       {reiter.map((r) => {
@@ -203,6 +240,8 @@ export function SprachReiter({
         // mit Begründung ist keine Attrappe, sondern die Auskunft, dass es hier
         // nichts zu löschen gibt — und wohin man für die Sprache selbst muss.
         const mitLeeren = Boolean(onFassungLeeren) && r.schluessel !== GRUNDFASSUNG;
+        const mitEntfernen =
+          Boolean(onSpracheEntfernt) && r.schluessel !== GRUNDFASSUNG;
         return (
           <span
             key={r.schluessel}
@@ -261,6 +300,22 @@ export function SprachReiter({
                 }
               >
                 <Icon icon="ph:x" className="size-3.5" />
+              </button>
+            )}
+            {/* Der Papierkorb trennt die zweite Bedeutung sichtbar vom X: nicht
+                „Fassung dieser Vorlage", sondern „Sprache des Betriebs". Nie an
+                der Standardsprache — sie ist der Rang vor der Grundfassung, und
+                „Sprachen verwalten" verweigert sie aus demselben Grund. */}
+            {mitEntfernen && !sprachen.find((x) => x.code === r.schluessel)?.is_default && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => void spracheEntfernen(r.schluessel, r.label)}
+                title={`${t("langRemove")} — ${t("langRemoveHint")}`}
+                aria-label={`${t("langRemove")} ${r.label}`}
+                className="mr-1.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive disabled:opacity-50"
+              >
+                <Icon icon="ph:trash" className="size-3.5" />
               </button>
             )}
           </span>

@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Senaste misslyckande: {zeit}. Uppgifterna är nu aktuella – meddelandet skickades aldrig:",
     "autoStandFehlerGrund": "Senaste misslyckande: {zeit}",
-    "langClearEmptyHint": "Det finns ingen version av den här mallen på {sprache} – inget att radera här. Du kan ta bort språket under ”Hantera språk”."
+    "langClearEmptyHint": "Det finns ingen version av den här mallen på {sprache} – inget att radera här. Du tar bort själva språket med papperskorgen bredvid."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Sidste mislykkede forsøg den {zeit}. Oplysningerne er nu tilgængelige – beskeden blev aldrig sendt ud:",
     "autoStandFehlerGrund": "Sidste mislykkede forsøg {zeit}:",
-    "langClearEmptyHint": "Der findes ingen version af denne skabelon på {sprache} – her er intet at slette. Du fjerner selv sproget under „Administrer sprog“."
+    "langClearEmptyHint": "Der findes ingen version af denne skabelon på {sprache} – her er intet at slette. Du fjerner selve sproget med papirkurven ved siden af."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

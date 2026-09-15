@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Viimati ebaõnnestus {zeit}. Andmed on nüüdseks olemas – sõnumit ei saadetud kunagi:",
     "autoStandFehlerGrund": "Viimati ebaõnnestus {zeit}:",
-    "langClearEmptyHint": "Selle malli jaoks pole {sprache} versiooni – siin pole midagi kustutada. Keele saate eemaldada jaotisest „Halda keeli“."
+    "langClearEmptyHint": "Selle malli jaoks pole {sprache} versiooni – siin pole midagi kustutada. Keele eemaldamiseks kasutage kõrval olevat prügikasti."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",

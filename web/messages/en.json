@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Last failed on {zeit}. The details are now correct — the message was never sent:",
     "autoStandFehlerGrund": "Last failed on {zeit}:",
-    "langClearEmptyHint": "There is no {sprache} version for this template — there is nothing to delete here. You can remove the language itself under \"Manage languages\"."
+    "langClearEmptyHint": "There is no {sprache} version for this template — nothing to delete here. You can remove the language itself using the trash can next to it."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",

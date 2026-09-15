@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Zuletzt fehlgeschlagen am {zeit}. Die Angaben stehen inzwischen — die Nachricht ging nie hinaus:",
     "autoStandFehlerGrund": "Zuletzt fehlgeschlagen am {zeit}:",
-    "langClearEmptyHint": "Für diese Vorlage gibt es keine Fassung auf {sprache} — hier ist nichts zu löschen. Die Sprache selbst entfernst du unter „Sprachen verwalten“."
+    "langClearEmptyHint": "Für diese Vorlage gibt es keine Fassung auf {sprache} — hier ist nichts zu löschen. Die Sprache selbst entfernst du mit dem Papierkorb daneben."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",

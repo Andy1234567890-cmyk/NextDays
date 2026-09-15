@@ -298,6 +298,17 @@ export function TemplatesTab() {
             setSprachen(liste);
             setAktiv(code);
           }}
+          onSpracheEntfernt={(liste, code) => {
+            setSprachen(liste);
+            // Stand der Reiter offen, den es nicht mehr gibt, zeigte der
+            // Editor sonst die Felder einer Sprache, die weg ist.
+            setAktiv((vorher) => (vorher === code ? GRUNDFASSUNG : vorher));
+            setFassungen((prev) => {
+              const rest = { ...prev };
+              delete rest[code];
+              return rest;
+            });
+          }}
           // Geleert, nicht aus `fassungen` entfernt: `texteFuerApi` baut die
           // Liste ohnehin aus `sprachen` und siebt leere Fassungen aus, und der
           // Server entfernt beim Speichern, was in der Liste fehlt

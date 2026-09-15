@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "L-aħħar falliment kien fi {zeit}. Id-dettalji issa huma korretti — il-messaġġ qatt ma ntbagħat:",
     "autoStandFehlerGrund": "L-aħħar falliment kien fi {zeit}:",
-    "langClearEmptyHint": "M'hemm l-ebda verżjoni ta' dan il-mudell bil-{sprache} – m'hemm xejn x'tħassar hawn. Tista' tneħħi l-lingwa nnifisha taħt \"Immaniġġja l-Lingwi\"."
+    "langClearEmptyHint": "M'hemm l-ebda verżjoni ta' dan il-mudell bil-{sprache} — m'hemm xejn x'tħassar hawn. Tista' tneħħi l-lingwa nnifisha billi tuża l-ikona tat-Trash ħdejha."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

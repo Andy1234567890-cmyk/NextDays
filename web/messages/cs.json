@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Naposledy se nezdařilo {zeit}. Údaje jsou nyní k dispozici – zpráva nikdy neodešla:",
     "autoStandFehlerGrund": "Naposledy se nezdařilo dne {zeit}:",
-    "langClearEmptyHint": "Pro tuto šablonu neexistuje verze v jazyce {sprache} – zde není co mazat. Samotný jazyk odstraníte v části „Spravovat jazyky“."
+    "langClearEmptyHint": "Pro tuto šablonu neexistuje verze v jazyce {sprache} – zde není co mazat. Samotný jazyk odstraníte pomocí ikony koše vedle."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatím není propojen. Zadejte přístupové údaje (Meta Cloud API) v nastavení serveru, poté bude odesílání aktivní.",

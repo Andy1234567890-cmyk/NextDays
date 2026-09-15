@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Viimeisin epäonnistuminen {zeit}. Tiedot ovat nyt saatavilla – viestiä ei koskaan lähetetty:",
     "autoStandFehlerGrund": "Viimeisin epäonnistuminen {zeit}:",
-    "langClearEmptyHint": "Tästä mallista ei ole versiota kielellä {sprache} – tässä ei ole mitään poistettavaa. Voit poistaa kielen kohdasta ”Hallinnoi kieliä”."
+    "langClearEmptyHint": "Tälle mallipohjalle ei ole versiota kielellä {sprache} – tässä ei ole mitään poistettavaa. Voit poistaa itse kielen vieressä olevasta roskakorista."
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",

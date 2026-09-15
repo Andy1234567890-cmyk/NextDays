@@ -1226,7 +1226,7 @@
     "autoStandLueckeAnzahl": "{count}×",
     "autoStandFehlerNachtrag": "Naposledy zlyhalo dňa {zeit}. Údaje sú už k dispozícii – správa nebola nikdy odoslaná:",
     "autoStandFehlerGrund": "Naposledy zlyhalo dňa {zeit}:",
-    "langClearEmptyHint": "Pre túto šablónu neexistuje verzia v jazyku {sprache} – tu nie je čo odstrániť. Samotný jazyk odstránite v časti „Spravovať jazyky“."
+    "langClearEmptyHint": "Pre túto šablónu neexistuje verzia v jazyku {sprache} – tu nie je čo vymazať. Samotný jazyk odstránite pomocou koša vedľa neho."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatiaľ nie je prepojený. Zadajte prístupové údaje (Meta Cloud API) v nastaveniach servera, potom bude odosielanie aktívne.",
