@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Un sistema. Un acceso.",
-    "baldBadge": "Muy pronto",
+    "baldBadge": "Llega en 2027",
+    "baldBadgeBuchhaltung": "Llega a partir del 01/01/2027",
     "hinweis": "Las facturas básicas se incluyen en el lanzamiento. La contabilidad avanzada (exportación DATEV), la gestión de empleados, el mercado de proveedores de servicios, las funciones de hotel y el avatar son módulos adicionales.",
     "eyebrow": "Funciones",
     "sub": "Un acceso para el negocio, los propietarios, los huéspedes y la limpieza: cada rol ve exactamente su área.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Análisis",
-        "items": "Ocupación, ingresos, ADR, informes automáticos, comparativa de canales, metabuscadores muy pronto"
+        "items": "Ocupación, ingresos, ADR, informes automáticos, comparación de canales, metabúsqueda llegan en 2027"
       },
       "eigentuemer": {
         "title": "Facturación del propietario",
@@ -746,7 +747,7 @@
     "blaseFrage": "¿Cómo va la ocupación la semana que viene?",
     "blaseAntwort": "18 de 24 noches ocupadas. Dos huecos el fin de semana, ¿bajamos el precio?",
     "eingabe": "Pregunta a myNextDays …",
-    "baldBadge": "Muy pronto"
+    "baldBadge": "Llega en 2027"
   },
   "integrationen": {
     "eyebrow": "Alcance",

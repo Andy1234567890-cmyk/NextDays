@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Córas amháin. Logáil isteach amháin.",
-    "baldBadge": "Ag teacht go luath",
+    "baldBadge": "Ar fáil in 2027",
+    "baldBadgeBuchhaltung": "Ar fáil ó 01.01.2027",
     "hinweis": "Tá bunbhilleálacha san áireamh ag an seoladh. Is modúil bhreise iad cuntasaíocht leathnaithe (easpórtáil DATEV), bainistíocht fostaithe, margadh soláthraithe seirbhíse, feidhmeanna óstáin agus an avatar.",
     "eyebrow": "Gnéithe",
     "sub": "Logáil isteach amháin don ghnó, do na húinéirí, do na haíonna agus don ghlantachán — feiceann gach ról a réimse féin go beacht.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Léargais",
-        "items": "Áitíocht, ioncam, ADR, tuarascálacha uathoibríocha, comparáid cainéal, meiticuardach ag teacht go luath"
+        "items": "Ualach, ioncam, ADR, tuarascálacha uathoibríocha, comparáid cainéal, meiteashonraí ar fáil in 2027"
       },
       "eigentuemer": {
         "title": "Billeáil an úinéara",
@@ -746,7 +747,7 @@
     "blaseFrage": "Conas atá an áitíocht an tseachtain seo chugainn?",
     "blaseAntwort": "18 as 24 oíche áirithithe. Dhá bhearna ag an deireadh seachtaine – an ráta a ísliú?",
     "eingabe": "Cuir ceist ar myNextDays …",
-    "baldBadge": "Ag teacht go luath"
+    "baldBadge": "Ar fáil in 2027"
   },
   "integrationen": {
     "eyebrow": "Raon",

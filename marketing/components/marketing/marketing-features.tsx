@@ -7,7 +7,7 @@
 //
 // Ersetzt die frühere Tab-Leiste: 14 Reiter zeigten immer nur EINE Funktion,
 // die Matrix zeigt den kompletten Umfang auf einen Blick — genau darum geht es
-// in dieser Sektion. Was zum Launch (01.09.2026) fehlt, trägt „In Kürze".
+// in dieser Sektion. Was zum Launch (01.09.2026) fehlt, trägt „Kommt 2027".
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 

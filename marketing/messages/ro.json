@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Un sistem. Un singur cont.",
-    "baldBadge": "În curând",
+    "baldBadge": "Disponibil în 2027",
+    "baldBadgeBuchhaltung": "Disponibil de la 01.01.2027",
     "hinweis": "Facturile de bază sunt incluse la lansare. Contabilitatea avansată (export DATEV), gestionarea angajaților, piața de furnizori de servicii, funcțiile hoteliere și avatarul sunt module suplimentare.",
     "eyebrow": "Funcții",
     "sub": "Un singur acces pentru unitate, proprietari, oaspeți și curățenie: fiecare rol vede exact zona sa.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analize",
-        "items": "Grad de ocupare, venituri, ADR, rapoarte automate, comparație între canale, metacăutare în curând"
+        "items": "Grad de ocupare, venituri, ADR, rapoarte automate, comparație canale, meta-căutare disponibile în 2027"
       },
       "eigentuemer": {
         "title": "Decont proprietar",
@@ -746,7 +747,7 @@
     "blaseFrage": "Cum stă gradul de ocupare săptămâna viitoare?",
     "blaseAntwort": "18 din 24 de nopți ocupate. Două goluri în weekend, scădem prețul?",
     "eingabe": "Întreabă myNextDays …",
-    "baldBadge": "În curând"
+    "baldBadge": "Disponibil în 2027"
   },
   "integrationen": {
     "eyebrow": "Acoperire",

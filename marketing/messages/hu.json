@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Egy rendszer. Egy belépés.",
-    "baldBadge": "Hamarosan",
+    "baldBadge": "Érkezik 2027-ben",
+    "baldBadgeBuchhaltung": "Érkezik 2027.01.01-től",
     "hinweis": "Az alap számlák a bevezetéskor rendelkezésre állnak. A kibővített könyvelés (DATEV export), a munkatárs-menedzsment, a szolgáltatói piactér, a szállodai funkciók és az Avatar kiegészítő modulok.",
     "eyebrow": "Funkciók",
     "sub": "Egy belépés az üzemeltetésnek, a tulajdonosoknak, a vendégeknek és a takarításnak — minden szerep pontosan a saját területét látja.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Kimutatások",
-        "items": "Kihasználtság, bevétel, ADR, automatikus riportok, csatorna-összehasonlítás, metakeresés hamarosan"
+        "items": "Kihasználtság, bevétel, ADR, automatikus jelentések, csatornaösszehasonlítás, meta-keresés érkezik 2027-ben"
       },
       "eigentuemer": {
         "title": "Tulajdonosi elszámolás",
@@ -746,7 +747,7 @@
     "blaseFrage": "Milyen a kihasználtság jövő héten?",
     "blaseAntwort": "24 éjszakából 18 foglalt. Két rés a hétvégén – csökkentsük az árat?",
     "eingabe": "Kérdezze a myNextDayst …",
-    "baldBadge": "Hamarosan"
+    "baldBadge": "Érkezik 2027-ben"
   },
   "integrationen": {
     "eyebrow": "Elérés",

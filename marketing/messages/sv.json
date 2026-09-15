@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Ett system. En inloggning.",
-    "baldBadge": "Kommer snart",
+    "baldBadge": "Kommer 2027",
+    "baldBadgeBuchhaltung": "Kommer från 2027-01-01",
     "hinweis": "Grundläggande fakturor ingår vid lanseringen. Utökad bokföring (DATEV-export), personalhantering, marknadsplats för tjänsteleverantörer, hotellfunktioner och avataren är tilläggsmoduler.",
     "eyebrow": "Funktioner",
     "sub": "En inloggning för verksamheten, ägarna, gästerna och städningen – varje roll ser exakt sitt eget område.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analyser",
-        "items": "Beläggning, intäkter, ADR, automatiska rapporter, kanaljämförelse, metasök kommer snart"
+        "items": "Beläggning, intäkter, ADR, automatiska rapporter, kanaljämförelse, metasökning kommer 2027"
       },
       "eigentuemer": {
         "title": "Ägarfakturering",
@@ -746,7 +747,7 @@
     "blaseFrage": "Hur ser beläggningen ut nästa vecka?",
     "blaseAntwort": "18 av 24 nätter bokade. Två luckor i helgen – sänka priset?",
     "eingabe": "Fråga myNextDays …",
-    "baldBadge": "Kommer snart"
+    "baldBadge": "Kommer 2027"
   },
   "integrationen": {
     "eyebrow": "Räckvidd",

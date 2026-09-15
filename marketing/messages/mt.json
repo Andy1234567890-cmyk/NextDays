@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Sistema waħda. Login wieħed.",
-    "baldBadge": "Dalwaqt",
+    "baldBadge": "Ġej fl-2027",
+    "baldBadgeBuchhaltung": "Ġej mill-01.01.2027",
     "hinweis": "Il-fatturi bażiċi huma inklużi mat-tnedija. Il-kontabilità avvanzata (esportazzjoni DATEV), il-ġestjoni tal-impjegati, is-suq tal-fornituri tas-servizzi, il-funzjonijiet tal-lukandi u l-avatar huma moduli addizzjonali.",
     "eyebrow": "Funzjonijiet",
     "sub": "Aċċess wieħed għan-negozju, għas-sidien, għall-mistednin u għat-tindif — kull rwol jara eżattament il-qasam tiegħu.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analiżi",
-        "items": "Okkupanza, dħul, ADR, rapporti awtomatiċi, tqabbil bejn il-kanali, metasearch dalwaqt"
+        "items": "Okkupanza, Dħul, ADR, rapporti awtomatiċi, tqabbil tal-kanali, metasearch ġejjin fl-2027"
       },
       "eigentuemer": {
         "title": "Kontabilità tas-sid",
@@ -746,7 +747,7 @@
     "blaseFrage": "Kif inhi l-okkupanza l-ġimgħa d-dieħla?",
     "blaseAntwort": "18 minn 24 lejl mibbukjati. Żewġ vojt fi tmiem il-ġimgħa – tbaxxi l-prezz?",
     "eingabe": "Staqsi lil myNextDays …",
-    "baldBadge": "Dalwaqt"
+    "baldBadge": "Ġej fl-2027"
   },
   "integrationen": {
     "eyebrow": "Firxa",

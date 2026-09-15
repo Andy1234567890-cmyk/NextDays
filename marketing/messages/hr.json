@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Jedan sustav. Jedna prijava.",
-    "baldBadge": "Uskoro",
+    "baldBadge": "Dolazi 2027.",
+    "baldBadgeBuchhaltung": "Dolazi od 01.01.2027.",
     "hinweis": "Osnovni računi uključeni su pri pokretanju. Prošireno knjigovodstvo (DATEV izvoz), upravljanje zaposlenicima, tržnica pružatelja usluga, hotelske funkcije i avatar su dodatni moduli.",
     "eyebrow": "Funkcije",
     "sub": "Jedan pristup za tvrtku, vlasnike, goste i čišćenje — svaka uloga vidi točno svoje područje.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analitika",
-        "items": "Popunjenost, prihod, ADR, automatska izvješća, usporedba kanala, metapretraživanje uskoro"
+        "items": "Popunjenost, prihod, ADR, automatska izvješća, usporedba kanala, metatražilica dolazi 2027."
       },
       "eigentuemer": {
         "title": "Obračun vlasnika",
@@ -746,7 +747,7 @@
     "blaseFrage": "Kakva je popunjenost sljedeći tjedan?",
     "blaseAntwort": "18 od 24 noćenja zauzeto. Dvije rupe za vikend – da spustimo cijenu?",
     "eingabe": "Pitajte myNextDays …",
-    "baldBadge": "Uskoro"
+    "baldBadge": "Dolazi 2027."
   },
   "integrationen": {
     "eyebrow": "Doseg",

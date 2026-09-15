@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Üks süsteem. Üks sisselogimine.",
-    "baldBadge": "Tulekul",
+    "baldBadge": "Tulekul 2027",
+    "baldBadgeBuchhaltung": "Tulekul alates 01.01.2027",
     "hinweis": "Põhiarved on käivitamisel kaasas. Laiendatud raamatupidamine (DATEV-eksport), töötajate haldamine, teenusepakkujate turg, hotellifunktsioonid ja avatar on lisamoodulid.",
     "eyebrow": "Funktsioonid",
     "sub": "Üks sisselogimine ettevõttele, omanikele, külalistele ja koristusele – iga roll näeb täpselt oma ala.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analüütika",
-        "items": "Täituvus, käive, ADR, automaatsed aruanded, kanalite võrdlus, metaotsing tulekul"
+        "items": "Täituvus, tulu, ADR, automaatsed aruanded, kanalite võrdlus, metasearch tulekul 2027"
       },
       "eigentuemer": {
         "title": "Omaniku arveldus",
@@ -746,7 +747,7 @@
     "blaseFrage": "Milline on järgmise nädala täituvus?",
     "blaseAntwort": "18 ööd 24-st broneeritud. Kaks auku nädalavahetusel – kas langetame hinda?",
     "eingabe": "Küsi myNextDaysilt …",
-    "baldBadge": "Tulekul"
+    "baldBadge": "Tulekul 2027"
   },
   "integrationen": {
     "eyebrow": "Ulatus",

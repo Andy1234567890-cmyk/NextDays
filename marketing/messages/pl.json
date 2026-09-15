@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Jeden system. Jedno logowanie.",
-    "baldBadge": "Wkrótce",
+    "baldBadge": "Dostępne w 2027 r.",
+    "baldBadgeBuchhaltung": "Dostępne od 01.01.2027 r.",
     "hinweis": "Podstawowe faktury są dostępne w momencie uruchomienia. Rozszerzona księgowość (eksport DATEV), zarządzanie pracownikami, rynek usługodawców, funkcje hotelowe i awatar to moduły dodatkowe.",
     "eyebrow": "Funkcje",
     "sub": "Jeden dostęp dla obiektu, właścicieli, gości i serwisu sprzątającego — każda rola widzi dokładnie swój obszar.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analizy",
-        "items": "Obłożenie, przychód, ADR, automatyczne raporty, porównanie kanałów, metawyszukiwarki wkrótce"
+        "items": "Obłożenie, przychody, ADR, automatyczne raporty, porównanie kanałów, metawyszukiwanie dostępne w 2027 r."
       },
       "eigentuemer": {
         "title": "Rozliczenie właściciela",
@@ -746,7 +747,7 @@
     "blaseFrage": "Jakie jest obłożenie w przyszłym tygodniu?",
     "blaseAntwort": "18 z 24 nocy zajętych. Dwie luki w weekend – obniżyć cenę?",
     "eingabe": "Zapytaj myNextDays …",
-    "baldBadge": "Wkrótce"
+    "baldBadge": "Dostępne w 2027 r."
   },
   "integrationen": {
     "eyebrow": "Zasięg",

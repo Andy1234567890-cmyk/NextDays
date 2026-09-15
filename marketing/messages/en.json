@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "One system. One login.",
-    "baldBadge": "Coming soon",
+    "baldBadge": "Coming 2027",
+    "baldBadgeBuchhaltung": "Coming from 01.01.2027",
     "hinweis": "Basic invoices are included at launch. Advanced accounting (DATEV export), employee management, service provider marketplace, hotel functions, and the avatar are additional modules.",
     "eyebrow": "Features",
     "sub": "One login for the business, owners, guests and housekeeping — every role sees exactly its own area.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Insights",
-        "items": "Occupancy, revenue, ADR, automatic reports, channel comparison, metasearch coming soon"
+        "items": "Occupancy, revenue, ADR, automated reports, channel comparison, metasearch coming 2027"
       },
       "eigentuemer": {
         "title": "Owner billing",
@@ -746,7 +747,7 @@
     "blaseFrage": "How is occupancy next week?",
     "blaseAntwort": "18 of 24 nights booked. Two gaps at the weekend — lower the rate?",
     "eingabe": "Ask myNextDays …",
-    "baldBadge": "Coming soon"
+    "baldBadge": "Coming 2027"
   },
   "integrationen": {
     "eyebrow": "Reach",

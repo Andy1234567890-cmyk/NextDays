@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Ét system. Ét login.",
-    "baldBadge": "Kommer snart",
+    "baldBadge": "Kommer i 2027",
+    "baldBadgeBuchhaltung": "Kommer fra 01.01.2027",
     "hinweis": "Basisregninger er inkluderet ved lanceringen. Udvidet bogføring (DATEV-eksport), medarbejderstyring, leverandør-markedsplads, hotelfunktioner og avataren er tillægsmoduler.",
     "eyebrow": "Funktioner",
     "sub": "Ét login til virksomheden, ejerne, gæsterne og rengøringen – hver rolle ser præcis sit eget område.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analyser",
-        "items": "Belægning, omsætning, ADR, automatiske rapporter, kanalsammenligning, metasøgning kommer snart"
+        "items": "Belægning, omsætning, ADR, automatiske rapporter, kanalsammenligning, metasøgning kommer i 2027"
       },
       "eigentuemer": {
         "title": "Ejerregnskab",
@@ -746,7 +747,7 @@
     "blaseFrage": "Hvordan ser belægningen ud i næste uge?",
     "blaseAntwort": "18 ud af 24 nætter booket. To huller i weekenden – skal prisen sættes ned?",
     "eingabe": "Spørg myNextDays …",
-    "baldBadge": "Kommer snart"
+    "baldBadge": "Kommer i 2027"
   },
   "integrationen": {
     "eyebrow": "Rækkevidde",

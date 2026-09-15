@@ -34,12 +34,18 @@ const MODULE: readonly {
    * plausibel aussehende Falschaussage, die niemand als Bug erkennt.
    */
   bald?: boolean;
+  /**
+   * Abweichender Badge-Schlüssel unter `features`. Die Buchhaltung hat ein
+   * festes Fertigstellungsdatum und nennt es — die übrigen Module nur das Jahr.
+   */
+  baldSchluessel?: string;
 }[] = [
   {
     key: "buchhaltung",
     lookup: "modul3_flat",
     einheit: "proMonat",
     bald: true,
+    baldSchluessel: "baldBadgeBuchhaltung",
   },
   {
     key: "mitarbeiter",
@@ -82,7 +88,7 @@ const MODULE: readonly {
 
 export function PreisModule({ liste }: { liste: Preisliste | null }) {
   const t = useTranslations("preise.module");
-  // „In Kürze" kommt aus features.baldBadge — derselbe Text steht schon auf der
+  // Der Badge kommt aus features.baldBadge — derselbe Text steht schon auf der
   // Funktionsseite an den kommenden Modulen. Zwei Fassungen desselben Hinweises
   // in 24 Sprachen wären Doppelpflege.
   const tf = useTranslations("features");
@@ -123,7 +129,7 @@ export function PreisModule({ liste }: { liste: Preisliste | null }) {
                   </span>
                   {m.bald ? (
                     <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                      {tf("baldBadge")}
+                      {tf(m.baldSchluessel ?? "baldBadge")}
                     </span>
                   ) : null}
                 </div>

@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Un système. Un identifiant.",
-    "baldBadge": "Bientôt disponible",
+    "baldBadge": "Arrive en 2027",
+    "baldBadgeBuchhaltung": "Arrive à partir du 01/01/2027",
     "hinweis": "Les factures de base sont incluses au lancement. La comptabilité avancée (export DATEV), la gestion des employés, la place de marché des prestataires de services, les fonctions hôtelières et l'avatar sont des modules complémentaires.",
     "eyebrow": "Fonctionnalités",
     "sub": "Un accès pour l'établissement, les propriétaires, les voyageurs et le ménage : chaque rôle voit exactement son périmètre.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analyses",
-        "items": "Taux d'occupation, chiffre d'affaires, RevPAR moyen (ADR), rapports automatiques, comparaison des canaux, métamoteurs bientôt disponibles"
+        "items": "Taux d'occupation, revenus, ADR, rapports automatiques, comparaison de canaux, métarecherche arrivent en 2027"
       },
       "eigentuemer": {
         "title": "Facturation propriétaire",
@@ -746,7 +747,7 @@
     "blaseFrage": "Quel est le taux d'occupation la semaine prochaine ?",
     "blaseAntwort": "18 nuits occupées sur 24. Deux trous le week-end, on baisse le tarif ?",
     "eingabe": "Demandez à myNextDays …",
-    "baldBadge": "Bientôt disponible"
+    "baldBadge": "Arrive en 2027"
   },
   "integrationen": {
     "eyebrow": "Portée",

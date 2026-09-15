@@ -100,7 +100,7 @@ Kundenstimmen, keine Award-Badges, keine ROI-/Zeitersparnis-Kennzahlen.
 Belegbar sind: 27 europäische Länder, 24 Sprachen, 56 Buchungsplattformen über
 Channex, EU-Hosting/DSGVO, „von Vermietern entwickelt",
 Preis 19,90 €/Monat. Funktionen, die zum Launch fehlen (Metasuche), tragen ein
-„In Kürze"-Badge; Zusatzmodule sind als solche gekennzeichnet.
+„Kommt 2027"-Badge; Zusatzmodule sind als solche gekennzeichnet.
 
 ## Icons
 

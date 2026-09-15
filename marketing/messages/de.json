@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Ein System. Ein Login.",
-    "baldBadge": "In Kürze",
+    "baldBadge": "Kommt 2027",
+    "baldBadgeBuchhaltung": "Kommt ab 01.01.2027",
     "hinweis": "Basis-Rechnungen sind zum Launch dabei. Erweiterte Buchhaltung (DATEV-Export), Mitarbeiter-Management, Dienstleister-Marktplatz, Hotel-Funktionen und der Avatar sind Zusatzmodule.",
     "eyebrow": "Funktionen",
     "sub": "Ein Zugang für Betrieb, Eigentümer, Gäste und Reinigung — jede Rolle sieht genau ihren Bereich.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Auswertungen",
-        "items": "Auslastung, Umsatz, ADR, automatische Berichte, Kanalvergleich, Metasuche in Kürze"
+        "items": "Auslastung, Umsatz, ADR, automatische Berichte, Kanalvergleich, Metasuche kommt 2027"
       },
       "eigentuemer": {
         "title": "Eigentümer-Abrechnung",
@@ -746,7 +747,7 @@
     "blaseFrage": "Wie ist die Auslastung nächste Woche?",
     "blaseAntwort": "18 von 24 Nächten belegt. Zwei Lücken am Wochenende – Preis senken?",
     "eingabe": "Frag myNextDays …",
-    "baldBadge": "In Kürze"
+    "baldBadge": "Kommt 2027"
   },
   "integrationen": {
     "eyebrow": "Reichweite",

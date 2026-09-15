@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Jeden systém. Jedno přihlášení.",
-    "baldBadge": "Již brzy",
+    "baldBadge": "Přijde v roce 2027",
+    "baldBadgeBuchhaltung": "Přijde od 1. 1. 2027",
     "hinweis": "Základní faktury jsou součástí spuštění. Rozšířené účetnictví (export DATEV), správa zaměstnanců, tržiště poskytovatelů služeb, hotelové funkce a avatar jsou doplňkové moduly.",
     "eyebrow": "Funkce",
     "sub": "Jeden přístup pro provoz, vlastníky, hosty i úklid — každá role vidí přesně svou oblast.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Vyhodnocení",
-        "items": "Obsazenost, tržby, ADR, automatické reporty, srovnání kanálů, metavyhledávače již brzy"
+        "items": "Obsazenost, tržby, ADR, automatické reporty, porovnání kanálů, metasíť přijde v roce 2027"
       },
       "eigentuemer": {
         "title": "Vyúčtování pro majitele",
@@ -746,7 +747,7 @@
     "blaseFrage": "Jaká je obsazenost příští týden?",
     "blaseAntwort": "18 z 24 nocí obsazeno. Dvě mezery o víkendu – snížit cenu?",
     "eingabe": "Zeptejte se myNextDays …",
-    "baldBadge": "Již brzy"
+    "baldBadge": "Přijde v roce 2027"
   },
   "integrationen": {
     "eyebrow": "Dosah",

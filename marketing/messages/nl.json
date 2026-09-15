@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Eén systeem. Eén login.",
-    "baldBadge": "Binnenkort",
+    "baldBadge": "Komt in 2027",
+    "baldBadgeBuchhaltung": "Komt vanaf 01-01-2027",
     "hinweis": "Basis facturen zijn inbegrepen bij de lancering. Uitgebreide boekhouding (DATEV-export), medewerkersbeheer, dienstverlenersmarktplaats, hotelfuncties en de avatar zijn extra modules.",
     "eyebrow": "Functies",
     "sub": "Eén toegang voor het bedrijf, eigenaren, gasten en schoonmaak – elke rol ziet precies het eigen gedeelte.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analyses",
-        "items": "Bezetting, omzet, ADR, automatische rapporten, kanaalvergelijking, metasearch binnenkort"
+        "items": "Bezetting, omzet, ADR, automatische rapporten, kanaalvergelijking, metazoekmachine komt in 2027"
       },
       "eigentuemer": {
         "title": "Eigenaarsafrekening",
@@ -746,7 +747,7 @@
     "blaseFrage": "Hoe is de bezetting volgende week?",
     "blaseAntwort": "18 van de 24 nachten bezet. Twee gaten in het weekend – prijs verlagen?",
     "eingabe": "Vraag het myNextDays …",
-    "baldBadge": "Binnenkort"
+    "baldBadge": "Komt in 2027"
   },
   "integrationen": {
     "eyebrow": "Bereik",

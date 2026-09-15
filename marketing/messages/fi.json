@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Yksi järjestelmä. Yksi kirjautuminen.",
-    "baldBadge": "Pian saatavilla",
+    "baldBadge": "Tulossa 2027",
+    "baldBadgeBuchhaltung": "Tulossa 1.1.2027 alkaen",
     "hinweis": "Peruslaskut sisältyvät julkaisuun. Laajennettu kirjanpito (DATEV-vienti), henkilöstöhallinto, palveluntarjoajien markkinapaikka, hotellitoiminnot ja Avatar ovat lisämoduuleja.",
     "eyebrow": "Ominaisuudet",
     "sub": "Yksi kirjautuminen yritykselle, omistajille, vieraille ja siivoukselle – jokainen rooli näkee täsmälleen oman alueensa.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Raportit",
-        "items": "Käyttöaste, myynti, ADR, automaattiset raportit, kanavavertailu, metahaku pian"
+        "items": "Käyttöaste, liikevaihto, ADR, automaattiset raportit, kanavavertailu, metahaku tulossa 2027"
       },
       "eigentuemer": {
         "title": "Omistajan laskutus",
@@ -746,7 +747,7 @@
     "blaseFrage": "Mikä on ensi viikon käyttöaste?",
     "blaseAntwort": "18 yötä 24:stä varattu. Kaksi aukkoa viikonloppuna – lasketaanko hintaa?",
     "eingabe": "Kysy myNextDaysilta …",
-    "baldBadge": "Pian saatavilla"
+    "baldBadge": "Tulossa 2027"
   },
   "integrationen": {
     "eyebrow": "Näkyvyys",

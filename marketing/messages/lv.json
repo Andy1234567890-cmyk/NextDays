@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Viena sistēma. Viena pieteikšanās.",
-    "baldBadge": "Drīzumā",
+    "baldBadge": "Būs pieejams 2027. gadā",
+    "baldBadgeBuchhaltung": "Būs pieejams no 01.01.2027",
     "hinweis": "Pamata rēķini ir iekļauti palaišanas brīdī. Paplašināta grāmatvedība (DATEV eksports), darbinieku pārvaldība, pakalpojumu sniedzēju tirgus, viesnīcu funkcijas un avatars ir papildu moduļi.",
     "eyebrow": "Funkcijas",
     "sub": "Viena piekļuve uzņēmumam, īpašniekiem, viesiem un uzkopšanai — katra loma redz tieši savu jomu.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analītika",
-        "items": "Noslodze, ieņēmumi, ADR, automātiskās atskaites, kanālu salīdzinājums, metameklēšana drīzumā"
+        "items": "Noslogojums, ieņēmumi, ADR, automātiskie pārskati, kanālu salīdzinājums, metameklēšana būs pieejama 2027. gadā"
       },
       "eigentuemer": {
         "title": "Īpašnieka norēķini",
@@ -746,7 +747,7 @@
     "blaseFrage": "Kāda ir noslodze nākamnedēļ?",
     "blaseAntwort": "Aizņemtas 18 no 24 naktīm. Divas brīvas vietas nedēļas nogalē – varbūt samazināt cenu?",
     "eingabe": "Jautājiet myNextDays …",
-    "baldBadge": "Drīzumā"
+    "baldBadge": "Būs pieejams 2027. gadā"
   },
   "integrationen": {
     "eyebrow": "Sasniedzamība",

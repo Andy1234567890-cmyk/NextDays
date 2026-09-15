@@ -669,7 +669,8 @@
   },
   "features": {
     "heading": "Viena sistema. Vienas prisijungimas.",
-    "baldBadge": "Netrukus",
+    "baldBadge": "Pasirodys 2027 m.",
+    "baldBadgeBuchhaltung": "Pasirodys nuo 2027-01-01",
     "hinweis": "Pagrindinės sąskaitos faktūros yra įtrauktos nuo paleidimo. Išplėstinė apskaita (DATEV eksportas), darbuotojų valdymas, paslaugų teikėjų prekyvietė, viešbučio funkcijos ir avataras yra papildomi moduliai.",
     "eyebrow": "Funkcijos",
     "sub": "Viena prieiga verslui, savininkams, svečiams ir valymo tarnybai — kiekvienas vaidmuo mato tiksliai savo sritį.",
@@ -718,7 +719,7 @@
       },
       "auswertungen": {
         "title": "Analitika",
-        "items": "Užimtumas, pajamos, ADR, automatinės ataskaitos, kanalų palyginimas, metapaieška netrukus"
+        "items": "Užimtumas, pajamos, ADR, automatinės ataskaitos, kanalų palyginimas, metapaieška pasirodys 2027 m."
       },
       "eigentuemer": {
         "title": "Savininko atsiskaitymas",
@@ -746,7 +747,7 @@
     "blaseFrage": "Koks užimtumas kitą savaitę?",
     "blaseAntwort": "Užimtos 18 iš 24 naktų. Dvi spragos savaitgalį – gal sumažinti kainą?",
     "eingabe": "Klauskite myNextDays …",
-    "baldBadge": "Netrukus"
+    "baldBadge": "Pasirodys 2027 m."
   },
   "integrationen": {
     "eyebrow": "Pasiekiamumas",
