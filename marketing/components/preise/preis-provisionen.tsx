@@ -16,7 +16,6 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { SectionHeading } from "@/components/marketing/section-kit";
 import { PROVISION_ILLUSTRATION } from "@/components/preise/preis-illustrationen";
-import { Icon } from "@/components/ui/icon";
 import { formatCurrency } from "@/lib/currency";
 import { formatProzent, type Preisliste } from "@/lib/preise";
 
@@ -47,6 +46,19 @@ export function PreisProvisionen({ liste }: { liste: Preisliste | null }) {
       wert: formatProzent(liste.commission_marketplace_percent, locale),
     },
   ];
+
+  // Der Monatsdeckel ist das eigentliche Versprechen der Portal-Karte: die
+  // Provision kann nicht mit dem Umsatz mitwachsen. Er steht deshalb IM Text
+  // dieser Karte und nicht als eigener Satz darunter — dort las er sich wie
+  // eine Fußnote zu allen drei Wegen, gilt aber nur für die Portale. Ohne
+  // Währung wäre die Zahl in 24 Ländern eine andere, sie kommt deshalb mit
+  // ihrer Währung aus dem Backend (Wurzel 4).
+  const deckel = formatCurrency(
+    liste.commission_external_cap_amount,
+    liste.commission_external_cap_currency,
+    locale,
+    0,
+  );
 
   return (
     <section className="bg-background">
@@ -82,30 +94,11 @@ export function PreisProvisionen({ liste }: { liste: Preisliste | null }) {
                 {t(`${weg.key}Titel`)}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {t(`${weg.key}Text`, { satz: weg.wert })}
+                {t(`${weg.key}Text`, { satz: weg.wert, betrag: deckel })}
               </p>
             </div>
           ))}
         </div>
-
-        {/* Der Monatsdeckel ist das eigentliche Versprechen: die Portal-
-            Provision kann nicht mit dem Umsatz mitwachsen. Ohne Währung wäre
-            die Zahl in 24 Ländern eine andere — sie kommt deshalb mit ihrer
-            Währung aus dem Backend. */}
-        <p className="mx-auto mt-10 max-w-3xl rounded-2xl bg-surface-warm px-6 py-5 text-center text-sm leading-relaxed">
-          <Icon
-            icon="ph:shield-check"
-            className="mr-2 inline-block size-4 align-[-0.2em] text-accent"
-          />
-          {t("deckel", {
-            betrag: formatCurrency(
-              liste.commission_external_cap_amount,
-              liste.commission_external_cap_currency,
-              locale,
-              0,
-            ),
-          })}
-        </p>
       </div>
     </section>
   );

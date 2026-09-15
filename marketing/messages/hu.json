@@ -493,8 +493,7 @@
       "ferienwohnung": "Nyaralóapartman",
       "resort": "Resort",
       "huette": "Faház",
-      "pension": "Panzió",
-      "campingplatz": "Kemping"
+      "pension": "Panzió"
     },
     "belegeHeading": "Amire számíthat",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Panziókezelés számlával és idegenforgalmi adóval",
         "text": "Félpanzió, idegenforgalmi adó, visszatérő vendégek, helyszíni fizetés: a felárakat és adókat a rendszer portálonként helyesen számolja — ott is, ahol a portál nettó összeget jelent, neked pedig a bruttó árra van szükséged. A számlák, jóváírások és nyitott tételek ugyanabban az ügyben állnak, mint a foglalás, az országod pénznemében. A visszatérő vendégeket az előzményeikről ismered fel, nem régi levelek keresésével.",
         "beleg": "Adók portálonként, helyesen számolva."
-      },
-      "campingplatz": {
-        "unterzeile": "Kempingkezelés parcellákkal",
-        "text": "A parcellák, bérelhető lakókocsik és glamping sátrak darabszámmal bíró típusok: húsz egyforma parcella egy típus húsz egységgel, nem húsz naptár. A szabad kapacitás számként megy a portálokra, hogy soha ne adj el többet, mint amennyi van. Az áramot, idegenforgalmi adót vagy kutyát éjszakánként vagy tartózkodásonként számolod el, a napi érkezések pedig összegyűjtve állnak a napi tervben.",
-        "beleg": "Darabszám húsz naptár helyett."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Mit tud a platform, mennyibe kerül és hogyan védjük az adataidat — marketingnyelv nélkül.",
     "was": {
       "frage": "Mi is pontosan a myNextDays?",
-      "antwort": "A myNextDays egy szálláskezelő rendszer és egy channel manager egyben — hotelekhez, panziókhoz, vendégházakhoz, nyaralóapartmanokhoz, kempingekhez és ügynökségekhez. Naptár, foglalások, árak, portálok, közvetlen foglalás, vendégkommunikáció, takarítás és elszámolás egy felületen, egy belépéssel van, nem négy eszközben, amelyek nem tudnak egymásról."
+      "antwort": "A myNextDays egy szálláskezelő rendszer és egy channel manager egyben — hotelekhez, panziókhoz, vendégházakhoz, nyaralóapartmanokhoz és ügynökségekhez. Naptár, foglalások, árak, portálok, közvetlen foglalás, vendégkommunikáció, takarítás és elszámolás egy felületen, egy belépéssel van, nem négy eszközben, amelyek nem tudnak egymásról."
     },
     "portale": {
       "frage": "Mely foglalási portálokat kapcsolhatom be?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "AI-válaszok",
-        "items": "Válaszol a vendégkönyvéből, témánkénti szabályok, tervezet vagy automatikus, eszkaláció probléma esetén, 24 nyelv"
+        "items": "Válaszol a vendégkönyvéből, témánkénti szabályok, tervezet vagy automatikus, deeszkaláció probléma esetén, 24 nyelv"
       },
       "zahlungen": {
         "title": "Fizetés és számlázás",
@@ -969,10 +963,9 @@
       "direktText": "A saját weboldaladon vagy foglalási űrlapodon keresztül. Ebből semmit nem viszünk el. Csak a fizetési szolgáltatód díja marad.",
       "direktWert": "0 %",
       "portaleTitel": "A vendég a Bookingról, Airbnb-ről és társaiktól jön",
-      "portaleText": "A díjunk {satz} a foglalás értékéből, havonta egyszer a számládon. Amit maga a portál tart vissza, attól független.",
+      "portaleText": "A díjunk {satz} a foglalás értékéből, havonta egyszer a számládon — havi {betrag} felső határral. Amit maga a portál tart vissza, attól független.",
       "marktplatzTitel": "A vendég a myBestDaysen át jön",
-      "marktplatzText": "A saját piacterünk. Itt olyan vendégek találnak rád, akik még nem ismernek. Mi hozzuk a foglalást, beszedjük a pénzt és kifizetjük neked — a jutalékunk ezért {satz}. További költség nincs.",
-      "deckel": "És van felső határ: portálos foglalásokért soha nem fizetsz többet, mint {betrag} havonta."
+      "marktplatzText": "A saját piacterünk. Itt olyan vendégek találnak rád, akik még nem ismernek. Mi hozzuk a foglalást, beszedjük a pénzt és kifizetjük neked — a jutalékunk ezért {satz}. További költség nincs."
     },
     "module": {
       "eyebrow": "Kiegészítő modulok",

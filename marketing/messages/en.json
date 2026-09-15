@@ -500,8 +500,7 @@
       "ferienwohnung": "Holiday rental",
       "resort": "Resort",
       "huette": "Cabin",
-      "pension": "Inn",
-      "campingplatz": "Campsite"
+      "pension": "Inn"
     },
     "eyebrow": "The platform",
     "typenEyebrow": "Who it is for"
@@ -554,11 +553,6 @@
         "unterzeile": "Guesthouse administration with invoices and tourist tax",
         "text": "Half board, tourist tax, regulars, payment on site: the system calculates surcharges and levies correctly for each portal — including where the portal reports a net amount and you need the gross price. Invoices, credit notes and open items sit in the same record as the booking, in your country's currency. Returning guests are recognised by their history instead of a search through old emails.",
         "beleg": "Levies per portal, calculated correctly."
-      },
-      "campingplatz": {
-        "unterzeile": "Campsite management with pitches",
-        "text": "Pitches, rental caravans and glamping tents are types with a count: twenty identical pitches are one type with twenty units, not twenty calendars. Availability goes to the portals as a number so you never sell more than you have. Electricity, tourist tax or a dog are charged per night or per stay, and the day's arrivals are bundled in the day plan.",
-        "beleg": "A count instead of twenty calendars."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "What the platform does, what it costs and how your data is protected — without marketing speak.",
     "was": {
       "frage": "What exactly is myNextDays?",
-      "antwort": "myNextDays is a property management system and a channel manager in one — for hotels, guesthouses, holiday apartments, campsites and agencies. Calendar, reservations, prices, portals, direct bookings, guest messaging, housekeeping and billing sit in one interface with one login, instead of four tools that know nothing about each other."
+      "antwort": "myNextDays is a property management system and a channel manager in one — for hotels, guesthouses, holiday apartments and agencies. Calendar, reservations, prices, portals, direct bookings, guest messaging, housekeeping and billing sit in one interface with one login, instead of four tools that know nothing about each other."
     },
     "portale": {
       "frage": "Which booking portals can I connect?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "AI answers",
-        "items": "Answers from your guest directory, rules by topic, draft or automatic, escalation in case of trouble, 24 languages"
+        "items": "Answers from your guest directory, rules by topic, draft or automatic, de-escalation in case of trouble, 24 languages"
       },
       "zahlungen": {
         "title": "Payments & accounting",
@@ -969,10 +963,9 @@
       "direktText": "Through your own website or booking form. We take nothing from that. Only your payment provider's fee remains.",
       "direktWert": "0 %",
       "portaleTitel": "The guest comes from Booking, Airbnb & co.",
-      "portaleText": "We charge {satz} of the booking value, once a month on your invoice. Whatever the channel itself keeps is separate from this.",
+      "portaleText": "We charge {satz} of the booking value, once a month on your invoice — capped at {betrag} a month. Whatever the channel itself keeps is separate from this.",
       "marktplatzTitel": "The guest comes via myBestDays",
-      "marktplatzText": "Our own marketplace. Here guests find you who do not know you yet. We bring the booking, collect the money and pay it out to you — for that we keep {satz}. There are no further costs.",
-      "deckel": "And there is a cap: for bookings from channels you never pay more than {betrag} a month."
+      "marktplatzText": "Our own marketplace. Here guests find you who do not know you yet. We bring the booking, collect the money and pay it out to you — for that we keep {satz}. There are no further costs."
     },
     "module": {
       "eyebrow": "Add-on modules",

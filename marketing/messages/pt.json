@@ -493,8 +493,7 @@
       "ferienwohnung": "Alojamento de férias",
       "resort": "Resort",
       "huette": "Cabana",
-      "pension": "Pensão",
-      "campingplatz": "Parque de campismo"
+      "pension": "Pensão"
     },
     "belegeHeading": "Aquilo com que pode contar",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Gestão de pensões com fatura e taxa turística",
         "text": "Meia pensão, taxa turística, clientes habituais, pagamento no local: o sistema calcula suplementos e taxas corretamente por portal — mesmo onde o portal comunica um valor líquido e tu precisas do preço bruto. Faturas, notas de crédito e valores em aberto ficam no mesmo processo da reserva, na moeda do teu país. Os hóspedes que voltam reconheces pelo histórico, sem procurar em e-mails antigos.",
         "beleg": "Taxas por portal, calculadas certas."
-      },
-      "campingplatz": {
-        "unterzeile": "Gestão de parques de campismo com lugares",
-        "text": "Lugares, caravanas de aluguer e tendas de glamping são tipos com quantidade: vinte lugares iguais são um tipo com vinte unidades, não vinte calendários. A disponibilidade vai para os portais como número, para nunca vender mais do que existe. Eletricidade, taxa turística ou cão cobram-se por noite ou por estadia, e as chegadas do dia ficam reunidas no plano diário.",
-        "beleg": "Uma quantidade em vez de vinte calendários."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "O que a plataforma faz, quanto custa e como os teus dados estão protegidos — sem linguagem de marketing.",
     "was": {
       "frage": "O que é exatamente o myNextDays?",
-      "antwort": "O myNextDays é um sistema de gestão de propriedades e um channel manager num só — para hotéis, pensões, casas de hóspedes, alojamento local, parques de campismo e agências. Calendário, reservas, preços, portais, reserva direta, comunicação com o hóspede, limpeza e faturação ficam numa única interface com um só acesso, em vez de quatro ferramentas que se ignoram."
+      "antwort": "O myNextDays é um sistema de gestão de propriedades e um channel manager num só — para hotéis, pensões, casas de hóspedes, alojamento local e agências. Calendário, reservas, preços, portais, reserva direta, comunicação com o hóspede, limpeza e faturação ficam numa única interface com um só acesso, em vez de quatro ferramentas que se ignoram."
     },
     "portale": {
       "frage": "Que portais de reservas posso ligar?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Respostas de IA",
-        "items": "Responde a partir do seu guia de hóspedes, regras por tópico, rascunho ou automaticamente, escalada em caso de problemas, 24 idiomas"
+        "items": "Responde a partir do seu guia de hóspedes, regras por tópico, rascunho ou automaticamente, desescalada em caso de problemas, 24 idiomas"
       },
       "zahlungen": {
         "title": "Pagamentos e faturação",
@@ -969,10 +963,9 @@
       "direktText": "Pelo seu próprio site ou pelo seu formulário de reserva. Daí não retiramos nada. Fica apenas a taxa do seu prestador de pagamentos.",
       "direktWert": "0 %",
       "portaleTitel": "O hóspede vem do Booking, Airbnb e afins",
-      "portaleText": "Cobramos {satz} do valor da reserva, uma vez por mês na sua fatura. O que o portal retém é independente disto.",
+      "portaleText": "Cobramos {satz} do valor da reserva, uma vez por mês na sua fatura — com um limite de {betrag} por mês. O que o portal retém é independente disto.",
       "marktplatzTitel": "O hóspede vem pelo myBestDays",
-      "marktplatzText": "O nosso marketplace. Aqui encontram-no hóspedes que ainda não o conhecem. Trazemos a reserva, cobramos o dinheiro e pagamos-lho — a nossa comissão por isso é de {satz}. Não há mais custos.",
-      "deckel": "E há um limite: nas reservas de portais nunca paga mais de {betrag} por mês."
+      "marktplatzText": "O nosso marketplace. Aqui encontram-no hóspedes que ainda não o conhecem. Trazemos a reserva, cobramos o dinheiro e pagamos-lho — a nossa comissão por isso é de {satz}. Não há mais custos."
     },
     "module": {
       "eyebrow": "Módulos adicionais",

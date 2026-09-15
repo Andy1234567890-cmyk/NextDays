@@ -493,8 +493,7 @@
       "ferienwohnung": "Árasán saoire",
       "resort": "Ionad saoire",
       "huette": "Bothán",
-      "pension": "Teach lóistín",
-      "campingplatz": "Láithreán campála"
+      "pension": "Teach lóistín"
     },
     "belegeHeading": "Cad air ar féidir leat brath",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Riar teach lóistín le sonraisc agus cáin turasóireachta",
         "text": "Leathchothú, cáin turasóireachta, aíonna rialta, íocaíocht ar an láthair: ríomhann an córas breismhuirir agus cánacha i gceart do gach tairseach — fiú nuair a thuairiscíonn an tairseach glanmhéid agus gur gá duit an praghas comhlán. Tá sonraisc, nótaí creidmheasa agus míreanna oscailte sa taifead céanna leis an áirithint, in airgeadra do thíre. Aithnítear aíonna a fhilleann ar a stair in ionad cuardach i seanríomhphoist.",
         "beleg": "Cánacha in aghaidh na tairsí, ríofa i gceart."
-      },
-      "campingplatz": {
-        "unterzeile": "Bainistiú láithreán campála le láithreacha",
-        "text": "Is cineálacha le líon iad láithreacha, carbháin ar cíos agus pubaill glampála: fiche láithreán mar an gcéanna, sin aon chineál le fiche aonad, ní fiche féilire. Téann an fáilteacht chuig na tairseacha mar uimhir, ionas nach ndíoltar níos mó ná mar atá ann. Gearrtar leictreachas, cáin turasóireachta nó madra in aghaidh na hoíche nó in aghaidh na fanachta, agus tá teachtaí an lae bailithe le chéile i bplean an lae.",
-        "beleg": "Líon in ionad fiche féilire."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Cad a dhéanann an t-ardán, cad a chosnaíonn sé agus conas a chosnaítear do chuid sonraí — gan chaint mhargaíochta.",
     "was": {
       "frage": "Cad é myNextDays go beacht?",
-      "antwort": "Is córas bainistithe lóistín agus channel manager in aon rud amháin é myNextDays — d'óstáin, do thithe lóistín, do thithe aíochta, d'árasáin saoire, do láithreáin champála agus do ghníomhaireachtaí. Tá an féilire, na háirithintí, na praghsanna, na tairseacha, an áirithint dhíreach, an chumarsáid le haíonna, an glanadh agus an billeáil in aon chomhéadan amháin le haon logáil isteach, in ionad ceithre uirlis nach bhfuil eolas ar bith ag ceann amháin ar an gceann eile."
+      "antwort": "Is córas bainistithe lóistín agus channel manager in aon rud amháin é myNextDays — d'óstáin, do thithe lóistín, do thithe aíochta, d'árasáin saoire agus do ghníomhaireachtaí. Tá an féilire, na háirithintí, na praghsanna, na tairseacha, an áirithint dhíreach, an chumarsáid le haíonna, an glanadh agus an billeáil in aon chomhéadan amháin le haon logáil isteach, in ionad ceithre uirlis nach bhfuil eolas ar bith ag ceann amháin ar an gceann eile."
     },
     "portale": {
       "frage": "Cé na tairseacha áirithinte is féidir liom a nascadh?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Freagraí AI",
-        "items": "Freagraí ó do leabhar aíochta, rialacha de réir topaicí, dréacht nó go huathoibríoch, ardú céime i gcás fadhbanna, 24 teanga"
+        "items": "Freagraí ó do leabhar aíochta, rialacha de réir topaicí, dréacht nó go huathoibríoch, maolú i gcás fadhbanna, 24 teanga"
       },
       "zahlungen": {
         "title": "Íocaíochtaí & billeáil",
@@ -969,10 +963,9 @@
       "direktText": "Trí do shuíomh gréasáin nó d'fhoirm áirithinte. Ní thógaimid tada uaidh sin. Ní fhanann ach táille do sholáthraí íocaíochta.",
       "direktWert": "0 %",
       "portaleTitel": "Tagann an t-aoi ó Booking, Airbnb agus a leithéidí",
-      "portaleText": "Gearraimid {satz} de luach na háirithinte, uair sa mhí ar do shonrasc. Tá an méid a choinníonn an tairseach féin neamhspleách air sin.",
+      "portaleText": "Gearraimid {satz} de luach na háirithinte, uair sa mhí ar do shonrasc — le uasteorainn {betrag} sa mhí. Tá an méid a choinníonn an tairseach féin neamhspleách air sin.",
       "marktplatzTitel": "Tagann an t-aoi trí myBestDays",
-      "marktplatzText": "Ár margadh féin. Anseo aimsíonn aíonna thú nach bhfuil aithne acu ort fós. Tugaimid an áirithint, bailímid an t-airgead agus íocaimid leat é — coinnímid {satz} dá bharr. Níl aon chostais eile ann.",
-      "deckel": "Agus tá uasteorainn ann: ar áirithintí ó thairseacha ní íocann tú riamh níos mó ná {betrag} sa mhí."
+      "marktplatzText": "Ár margadh féin. Anseo aimsíonn aíonna thú nach bhfuil aithne acu ort fós. Tugaimid an áirithint, bailímid an t-airgead agus íocaimid leat é — coinnímid {satz} dá bharr. Níl aon chostais eile ann."
     },
     "module": {
       "eyebrow": "Modúil bhreise",

@@ -493,8 +493,7 @@
       "ferienwohnung": "Apartament de vacanță",
       "resort": "Resort",
       "huette": "Cabană",
-      "pension": "Pensiune",
-      "campingplatz": "Camping"
+      "pension": "Pensiune"
     },
     "belegeHeading": "Pe ce te poți baza",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Administrare de pensiune cu factură și taxă de sejur",
         "text": "Demipensiune, taxă de sejur, clienți fideli, plata la fața locului: suplimentele și taxele sunt calculate corect de sistem pentru fiecare portal — inclusiv acolo unde portalul raportează o sumă netă, iar tu ai nevoie de prețul brut. Facturile, notele de credit și pozițiile deschise stau în același dosar cu rezervarea, în moneda țării tale. Oaspeții care revin se recunosc din istoricul lor, nu prin căutări în mailuri vechi.",
         "beleg": "Taxe per portal, calculate corect."
-      },
-      "campingplatz": {
-        "unterzeile": "Administrare de camping cu parcele",
-        "text": "Parcelele, caravanele de închiriat și corturile de glamping sunt tipuri cu cantitate: douăzeci de parcele identice sunt un tip cu douăzeci de unități, nu douăzeci de calendare. Disponibilitatea merge la portaluri ca număr, ca să nu vinzi niciodată mai mult decât ai. Curentul, taxa de sejur sau câinele se facturează pe noapte sau pe sejur, iar sosirile zilei stau adunate în planul zilei.",
-        "beleg": "O cantitate în loc de douăzeci de calendare."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Ce face platforma, cât costă și cum sunt protejate datele tale — fără limbaj de marketing.",
     "was": {
       "frage": "Ce este exact myNextDays?",
-      "antwort": "myNextDays este un sistem de administrare a proprietăților și un channel manager într-unul — pentru hoteluri, pensiuni, case de oaspeți, apartamente de vacanță, campinguri și agenții. Calendar, rezervări, prețuri, portaluri, rezervare directă, comunicare cu oaspeții, curățenie și facturare stau într-o singură interfață cu un singur cont, în loc de patru unelte care nu știu una de alta."
+      "antwort": "myNextDays este un sistem de administrare a proprietăților și un channel manager într-unul — pentru hoteluri, pensiuni, case de oaspeți, apartamente de vacanță și agenții. Calendar, rezervări, prețuri, portaluri, rezervare directă, comunicare cu oaspeții, curățenie și facturare stau într-o singură interfață cu un singur cont, în loc de patru unelte care nu știu una de alta."
     },
     "portale": {
       "frage": "Ce portaluri de rezervare pot conecta?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Răspunsuri AI",
-        "items": "Răspunde din ghidul dvs. pentru oaspeți, reguli per subiect, ciornă sau automat, escaladare la probleme, 24 de limbi"
+        "items": "Răspunde din ghidul dvs. pentru oaspeți, reguli per subiect, ciornă sau automat, dezescaladare la probleme, 24 de limbi"
       },
       "zahlungen": {
         "title": "Plăți și facturare",
@@ -969,10 +963,9 @@
       "direktText": "Prin propriul site sau formularul tău de rezervare. De acolo nu luăm nimic. Rămâne doar comisionul procesatorului tău de plăți.",
       "direktWert": "0 %",
       "portaleTitel": "Oaspetele vine de pe Booking, Airbnb și altele",
-      "portaleText": "Percepem {satz} din valoarea rezervării, o dată pe lună pe factura ta. Ce reține portalul însuși este independent de asta.",
+      "portaleText": "Percepem {satz} din valoarea rezervării, o dată pe lună pe factura ta — cu un plafon de {betrag} pe lună. Ce reține portalul însuși este independent de asta.",
       "marktplatzTitel": "Oaspetele vine prin myBestDays",
-      "marktplatzText": "Propriul nostru marketplace. Aici te găsesc oaspeți care încă nu te cunosc. Aducem rezervarea, încasăm banii și ți-i plătim — comisionul nostru pentru asta este de {satz}. Alte costuri nu există.",
-      "deckel": "Și există un plafon: pentru rezervările din portaluri nu plătești niciodată mai mult de {betrag} pe lună."
+      "marktplatzText": "Propriul nostru marketplace. Aici te găsesc oaspeți care încă nu te cunosc. Aducem rezervarea, încasăm banii și ți-i plătim — comisionul nostru pentru asta este de {satz}. Alte costuri nu există."
     },
     "module": {
       "eyebrow": "Module suplimentare",

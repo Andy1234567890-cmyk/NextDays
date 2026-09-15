@@ -493,8 +493,7 @@
       "ferienwohnung": "Apartament wakacyjny",
       "resort": "Resort",
       "huette": "Domek",
-      "pension": "Zajazd",
-      "campingplatz": "Kemping"
+      "pension": "Zajazd"
     },
     "belegeHeading": "Na czym możesz polegać",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Prowadzenie pensjonatu z fakturą i opłatą miejscową",
         "text": "Półpensjon, opłata miejscowa, stali goście, płatność na miejscu: dopłaty i opłaty system liczy poprawnie dla każdego portalu — także tam, gdzie portal podaje kwotę netto, a ty potrzebujesz ceny brutto. Faktury, korekty i pozycje otwarte stoją w tej samej sprawie co rezerwacja, w walucie twojego kraju. Powracających gości poznajesz po historii, a nie po szukaniu w starych mailach.",
         "beleg": "Opłaty per portal, policzone poprawnie."
-      },
-      "campingplatz": {
-        "unterzeile": "Zarządzanie kempingiem ze stanowiskami",
-        "text": "Stanowiska, przyczepy na wynajem i namioty glampingowe to typy z liczbą sztuk: dwadzieścia takich samych stanowisk to jeden typ z dwudziestoma jednostkami, a nie dwadzieścia kalendarzy. Dostępność idzie do portali jako liczba, żeby nigdy nie sprzedać więcej, niż jest. Prąd, opłatę miejscową czy psa rozliczasz za noc lub za pobyt, a przyjazdy dnia stoją zebrane w planie dnia.",
-        "beleg": "Liczba sztuk zamiast dwudziestu kalendarzy."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Co robi platforma, ile kosztuje i jak chronione są twoje dane — bez marketingowej nowomowy.",
     "was": {
       "frage": "Czym dokładnie jest myNextDays?",
-      "antwort": "myNextDays to system zarządzania obiektami i channel manager w jednym — dla hoteli, pensjonatów, domów gościnnych, apartamentów wakacyjnych, kempingów i agencji. Kalendarz, rezerwacje, ceny, portale, rezerwacja bezpośrednia, komunikacja z gościem, sprzątanie i rozliczenia są w jednym interfejsie z jednym loginem, a nie w czterech narzędziach, które nic o sobie nie wiedzą."
+      "antwort": "myNextDays to system zarządzania obiektami i channel manager w jednym — dla hoteli, pensjonatów, domów gościnnych, apartamentów wakacyjnych i agencji. Kalendarz, rezerwacje, ceny, portale, rezerwacja bezpośrednia, komunikacja z gościem, sprzątanie i rozliczenia są w jednym interfejsie z jednym loginem, a nie w czterech narzędziach, które nic o sobie nie wiedzą."
     },
     "portale": {
       "frage": "Jakie portale rezerwacyjne mogę podłączyć?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Odpowiedzi AI",
-        "items": "Odpowiada z Twojej teczki gościa, zasady według tematu, szkic lub automatycznie, eskalacja w przypadku problemów, 24 języki"
+        "items": "Odpowiada z Twojej teczki gościa, zasady według tematu, szkic lub automatycznie, deeskalacja w przypadku problemów, 24 języki"
       },
       "zahlungen": {
         "title": "Płatności i rozliczenia",
@@ -969,10 +963,9 @@
       "direktText": "Przez Twoją stronę lub formularz rezerwacji. Z tego nie bierzemy nic. Zostaje tylko opłata Twojego operatora płatności.",
       "direktWert": "0 %",
       "portaleTitel": "Gość przychodzi z Booking, Airbnb i innych",
-      "portaleText": "Naliczamy {satz} wartości rezerwacji, raz w miesiącu na Twojej fakturze. To, co zatrzymuje sam portal, jest od tego niezależne.",
+      "portaleText": "Naliczamy {satz} wartości rezerwacji, raz w miesiącu na Twojej fakturze — z limitem {betrag} miesięcznie. To, co zatrzymuje sam portal, jest od tego niezależne.",
       "marktplatzTitel": "Gość przychodzi przez myBestDays",
-      "marktplatzText": "Nasz własny marketplace. Tu znajdują Cię goście, którzy jeszcze Cię nie znają. Przynosimy rezerwację, pobieramy pieniądze i wypłacamy je Tobie — nasza prowizja za to wynosi {satz}. Innych kosztów nie ma.",
-      "deckel": "I jest limit: za rezerwacje z portali nigdy nie zapłacisz więcej niż {betrag} miesięcznie."
+      "marktplatzText": "Nasz własny marketplace. Tu znajdują Cię goście, którzy jeszcze Cię nie znają. Przynosimy rezerwację, pobieramy pieniądze i wypłacamy je Tobie — nasza prowizja za to wynosi {satz}. Innych kosztów nie ma."
     },
     "module": {
       "eyebrow": "Moduły dodatkowe",

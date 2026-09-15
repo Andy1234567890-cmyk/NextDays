@@ -1,6 +1,6 @@
 "use client";
 
-// Zielgruppen — die zehn Unterkunftsarten als gestapelte Scroll-Karten.
+// Zielgruppen — die neun Unterkunftsarten als gestapelte Scroll-Karten.
 //
 // Referenz-UX: st-sicherheitsdienst.de, Abschnitt „Ablauf unserer
 // Zusammenarbeit" (deren `/scripts/process-stack.js`, ausgelesen 14.08.2026).
@@ -13,7 +13,7 @@
 //     Tiefenstufe um STAPEL_VERSATZ nach oben, dabei minimal kleiner.
 //   • Links leuchtet genau die Nummer der aktiven Karte (round(sp)).
 //
-// Unter der lg-Grenze läuft KEIN Stapel: neun Bildschirmhöhen Blindscroll sind
+// Unter der lg-Grenze läuft KEIN Stapel: acht Bildschirmhöhen Blindscroll sind
 // auf einem Handy kein Effekt, sondern eine Sperre. Dort steht dieselbe Liste
 // als gewöhnliche Karten untereinander.
 //
@@ -43,7 +43,6 @@ const TYPEN = [
   "resort",
   "huette",
   "pension",
-  "campingplatz",
 ] as const;
 
 // Stapel-Kennwerte der Referenz: 18 px Versatz und 1,8 % Verkleinerung je

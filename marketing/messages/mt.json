@@ -493,8 +493,7 @@
       "ferienwohnung": "Appartament tal-vaganzi",
       "resort": "Resort",
       "huette": "Għarix",
-      "pension": "Pensjon",
-      "campingplatz": "Sit tal-camping"
+      "pension": "Pensjon"
     },
     "belegeHeading": "Fuq xiex tista' toqgħod",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Amministrazzjoni ta' pensjoni bi fatturi u taxxa turistika",
         "text": "Nofs pensjoni, taxxa turistika, mistednin regolari, ħlas fuq il-post: is-sistema tikkalkula ż-żidiet u t-taxxi sew għal kull portal — anke fejn il-portal jirrapporta ammont nett u int trid il-prezz gross. Il-fatturi, in-noti ta' kreditu u l-partiti miftuħa jinsabu fl-istess rekord tal-booking, fil-munita ta' pajjiżek. Il-mistednin li jerġgħu jiġu tagħrafhom mill-istorja tagħhom, mhux billi tfittex fi emails qodma.",
         "beleg": "Taxxi għal kull portal, kalkolati sew."
-      },
-      "campingplatz": {
-        "unterzeile": "Immaniġġjar ta' kamp bi postijiet",
-        "text": "Il-postijiet, il-karavani għall-kiri u t-tined tal-glamping huma tipi bi kwantità: għoxrin post identiku huma tip wieħed bi għoxrin unità, mhux għoxrin kalendarju. Id-disponibbiltà tmur għand il-portali bħala numru, biex qatt ma jinbiegħ aktar milli hemm. L-elettriku, it-taxxa turistika jew il-kelb tiċċarġjahom bil-lejl jew bil-żjara, u l-waslat tal-ġurnata jinsabu miġbura fil-pjan tal-ġurnata.",
-        "beleg": "Kwantità minflok għoxrin kalendarju."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "X'tagħmel il-pjattaforma, kemm tiswa u kif inhuma protetti d-data tiegħek — mingħajr lingwaġġ ta' marketing.",
     "was": {
       "frage": "X'inhu eżattament myNextDays?",
-      "antwort": "myNextDays hija sistema ta' management tal-proprjetà u channel manager f'wieħed — għal lukandi, pensjonijiet, guest houses, appartamenti tal-vaganzi, kampijiet u aġenziji. Kalendarju, bookings, prezzijiet, portali, booking dirett, komunikazzjoni mal-mistiedni, tindif u fatturazzjoni jinsabu f'interfaċċja waħda bi login wieħed, minflok f'erba' għodod li ma jafux b'xulxin."
+      "antwort": "myNextDays hija sistema ta' management tal-proprjetà u channel manager f'wieħed — għal lukandi, pensjonijiet, guest houses, appartamenti tal-vaganzi u aġenziji. Kalendarju, bookings, prezzijiet, portali, booking dirett, komunikazzjoni mal-mistiedni, tindif u fatturazzjoni jinsabu f'interfaċċja waħda bi login wieħed, minflok f'erba' għodod li ma jafux b'xulxin."
     },
     "portale": {
       "frage": "Liema portali tal-booking nista' ngħaqqad?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Tweġibiet bl-AI",
-        "items": "Tweġibiet mill-ktejjeb tal-klijenti tiegħek, regoli skont is-suġġett, abbozz jew awtomatiku, eskalazzjoni f'każ ta' problemi, 24 lingwa"
+        "items": "Tweġibiet mill-ktejjeb tal-klijenti tiegħek, regoli skont is-suġġett, abbozz jew awtomatiku, de-eskalazzjoni f'każ ta' problemi, 24 lingwa"
       },
       "zahlungen": {
         "title": "Ħlasijiet u fatturar",
@@ -969,10 +963,9 @@
       "direktText": "Permezz tas-sit tiegħek jew tal-formola tal-prenotazzjoni. Minn dan ma nieħdu xejn. Jibqa' biss il-ħlas tal-fornitur tal-pagamenti tiegħek.",
       "direktWert": "0 %",
       "portaleTitel": "Il-mistieden jiġi minn Booking, Airbnb u oħrajn",
-      "portaleText": "Nitolbu {satz} tal-valur tal-prenotazzjoni, darba fix-xahar fuq il-fattura tiegħek. Dak li żżomm il-portal innifsu huwa indipendenti minn dan.",
+      "portaleText": "Nitolbu {satz} tal-valur tal-prenotazzjoni, darba fix-xahar fuq il-fattura tiegħek — b'limitu ta' {betrag} fix-xahar. Dak li żżomm il-portal innifsu huwa indipendenti minn dan.",
       "marktplatzTitel": "Il-mistieden jiġi permezz ta' myBestDays",
-      "marktplatzText": "Is-suq tagħna stess. Hawn isibuk mistednin li għadhom ma jafukx. Aħna nġibu l-prenotazzjoni, niġbru l-flus u nħallsuhomlok — għal dan inżommu {satz}. M'hemmx spejjeż oħra.",
-      "deckel": "U hemm limitu: għal prenotazzjonijiet mill-portali qatt ma tħallas aktar minn {betrag} fix-xahar."
+      "marktplatzText": "Is-suq tagħna stess. Hawn isibuk mistednin li għadhom ma jafukx. Aħna nġibu l-prenotazzjoni, niġbru l-flus u nħallsuhomlok — għal dan inżommu {satz}. M'hemmx spejjeż oħra."
     },
     "module": {
       "eyebrow": "Moduli addizzjonali",

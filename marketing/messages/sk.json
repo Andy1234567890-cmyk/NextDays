@@ -493,8 +493,7 @@
       "ferienwohnung": "Rekreačný apartmán",
       "resort": "Rezort",
       "huette": "Chata",
-      "pension": "Hostinec",
-      "campingplatz": "Kemp"
+      "pension": "Hostinec"
     },
     "belegeHeading": "Na čo sa môžete spoľahnúť",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Vedenie penziónu s faktúrou a poplatkom za pobyt",
         "text": "Polpenzia, poplatok za pobyt, stáli hostia, platba na mieste: príplatky a poplatky systém spočíta správne pre každý portál — aj tam, kde portál hlási čistú sumu a vy potrebujete cenu brutto. Faktúry, opravné doklady a otvorené položky sú v tom istom prípade ako rezervácia, v mene vašej krajiny. Vracajúcich sa hostí poznáte podľa histórie, nie hľadaním v starých mailoch.",
         "beleg": "Poplatky podľa portálu, správne spočítané."
-      },
-      "campingplatz": {
-        "unterzeile": "Správa kempingu s miestami",
-        "text": "Miesta, karavany na prenájom a glampingové stany sú typy s počtom: dvadsať rovnakých miest je jeden typ s dvadsiatimi jednotkami, nie dvadsať kalendárov. Dostupnosť ide na portály ako číslo, aby sa nikdy nepredalo viac, než je. Elektrinu, poplatok za pobyt alebo psa účtujete za noc alebo za pobyt a príchody dňa stoja pohromade v dennom pláne.",
-        "beleg": "Počet namiesto dvadsiatich kalendárov."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Čo platforma robí, koľko stojí a ako sú chránené vaše dáta — bez marketingových fráz.",
     "was": {
       "frage": "Čo je myNextDays presne?",
-      "antwort": "myNextDays je property management systém a channel manager v jednom — pre hotely, penzióny, apartmány, kempingy a agentúry. Kalendár, rezervácie, ceny, portály, priama rezervácia, komunikácia s hosťom, úklid a vyúčtovanie sú v jednom rozhraní pod jedným prihlásením namiesto štyroch nástrojov, ktoré o sebe nevedia."
+      "antwort": "myNextDays je property management systém a channel manager v jednom — pre hotely, penzióny, apartmány a agentúry. Kalendár, rezervácie, ceny, portály, priama rezervácia, komunikácia s hosťom, úklid a vyúčtovanie sú v jednom rozhraní pod jedným prihlásením namiesto štyroch nástrojov, ktoré o sebe nevedia."
     },
     "portale": {
       "frage": "Ktoré rezervačné portály môžem pripojiť?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Odpovede AI",
-        "items": "Odpovedá z vašej knihy pre hostí, pravidlá podľa témy, návrh alebo automaticky, eskalácia pri problémoch, 24 jazykov"
+        "items": "Odpovedá z vašej knihy pre hostí, pravidlá podľa témy, návrh alebo automaticky, deeskalácia pri problémoch, 24 jazykov"
       },
       "zahlungen": {
         "title": "Platby a fakturácia",
@@ -969,10 +963,9 @@
       "direktText": "Cez váš web alebo rezervačný formulár. Z toho si neberieme nič. Zostáva len poplatok vašej platobnej brány.",
       "direktWert": "0 %",
       "portaleTitel": "Hosť prichádza z Booking, Airbnb a ďalších",
-      "portaleText": "Účtujeme {satz} z hodnoty rezervácie, raz mesačne na vašej faktúre. To, čo si necháva samotný portál, je od toho nezávislé.",
+      "portaleText": "Účtujeme {satz} z hodnoty rezervácie, raz mesačne na vašej faktúre — so stropom {betrag} mesačne. To, čo si necháva samotný portál, je od toho nezávislé.",
       "marktplatzTitel": "Hosť prichádza cez myBestDays",
-      "marktplatzText": "Naše vlastné trhovisko. Tu vás nájdu hostia, ktorí vás ešte nepoznajú. Prinesieme rezerváciu, vyberieme peniaze a vyplatíme vám ich — za to si necháme {satz}. Ďalšie náklady nie sú.",
-      "deckel": "A je tu strop: za rezervácie z portálov nikdy nezaplatíte viac než {betrag} mesačne."
+      "marktplatzText": "Naše vlastné trhovisko. Tu vás nájdu hostia, ktorí vás ešte nepoznajú. Prinesieme rezerváciu, vyberieme peniaze a vyplatíme vám ich — za to si necháme {satz}. Ďalšie náklady nie sú."
     },
     "module": {
       "eyebrow": "Doplnkové moduly",

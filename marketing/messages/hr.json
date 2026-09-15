@@ -493,8 +493,7 @@
       "ferienwohnung": "Apartman",
       "resort": "Resort",
       "huette": "Kućica",
-      "pension": "Pansion",
-      "campingplatz": "Kamp"
+      "pension": "Pansion"
     },
     "belegeHeading": "Na što se možete osloniti",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Vođenje pansiona s računom i turističkom taksom",
         "text": "Polupansion, turistička taksa, stalni gosti, plaćanje na mjestu: nadoplate i takse sustav izračunava točno za svaki portal — i tamo gdje portal javlja neto iznos, a tebi treba bruto cijena. Računi, storna i otvorene pozicije stoje u istom predmetu kao rezervacija, u valuti tvoje zemlje. Goste koji se vraćaju prepoznaješ po povijesti, a ne pretragom starih e-mailova.",
         "beleg": "Takse po portalu, točno izračunate."
-      },
-      "campingplatz": {
-        "unterzeile": "Upravljanje kampom s parcelama",
-        "text": "Parcele, kamp-prikolice za najam i glamping šatori su tipovi s količinom: dvadeset istih parcela je jedan tip s dvadeset jedinica, a ne dvadeset kalendara. Dostupnost ide na portale kao broj, da se nikad ne proda više nego što ima. Struju, turističku taksu ili psa obračunavaš po noći ili po boravku, a dolasci dana stoje skupljeni u dnevnom planu.",
-        "beleg": "Količina umjesto dvadeset kalendara."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Što platforma radi, koliko košta i kako su zaštićeni tvoji podaci — bez marketinškog jezika.",
     "was": {
       "frage": "Što je myNextDays točno?",
-      "antwort": "myNextDays je sustav za upravljanje smještajem i channel manager u jednom — za hotele, pansione, apartmane, kampove i agencije. Kalendar, rezervacije, cijene, portali, direktna rezervacija, komunikacija s gostom, čišćenje i obračun nalaze se u jednom sučelju s jednom prijavom, umjesto u četiri alata koji ne znaju jedan o drugom."
+      "antwort": "myNextDays je sustav za upravljanje smještajem i channel manager u jednom — za hotele, pansione, apartmane i agencije. Kalendar, rezervacije, cijene, portali, direktna rezervacija, komunikacija s gostom, čišćenje i obračun nalaze se u jednom sučelju s jednom prijavom, umjesto u četiri alata koji ne znaju jedan o drugom."
     },
     "portale": {
       "frage": "Koje rezervacijske portale mogu povezati?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "AI odgovori",
-        "items": "Odgovara iz vaše mape za goste, pravila po temi, nacrt ili automatski, eskalacija u slučaju problema, 24 jezika"
+        "items": "Odgovara iz vaše mape za goste, pravila po temi, nacrt ili automatski, deeskalacija u slučaju problema, 24 jezika"
       },
       "zahlungen": {
         "title": "Plaćanja i obračun",
@@ -969,10 +963,9 @@
       "direktText": "Preko vaše web stranice ili obrasca za rezervacije. Od toga ne uzimamo ništa. Ostaje samo naknada vašeg pružatelja plaćanja.",
       "direktWert": "0 %",
       "portaleTitel": "Gost dolazi s Bookinga, Airbnb-a i sličnih",
-      "portaleText": "Naplaćujemo {satz} vrijednosti rezervacije, jednom mjesečno na vašem računu. Ono što zadržava sam portal neovisno je o tome.",
+      "portaleText": "Naplaćujemo {satz} vrijednosti rezervacije, jednom mjesečno na vašem računu — uz gornju granicu od {betrag} mjesečno. Ono što zadržava sam portal neovisno je o tome.",
       "marktplatzTitel": "Gost dolazi preko myBestDays",
-      "marktplatzText": "Naše vlastito tržište. Ovdje vas pronalaze gosti koji vas još ne poznaju. Donosimo rezervaciju, naplaćujemo novac i isplaćujemo vam ga — za to zadržavamo {satz}. Drugih troškova nema.",
-      "deckel": "I postoji gornja granica: za rezervacije s portala nikada ne plaćate više od {betrag} mjesečno."
+      "marktplatzText": "Naše vlastito tržište. Ovdje vas pronalaze gosti koji vas još ne poznaju. Donosimo rezervaciju, naplaćujemo novac i isplaćujemo vam ga — za to zadržavamo {satz}. Drugih troškova nema."
     },
     "module": {
       "eyebrow": "Dodatni moduli",

@@ -493,8 +493,7 @@
       "ferienwohnung": "Semesterlägenhet",
       "resort": "Resort",
       "huette": "Stuga",
-      "pension": "Pensionat",
-      "campingplatz": "Camping"
+      "pension": "Pensionat"
     },
     "belegeHeading": "Det här kan du lita på",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Pensionatsdrift med faktura och turistskatt",
         "text": "Halvpension, turistskatt, stamgäster, betalning på plats: systemet räknar tillägg och avgifter rätt för varje portal — även där portalen rapporterar ett nettobelopp och du behöver bruttopriset. Fakturor, kreditnotor och öppna poster ligger i samma ärende som bokningen, i ditt lands valuta. Återkommande gäster känner du igen på deras historik i stället för att söka i gamla mejl.",
         "beleg": "Avgifter per portal, rätt räknat."
-      },
-      "campingplatz": {
-        "unterzeile": "Campingadministration med platser",
-        "text": "Platser, uthyrningsvagnar och glampingtält är typer med antal: tjugo likadana platser är en typ med tjugo enheter, inte tjugo kalendrar. Tillgänglighet går till portalerna som ett tal, så att aldrig mer säljs än det finns. El, turistskatt eller hund debiterar du per natt eller per vistelse, och dagens ankomster står samlade i dagsplanen.",
-        "beleg": "Ett antal i stället för tjugo kalendrar."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Vad plattformen gör, vad den kostar och hur dina uppgifter skyddas — utan marknadsföringsspråk.",
     "was": {
       "frage": "Vad är myNextDays egentligen?",
-      "antwort": "myNextDays är ett property management-system och en channel manager i ett — för hotell, pensionat, gästhus, semesterbostäder, campingplatser och förvaltare. Kalender, bokningar, priser, portaler, direktbokning, gästkommunikation, städning och avräkning ligger i ett gränssnitt med en inloggning i stället för fyra verktyg som inte vet om varandra."
+      "antwort": "myNextDays är ett property management-system och en channel manager i ett — för hotell, pensionat, gästhus, semesterbostäder och förvaltare. Kalender, bokningar, priser, portaler, direktbokning, gästkommunikation, städning och avräkning ligger i ett gränssnitt med en inloggning i stället för fyra verktyg som inte vet om varandra."
     },
     "portale": {
       "frage": "Vilka bokningsportaler kan jag koppla på?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "AI-svar",
-        "items": "Svarar från din gästmapp, regler per ämne, utkast eller automatiskt, eskalering vid problem, 24 språk"
+        "items": "Svarar från din gästmapp, regler per ämne, utkast eller automatiskt, deeskalering vid problem, 24 språk"
       },
       "zahlungen": {
         "title": "Betalningar & fakturering",
@@ -969,10 +963,9 @@
       "direktText": "Via din egen webbplats eller ditt bokningsformulär. Av det tar vi ingenting. Kvar blir bara avgiften från din betalleverantör.",
       "direktWert": "0 %",
       "portaleTitel": "Gästen kommer från Booking, Airbnb med flera",
-      "portaleText": "Vi tar {satz} av bokningsvärdet, en gång i månaden på din faktura. Vad portalen själv behåller är oberoende av detta.",
+      "portaleText": "Vi tar {satz} av bokningsvärdet, en gång i månaden på din faktura — med ett tak på {betrag} i månaden. Vad portalen själv behåller är oberoende av detta.",
       "marktplatzTitel": "Gästen kommer via myBestDays",
-      "marktplatzText": "Vår egen marknadsplats. Här hittar gäster dig som inte känner dig än. Vi ger dig bokningen, drar in pengarna och betalar ut dem till dig — för det behåller vi {satz}. Fler kostnader tillkommer inte.",
-      "deckel": "Och det finns ett tak: för bokningar från portaler betalar du aldrig mer än {betrag} i månaden."
+      "marktplatzText": "Vår egen marknadsplats. Här hittar gäster dig som inte känner dig än. Vi ger dig bokningen, drar in pengarna och betalar ut dem till dig — för det behåller vi {satz}. Fler kostnader tillkommer inte."
     },
     "module": {
       "eyebrow": "Tilläggsmoduler",

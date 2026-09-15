@@ -148,19 +148,6 @@ export function TypePension(p: Props) {
   );
 }
 
-/** Campingplatz — Zelt mit Baum. */
-export function TypeCampingplatz(p: Props) {
-  return (
-    <Frame {...p}>
-      <path d="M4 42h40" {...S} opacity="0.35" />
-      <path d="M18 12 6 42h24z" {...S} />
-      <path d="m18 24 8 18h-8" {...S} opacity="0.55" />
-      <path d="M38 42V32" {...S} />
-      <path d="M38 32a7 7 0 1 1 0-14 7 7 0 0 1 0 14" {...S} />
-    </Frame>
-  );
-}
-
 export const TYPE_ICONS = {
   hotel: TypeHotel,
   bnb: TypeBnb,
@@ -171,5 +158,4 @@ export const TYPE_ICONS = {
   resort: TypeResort,
   huette: TypeHuette,
   pension: TypePension,
-  campingplatz: TypeCampingplatz,
 } as const;

@@ -57,7 +57,6 @@ KURATIERT: dict[str, tuple[int, str]] = {
     "resort": (6821435, "Resort-Pool mit Palmen und Liegen"),
     "huette": (7185634, "Almhütte auf einer Wiese vor Bergen"),
     "pension": (11757072, "Zimmer einer Pension mit hölzernem Bettkopfteil und Nachttischlampen"),
-    "campingplatz": (10513799, "Campingplatz mit bunten Zelten zwischen Bäumen"),
 }
 
 

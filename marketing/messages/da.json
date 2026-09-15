@@ -493,8 +493,7 @@
       "ferienwohnung": "Ferielejlighed",
       "resort": "Resort",
       "huette": "Hytte",
-      "pension": "Pensionat",
-      "campingplatz": "Campingplads"
+      "pension": "Pensionat"
     },
     "belegeHeading": "Det kan du regne med",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Pensionatsdrift med faktura og kurafgift",
         "text": "Halvpension, kurafgift, faste gæster, betaling på stedet: tillæg og afgifter beregner systemet rigtigt for hver portal — også hvor portalen melder et nettobeløb, og du har brug for bruttoprisen. Fakturaer, kreditnotaer og åbne poster står i samme sag som bookingen, i dit lands valuta. Tilbagevendende gæster genkender du på deres historik i stedet for at søge i gamle mails.",
         "beleg": "Afgifter pr. portal, korrekt beregnet."
-      },
-      "campingplatz": {
-        "unterzeile": "Campingpladsadministration med pladser",
-        "text": "Pladser, udlejningsvogne og glampingtelte er typer med antal: tyve ens pladser er én type med tyve enheder, ikke tyve kalendere. Tilgængelighed går til portalerne som et tal, så der aldrig sælges mere, end der er. Strøm, kurafgift eller hund afregner du pr. nat eller pr. ophold, og dagens ankomster står samlet i dagsplanen.",
-        "beleg": "Antal i stedet for tyve kalendere."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Hvad platformen gør, hvad den koster, og hvordan dine data er beskyttet — uden markedsføringssnak.",
     "was": {
       "frage": "Hvad er myNextDays helt præcist?",
-      "antwort": "myNextDays er et property management-system og en channel manager i ét — til hoteller, pensionater, gæstehuse, ferieboliger, campingpladser og bureauer. Kalender, reservationer, priser, portaler, direkte booking, gæstekommunikation, rengøring og afregning ligger i én flade med ét login i stedet for fire værktøjer, der intet ved om hinanden."
+      "antwort": "myNextDays er et property management-system og en channel manager i ét — til hoteller, pensionater, gæstehuse, ferieboliger og bureauer. Kalender, reservationer, priser, portaler, direkte booking, gæstekommunikation, rengøring og afregning ligger i én flade med ét login i stedet for fire værktøjer, der intet ved om hinanden."
     },
     "portale": {
       "frage": "Hvilke bookingportaler kan jeg koble til?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "AI-svar",
-        "items": "Svar fra din gæstemappe, regler pr. emne, udkast eller automatisk, eskalering ved problemer, 24 sprog"
+        "items": "Svar fra din gæstemappe, regler pr. emne, udkast eller automatisk, deeskalering ved problemer, 24 sprog"
       },
       "zahlungen": {
         "title": "Betalinger & afregning",
@@ -969,10 +963,9 @@
       "direktText": "Via din egen hjemmeside eller dit bookingformular. Af det tager vi intet. Kun gebyret fra din betalingsudbyder er tilbage.",
       "direktWert": "0 %",
       "portaleTitel": "Gæsten kommer fra Booking, Airbnb m.fl.",
-      "portaleText": "Vi beregner {satz} af bookingens værdi, én gang om måneden på din faktura. Hvad portalen selv beholder, er uafhængigt af det.",
+      "portaleText": "Vi beregner {satz} af bookingens værdi, én gang om måneden på din faktura — med et loft på {betrag} om måneden. Hvad portalen selv beholder, er uafhængigt af det.",
       "marktplatzTitel": "Gæsten kommer via myBestDays",
-      "marktplatzText": "Vores egen markedsplads. Her finder gæster dig, som ikke kender dig endnu. Vi skaffer bookingen, opkræver pengene og udbetaler dem til dig — for det beholder vi {satz}. Der kommer ikke flere omkostninger.",
-      "deckel": "Og der er et loft: for bookinger fra portaler betaler du aldrig mere end {betrag} om måneden."
+      "marktplatzText": "Vores egen markedsplads. Her finder gæster dig, som ikke kender dig endnu. Vi skaffer bookingen, opkræver pengene og udbetaler dem til dig — for det beholder vi {satz}. Der kommer ikke flere omkostninger."
     },
     "module": {
       "eyebrow": "Tilvalgsmoduler",

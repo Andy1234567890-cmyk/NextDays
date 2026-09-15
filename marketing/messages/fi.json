@@ -493,8 +493,7 @@
       "ferienwohnung": "Loma-asunto",
       "resort": "Lomakeskus",
       "huette": "Mökki",
-      "pension": "Täysihoitola",
-      "campingplatz": "Leirintäalue"
+      "pension": "Täysihoitola"
     },
     "belegeHeading": "Tähän voit luottaa",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Täysihoitolan hallinta laskuilla ja matkailuverolla",
         "text": "Puolihoito, matkailuvero, kantavieraat, maksu paikan päällä: järjestelmä laskee lisät ja maksut oikein jokaiselle portaalille — myös siellä, missä portaali ilmoittaa nettosumman ja tarvitset bruttohinnan. Laskut, hyvityslaskut ja avoimet erät ovat samassa asiakirjassa varauksen kanssa, maasi valuutassa. Palaavat vieraat tunnistat historiasta etkä etsimällä vanhoja sähköposteja.",
         "beleg": "Maksut portaalikohtaisesti, oikein laskettuna."
-      },
-      "campingplatz": {
-        "unterzeile": "Leirintäalueen hallinta paikkoineen",
-        "text": "Paikat, vuokravaunut ja glamping-teltat ovat tyyppejä kappalemäärällä: kaksikymmentä samanlaista paikkaa on yksi tyyppi ja kaksikymmentä yksikköä, ei kaksikymmentä kalenteria. Saatavuus menee portaaleihin lukuna, jotta koskaan ei myydä enempää kuin on. Sähkö, matkailuvero tai koira laskutetaan yöltä tai oleskelulta, ja päivän saapumiset ovat koottuina päiväsuunnitelmaan.",
-        "beleg": "Kappalemäärä kahdenkymmenen kalenterin sijaan."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Mitä alusta tekee, mitä se kustantaa ja miten tietosi on suojattu — ilman markkinointikieltä.",
     "was": {
       "frage": "Mikä myNextDays tarkalleen on?",
-      "antwort": "myNextDays on kiinteistönhallintajärjestelmä ja channel manager yhdessä — hotelleille, täysihoitoloille, vierastaloille, vuokramökeille, leirintäalueille ja välittäjille. Kalenteri, varaukset, hinnat, portaalit, suoravaraus, vieraiden viestintä, siivous ja laskutus ovat yhdessä käyttöliittymässä yhdellä kirjautumisella, eivät neljässä työkalussa, jotka eivät tiedä toisistaan."
+      "antwort": "myNextDays on kiinteistönhallintajärjestelmä ja channel manager yhdessä — hotelleille, täysihoitoloille, vierastaloille, vuokramökeille ja välittäjille. Kalenteri, varaukset, hinnat, portaalit, suoravaraus, vieraiden viestintä, siivous ja laskutus ovat yhdessä käyttöliittymässä yhdellä kirjautumisella, eivät neljässä työkalussa, jotka eivät tiedä toisistaan."
     },
     "portale": {
       "frage": "Mitkä varausportaalit voin kytkeä?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Tekoälyvastaukset",
-        "items": "Vastaa vieraskansiosta, säännöt aiheittain, luonnos tai automaattisesti, eskalointi ongelmatilanteissa, 24 kieltä"
+        "items": "Vastaa vieraskansiosta, säännöt aiheittain, luonnos tai automaattisesti, deeskalointi ongelmatilanteissa, 24 kieltä"
       },
       "zahlungen": {
         "title": "Maksut & laskutus",
@@ -969,10 +963,9 @@
       "direktText": "Oman sivustosi tai varauslomakkeesi kautta. Siitä emme ota mitään. Jäljelle jää vain maksunvälittäjäsi kulu.",
       "direktWert": "0 %",
       "portaleTitel": "Vieras tulee Bookingista, Airbnb:stä ja muista",
-      "portaleText": "Veloitamme {satz} varauksen arvosta, kerran kuussa laskullasi. Se, minkä portaali itse pitää, on tästä riippumatonta.",
+      "portaleText": "Veloitamme {satz} varauksen arvosta, kerran kuussa laskullasi — enintään {betrag} kuukaudessa. Se, minkä portaali itse pitää, on tästä riippumatonta.",
       "marktplatzTitel": "Vieras tulee myBestDaysin kautta",
-      "marktplatzText": "Oma markkinapaikkamme. Täältä sinut löytävät vieraat, jotka eivät vielä tunne sinua. Tuomme varauksen, perimme rahat ja maksamme ne sinulle — siitä pidämme {satz}. Muita kuluja ei tule.",
-      "deckel": "Ja katto on olemassa: portaalivarauksista maksat enintään {betrag} kuukaudessa."
+      "marktplatzText": "Oma markkinapaikkamme. Täältä sinut löytävät vieraat, jotka eivät vielä tunne sinua. Tuomme varauksen, perimme rahat ja maksamme ne sinulle — siitä pidämme {satz}. Muita kuluja ei tule."
     },
     "module": {
       "eyebrow": "Lisämoduulit",

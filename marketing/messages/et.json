@@ -493,8 +493,7 @@
       "ferienwohnung": "Puhkekorter",
       "resort": "Kuurort",
       "huette": "Suvila",
-      "pension": "Võõrastemaja",
-      "campingplatz": "Kämping"
+      "pension": "Võõrastemaja"
     },
     "belegeHeading": "Millele võid kindel olla",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Pansionaadi haldus arvete ja turismimaksuga",
         "text": "Poolpansion, turismimaks, püsikliendid, kohapeal tasumine: lisatasud ja maksud arvutab süsteem iga portaali jaoks õigesti — ka seal, kus portaal teatab netosumma ja sul on vaja brutohinda. Arved, kreeditarved ja avatud read on samas toimikus koos broneeringuga, sinu riigi valuutas. Naasvaid külalisi tunned ära nende ajaloost, mitte vanade kirjade otsimisest.",
         "beleg": "Maksud portaali kaupa, õigesti arvutatud."
-      },
-      "campingplatz": {
-        "unterzeile": "Kämpingu haldus platsidega",
-        "text": "Platsid, üürihaagissuvilad ja glamping-telgid on tüübid kogusega: kakskümmend ühesugust platsi on üks tüüp kahekümne üksusega, mitte kakskümmend kalendrit. Saadavus läheb portaalidesse arvuna, et kunagi ei müüdaks rohkem kui on. Elektri, turismimaksu või koera arveldad öö või peatuse kaupa, ja päeva saabumised on koos päevaplaanis.",
-        "beleg": "Kogus kahekümne kalendri asemel."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Mida platvorm teeb, mis see maksab ja kuidas sinu andmeid kaitstakse — turunduskeeleta.",
     "was": {
       "frage": "Mis on myNextDays täpselt?",
-      "antwort": "myNextDays on majutuse haldussüsteem ja channel manager ühes — hotellidele, pansionaatidele, külalistemajadele, puhkusekorteritele, kämpingutele ja haldusfirmadele. Kalender, broneeringud, hinnad, portaalid, otsebroneering, külalissuhtlus, koristus ja arveldus on ühes liideses ühe sisselogimisega, mitte neljas tööriistas, mis üksteisest midagi ei tea."
+      "antwort": "myNextDays on majutuse haldussüsteem ja channel manager ühes — hotellidele, pansionaatidele, külalistemajadele, puhkusekorteritele ja haldusfirmadele. Kalender, broneeringud, hinnad, portaalid, otsebroneering, külalissuhtlus, koristus ja arveldus on ühes liideses ühe sisselogimisega, mitte neljas tööriistas, mis üksteisest midagi ei tea."
     },
     "portale": {
       "frage": "Milliseid broneerimisportaale saan ühendada?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "AI vastused",
-        "items": "Vastab teie külaliste kaustast, reeglid teemade kaupa, mustand või automaatne, eskaleerimine probleemide korral, 24 keelt"
+        "items": "Vastab teie külaliste kaustast, reeglid teemade kaupa, mustand või automaatne, deeskaleerimine probleemide korral, 24 keelt"
       },
       "zahlungen": {
         "title": "Maksed ja arveldus",
@@ -969,10 +963,9 @@
       "direktText": "Sinu oma veebilehe või broneerimisvormi kaudu. Sellest ei võta me midagi. Jääb ainult sinu makseteenuse tasu.",
       "direktWert": "0 %",
       "portaleTitel": "Külaline tuleb Bookingust, Airbnb-st jt",
-      "portaleText": "Arvestame {satz} broneeringu väärtusest, kord kuus sinu arvel. See, mida portaal ise endale jätab, on sellest sõltumatu.",
+      "portaleText": "Arvestame {satz} broneeringu väärtusest, kord kuus sinu arvel — ülempiiriga {betrag} kuus. See, mida portaal ise endale jätab, on sellest sõltumatu.",
       "marktplatzTitel": "Külaline tuleb myBestDaysi kaudu",
-      "marktplatzText": "Meie oma turuplats. Siin leiavad sind külalised, kes sind veel ei tunne. Toome broneeringu, kogume raha ja maksame selle sulle välja — selle eest jätame endale {satz}. Muid kulusid ei ole.",
-      "deckel": "Ja ülempiir on olemas: portaalide broneeringute eest ei maksa sa kunagi rohkem kui {betrag} kuus."
+      "marktplatzText": "Meie oma turuplats. Siin leiavad sind külalised, kes sind veel ei tunne. Toome broneeringu, kogume raha ja maksame selle sulle välja — selle eest jätame endale {satz}. Muid kulusid ei ole."
     },
     "module": {
       "eyebrow": "Lisamoodulid",

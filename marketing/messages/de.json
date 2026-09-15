@@ -500,8 +500,7 @@
       "ferienwohnung": "Ferienwohnung",
       "resort": "Resort",
       "huette": "Hütte",
-      "pension": "Pension",
-      "campingplatz": "Campingplatz"
+      "pension": "Pension"
     },
     "eyebrow": "Die Plattform",
     "typenEyebrow": "Zielgruppen"
@@ -554,11 +553,6 @@
         "unterzeile": "Pensionsverwaltung mit Rechnung und Kurtaxe",
         "text": "Halbpension, Kurtaxe, Stammgäste, Zahlung am Haus: Aufpreise und Abgaben rechnet das System je Portal richtig ab — auch dort, wo das Portal einen Netto-Betrag meldet und du den Bruttopreis brauchst. Rechnungen, Gutschriften und offene Posten stehen im selben Vorgang wie die Buchung, in der Währung deines Landes. Wiederkehrende Gäste erkennst du an ihrer Historie, statt in alten Mails zu suchen.",
         "beleg": "Abgaben je Portal, korrekt gerechnet."
-      },
-      "campingplatz": {
-        "unterzeile": "Campingplatz-Verwaltung mit Stellplätzen",
-        "text": "Stellplätze, Mietwohnwagen und Glamping-Zelte sind Typen mit Stückzahl: zwanzig gleiche Plätze sind ein Typ mit zwanzig Einheiten, kein zwanzigfacher Kalender. Verfügbarkeit geht als Zahl an die Portale, damit nie mehr verkauft wird als da ist. Strom, Kurtaxe oder Hund rechnest du pro Nacht oder pro Aufenthalt ab, und die Anreisen des Tages stehen gebündelt im Tagesplan.",
-        "beleg": "Stückzahl statt zwanzig Kalender."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Was die Plattform tut, was sie kostet und wie deine Daten geschützt sind — ohne Marketing-Sprech.",
     "was": {
       "frage": "Was ist myNextDays genau?",
-      "antwort": "myNextDays ist ein Property-Management-System und ein Channel-Manager in einem — für Hotels, Pensionen, Gästehäuser, Ferienwohnungen, Campingplätze und Agenturen. Kalender, Reservierungen, Preise, Portale, Direktbuchung, Gästekommunikation, Reinigung und Abrechnung liegen in einer Oberfläche mit einem Login, statt in vier Werkzeugen, die nichts voneinander wissen."
+      "antwort": "myNextDays ist ein Property-Management-System und ein Channel-Manager in einem — für Hotels, Pensionen, Gästehäuser, Ferienwohnungen und Agenturen. Kalender, Reservierungen, Preise, Portale, Direktbuchung, Gästekommunikation, Reinigung und Abrechnung liegen in einer Oberfläche mit einem Login, statt in vier Werkzeugen, die nichts voneinander wissen."
     },
     "portale": {
       "frage": "Welche Buchungsportale kann ich anbinden?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "KI-Antworten",
-        "items": "Antwortet aus deiner Gästemappe, Regeln je Thema, Entwurf oder automatisch, Eskalation bei Ärger, 24 Sprachen"
+        "items": "Antwortet aus deiner Gästemappe, Regeln je Thema, Entwurf oder automatisch, Deeskalation bei Ärger, 24 Sprachen"
       },
       "zahlungen": {
         "title": "Zahlungen & Abrechnung",
@@ -969,10 +963,9 @@
       "direktText": "Über deine eigene Website oder dein Buchungsformular. Davon nehmen wir nichts. Es bleibt nur die Gebühr deines Zahlungsanbieters.",
       "direktWert": "0 %",
       "portaleTitel": "Der Gast kommt von Booking, Airbnb & Co.",
-      "portaleText": "Wir berechnen {satz} vom Buchungswert, einmal im Monat auf deiner Rechnung. Was das Portal selbst einbehält, ist davon unabhängig.",
+      "portaleText": "Wir berechnen {satz} vom Buchungswert, einmal im Monat auf deiner Rechnung — und nach oben gedeckelt auf {betrag} im Monat. Was das Portal selbst einbehält, ist davon unabhängig.",
       "marktplatzTitel": "Der Gast kommt über myBestDays",
-      "marktplatzText": "Unser eigener Marktplatz. Hier finden dich Gäste, die dich noch nicht kennen. Wir bringen die Buchung, ziehen das Geld ein und zahlen es dir aus — dafür behalten wir {satz}. Weitere Kosten gibt es nicht.",
-      "deckel": "Und nach oben ist es gedeckelt: Für Buchungen von Portalen zahlst du nie mehr als {betrag} im Monat."
+      "marktplatzText": "Unser eigener Marktplatz. Hier finden dich Gäste, die dich noch nicht kennen. Wir bringen die Buchung, ziehen das Geld ein und zahlen es dir aus — dafür behalten wir {satz}. Weitere Kosten gibt es nicht."
     },
     "module": {
       "eyebrow": "Zusatzmodule",

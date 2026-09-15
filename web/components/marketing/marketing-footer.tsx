@@ -20,7 +20,7 @@ const FOOTER_COLUMNS = [
   },
   {
     title: "Lösungen",
-    links: ["Hotels", "B&B", "Gästehäuser", "Ferienwohnungen", "Campingplätze"],
+    links: ["Hotels", "B&B", "Gästehäuser", "Ferienwohnungen", "Pensionen"],
   },
   {
     title: "Ressourcen",

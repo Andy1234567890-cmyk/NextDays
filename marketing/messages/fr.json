@@ -493,8 +493,7 @@
       "ferienwohnung": "Location de vacances",
       "resort": "Resort",
       "huette": "Chalet",
-      "pension": "Pension",
-      "campingplatz": "Camping"
+      "pension": "Pension"
     },
     "belegeHeading": "Ce sur quoi vous pouvez compter",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Gestion de pension avec facture et taxe de séjour",
         "text": "Demi-pension, taxe de séjour, habitués, paiement sur place : le système calcule correctement suppléments et taxes pour chaque portail — y compris là où le portail annonce un montant net alors qu'il vous faut le prix brut. Factures, avoirs et postes ouverts se trouvent dans le même dossier que la réservation, dans la monnaie de votre pays. Les clients fidèles se reconnaissent à leur historique, sans fouiller d'anciens courriels.",
         "beleg": "Taxes par portail, calculées juste."
-      },
-      "campingplatz": {
-        "unterzeile": "Gestion de camping avec emplacements",
-        "text": "Emplacements, caravanes de location et tentes glamping sont des types avec une quantité : vingt emplacements identiques font un type de vingt unités, pas vingt calendriers. La disponibilité part aux portails sous forme de nombre, pour ne jamais vendre plus que ce qui existe. Électricité, taxe de séjour ou chien se facturent à la nuit ou au séjour, et les arrivées du jour sont regroupées dans le plan du jour.",
-        "beleg": "Une quantité au lieu de vingt calendriers."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Ce que fait la plateforme, ce qu'elle coûte et comment vos données sont protégées — sans jargon marketing.",
     "was": {
       "frage": "Qu'est-ce que myNextDays exactement ?",
-      "antwort": "myNextDays est un système de gestion immobilière et un channel manager en un — pour hôtels, pensions, maisons d'hôtes, locations saisonnières, campings et agences. Calendrier, réservations, tarifs, portails, réservation directe, messages aux clients, ménage et facturation se trouvent dans une seule interface avec un seul identifiant, au lieu de quatre outils qui s'ignorent."
+      "antwort": "myNextDays est un système de gestion immobilière et un channel manager en un — pour hôtels, pensions, maisons d'hôtes, locations saisonnières et agences. Calendrier, réservations, tarifs, portails, réservation directe, messages aux clients, ménage et facturation se trouvent dans une seule interface avec un seul identifiant, au lieu de quatre outils qui s'ignorent."
     },
     "portale": {
       "frage": "Quels portails de réservation puis-je connecter ?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Réponses IA",
-        "items": "Répondre depuis votre livret d'accueil, règles par sujet, brouillon ou automatique, escalade en cas de problème, 24 langues"
+        "items": "Répondre depuis votre livret d'accueil, règles par sujet, brouillon ou automatique, désescalade en cas de problème, 24 langues"
       },
       "zahlungen": {
         "title": "Paiements et facturation",
@@ -969,10 +963,9 @@
       "direktText": "Via votre propre site ou votre formulaire de réservation. Nous n'en prenons rien. Il ne reste que les frais de votre prestataire de paiement.",
       "direktWert": "0 %",
       "portaleTitel": "Le voyageur vient de Booking, Airbnb & co.",
-      "portaleText": "Nous facturons {satz} de la valeur de la réservation, une fois par mois sur votre facture. Ce que le portail retient de son côté est indépendant.",
+      "portaleText": "Nous facturons {satz} de la valeur de la réservation, une fois par mois sur votre facture — plafonné à {betrag} par mois. Ce que le portail retient de son côté est indépendant.",
       "marktplatzTitel": "Le voyageur vient via myBestDays",
-      "marktplatzText": "Notre propre place de marché. Ici, des voyageurs qui ne vous connaissent pas encore vous trouvent. Nous apportons la réservation, encaissons l'argent et vous le versons — pour cela nous gardons {satz}. Il n'y a pas d'autres frais.",
-      "deckel": "Et c'est plafonné : pour les réservations venant des portails, vous ne payez jamais plus de {betrag} par mois."
+      "marktplatzText": "Notre propre place de marché. Ici, des voyageurs qui ne vous connaissent pas encore vous trouvent. Nous apportons la réservation, encaissons l'argent et vous le versons — pour cela nous gardons {satz}. Il n'y a pas d'autres frais."
     },
     "module": {
       "eyebrow": "Modules complémentaires",

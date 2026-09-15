@@ -15,7 +15,6 @@ const PROPERTY_TYPES = [
   "Resort",
   "Hütte",
   "Pension",
-  "Campingplatz",
 ];
 
 export function MarketingIntro() {

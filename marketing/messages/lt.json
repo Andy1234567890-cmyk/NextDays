@@ -493,8 +493,7 @@
       "ferienwohnung": "Atostogų butas",
       "resort": "Kurortas",
       "huette": "Namelis",
-      "pension": "Pensionas",
-      "campingplatz": "Kempingas"
+      "pension": "Pensionas"
     },
     "belegeHeading": "Kuo galite pasikliauti",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Pensionų valdymas su sąskaita ir turizmo rinkliava",
         "text": "Pusryčiai su vakariene, turizmo rinkliava, nuolatiniai svečiai, mokėjimas vietoje: priemokas ir rinkliavas sistema apskaičiuoja teisingai kiekvienam portalui — taip pat ten, kur portalas praneša neto sumą, o jums reikia bruto kainos. Sąskaitos, kreditinės sąskaitos ir atviros pozicijos yra toje pačioje byloje kaip rezervacija, jūsų šalies valiuta. Sugrįžtančius svečius atpažįstate iš jų istorijos, o ne ieškodami senuose laiškuose.",
         "beleg": "Rinkliavos pagal portalą, teisingai apskaičiuotos."
-      },
-      "campingplatz": {
-        "unterzeile": "Kempingo valdymas su vietomis",
-        "text": "Vietos, nuomojami nameliai ant ratų ir glampingo palapinės yra tipai su kiekiu: dvidešimt vienodų vietų yra vienas tipas su dvidešimt vienetų, o ne dvidešimt kalendorių. Prieinamumas eina į portalus kaip skaičius, kad niekada nebūtų parduota daugiau, nei yra. Elektrą, turizmo rinkliavą ar šunį apmokestinate už naktį arba už apsistojimą, o dienos atvykimai stovi sudėti dienos plane.",
-        "beleg": "Kiekis, o ne dvidešimt kalendorių."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Ką platforma daro, kiek kainuoja ir kaip saugomi jūsų duomenys — be rinkodaros kalbos.",
     "was": {
       "frage": "Kas tiksliai yra myNextDays?",
-      "antwort": "myNextDays yra apgyvendinimo valdymo sistema ir channel manager viename — viešbučiams, pensionams, svečių namams, atostogų apartamentams, kempingams ir agentūroms. Kalendorius, rezervacijos, kainos, portalai, tiesioginė rezervacija, bendravimas su svečiu, tvarkymas ir atsiskaitymai yra vienoje sąsajoje su vienu prisijungimu, o ne keturiuose įrankiuose, kurie vienas apie kitą nieko nežino."
+      "antwort": "myNextDays yra apgyvendinimo valdymo sistema ir channel manager viename — viešbučiams, pensionams, svečių namams, atostogų apartamentams ir agentūroms. Kalendorius, rezervacijos, kainos, portalai, tiesioginė rezervacija, bendravimas su svečiu, tvarkymas ir atsiskaitymai yra vienoje sąsajoje su vienu prisijungimu, o ne keturiuose įrankiuose, kurie vienas apie kitą nieko nežino."
     },
     "portale": {
       "frage": "Kuriuos rezervacijų portalus galiu prijungti?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "AI atsakymai",
-        "items": "Atsakymai iš jūsų svečių aplanko, taisyklės pagal temas, juodraštis arba automatiškai, eskalavimas kilus problemoms, 24 kalbos"
+        "items": "Atsakymai iš jūsų svečių aplanko, taisyklės pagal temas, juodraštis arba automatiškai, deeskalavimas kilus problemoms, 24 kalbos"
       },
       "zahlungen": {
         "title": "Mokėjimai ir apskaita",
@@ -969,10 +963,9 @@
       "direktText": "Per jūsų svetainę arba rezervacijos formą. Iš to mes neimame nieko. Lieka tik jūsų mokėjimų tiekėjo mokestis.",
       "direktWert": "0 %",
       "portaleTitel": "Svečias ateina iš Booking, Airbnb ir kitų",
-      "portaleText": "Skaičiuojame {satz} nuo rezervacijos vertės, kartą per mėnesį jūsų sąskaitoje. Tai, ką pasilieka pats portalas, nuo to nepriklauso.",
+      "portaleText": "Skaičiuojame {satz} nuo rezervacijos vertės, kartą per mėnesį jūsų sąskaitoje — ne daugiau kaip {betrag} per mėnesį. Tai, ką pasilieka pats portalas, nuo to nepriklauso.",
       "marktplatzTitel": "Svečias ateina per myBestDays",
-      "marktplatzText": "Mūsų pačių prekyvietė. Čia jus randa svečiai, kurie jūsų dar nepažįsta. Mes atnešame rezervaciją, surenkame pinigus ir juos jums išmokame — už tai pasiliekame {satz}. Kitų išlaidų nėra.",
-      "deckel": "Ir yra riba: už portalų rezervacijas niekada nemokate daugiau nei {betrag} per mėnesį."
+      "marktplatzText": "Mūsų pačių prekyvietė. Čia jus randa svečiai, kurie jūsų dar nepažįsta. Mes atnešame rezervaciją, surenkame pinigus ir juos jums išmokame — už tai pasiliekame {satz}. Kitų išlaidų nėra."
     },
     "module": {
       "eyebrow": "Papildomi moduliai",

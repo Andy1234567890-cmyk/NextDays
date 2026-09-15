@@ -493,8 +493,7 @@
       "ferienwohnung": "Casa vacanza",
       "resort": "Resort",
       "huette": "Baita",
-      "pension": "Pensione",
-      "campingplatz": "Campeggio"
+      "pension": "Pensione"
     },
     "belegeHeading": "Su cosa puoi contare",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Gestione di pensioni con fattura e imposta di soggiorno",
         "text": "Mezza pensione, imposta di soggiorno, clienti abituali, pagamento in struttura: il sistema calcola supplementi e imposte correttamente per ogni portale — anche dove il portale comunica un importo netto e a te serve il prezzo lordo. Fatture, note di credito e partite aperte stanno nella stessa pratica della prenotazione, nella valuta del tuo paese. Gli ospiti di ritorno si riconoscono dalla loro storia, senza cercare tra vecchie mail.",
         "beleg": "Imposte per portale, calcolate giuste."
-      },
-      "campingplatz": {
-        "unterzeile": "Gestione di campeggi con piazzole",
-        "text": "Piazzole, caravan a noleggio e tende glamping sono tipologie con quantità: venti piazzole identiche sono una tipologia con venti unità, non venti calendari. La disponibilità arriva ai portali come numero, così non si vende mai più di quello che c'è. Corrente, imposta di soggiorno o cane si addebitano a notte o a soggiorno, e gli arrivi del giorno sono raccolti nel piano giornaliero.",
-        "beleg": "Una quantità invece di venti calendari."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Cosa fa la piattaforma, quanto costa e come sono protetti i tuoi dati — senza linguaggio da brochure.",
     "was": {
       "frage": "Che cos'è esattamente myNextDays?",
-      "antwort": "myNextDays è un sistema di property management e un channel manager in uno — per hotel, pensioni, guest house, case vacanza, campeggi e agenzie. Calendario, prenotazioni, prezzi, portali, prenotazione diretta, comunicazione con l'ospite, pulizie e contabilità stanno in un'unica interfaccia con un solo accesso, invece di quattro strumenti che non si parlano."
+      "antwort": "myNextDays è un sistema di property management e un channel manager in uno — per hotel, pensioni, guest house, case vacanza e agenzie. Calendario, prenotazioni, prezzi, portali, prenotazione diretta, comunicazione con l'ospite, pulizie e contabilità stanno in un'unica interfaccia con un solo accesso, invece di quattro strumenti che non si parlano."
     },
     "portale": {
       "frage": "Quali portali di prenotazione posso collegare?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Risposte AI",
-        "items": "Risponde dal suo manuale per gli ospiti, regole per argomento, bozza o automatico, escalation in caso di problemi, 24 lingue"
+        "items": "Risponde dal suo manuale per gli ospiti, regole per argomento, bozza o automatico, de-escalation in caso di problemi, 24 lingue"
       },
       "zahlungen": {
         "title": "Pagamenti e fatturazione",
@@ -969,10 +963,9 @@
       "direktText": "Tramite il tuo sito o il tuo modulo di prenotazione. Da lì non prendiamo nulla. Resta solo la commissione del tuo fornitore di pagamento.",
       "direktWert": "0 %",
       "portaleTitel": "L'ospite arriva da Booking, Airbnb e simili",
-      "portaleText": "Calcoliamo {satz} del valore della prenotazione, una volta al mese sulla tua fattura. Quanto trattiene il portale è indipendente da questo.",
+      "portaleText": "Calcoliamo {satz} del valore della prenotazione, una volta al mese sulla tua fattura — con un tetto di {betrag} al mese. Quanto trattiene il portale è indipendente da questo.",
       "marktplatzTitel": "L'ospite arriva tramite myBestDays",
-      "marktplatzText": "Il nostro marketplace. Qui ti trovano ospiti che ancora non ti conoscono. Portiamo la prenotazione, incassiamo il denaro e te lo versiamo: la nostra commissione per questo è {satz}. Non ci sono altri costi.",
-      "deckel": "E c'è un tetto: per le prenotazioni dai portali non paghi mai più di {betrag} al mese."
+      "marktplatzText": "Il nostro marketplace. Qui ti trovano ospiti che ancora non ti conoscono. Portiamo la prenotazione, incassiamo il denaro e te lo versiamo: la nostra commissione per questo è {satz}. Non ci sono altri costi."
     },
     "module": {
       "eyebrow": "Moduli aggiuntivi",

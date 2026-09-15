@@ -52,14 +52,16 @@ const UEBERWACHT = [
     app: "marketing",
     keys: [
       // Preisseite, Abschnitt „Provisionen" — direkt unter der Live-Zahl.
-      { pfad: "preise.provisionen.portaleText", platzhalter: "satz" },
-      { pfad: "preise.provisionen.marktplatzText", platzhalter: "satz" },
-      // Der Monatsdeckel trägt seine Währung mit.
+      // Die Portal-Karte nennt BEIDE Zahlen: den Satz und den Monatsdeckel.
+      // Der Deckel stand bis zum 15.09.2026 als eigener Satz (`deckel`) unter
+      // den drei Karten — dort las er sich wie eine Fußnote zu allen drei
+      // Wegen, gilt aber nur für die Portale. Er trägt seine Währung mit.
       {
-        pfad: "preise.provisionen.deckel",
-        platzhalter: "betrag",
+        pfad: "preise.provisionen.portaleText",
+        platzhalter: ["satz", "betrag"],
         waehrung: true,
       },
+      { pfad: "preise.provisionen.marktplatzText", platzhalter: "satz" },
       // Startseiten-Teaser.
       { pfad: "preise.teaser.provision", platzhalter: "portale" },
       // FAQ-Antwort und Stichwortzeile „Direktbuchung" nennen seit dem
@@ -194,6 +196,9 @@ for (const { app, keys } of UEBERWACHT) {
       // `flexibel` = der Text darf eine FREMDE Provision nennen (15–18 % der
       // Portale), nur nicht unseren eigenen Satz. Sonst gilt: keine
       // Prozentzahl überhaupt.
+      // Ein Key darf mehrere Zahlen tragen (die Portal-Karte nennt Satz UND
+      // Deckel); `platzhalter` ist deshalb eine Liste oder ein einzelner Name.
+      const platzhalterListe = [platzhalter].flat().filter(Boolean);
       const regel = flexibel ? EIGENER_SATZ_LITERAL : PROZENT_LITERAL;
       const treffer = wert.match(regel);
       if (treffer) {
@@ -201,22 +206,25 @@ for (const { app, keys } of UEBERWACHT) {
           `✗ ${app}/${sprache}: ${pfad} enthält die harte Zahl „${treffer[0].trim()}" — ` +
             (flexibel
               ? "das ist UNSER Provisionssatz und kommt aus " +
-                `/subscriptions/public/pricing; im Text steht {${platzhalter}}. ` +
+                "/subscriptions/public/pricing; im Text steht " +
+                `${platzhalterListe.map((n) => `{${n}}`).join(" und ")}. ` +
                 "Fremde Portalprovisionen (15–18 %) dürfen hier literal stehen, " +
                 "unsere nicht."
               : "der Satz kommt aus /subscriptions/public/pricing, im Text " +
-                `steht {${platzhalter}}`),
+                `steht ${platzhalterListe.map((n) => `{${n}}`).join(" und ")}`),
         );
         fehler += 1;
       }
       // Ersatzwort-Keys tragen keinen Platzhalter — sie SIND der Ersatz.
       if (nurVorhanden) continue;
-      if (!wert.includes(`{${platzhalter}}`)) {
-        console.error(
-          `✗ ${app}/${sprache}: ${pfad} hat keinen Platzhalter {${platzhalter}} — ` +
-            "ohne ihn nennt der Text die Zahl gar nicht mehr",
-        );
-        fehler += 1;
+      for (const name of platzhalterListe) {
+        if (!wert.includes(`{${name}}`)) {
+          console.error(
+            `✗ ${app}/${sprache}: ${pfad} hat keinen Platzhalter {${name}} — ` +
+              "ohne ihn nennt der Text die Zahl gar nicht mehr",
+          );
+          fehler += 1;
+        }
       }
       if (waehrung && WAEHRUNGSSYMBOL.test(wert)) {
         console.error(

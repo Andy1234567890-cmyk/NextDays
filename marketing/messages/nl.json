@@ -493,8 +493,7 @@
       "ferienwohnung": "Vakantiewoning",
       "resort": "Resort",
       "huette": "Chalet",
-      "pension": "Herberg",
-      "campingplatz": "Camping"
+      "pension": "Herberg"
     },
     "belegeHeading": "Waar je op kunt rekenen",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Pensionbeheer met factuur en toeristenbelasting",
         "text": "Halfpension, toeristenbelasting, vaste gasten, betaling ter plaatse: toeslagen en heffingen rekent het systeem per portaal correct af — ook waar het portaal een nettobedrag meldt en jij de brutoprijs nodig hebt. Facturen, creditnota's en openstaande posten staan in hetzelfde dossier als de boeking, in de valuta van je land. Terugkerende gasten herken je aan hun historie in plaats van in oude mails te zoeken.",
         "beleg": "Heffingen per portaal, correct berekend."
-      },
-      "campingplatz": {
-        "unterzeile": "Campingbeheer met staanplaatsen",
-        "text": "Staanplaatsen, huurcaravans en glampingtenten zijn types met een aantal: twintig gelijke plaatsen zijn één type met twintig eenheden, geen twintig agenda's. Beschikbaarheid gaat als getal naar de portalen, zodat er nooit meer verkocht wordt dan er is. Stroom, toeristenbelasting of een hond reken je per nacht of per verblijf af, en de aankomsten van de dag staan gebundeld in de dagplanning.",
-        "beleg": "Een aantal in plaats van twintig agenda's."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Wat het platform doet, wat het kost en hoe je gegevens beschermd zijn — zonder marketingtaal.",
     "was": {
       "frage": "Wat is myNextDays precies?",
-      "antwort": "myNextDays is een property-management-systeem en een channel manager in één — voor hotels, pensions, gastenhuizen, vakantiewoningen, campings en agentschappen. Agenda, reserveringen, prijzen, portalen, directe boekingen, gastcommunicatie, schoonmaak en afrekening zitten in één omgeving met één login, in plaats van in vier tools die niets van elkaar weten."
+      "antwort": "myNextDays is een property-management-systeem en een channel manager in één — voor hotels, pensions, gastenhuizen, vakantiewoningen en agentschappen. Agenda, reserveringen, prijzen, portalen, directe boekingen, gastcommunicatie, schoonmaak en afrekening zitten in één omgeving met één login, in plaats van in vier tools die niets van elkaar weten."
     },
     "portale": {
       "frage": "Welke boekingsportalen kan ik aansluiten?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "AI-antwoorden",
-        "items": "Antwoord uit uw gastenmap, regels per onderwerp, concept of automatisch, escalatie bij problemen, 24 talen"
+        "items": "Antwoord uit uw gastenmap, regels per onderwerp, concept of automatisch, de-escalatie bij problemen, 24 talen"
       },
       "zahlungen": {
         "title": "Betalingen & facturatie",
@@ -969,10 +963,9 @@
       "direktText": "Via je eigen website of je boekingsformulier. Daarvan nemen wij niets. Alleen de kosten van je betaalprovider blijven over.",
       "direktWert": "0 %",
       "portaleTitel": "De gast komt van Booking, Airbnb & co.",
-      "portaleText": "Wij rekenen {satz} van de boekingswaarde, één keer per maand op je factuur. Wat het portaal zelf inhoudt, staat daar los van.",
+      "portaleText": "Wij rekenen {satz} van de boekingswaarde, één keer per maand op je factuur — met een plafond van {betrag} per maand. Wat het portaal zelf inhoudt, staat daar los van.",
       "marktplatzTitel": "De gast komt via myBestDays",
-      "marktplatzText": "Onze eigen marktplaats. Hier vinden gasten je die je nog niet kennen. Wij brengen de boeking, innen het geld en betalen het aan je uit — daarvoor houden wij {satz}. Verdere kosten zijn er niet.",
-      "deckel": "En er zit een plafond op: voor boekingen van portalen betaal je nooit meer dan {betrag} per maand."
+      "marktplatzText": "Onze eigen marktplaats. Hier vinden gasten je die je nog niet kennen. Wij brengen de boeking, innen het geld en betalen het aan je uit — daarvoor houden wij {satz}. Verdere kosten zijn er niet."
     },
     "module": {
       "eyebrow": "Extra modules",

@@ -493,8 +493,7 @@
       "ferienwohnung": "Apartamento turístico",
       "resort": "Resort",
       "huette": "Cabaña",
-      "pension": "Pensión",
-      "campingplatz": "Camping"
+      "pension": "Pensión"
     },
     "belegeHeading": "Aquello en lo que puedes confiar",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Gestión de pensión con factura e impuesto turístico",
         "text": "Media pensión, impuesto turístico, clientes habituales, pago en la casa: el sistema calcula recargos e impuestos correctamente por portal — también donde el portal informa un importe neto y tú necesitas el precio bruto. Facturas, abonos y partidas abiertas están en el mismo expediente que la reserva, en la moneda de tu país. A los huéspedes que vuelven los reconoces por su historial, sin buscar en correos viejos.",
         "beleg": "Impuestos por portal, bien calculados."
-      },
-      "campingplatz": {
-        "unterzeile": "Gestión de camping con parcelas",
-        "text": "Parcelas, caravanas de alquiler y tiendas de glamping son tipos con cantidad: veinte parcelas iguales son un tipo con veinte unidades, no veinte calendarios. La disponibilidad va a los portales como número, para no vender nunca más de lo que hay. Electricidad, impuesto turístico o perro se cobran por noche o por estancia, y las llegadas del día se agrupan en el plan diario.",
-        "beleg": "Una cantidad en vez de veinte calendarios."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Qué hace la plataforma, cuánto cuesta y cómo se protegen tus datos — sin lenguaje de marketing.",
     "was": {
       "frage": "¿Qué es exactamente myNextDays?",
-      "antwort": "myNextDays es un sistema de gestión de propiedades y un channel manager en uno — para hoteles, pensiones, casas de huéspedes, apartamentos turísticos, campings y agencias. Calendario, reservas, precios, portales, reserva directa, comunicación con el huésped, limpieza y facturación están en una sola interfaz con un único acceso, en lugar de cuatro herramientas que no se conocen."
+      "antwort": "myNextDays es un sistema de gestión de propiedades y un channel manager en uno — para hoteles, pensiones, casas de huéspedes, apartamentos turísticos y agencias. Calendario, reservas, precios, portales, reserva directa, comunicación con el huésped, limpieza y facturación están en una sola interfaz con un único acceso, en lugar de cuatro herramientas que no se conocen."
     },
     "portale": {
       "frage": "¿Qué portales de reserva puedo conectar?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "Respuestas de IA",
-        "items": "Responde desde su carpeta de huésped, reglas por tema, borrador o automático, escalada en caso de problemas, 24 idiomas"
+        "items": "Responde desde su carpeta de huésped, reglas por tema, borrador o automático, desescalada en caso de problemas, 24 idiomas"
       },
       "zahlungen": {
         "title": "Pagos y facturación",
@@ -969,10 +963,9 @@
       "direktText": "A través de tu propia web o de tu formulario de reserva. De ahí no nos llevamos nada. Solo queda la comisión de tu proveedor de pagos.",
       "direktWert": "0 %",
       "portaleTitel": "El huésped llega desde Booking, Airbnb y demás",
-      "portaleText": "Cobramos un {satz} del valor de la reserva, una vez al mes en tu factura. Lo que retenga el portal es independiente de esto.",
+      "portaleText": "Cobramos un {satz} del valor de la reserva, una vez al mes en tu factura — con un tope de {betrag} al mes. Lo que retenga el portal es independiente de esto.",
       "marktplatzTitel": "El huésped llega por myBestDays",
-      "marktplatzText": "Nuestro propio marketplace. Aquí te encuentran huéspedes que aún no te conocen. Traemos la reserva, cobramos el dinero y te lo pagamos: por eso nos quedamos un {satz}. No hay más costes.",
-      "deckel": "Y tiene tope: por las reservas de portales nunca pagas más de {betrag} al mes."
+      "marktplatzText": "Nuestro propio marketplace. Aquí te encuentran huéspedes que aún no te conocen. Traemos la reserva, cobramos el dinero y te lo pagamos: por eso nos quedamos un {satz}. No hay más costes."
     },
     "module": {
       "eyebrow": "Módulos adicionales",

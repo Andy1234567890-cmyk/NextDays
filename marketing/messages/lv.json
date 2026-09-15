@@ -493,8 +493,7 @@
       "ferienwohnung": "Brīvdienu dzīvoklis",
       "resort": "Kūrorts",
       "huette": "Namiņš",
-      "pension": "Pansija",
-      "campingplatz": "Kempings"
+      "pension": "Pansija"
     },
     "belegeHeading": "Uz ko varat paļauties",
     "belege": {
@@ -554,11 +553,6 @@
         "unterzeile": "Pansijas pārvaldība ar rēķinu un tūrisma nodevu",
         "text": "Puspansija, tūrisma nodeva, pastāvīgie viesi, maksa uz vietas: piemaksas un nodevas sistēma aprēķina pareizi katram portālam — arī tur, kur portāls ziņo neto summu, bet tev vajag bruto cenu. Rēķini, kredītrēķini un atvērtās pozīcijas atrodas tajā pašā lietā kā rezervācija, tavas valsts valūtā. Atgriežošos viesus pazīsti pēc viņu vēstures, nevis meklējot vecās vēstulēs.",
         "beleg": "Nodevas pa portāliem, pareizi aprēķinātas."
-      },
-      "campingplatz": {
-        "unterzeile": "Kempinga pārvaldība ar vietām",
-        "text": "Vietas, nomas treileri un glamping teltis ir tipi ar skaitu: divdesmit vienādas vietas ir viens tips ar divdesmit vienībām, nevis divdesmit kalendāri. Pieejamība nonāk portālos kā skaitlis, lai nekad netiktu pārdots vairāk, nekā ir. Elektrību, tūrisma nodevu vai suni norēķini par nakti vai par uzturēšanos, un dienas ierašanās stāv kopā dienas plānā.",
-        "beleg": "Skaits, nevis divdesmit kalendāri."
       }
     }
   },
@@ -568,7 +562,7 @@
     "sub": "Ko platforma dara, cik tā maksā un kā tiek aizsargāti tavi dati — bez mārketinga valodas.",
     "was": {
       "frage": "Kas tieši ir myNextDays?",
-      "antwort": "myNextDays ir naktsmītņu pārvaldības sistēma un channel manager vienā — viesnīcām, pansijām, viesu namiem, brīvdienu dzīvokļiem, kempingiem un aģentūrām. Kalendārs, rezervācijas, cenas, portāli, tiešā rezervācija, saziņa ar viesi, uzkopšana un norēķini atrodas vienā saskarnē ar vienu pieteikšanos, nevis četros rīkos, kas viens par otru neko nezina."
+      "antwort": "myNextDays ir naktsmītņu pārvaldības sistēma un channel manager vienā — viesnīcām, pansijām, viesu namiem, brīvdienu dzīvokļiem un aģentūrām. Kalendārs, rezervācijas, cenas, portāli, tiešā rezervācija, saziņa ar viesi, uzkopšana un norēķini atrodas vienā saskarnē ar vienu pieteikšanos, nevis četros rīkos, kas viens par otru neko nezina."
     },
     "portale": {
       "frage": "Kurus rezervāciju portālus varu pieslēgt?",
@@ -703,7 +697,7 @@
       },
       "ki": {
         "title": "AI atbildes",
-        "items": "Atbild no jūsu viesu mapes, noteikumi pa tēmām, melnraksts vai automātiski, eskalācija strīdu gadījumā, 24 valodas"
+        "items": "Atbild no jūsu viesu mapes, noteikumi pa tēmām, melnraksts vai automātiski, deeskalācija strīdu gadījumā, 24 valodas"
       },
       "zahlungen": {
         "title": "Maksājumi un norēķini",
@@ -969,10 +963,9 @@
       "direktText": "Caur tavu mājaslapu vai rezervācijas formu. No tā mēs neņemam neko. Paliek tikai tava maksājumu pakalpojuma maksa.",
       "direktWert": "0 %",
       "portaleTitel": "Viesis nāk no Booking, Airbnb un citiem",
-      "portaleText": "Aprēķinām {satz} no rezervācijas vērtības, reizi mēnesī tavā rēķinā. Tas, ko patur pats portāls, no tā nav atkarīgs.",
+      "portaleText": "Aprēķinām {satz} no rezervācijas vērtības, reizi mēnesī tavā rēķinā — ar griestiem {betrag} mēnesī. Tas, ko patur pats portāls, no tā nav atkarīgs.",
       "marktplatzTitel": "Viesis nāk caur myBestDays",
-      "marktplatzText": "Mūsu pašu tirgus vieta. Šeit tevi atrod viesi, kas tevi vēl nepazīst. Mēs atnesam rezervāciju, iekasējam naudu un izmaksājam to tev — par to paturam {satz}. Citu izmaksu nav.",
-      "deckel": "Un ir griesti: par portālu rezervācijām nekad nemaksā vairāk par {betrag} mēnesī."
+      "marktplatzText": "Mūsu pašu tirgus vieta. Šeit tevi atrod viesi, kas tevi vēl nepazīst. Mēs atnesam rezervāciju, iekasējam naudu un izmaksājam to tev — par to paturam {satz}. Citu izmaksu nav."
     },
     "module": {
       "eyebrow": "Papildmoduļi",
