@@ -86,7 +86,7 @@ def test_public_pricing_ohne_login(monkeypatch: pytest.MonkeyPatch) -> None:
     # Frontend hardcodiert sein.
     assert body["commission_marketplace_percent"] == 8.0
     assert body["commission_external_percent"] == 0.5
-    assert body["commission_external_cap_amount"] == 250.0
+    assert body["commission_external_cap_amount"] == 50.0
     assert body["commission_external_cap_currency"] == "EUR"
 
 
@@ -284,7 +284,7 @@ def test_provisionsdeckel_bleibt_euro(monkeypatch: pytest.MonkeyPatch) -> None:
     body = client.get("/api/v1/subscriptions/public/pricing?currency=DKK").json()
     assert body["currency"] == "DKK"
     assert body["commission_external_cap_currency"] == "EUR"
-    assert body["commission_external_cap_amount"] == 250.0
+    assert body["commission_external_cap_amount"] == 50.0
 
 
 def test_stripeobject_kippt_die_preisliste_nicht() -> None:

@@ -672,9 +672,9 @@ def test_record_commission_fremder_tenant_bekommt_keine_provision() -> None:
 
 
 def test_deckel_gleiche_waehrung_ohne_kurs() -> None:
-    """250-€-Monatsdeckel: bei EUR wird kein Wechselkurs gebraucht."""
+    """50-€-Monatsdeckel: bei EUR wird kein Wechselkurs gebraucht."""
     svc = SubscriptionsService(service_client=_DB())
-    assert svc.cap_for_currency(svc._db, "EUR", "2026-08") == 250.0  # noqa: SLF001
+    assert svc.cap_for_currency(svc._db, "EUR", "2026-08") == 50.0  # noqa: SLF001
 
 
 def test_deckel_stichtag_ist_monatserster() -> None:

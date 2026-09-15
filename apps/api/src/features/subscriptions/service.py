@@ -1128,7 +1128,7 @@ class SubscriptionsService(
     def bill_pending_commissions(self, tenant_id: str, *, period: str) -> int:
         """Monats-Worker: alle 'pending'-Provisionen eines Tenants als EIN
         Stripe-Invoice-Item auf das laufende Abo buchen, dann auf 'invoiced'
-        setzen. Die Summe wird beim Monatsdeckel (250 €, in Rechnungswährung
+        setzen. Die Summe wird beim Monatsdeckel (50 €, in Rechnungswährung
         umgerechnet) gekappt. Idempotent: bereits fakturierte Zeilen (period
         gesetzt) werden nicht erneut berechnet (Wurzel 2). Gibt die Zahl der
         abgerechneten Zeilen zurück. Kein Abo → klar fehlschlagen, nicht still
@@ -1166,7 +1166,7 @@ class SubscriptionsService(
         total = round(sum(float(row["commission_amount"]) for row in pending), 2)
         if total <= 0:
             return 0
-        # Monatsdeckel (250 €): alles darüber ist 0 %. Bewusst HIER und nicht in
+        # Monatsdeckel (50 €): alles darüber ist 0 %. Bewusst HIER und nicht in
         # record_commission — der Deckel gilt für die PERIODE, nicht je Buchung;
         # die einzelne Ledger-Zeile behält ihren ungekappten Wert, damit
         # nachvollziehbar bleibt, wie viel Provision entstanden wäre.

@@ -305,7 +305,7 @@ class PublicPricingResponse(BaseModel):
     Erweitert `PricingResponse` um die Konditionen, die auf der Preisseite
     genannt werden müssen und NICHT in Stripe liegen: die beiden
     Provisionssätze und der Monatsdeckel der Portal-Provision. Ohne sie müsste
-    die Marketing-App „8 %"/„0,5 %"/„250 €" selbst hinschreiben — genau der
+    die Marketing-App „8 %"/„0,5 %"/„50 €" selbst hinschreiben — genau der
     Hardcode, den Wurzel 4 verbietet.
 
     Der Deckel trägt seine Währung mit (EUR-Anker, `COMMISSION_CAP_CURRENCY`):
@@ -344,7 +344,7 @@ class CommissionSummary(BaseModel):
     pending_total: float
     pending_count: int
     currency: str | None = None
-    # Monatsdeckel in der Währung der offenen Provisionen (250 €, ggf.
+    # Monatsdeckel in der Währung der offenen Provisionen (50 €, ggf.
     # umgerechnet). None, solange keine offenen Zeilen existieren — dann gibt es
     # keine Währung, in der ein Deckel benannt werden könnte (Wurzel 4: kein
     # EUR-Ersatzwert). `pending_capped` sagt, ob der Deckel schon greift.
