@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Obrázek",
         "text": "Textový modul",
-        "link": "Odkaz"
+        "link": "Odkaz",
+        "file": "Soubor"
       },
-      "oeffnen": "Otevřít"
+      "oeffnen": "Otevřít",
+      "herunterladen": "Stáhnout"
     }
   },
   "kunden": {

@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Bild",
         "text": "Textmodul",
-        "link": "Länk"
+        "link": "Länk",
+        "file": "Fil"
       },
-      "oeffnen": "Öppna"
+      "oeffnen": "Öppna",
+      "herunterladen": "Ladda ner"
     }
   },
   "kunden": {

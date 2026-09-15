@@ -195,7 +195,10 @@ export const FLAG_LABEL: Record<string, string> = {
 };
 
 // --- Werbematerial (affiliate_assets) ---------------------------------------
-export type MaterialArt = "video" | "image" | "text" | "link";
+// `file` kam mit 0707 dazu (Presse-PDF, Logo-Paket als ZIP). Die Union hängt an
+// drei weiteren Stellen: dem Check in der DB, `MaterialArt` in schemas.py und
+// `material.art.*` in allen 24 Sprachdateien des Partner-Dashboards.
+export type MaterialArt = "video" | "image" | "text" | "link" | "file";
 export type Material = {
   id: string;
   kind: MaterialArt;
@@ -207,14 +210,51 @@ export type Material = {
   sort: number;
   active: boolean;
   created_at: string;
+  // Nur bei einer EIGENEN Datei gesetzt; bei einer fremden Adresse alles null.
+  download_url: string | null;
+  filename: string | null;
+  mime: string | null;
+  bytes: number | null;
+  /** Ordner im Backoffice (0709). null = kein Ordner. Rein organisatorisch —
+   *  der Partner sieht weiterhin eine flache Liste. */
+  folder_id: string | null;
 };
+
+/** Ein Reiter über der Materialliste. `anzahl` kommt vom Server: die
+ *  Oberfläche zeigt nur den aktiven Ordner und könnte die anderen nicht zählen. */
+export type Ordner = {
+  id: string;
+  name: string;
+  sort: number;
+  anzahl: number;
+};
+
+export async function getOrdner(): Promise<Ordner[]> {
+  return api<Ordner[]>("/platform/affiliates/assets/folders", { cache: "no-store" });
+}
 
 export const MATERIAL_ART_LABEL: Record<MaterialArt, string> = {
   video: "Video",
   image: "Bild",
   text: "Textbaustein",
   link: "Link",
+  file: "Datei",
 };
+
+/** Dateigröße menschenlesbar. Basis 1024 wie im Finder; ohne Wert kein
+ *  geratener Ersatz, sondern gar keine Angabe (Wurzel 4). */
+export function groesseLesbar(bytes: number | null): string | null {
+  if (bytes === null || bytes < 0) return null;
+  if (bytes < 1024) return `${bytes} B`;
+  const einheiten = ["KB", "MB", "GB"];
+  let wert = bytes / 1024;
+  let i = 0;
+  while (wert >= 1024 && i < einheiten.length - 1) {
+    wert /= 1024;
+    i += 1;
+  }
+  return `${wert < 10 ? wert.toFixed(1) : Math.round(wert)} ${einheiten[i]}`;
+}
 
 export async function getMaterial(): Promise<Material[]> {
   return api<Material[]>("/platform/affiliates/assets", { cache: "no-store" });

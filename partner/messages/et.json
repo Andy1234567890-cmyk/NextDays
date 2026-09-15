@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Pilt",
         "text": "Tekstilõik",
-        "link": "Link"
+        "link": "Link",
+        "file": "Fail"
       },
-      "oeffnen": "Ava"
+      "oeffnen": "Ava",
+      "herunterladen": "Laadi alla"
     }
   },
   "kunden": {

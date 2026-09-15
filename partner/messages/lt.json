@@ -100,9 +100,11 @@
         "video": "Vaizdo įrašas",
         "image": "Paveikslėlis",
         "text": "Teksto fragmentas",
-        "link": "Nuoroda"
+        "link": "Nuoroda",
+        "file": "Failas"
       },
-      "oeffnen": "Atidaryti"
+      "oeffnen": "Atidaryti",
+      "herunterladen": "Atsisiųsti"
     }
   },
   "kunden": {

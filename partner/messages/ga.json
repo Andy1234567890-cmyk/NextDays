@@ -100,9 +100,11 @@
         "video": "Físeán",
         "image": "Íomhá",
         "text": "Bloc téacs",
-        "link": "Nasc"
+        "link": "Nasc",
+        "file": "Comhad"
       },
-      "oeffnen": "Oscail"
+      "oeffnen": "Oscail",
+      "herunterladen": "Íoslódáil"
     }
   },
   "kunden": {

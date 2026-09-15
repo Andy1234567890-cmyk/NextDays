@@ -35,7 +35,7 @@ from src.core.logging import get_logger, mask_email
 from src.core.security import AffiliateContext, PlatformContext
 from src.core.supabase import fetch_all_rows
 
-from . import attribution, newsletter_anmeldung, vies
+from . import attribution, material_dateien, newsletter_anmeldung, vies
 from .attribution import code_normalisieren, code_vorschlag
 from .connect_service import ConnectMixin
 from .fehler import AffiliateError
@@ -43,13 +43,11 @@ from .kanaele import kanaele_aus_zeile
 from .leads_service import LeadsMixin
 from .login_konto import LoginKontoMixin
 from .mails import PartnerMails
+from .material_service import MaterialMixin
 from .schemas import (
     BackofficeEntscheidung,
     BackofficeKorrektur,
     BackofficeManuelleZuordnung,
-    BackofficeMaterial,
-    BackofficeMaterialAendern,
-    BackofficeMaterialAnlegen,
     BackofficePartner,
     BackofficePartnerDetail,
     BackofficePartnerListe,
@@ -141,7 +139,7 @@ def _maskiert(method: str | None, details: dict[str, Any]) -> str | None:
 
 
 class AffiliatesService(
-    LoginKontoMixin, TeamMixin, TrackingMixin, ConnectMixin, LeadsMixin
+    LoginKontoMixin, TeamMixin, TrackingMixin, ConnectMixin, LeadsMixin, MaterialMixin
 ):
     slice_name = "affiliates"
 
@@ -810,6 +808,9 @@ class AffiliatesService(
                 language=r.get("language"),
                 url=r.get("url"),
                 body=r.get("body"),
+                # Gleiche Quelle wie im Backoffice (0707): eine zweite
+                # Adressbildung hier wäre der Ort, an dem beide auseinanderlaufen.
+                **material_dateien.datei_felder(r),
             )
             for r in rows
             if r.get("language") in erlaubt
@@ -1408,71 +1409,6 @@ class AffiliatesService(
             "partner_rang_manuell", affiliate_id=affiliate_id, tier=tier["id"], by=admin.user_id
         )
         return self._bo_partner(self._bo_row(affiliate_id))
-
-    # --- Werbematerial (affiliate_assets) — Pflege im Backoffice ------------
-
-    def bo_material_liste(self) -> list[BackofficeMaterial]:
-        rows = fetch_all_rows(
-            self._db.table("affiliate_assets").select("*").order("sort").order("created_at")
-        )
-        return [self._material(r) for r in rows]
-
-    def bo_material_anlegen(
-        self, req: BackofficeMaterialAnlegen, admin: PlatformContext
-    ) -> BackofficeMaterial:
-        res = self._db.table("affiliate_assets").insert(req.model_dump()).execute()
-        row = (res.data or [None])[0]
-        if not row:
-            raise AffiliateError("Material konnte nicht angelegt werden.", status_code=500)
-        log.info("partner_material_angelegt", asset_id=row["id"], kind=req.kind, by=admin.user_id)
-        return self._material(row)
-
-    def bo_material_aendern(
-        self, asset_id: str, req: BackofficeMaterialAendern, admin: PlatformContext
-    ) -> BackofficeMaterial:
-        alt = self._material_row(asset_id)
-        daten = req.model_dump(exclude_unset=True)
-        if not daten:
-            return self._material(alt)
-        neu = {**alt, **daten}
-        # Dieselbe Vollständigkeitsregel wie beim Anlegen — sonst ließe sich
-        # per PATCH die Adresse eines Links leeren.
-        if neu["kind"] == "text" and not (neu.get("body") or "").strip():
-            raise AffiliateError("Ein Textbaustein braucht einen Text.", status_code=422)
-        if neu["kind"] != "text" and not neu.get("url"):
-            raise AffiliateError("Video, Bild und Link brauchen eine Adresse.", status_code=422)
-        self._db.table("affiliate_assets").update(daten).eq("id", asset_id).execute()
-        log.info(
-            "partner_material_geaendert", asset_id=asset_id, felder=sorted(daten), by=admin.user_id
-        )
-        return self._material(self._material_row(asset_id))
-
-    def bo_material_loeschen(self, asset_id: str, admin: PlatformContext) -> None:
-        self._material_row(asset_id)
-        self._db.table("affiliate_assets").delete().eq("id", asset_id).execute()
-        log.info("partner_material_geloescht", asset_id=asset_id, by=admin.user_id)
-
-    def _material_row(self, asset_id: str) -> dict[str, Any]:
-        res = self._db.table("affiliate_assets").select("*").eq("id", asset_id).limit(1).execute()
-        row = (res.data or [None])[0]
-        if not row:
-            raise AffiliateError("Material nicht gefunden.", status_code=404)
-        return row
-
-    @staticmethod
-    def _material(r: dict[str, Any]) -> BackofficeMaterial:
-        return BackofficeMaterial(
-            id=r["id"],
-            kind=r["kind"],
-            title=r["title"],
-            description=r.get("description"),
-            language=r.get("language"),
-            url=r.get("url"),
-            body=r.get("body"),
-            sort=int(r.get("sort") or 0),
-            active=bool(r.get("active", True)),
-            created_at=str(r.get("created_at") or ""),
-        )
 
     # --- Klick-Token für die Marketing-Weiterleitung -------------------------
 

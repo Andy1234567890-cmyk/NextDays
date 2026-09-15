@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { CodeAnlegen } from "@/components/code-anlegen";
 import { CodeKarte } from "@/components/code-karte";
 import { KENNZEICHNUNG } from "@/lib/kennzeichnung";
-import { getCodes, getMaterial, getMe } from "@/lib/partner";
+import { getCodes, getMaterial, getMe, groesseLesbar } from "@/lib/partner";
 
 export default async function LinksSeite() {
   const [t, me] = await Promise.all([getTranslations("links"), getMe()]);
@@ -60,15 +60,40 @@ export default async function LinksSeite() {
           <ul className="mt-4 grid gap-4 md:grid-cols-2">
             {material.map((m) => (
               <li key={m.id} className="rounded-2xl border border-border p-5 text-sm">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`material.art.${m.kind}`)}</p>
+                {/* Vorschau nur bei eigenen Bildern. Eine fremde Adresse kann auf
+                    alles zeigen — ein <img> darauf wäre ein Aufruf an einen
+                    fremden Server bei jedem Öffnen der Seite. */}
+                {m.kind === "image" && m.download_url && m.url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={m.url} alt="" className="mb-3 max-h-40 w-full rounded-xl bg-muted object-contain" />
+                )}
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t(`material.art.${m.kind}`)}
+                  {groesseLesbar(m.bytes) && <> · {groesseLesbar(m.bytes)}</>}
+                </p>
                 <p className="mt-1 font-semibold">{m.title}</p>
                 {m.description && <p className="mt-1 text-muted-foreground">{m.description}</p>}
                 {m.body && <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-muted p-3 text-xs">{m.body}</pre>}
-                {m.url && (
-                  <a href={m.url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-block font-semibold underline-offset-4 hover:underline">
-                    {t("material.oeffnen")}
-                  </a>
-                )}
+                <div className="mt-3 flex flex-wrap items-center gap-4">
+                  {m.download_url && (
+                    // Kein `target="_blank"`: der Storage schickt die Datei mit
+                    // `Content-Disposition: attachment`, ein neuer Tab bliebe
+                    // leer zurück.
+                    <a href={m.download_url} className="font-semibold underline-offset-4 hover:underline">
+                      {t("material.herunterladen")}
+                    </a>
+                  )}
+                  {m.url && (
+                    <a
+                      href={m.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={m.download_url ? "text-muted-foreground underline-offset-4 hover:underline" : "font-semibold underline-offset-4 hover:underline"}
+                    >
+                      {t("material.oeffnen")}
+                    </a>
+                  )}
+                </div>
               </li>
             ))}
           </ul>

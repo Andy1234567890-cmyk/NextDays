@@ -100,9 +100,11 @@
         "video": "Videó",
         "image": "Kép",
         "text": "Szövegmodul",
-        "link": "Link"
+        "link": "Link",
+        "file": "Fájl"
       },
-      "oeffnen": "Megnyitás"
+      "oeffnen": "Megnyitás",
+      "herunterladen": "Letöltés"
     }
   },
   "kunden": {

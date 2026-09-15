@@ -15,6 +15,7 @@ import type {
   LeadKategorie,
   LeadStatus,
   Material,
+  Ordner,
   Partner,
   Provision,
   Referral,
@@ -209,11 +210,12 @@ export type MaterialEingabe = {
   active: boolean;
 };
 
-export async function materialAnlegen(eingabe: MaterialEingabe): Promise<Ergebnis<Material>> {
-  const res = await call<Material>("/platform/affiliates/assets", { method: "POST", body: eingabe });
-  if (res.ok) revalidatePath("/partner/material");
-  return res;
-}
+// `materialAnlegen` gab es hier bis 0707. Material entsteht seitdem
+// ausschließlich durch Hochladen (BFF-Route `app/api/partner/material` →
+// `POST /platform/affiliates/assets/upload`); die Action hatte danach keinen
+// Aufrufer mehr. Eine exportierte Server Action ohne Aufrufer ist kein toter
+// Code, sondern ein erreichbarer Endpunkt — deshalb entfernt und nicht
+// liegengelassen. Der JSON-Endpunkt des Backends bleibt bestehen.
 
 export async function materialAendern(
   id: string,
@@ -229,6 +231,49 @@ export async function materialAendern(
 
 export async function materialLoeschen(id: string): Promise<Ergebnis<null>> {
   const res = await call<null>(`/platform/affiliates/assets/${id}`, { method: "DELETE" });
+  if (res.ok) revalidatePath("/partner/material");
+  return res;
+}
+
+// --- Ordner (0709) ------------------------------------------------------------
+
+export async function ordnerAnlegen(name: string): Promise<Ergebnis<Ordner>> {
+  const res = await call<Ordner>("/platform/affiliates/assets/folders", {
+    method: "POST",
+    body: { name },
+  });
+  if (res.ok) revalidatePath("/partner/material");
+  return res;
+}
+
+export async function ordnerUmbenennen(id: string, name: string): Promise<Ergebnis<Ordner>> {
+  const res = await call<Ordner>(`/platform/affiliates/assets/folders/${id}`, {
+    method: "PATCH",
+    body: { name },
+  });
+  if (res.ok) revalidatePath("/partner/material");
+  return res;
+}
+
+/** Den Reiter entfernen. Das Material darin BLEIBT und liegt danach in keinem
+ *  Ordner — das erzwingt der Fremdschlüssel (`on delete set null`, 0709). */
+export async function ordnerLoeschen(id: string): Promise<Ergebnis<null>> {
+  const res = await call<null>(`/platform/affiliates/assets/folders/${id}`, {
+    method: "DELETE",
+  });
+  if (res.ok) revalidatePath("/partner/material");
+  return res;
+}
+
+/** Material in einen Ordner ziehen — `folderId: null` holt es heraus. */
+export async function materialVerschieben(
+  assetIds: string[],
+  folderId: string | null,
+): Promise<Ergebnis<Material[]>> {
+  const res = await call<Material[]>("/platform/affiliates/assets/move", {
+    method: "POST",
+    body: { asset_ids: assetIds, folder_id: folderId },
+  });
   if (res.ok) revalidatePath("/partner/material");
   return res;
 }

@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Kuva",
         "text": "Tekstipätkä",
-        "link": "Linkki"
+        "link": "Linkki",
+        "file": "Tiedosto"
       },
-      "oeffnen": "Avaa"
+      "oeffnen": "Avaa",
+      "herunterladen": "Lataa"
     }
   },
   "kunden": {

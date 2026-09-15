@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Bild",
         "text": "Textbaustein",
-        "link": "Link"
+        "link": "Link",
+        "file": "Datei"
       },
-      "oeffnen": "Öffnen"
+      "oeffnen": "Öffnen",
+      "herunterladen": "Herunterladen"
     }
   },
   "kunden": {

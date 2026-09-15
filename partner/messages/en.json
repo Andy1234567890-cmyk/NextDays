@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Image",
         "text": "Text module",
-        "link": "Link"
+        "link": "Link",
+        "file": "File"
       },
-      "oeffnen": "Open"
+      "oeffnen": "Open",
+      "herunterladen": "Download"
     }
   },
   "kunden": {

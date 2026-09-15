@@ -12,9 +12,16 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
+
+# Bewusst Starlettes `UploadFile` und NICHT FastAPIs gleichnamige Unterklasse:
+# der Multipart-Parser erzeugt Starlette-Instanzen, und
+# `isinstance(teil, fastapi.UploadFile)` ist für die IMMER False — die Datei
+# fiele stumm aus dem Formular, und der Upload meldete „keine Datei".
+from starlette.datastructures import UploadFile
 
 from src.core.security import CurrentPlatformAdmin, require_platform_write
+from src.core.uploads import MAX_UPLOAD_BYTES
 from src.features.platform_admin import audit
 
 from . import auszahlung
@@ -33,6 +40,11 @@ from .schemas import (
     BackofficeMaterial,
     BackofficeMaterialAendern,
     BackofficeMaterialAnlegen,
+    BackofficeMaterialDatei,
+    BackofficeMaterialVerschieben,
+    BackofficeOrdner,
+    BackofficeOrdnerAendern,
+    BackofficeOrdnerAnlegen,
     BackofficePartner,
     BackofficePartnerDetail,
     BackofficePartnerListe,
@@ -138,6 +150,231 @@ def material_loeschen(
         target_id=asset_id,
         request=request,
     )
+
+
+async def _material_formular(request: Request) -> tuple[bytes, str | None, dict[str, str]]:
+    """Multipart einlesen: die Datei unter `file`, der Rest als Textfelder.
+
+    Alles in EINEM Durchlauf und innerhalb des Kontextmanagers: `request.form()`
+    schließt beim Verlassen des Blocks jedes `UploadFile` darin, ein zweites
+    `await request.form()` liefert dann geschlossene Dateien (siehe
+    `core.uploads.read_upload_named`). Der Part-Deckel wird auf
+    `MAX_UPLOAD_BYTES` angehoben — Starlette bricht sonst jede Datei über 1 MB
+    mit einem rohen 413 ab, bevor der Service sie sieht.
+    """
+    try:
+        async with request.form(max_part_size=MAX_UPLOAD_BYTES) as form:
+            datei = form.get("file")
+            if not isinstance(datei, UploadFile):
+                raise HTTPException(status_code=400, detail="Keine Datei im Upload gefunden.")
+            inhalt = await datei.read()
+            name = datei.filename
+            felder = {
+                k: v for k, v in form.items() if k != "file" and isinstance(v, str)
+            }
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001 — Multipart-Parser wirft untypisiert
+        raise HTTPException(
+            status_code=413, detail="Die Datei ist zu groß oder ungültig."
+        ) from exc
+    return inhalt, name, felder
+
+
+def _material_beschreibung(felder: dict[str, str]) -> BackofficeMaterialDatei:
+    """Formularfelder → geprüfte Beschreibung.
+
+    Ein HTML-Formular kennt nur Text: `sort` kommt als `"3"`, `active` als
+    `"true"`/`"on"` oder gar nicht. Angreiferkontrollierter Text darf dabei
+    keinen 500 werfen (Wurzel 5) — was keine Zahl ist, wird als Feldfehler
+    abgelehnt, nicht als Absturz im `int()`.
+    """
+    sort_roh = (felder.get("sort") or "0").strip()
+    try:
+        return BackofficeMaterialDatei(
+            title=felder.get("title") or "",
+            description=felder.get("description"),
+            language=felder.get("language"),
+            sort=int(sort_roh) if sort_roh.isdigit() else 0,
+            active=(felder.get("active") or "true").lower() in ("true", "on", "1"),
+            # Der Reiter, der beim Ablegen offen war (0709). Existiert er
+            # nicht, antwortet der Service mit 404 — die Datei landet dann
+            # NICHT im Nirgendwo, sondern gar nicht.
+            folder_id=felder.get("folder_id"),
+        )
+    except ValidationError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post("/assets/upload", response_model=BackofficeMaterial, status_code=201)
+async def material_hochladen(
+    request: Request,
+    ctx: CurrentPlatformAdmin,
+    service: AffiliatesServiceDep,
+) -> BackofficeMaterial:
+    """Eine Datei als Werbematerial ablegen (multipart `file` + Textfelder).
+
+    Die Art (Bild · Video · Dokument) bestimmt der Service aus den Magic-Bytes;
+    der vom Browser gemeldete `content_type` wird verworfen (Wurzel 8).
+    """
+    require_platform_write(ctx)
+    inhalt, dateiname, felder = await _material_formular(request)
+    beschreibung = _material_beschreibung(felder)
+    try:
+        res = service.bo_material_hochladen(inhalt, dateiname, beschreibung, ctx)
+    except AffiliateError as exc:
+        raise _fehler(exc) from exc
+    audit.record(
+        service.db,
+        ctx,
+        "affiliate.material.upload",
+        target_type="affiliate_asset",
+        target_id=res.id,
+        detail={"kind": res.kind, "title": res.title, "bytes": res.bytes},
+        request=request,
+    )
+    return res
+
+
+@router.post("/assets/{asset_id}/datei", response_model=BackofficeMaterial)
+async def material_datei_ersetzen(
+    asset_id: str,
+    request: Request,
+    ctx: CurrentPlatformAdmin,
+    service: AffiliatesServiceDep,
+) -> BackofficeMaterial:
+    """Die Datei eines vorhandenen Eintrags austauschen; die alte wird entfernt."""
+    require_platform_write(ctx)
+    inhalt, dateiname, _felder = await _material_formular(request)
+    try:
+        res = service.bo_material_datei_ersetzen(asset_id, inhalt, dateiname, ctx)
+    except AffiliateError as exc:
+        raise _fehler(exc) from exc
+    audit.record(
+        service.db,
+        ctx,
+        "affiliate.material.replace_file",
+        target_type="affiliate_asset",
+        target_id=asset_id,
+        detail={"bytes": res.bytes},
+        request=request,
+    )
+    return res
+
+
+# --- Ordner (0709) -----------------------------------------------------------
+# Anders als bei `/assets` gegenüber `/{affiliate_id}` weiter unten braucht es
+# hier KEINE Reihenfolge-Vorsicht: `/assets/{asset_id}` hat genau EIN Segment
+# nach `/assets` (`[^/]+` matcht keinen Schrägstrich), `/assets/folders/{id}`
+# hat zwei. `/assets/move` wäre einsegmentig, aber ein `POST /assets/{asset_id}`
+# gibt es nicht. Steht hier, damit die nächste Änderung es nicht neu prüfen muss.
+
+
+@router.get("/assets/folders", response_model=list[BackofficeOrdner])
+def ordner_liste(
+    ctx: CurrentPlatformAdmin, service: AffiliatesServiceDep
+) -> list[BackofficeOrdner]:
+    """Die Reiter über der Materialliste. Kein Audit-Eintrag: Ordnernamen sind
+    keine Daten, deren Einsicht nachvollziehbar sein muss."""
+    _ = ctx
+    return service.bo_ordner_liste()
+
+
+@router.post("/assets/folders", response_model=BackofficeOrdner, status_code=201)
+def ordner_anlegen(
+    req: BackofficeOrdnerAnlegen,
+    request: Request,
+    ctx: CurrentPlatformAdmin,
+    service: AffiliatesServiceDep,
+) -> BackofficeOrdner:
+    require_platform_write(ctx)
+    try:
+        res = service.bo_ordner_anlegen(req, ctx)
+    except AffiliateError as exc:
+        raise _fehler(exc) from exc
+    audit.record(
+        service.db,
+        ctx,
+        "affiliate.material_folder.create",
+        target_type="affiliate_asset_folder",
+        target_id=res.id,
+        detail={"name": res.name},
+        request=request,
+    )
+    return res
+
+
+@router.patch("/assets/folders/{folder_id}", response_model=BackofficeOrdner)
+def ordner_aendern(
+    folder_id: str,
+    req: BackofficeOrdnerAendern,
+    request: Request,
+    ctx: CurrentPlatformAdmin,
+    service: AffiliatesServiceDep,
+) -> BackofficeOrdner:
+    require_platform_write(ctx)
+    try:
+        res = service.bo_ordner_aendern(folder_id, req, ctx)
+    except AffiliateError as exc:
+        raise _fehler(exc) from exc
+    audit.record(
+        service.db,
+        ctx,
+        "affiliate.material_folder.update",
+        target_type="affiliate_asset_folder",
+        target_id=folder_id,
+        detail=req.model_dump(exclude_unset=True),
+        request=request,
+    )
+    return res
+
+
+@router.delete("/assets/folders/{folder_id}", status_code=204)
+def ordner_loeschen(
+    folder_id: str,
+    request: Request,
+    ctx: CurrentPlatformAdmin,
+    service: AffiliatesServiceDep,
+) -> None:
+    """Den Reiter entfernen. Das Material darin bleibt und liegt danach in
+    keinem Ordner — Löschen eines Ordners ist kein Löschen von Material."""
+    require_platform_write(ctx)
+    try:
+        service.bo_ordner_loeschen(folder_id, ctx)
+    except AffiliateError as exc:
+        raise _fehler(exc) from exc
+    audit.record(
+        service.db,
+        ctx,
+        "affiliate.material_folder.delete",
+        target_type="affiliate_asset_folder",
+        target_id=folder_id,
+        request=request,
+    )
+
+
+@router.post("/assets/move", response_model=list[BackofficeMaterial])
+def material_verschieben(
+    req: BackofficeMaterialVerschieben,
+    request: Request,
+    ctx: CurrentPlatformAdmin,
+    service: AffiliatesServiceDep,
+) -> list[BackofficeMaterial]:
+    """Material in einen Ordner ziehen — `folder_id: null` holt es heraus."""
+    require_platform_write(ctx)
+    try:
+        res = service.bo_material_verschieben(req, ctx)
+    except AffiliateError as exc:
+        raise _fehler(exc) from exc
+    audit.record(
+        service.db,
+        ctx,
+        "affiliate.material.move",
+        target_type="affiliate_asset",
+        detail={"anzahl": len(req.asset_ids), "folder_id": req.folder_id},
+        request=request,
+    )
+    return res
 
 
 # --- Leads (0526): VOR /{affiliate_id}, sonst fängt der Pfadparameter "leads" ab.

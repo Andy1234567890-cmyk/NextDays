@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Slika",
         "text": "Tekstualni blok",
-        "link": "Poveznica"
+        "link": "Poveznica",
+        "file": "Datoteka"
       },
-      "oeffnen": "Otvori"
+      "oeffnen": "Otvori",
+      "herunterladen": "Preuzmi"
     }
   },
   "kunden": {

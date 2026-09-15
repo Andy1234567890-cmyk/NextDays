@@ -748,6 +748,15 @@ class PartnerAuszahlung(BaseModel):
 
 
 class PartnerMaterial(BaseModel):
+    """Eine Karte unter „Links & Material" im Partner-Dashboard.
+
+    `download_url` steht NEBEN `url` und ersetzt sie nicht: `url` zeigt das
+    Material an (Bild im Browser, Video im Player), `download_url` legt es mit
+    dem Original-Dateinamen in den Download-Ordner. Bei fremden Adressen
+    (YouTube-Link) gibt es nichts herunterzuladen — dann ist sie `None`, und
+    die Oberfläche zeigt nur „Öffnen" (Wurzel 4: kein erfundener Ersatzwert).
+    """
+
     id: str
     kind: str
     title: str
@@ -755,6 +764,10 @@ class PartnerMaterial(BaseModel):
     language: str | None = None
     url: str | None = None
     body: str | None = None
+    download_url: str | None = None
+    filename: str | None = None
+    mime: str | None = None
+    bytes: int | None = None
 
 
 class Seite(BaseModel):
@@ -995,7 +1008,12 @@ class PlatformOk(BaseModel):
     ok: bool = True
 
 
-MaterialArt = Literal["video", "image", "text", "link"]
+#: `file` kam mit 0707 dazu: ein Presse-PDF oder das Logo-Paket als ZIP ist
+#: weder Bild noch Video noch Link. Wer hier etwas ergänzt, ergänzt auch den
+#: Check in der DB, `MATERIAL_ART_LABEL` im Backoffice und `material.art.*`
+#: in allen 24 Sprachdateien des Partner-Dashboards — sonst steht dort ein
+#: roher Schlüssel.
+MaterialArt = Literal["video", "image", "text", "link", "file"]
 
 
 def _material_url_pruefen(url: str | None) -> str | None:
@@ -1021,6 +1039,15 @@ class BackofficeMaterial(BaseModel):
     sort: int
     active: bool
     created_at: str
+    # Nur gesetzt, wenn die Zeile eine EIGENE Datei hat (0707). Bei einer
+    # fremden Adresse bleibt alles leer — die Oberfläche unterscheidet daran,
+    # ob sie „Herunterladen" oder nur „Öffnen" anbietet.
+    download_url: str | None = None
+    filename: str | None = None
+    mime: str | None = None
+    bytes: int | None = None
+    # Ordner im Backoffice (0709). NULL = kein Ordner.
+    folder_id: str | None = None
 
 
 class BackofficeMaterialAnlegen(BaseModel):
@@ -1069,6 +1096,98 @@ class BackofficeMaterialAendern(BaseModel):
     @classmethod
     def _url(cls, v: str | None) -> str | None:
         return _material_url_pruefen(v)
+
+
+class BackofficeOrdner(BaseModel):
+    """Ein Reiter über der Materialliste (0709).
+
+    `anzahl` steht hier und wird nicht in der Oberfläche gezählt: die Liste
+    zeigt nur, was der aktive Reiter enthält — sie könnte die Zahl der anderen
+    gar nicht kennen.
+    """
+
+    id: str
+    name: str
+    sort: int
+    anzahl: int
+
+
+class BackofficeOrdnerAnlegen(BaseModel):
+    name: str = Field(min_length=1, max_length=60)
+    sort: int = Field(default=0, ge=0, le=10000)
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, v: str) -> str:
+        wert = v.strip()
+        if not wert:
+            raise ValueError("Der Ordner braucht einen Namen.")
+        return wert
+
+
+class BackofficeOrdnerAendern(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=60)
+    sort: int | None = Field(default=None, ge=0, le=10000)
+
+    @field_validator("name")
+    @classmethod
+    def _name(cls, v: str | None) -> str | None:
+        wert = (v or "").strip()
+        return wert or None
+
+
+class BackofficeMaterialVerschieben(BaseModel):
+    """Material in einen Ordner ziehen — oder mit `folder_id=None` heraus.
+
+    Eine LISTE von IDs, obwohl die Oberfläche heute einen Eintrag zieht: ein
+    Mehrfachzug ist die naheliegende nächste Geste, und ein Endpunkt, der sie
+    später kann, ist billiger als ein zweiter daneben. Gedeckelt, damit kein
+    unbegrenzter Bereich entsteht (Wurzel 8).
+    """
+
+    asset_ids: list[str] = Field(min_length=1, max_length=200)
+    folder_id: str | None = None
+
+
+class BackofficeMaterialDatei(BaseModel):
+    """Beschreibung zu einer HOCHGELADENEN Datei (0707).
+
+    `kind` und `url` fehlen mit Absicht: beide entstehen serverseitig. Die Art
+    kommt aus der Magic-Byte-Prüfung — ein Client, der zu einem PNG
+    `kind='video'` behauptet, bekäme sonst eine Zeile, die in keiner Anzeige
+    stimmt (Wurzel 8). Die Adresse ist der Bucket-Pfad und kann per Definition
+    nicht von außen kommen.
+
+    Die Felder kommen als Multipart-FORM-Werte, nicht als JSON — deshalb ist
+    `active` hier ein Text: ein HTML-Formular kennt kein `false`, es schickt
+    entweder `on`/`true` oder gar nichts.
+    """
+
+    title: str = Field(min_length=1, max_length=200)
+    description: str | None = Field(default=None, max_length=1000)
+    language: str | None = Field(default=None, max_length=10)
+    sort: int = Field(default=0, ge=0, le=10000)
+    active: bool = True
+    # In welchen Ordner die Datei fällt (0709). Die Ablagefläche schickt den
+    # gerade offenen Reiter mit — sonst landete jeder Upload im Nirgendwo und
+    # müsste danach von Hand dorthin gezogen werden, wo man ihn ablegte.
+    folder_id: str | None = None
+
+    @field_validator("description", "language", "folder_id", mode="before")
+    @classmethod
+    def _leer_zu_none(cls, v: object) -> object:
+        """Ein leeres Formularfeld ist keine leere Zeichenkette, sondern nichts.
+
+        Ohne diese Umwandlung stünde in `language` ein `""`, und die Auswahl
+        „für alle Sprachen" (NULL) wäre nicht mehr von „Sprache vergessen"
+        unterscheidbar.
+        """
+        return v.strip() or None if isinstance(v, str) else v
+
+    @field_validator("language")
+    @classmethod
+    def _language(cls, v: str | None) -> str | None:
+        return (v or "").strip().lower() or None
 
 
 # --- Leads (0526) — Multiplikatoren-Liste im Backoffice ------------------------------

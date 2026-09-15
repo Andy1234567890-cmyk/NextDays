@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Immagine",
         "text": "Blocco di testo",
-        "link": "Link"
+        "link": "Link",
+        "file": "File"
       },
-      "oeffnen": "Apri"
+      "oeffnen": "Apri",
+      "herunterladen": "Scarica"
     }
   },
   "kunden": {

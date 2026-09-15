@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Afbeelding",
         "text": "Tekstblok",
-        "link": "Link"
+        "link": "Link",
+        "file": "Bestand"
       },
-      "oeffnen": "Openen"
+      "oeffnen": "Openen",
+      "herunterladen": "Downloaden"
     }
   },
   "kunden": {

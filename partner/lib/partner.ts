@@ -143,12 +143,35 @@ export interface Auszahlung {
 
 export interface Material {
   id: string;
-  kind: "video" | "image" | "text" | "link";
+  kind: "video" | "image" | "text" | "link" | "file";
   title: string;
   description: string | null;
   language: string | null;
   url: string | null;
   body: string | null;
+  /** Gesetzt, wenn es eine hochgeladene Datei ist: Adresse mit
+   *  `Content-Disposition: attachment` samt Original-Dateinamen. Bei einer
+   *  fremden Adresse (YouTube-Link) null — dann gibt es nur „Öffnen". */
+  download_url: string | null;
+  filename: string | null;
+  mime: string | null;
+  bytes: number | null;
+}
+
+/** Dateigröße menschenlesbar. Basis 1024 wie im Finder; die Einheiten sind
+ *  international gleich und bleiben deshalb unübersetzt. Ohne Wert kein
+ *  geratener Ersatz, sondern gar keine Angabe. */
+export function groesseLesbar(bytes: number | null): string | null {
+  if (bytes === null || bytes < 0) return null;
+  if (bytes < 1024) return `${bytes} B`;
+  const einheiten = ["KB", "MB", "GB"];
+  let wert = bytes / 1024;
+  let i = 0;
+  while (wert >= 1024 && i < einheiten.length - 1) {
+    wert /= 1024;
+    i += 1;
+  }
+  return `${wert < 10 ? wert.toFixed(1) : Math.round(wert)} ${einheiten[i]}`;
 }
 
 /** Eigenes Profil — null, wenn keine (gültige) Sitzung. Der Server prüft

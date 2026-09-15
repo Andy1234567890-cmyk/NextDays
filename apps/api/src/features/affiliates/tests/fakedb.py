@@ -33,6 +33,10 @@ _UNIQUE: dict[str, list[tuple[tuple[str, ...], dict[str, Any] | None]]] = {
         (("stripe_transfer_id",), None),
     ],
     "affiliates": [(("email",), None)],
+    # 0709: ein Ordnername genau einmal. Die Live-DB prueft zusaetzlich
+    # ohne Ruecksicht auf Gross-/Kleinschreibung (Index auf lower(btrim(name)));
+    # das kann dieser Fake nicht, und die Feinheit gehoert auch dorthin.
+    "affiliate_asset_folders": [(("name",), None)],
     # 0574: ein Geraet kostet je Monat genau einmal. Die Regel gehoert
     # hierher, weil der Test „zweiter Lauf belastet nicht doppelt" sonst
     # nichts beweisen kann — er wuerde gruen sein, obwohl die echte DB

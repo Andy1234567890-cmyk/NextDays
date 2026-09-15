@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Slika",
         "text": "Besedilni blok",
-        "link": "Povezava"
+        "link": "Povezava",
+        "file": "Datoteka"
       },
-      "oeffnen": "Odpri"
+      "oeffnen": "Odpri",
+      "herunterladen": "Prenesi"
     }
   },
   "kunden": {

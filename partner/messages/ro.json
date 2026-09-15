@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Imagine",
         "text": "Fragment de text",
-        "link": "Link"
+        "link": "Link",
+        "file": "Fișier"
       },
-      "oeffnen": "Deschideți"
+      "oeffnen": "Deschideți",
+      "herunterladen": "Descarcă"
     }
   },
   "kunden": {

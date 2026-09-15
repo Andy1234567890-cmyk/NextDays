@@ -100,9 +100,11 @@
         "video": "Wideo",
         "image": "Obraz",
         "text": "Fragment tekstu",
-        "link": "Link"
+        "link": "Link",
+        "file": "Plik"
       },
-      "oeffnen": "Otwórz"
+      "oeffnen": "Otwórz",
+      "herunterladen": "Pobierz"
     }
   },
   "kunden": {

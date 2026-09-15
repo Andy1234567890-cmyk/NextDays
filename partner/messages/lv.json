@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Attēls",
         "text": "Teksta fragments",
-        "link": "Saite"
+        "link": "Saite",
+        "file": "Fails"
       },
-      "oeffnen": "Atvērt"
+      "oeffnen": "Atvērt",
+      "herunterladen": "Lejupielādēt"
     }
   },
   "kunden": {

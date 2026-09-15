@@ -100,9 +100,11 @@
         "video": "Vidjo",
         "image": "Immaġni",
         "text": "Blokk ta' test",
-        "link": "Link"
+        "link": "Link",
+        "file": "Fajl"
       },
-      "oeffnen": "Iftaħ"
+      "oeffnen": "Iftaħ",
+      "herunterladen": "Niżżel"
     }
   },
   "kunden": {

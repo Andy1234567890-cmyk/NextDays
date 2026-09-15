@@ -100,9 +100,11 @@
         "video": "Video",
         "image": "Obrázok",
         "text": "Textový blok",
-        "link": "Odkaz"
+        "link": "Odkaz",
+        "file": "Súbor"
       },
-      "oeffnen": "Otvoriť"
+      "oeffnen": "Otvoriť",
+      "herunterladen": "Stiahnuť"
     }
   },
   "kunden": {
