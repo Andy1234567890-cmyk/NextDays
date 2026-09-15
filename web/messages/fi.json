@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Kohteesta puuttuu vielä tietoja. Lähetys epäonnistuu silloin uudelleen.",
     "autoProtokollGastUnbekannt": "Vieras tuntematon",
     "autoProtokollHeuteLeerFelder": "Kohteessa tänään vielä tyhjä: {felder}",
-    "autoProtokollSchliessen": "Sulje"
+    "autoProtokollSchliessen": "Sulje",
+    "autoStandFehlerOffen": "Viimeisin epäonnistuminen {zeit} — tiedot puuttuvat:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Viimeisin epäonnistuminen {zeit}. Tiedot ovat nyt saatavilla – viestiä ei koskaan lähetetty:",
+    "autoStandFehlerGrund": "Viimeisin epäonnistuminen {zeit}:",
+    "langClearEmptyHint": "Tästä mallista ei ole versiota kielellä {sprache} – tässä ei ole mitään poistettavaa. Voit poistaa kielen kohdasta ”Hallinnoi kieliä”."
   },
   "whatsapp": {
     "notConfigured": "WhatsAppia ei ole vielä yhdistetty. Syötä tunnukset (Meta Cloud API) palvelimen asetuksiin, niin lähetys on käytössä.",

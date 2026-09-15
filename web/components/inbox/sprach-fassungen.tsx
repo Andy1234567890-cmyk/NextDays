@@ -195,11 +195,14 @@ export function SprachReiter({
     <div className="flex flex-wrap items-center gap-1 border-b border-border">
       {reiter.map((r) => {
         const gefuellt = fassungGefuellt(fassungen[r.schluessel]);
-        // Das X nur, wo es etwas zu leeren GIBT: nie an der Grundfassung (der
-        // letzte Rang, s. Prop-Kommentar) und nie an einem schon leeren Reiter
-        // — ein Knopf, der nichts tut, ist eine Attrappe.
-        const mitLeeren =
-          Boolean(onFassungLeeren) && r.schluessel !== GRUNDFASSUNG && gefuellt;
+        // Das X steht an JEDEM Sprach-Reiter, nie an der Grundfassung (der
+        // letzte Rang, s. Prop-Kommentar). An einem leeren Reiter ist es
+        // abgeschaltet statt versteckt: „wir müssen hier auch Fassungen löschen
+        // können" (15.09.2026) kam genau daher, dass am einzigen leeren Reiter
+        // kein X stand und das wie ein Mangel aussah. Ein abgeschalteter Knopf
+        // mit Begründung ist keine Attrappe, sondern die Auskunft, dass es hier
+        // nichts zu löschen gibt — und wohin man für die Sprache selbst muss.
+        const mitLeeren = Boolean(onFassungLeeren) && r.schluessel !== GRUNDFASSUNG;
         return (
           <span
             key={r.schluessel}
@@ -238,10 +241,24 @@ export function SprachReiter({
             {mitLeeren && (
               <button
                 type="button"
+                disabled={!gefuellt}
                 onClick={() => leeren(r.schluessel, r.label)}
-                title={t("langClear", { sprache: r.label })}
-                aria-label={t("langClear", { sprache: r.label })}
-                className="mr-1.5 rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                title={
+                  gefuellt
+                    ? t("langClear", { sprache: r.label })
+                    : t("langClearEmptyHint", { sprache: r.label })
+                }
+                aria-label={
+                  gefuellt
+                    ? t("langClear", { sprache: r.label })
+                    : t("langClearEmptyHint", { sprache: r.label })
+                }
+                className={
+                  "mr-1.5 rounded-full p-0.5 transition-colors " +
+                  (gefuellt
+                    ? "text-muted-foreground hover:bg-muted hover:text-destructive"
+                    : "cursor-not-allowed text-border")
+                }
               >
                 <Icon icon="ph:x" className="size-3.5" />
               </button>

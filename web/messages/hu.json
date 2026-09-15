@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Az ingatlanon még hiányoznak adatok. A küldés ekkor ismét sikertelen lesz.",
     "autoProtokollGastUnbekannt": "Vendég ismeretlen",
     "autoProtokollHeuteLeerFelder": "Az ingatlanon ma még üres: {felder}",
-    "autoProtokollSchliessen": "Bezárás"
+    "autoProtokollSchliessen": "Bezárás",
+    "autoStandFehlerOffen": "Utolsó sikertelen kézbesítés: {zeit} – az adatok még hiányoznak:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Utolsó sikertelen próbálkozás: {zeit}. Az adatok időközben frissültek – az üzenet sosem került kiküldésre:",
+    "autoStandFehlerGrund": "Utolsó sikertelen próbálkozás: {zeit}",
+    "langClearEmptyHint": "Ehhez a sablonhoz nincs {sprache} nyelvű változat – itt nincs mit törölni. Magát a nyelvet a „Nyelvek kezelése” menüpont alatt távolíthatja el."
   },
   "whatsapp": {
     "notConfigured": "A WhatsApp még nincs csatlakoztatva. Adja meg a hozzáférési adatokat (Meta Cloud API) a kiszolgáló beállításaiban, ezután a küldés aktív.",

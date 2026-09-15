@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "В имота все още липсват данни. Изпращането ще се провали отново.",
     "autoProtokollGastUnbekannt": "Гост неизвестен",
     "autoProtokollHeuteLeerFelder": "В имота днес все още празно: {felder}",
-    "autoProtokollSchliessen": "Затвори"
+    "autoProtokollSchliessen": "Затвори",
+    "autoStandFehlerOffen": "Последен неуспешен опит на {zeit} — данните все още липсват:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Последен неуспешен опит на {zeit}. Данните вече са налични — съобщението така и не беше изпратено:",
+    "autoStandFehlerGrund": "Последен неуспешен опит на {zeit}:",
+    "langClearEmptyHint": "Няма версия на този шаблон на {sprache} – тук няма какво да изтривате. Можете да премахнете самия език в „Управление на езици“."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp още не е свързан. Въведете данните за достъп (Meta Cloud API) в настройките на сървъра, след което изпращането е активно.",

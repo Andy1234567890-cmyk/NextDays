@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Īpašumā vēl trūkst datu. Sūtīšana atkal neizdosies.",
     "autoProtokollGastUnbekannt": "Viesis nezināms",
     "autoProtokollHeuteLeerFelder": "Īpašumā šodien vēl tukšs: {felder}",
-    "autoProtokollSchliessen": "Aizvērt"
+    "autoProtokollSchliessen": "Aizvērt",
+    "autoStandFehlerOffen": "Pēdējā neveiksmīgā piegāde {zeit} — dati joprojām trūkst:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Pēdējā neveiksme: {zeit}. Dati ir atjaunināti — ziņojums netika nosūtīts:",
+    "autoStandFehlerGrund": "Pēdējā neveiksme: {zeit}",
+    "langClearEmptyHint": "Šai veidnei nav versijas valodā {sprache} — šeit nav ko dzēst. Pašu valodu varat noņemt sadaļā “Valodu pārvaldība”."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp vēl nav savienots. Ievadiet piekļuves datus (Meta Cloud API) servera iestatījumos, tad sūtīšana būs aktīva.",

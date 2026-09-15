@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Għad hemm informazzjoni nieqsa fil-proprjetà. Il-konsenja terġa' tfalli.",
     "autoProtokollGastUnbekannt": "Mistieden mhux magħruf",
     "autoProtokollHeuteLeerFelder": "Għadu vojt fil-proprjetà llum: {felder}",
-    "autoProtokollSchliessen": "Agħlaq"
+    "autoProtokollSchliessen": "Agħlaq",
+    "autoStandFehlerOffen": "L-aħħar falliment fil-{zeit} — id-dettalji għadhom neqsin:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "L-aħħar falliment kien fi {zeit}. Id-dettalji issa huma korretti — il-messaġġ qatt ma ntbagħat:",
+    "autoStandFehlerGrund": "L-aħħar falliment kien fi {zeit}:",
+    "langClearEmptyHint": "M'hemm l-ebda verżjoni ta' dan il-mudell bil-{sprache} – m'hemm xejn x'tħassar hawn. Tista' tneħħi l-lingwa nnifisha taħt \"Immaniġġja l-Lingwi\"."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp għadu mhux imqabbad. Daħħal il-kredenzjali (Meta Cloud API) fis-settings tas-server, imbagħad il-konsenja tkun attiva.",

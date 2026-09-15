@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Λείπουν ακόμα στοιχεία από το κατάλυμα. Η αποστολή θα αποτύχει ξανά.",
     "autoProtokollGastUnbekannt": "Άγνωστος επισκέπτης",
     "autoProtokollHeuteLeerFelder": "Στο κατάλυμα σήμερα ακόμα κενό: {felder}",
-    "autoProtokollSchliessen": "Κλείσιμο"
+    "autoProtokollSchliessen": "Κλείσιμο",
+    "autoStandFehlerOffen": "Τελευταία αποτυχία στις {zeit} — τα στοιχεία λείπουν ακόμα:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Τελευταία αποτυχία στις {zeit}. Τα δεδομένα είναι πλέον διαθέσιμα — το μήνυμα δεν στάλθηκε ποτέ:",
+    "autoStandFehlerGrund": "Τελευταία αποτυχία στις {zeit}:",
+    "langClearEmptyHint": "Δεν υπάρχει έκδοση για αυτό το πρότυπο στα {sprache} — δεν υπάρχει τίποτα για διαγραφή εδώ. Μπορείτε να καταργήσετε τη γλώσσα στην ενότητα «Διαχείριση γλωσσών»."
   },
   "whatsapp": {
     "notConfigured": "Το WhatsApp δεν έχει συνδεθεί ακόμη. Καταχωρίστε τα διαπιστευτήρια (Meta Cloud API) στις ρυθμίσεις του διακομιστή και η αποστολή θα ενεργοποιηθεί.",

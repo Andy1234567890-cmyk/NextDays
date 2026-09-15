@@ -1221,7 +1221,12 @@
     "autoProtokollHeuteLeerFelder": "Am Objekt heute noch leer: {felder}",
     "autoProtokollSchliessen": "Schließen",
     "autoStandTitle": "Versand",
-    "autoSubjectHint": "Betreff gilt für E-Mail-Versand (Direkt-/Marktplatzbuchungen); Portale zeigen keinen Betreff."
+    "autoSubjectHint": "Betreff gilt für E-Mail-Versand (Direkt-/Marktplatzbuchungen); Portale zeigen keinen Betreff.",
+    "autoStandFehlerOffen": "Zuletzt fehlgeschlagen am {zeit} — die Angaben fehlen noch:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Zuletzt fehlgeschlagen am {zeit}. Die Angaben stehen inzwischen — die Nachricht ging nie hinaus:",
+    "autoStandFehlerGrund": "Zuletzt fehlgeschlagen am {zeit}:",
+    "langClearEmptyHint": "Für diese Vorlage gibt es keine Fassung auf {sprache} — hier ist nichts zu löschen. Die Sprache selbst entfernst du unter „Sprachen verwalten“."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",

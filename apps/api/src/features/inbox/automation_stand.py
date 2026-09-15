@@ -62,6 +62,31 @@ ZUSTAENDE: Final = ("pending", "sending", "sent", "failed", "skipped", "cancelle
 # Nachrichtentext geht den Zustandsbericht nichts an (0337 sperrt die Tabelle
 # genau deshalb für den DB-Direktpfad).
 _SPALTEN: Final = "automation_id,status,send_at,updated_at,last_error"
+# Wie viele FEHLGESCHLAGENE Zeilen je Betrieb zu Objekt-Lücken aufgelöst werden
+# (Wurzel 8). Die Auflösung kostet drei zusätzliche Abfragen mit einer `in`-
+# Liste; unbegrenzt wäre sie bei einem Betrieb mit jahrelangem Protokoll eine
+# IN-Liste über Tausende IDs. Die Lücken-Sicht braucht keine Vollständigkeit —
+# sie nennt die betroffenen OBJEKTE, und die wiederholen sich.
+MAX_LUECKEN_ZEILEN: Final = 200
+
+
+class AutomationLuecke(BaseModel):
+    """Ein OBJEKT, an dem Nachrichten dieser Regel gescheitert sind.
+
+    Der Betrieb braucht nicht den Fehlersatz, sondern die Stelle: welches Haus,
+    welche Felder, und ob sie HEUTE noch leer sind. Genau das steht hier.
+    """
+
+    property_id: str
+    #: Name des Objekts; None, wenn es inzwischen gelöscht wurde.
+    objekt: str | None = None
+    #: Alle Platzhalter, die in den Fehlschlägen dieses Objekts fehlten.
+    felder: list[str] = Field(default_factory=list)
+    #: Die Teilmenge davon, die am Objekt heute noch leer ist. Leere Liste
+    #: heißt: inzwischen gepflegt — der Fehlschlag ist Vergangenheit.
+    heute_leer: list[str] = Field(default_factory=list)
+    #: Wie viele Nachrichten an diesem Objekt scheiterten.
+    anzahl: int = 0
 
 
 class AutomationStand(BaseModel):
@@ -82,6 +107,23 @@ class AutomationStand(BaseModel):
     letzter_fehler_am: str | None = None
     #: Frühester geplanter Versand über alle offenen Zeilen (`send_at`).
     naechster_versand: str | None = None
+    #: Wann zuletzt erfolgreich zugestellt wurde (`updated_at` der jüngsten
+    #: `sent`-Zeile, unsere Uhr).
+    letzter_erfolg_am: str | None = None
+    #: True, wenn aus den Fehlschlägen keine Arbeit mehr folgt. Zwei Wege
+    #: dorthin: nach dem jüngsten Fehlschlag wurde wieder zugestellt, ODER die
+    #: betroffenen Aufenthalte sind vorbei — an eine abgereiste Buchung geht
+    #: keine Nachricht mehr, der Fehlschlag ist dann Historie.
+    #:
+    #: Ohne den zweiten Weg blieb ein Fehler EWIG rot stehen: „Forbidden" von
+    #: Booking.com zu einem Aufenthalt vom August, danach nie wieder ein
+    #: Versand — also nie ein Erfolg, der ihn ablösen konnte (15.09.2026,
+    #: „warum immer noch").
+    erledigt: bool = False
+    #: Die betroffenen Objekte mit ihren fehlenden Angaben — die Sicht, mit der
+    #: der Betrieb etwas tun kann. Leer, wenn kein Fehlschlag an einem
+    #: fehlenden Platzhalter lag.
+    luecken: list[AutomationLuecke] = Field(default_factory=list)
 
 
 class AutomationStandListe(BaseModel):
@@ -177,7 +219,7 @@ def stand_laden(db: Client, ctx: AuthContext) -> AutomationStandListe:
 
     zeilen = (
         db.table("automation_scheduled_message")
-        .select(_SPALTEN)
+        .select(f"thread_id,{_SPALTEN}")
         .eq("tenant_id", tenant_id)
         .order("updated_at", desc=True)
         .limit(MAX_ZEILEN)
@@ -197,10 +239,100 @@ def stand_laden(db: Client, ctx: AuthContext) -> AutomationStandListe:
             stand[aid] = eintrag
         _zeile_verbuchen(eintrag, zeile)
 
+    _luecken_ergaenzen(db, tenant_id, stand, zeilen)
     items = sorted(stand.values(), key=lambda s: s.automation_id)
     return AutomationStandListe(
         items=items, total=len(items), gekappt=len(zeilen) >= MAX_ZEILEN
     )
+
+
+def _luecken_ergaenzen(
+    db: Client, tenant_id: str, stand: dict[str, AutomationStand], zeilen: list[dict]
+) -> None:
+    """Je Regel die betroffenen OBJEKTE an den Zustand hängen.
+
+    Warum nicht erst im Protokoll-Dialog: die Karte soll den Befund ZEIGEN,
+    nicht über ihn reden. Ein Satz „Diese Felder haben keinen Wert: door_code,
+    wifi_ssid" nennt weder das Haus noch, ob es heute noch fehlt — der Betrieb
+    musste ihn erst irgendwo nachschlagen (Anlass 15.09.2026).
+
+    Drei Abfragen für ALLE Regeln zusammen, nicht je Regel eine: die Auflösung
+    Buchung → Objekt → Gästemappe ist dieselbe, und die Objekte wiederholen
+    sich über die Regeln hinweg.
+    """
+    # ALLE Fehlschläge — nicht nur die mit Platzhalter-Lücke: auch ein
+    # „Forbidden" braucht die Buchung dahinter, um zu wissen, ob der Aufenthalt
+    # noch läuft.
+    fehl = [z for z in zeilen if str(z.get("status") or "") == "failed"][
+        :MAX_LUECKEN_ZEILEN
+    ]
+    if not fehl:
+        return
+    threads = _threads(
+        db, tenant_id, {str(z["thread_id"]) for z in fehl if z.get("thread_id")}
+    )
+    objekt_ids = {str(t["property_id"]) for t in threads.values() if t.get("property_id")}
+    objekte = _objekte(db, tenant_id, objekt_ids)
+    leer = _portal_leer(db, objekt_ids)
+
+    je_regel: dict[str, dict[str, AutomationLuecke]] = {}
+    for z in fehl:
+        aid = _text(z.get("automation_id"))
+        th = threads.get(str(z.get("thread_id") or ""), {})
+        pid = _text(th.get("property_id"))
+        if not aid or not pid:
+            continue
+        luecke = je_regel.setdefault(aid, {}).setdefault(
+            pid,
+            AutomationLuecke(property_id=pid, objekt=_text(objekte.get(pid, {}).get("title"))),
+        )
+        luecke.anzahl += 1
+        heute = leer.get(pid, set())
+        for feld in fehlende_felder_aus(z.get("last_error")):
+            if feld not in luecke.felder:
+                luecke.felder.append(feld)
+            if feld in heute and feld not in luecke.heute_leer:
+                luecke.heute_leer.append(feld)
+    for aid, gefunden in je_regel.items():
+        eintrag = stand.get(aid)
+        if eintrag is not None:
+            eintrag.luecken = sorted(
+                gefunden.values(), key=lambda x: (-x.anzahl, x.objekt or "")
+            )
+    _erledigt_setzen(stand, fehl, threads)
+
+
+def _erledigt_setzen(
+    stand: dict[str, AutomationStand], fehl: list[dict], threads: dict[str, dict]
+) -> None:
+    """Je Regel: folgt aus den Fehlschlägen noch Arbeit?
+
+    Nein, wenn danach wieder zugestellt wurde ODER jeder betroffene Aufenthalt
+    vorbei ist. Eine Nachricht an eine abgereiste Buchung nimmt kein Portal mehr
+    an — sie rot stehen zu lassen, verlangt eine Handlung, die es nicht gibt.
+
+    Ein Fehlschlag OHNE auflösbare Buchung gilt als offen: lieber einmal zu viel
+    gezeigt als eine Panne stillgelegt, die niemand geprüft hat (Wurzel 5).
+    """
+    heute = datetime.now(UTC).date().isoformat()
+    laufend: dict[str, bool] = {}
+    for z in fehl:
+        aid = _text(z.get("automation_id"))
+        if not aid:
+            continue
+        th = threads.get(str(z.get("thread_id") or ""))
+        abreise = _text((th or {}).get("departure_date"))
+        # Ohne Buchung oder ohne Abreisedatum: als laufend werten.
+        laufend[aid] = laufend.get(aid, False) or not abreise or abreise >= heute
+    for aid, eintrag in stand.items():
+        if not eintrag.failed:
+            continue
+        danach_zugestellt = bool(
+            eintrag.letzter_erfolg_am
+            and eintrag.letzter_fehler_am
+            and eintrag.letzter_erfolg_am > eintrag.letzter_fehler_am
+        )
+        eintrag.erledigt = danach_zugestellt or not laufend.get(aid, True)
 
 
 def _zeile_verbuchen(eintrag: AutomationStand, zeile: dict) -> None:
@@ -221,6 +353,8 @@ def _zeile_verbuchen(eintrag: AutomationStand, zeile: dict) -> None:
     if zustand == "failed" and eintrag.letzter_fehler is None:
         eintrag.letzter_fehler = _text(zeile.get("last_error"))
         eintrag.letzter_fehler_am = _text(zeile.get("updated_at"))
+    if zustand == "sent" and eintrag.letzter_erfolg_am is None:
+        eintrag.letzter_erfolg_am = _text(zeile.get("updated_at"))
     if zustand in ("pending", "sending"):
         geplant = _text(zeile.get("send_at"))
         if geplant and (

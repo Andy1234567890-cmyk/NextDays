@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Information is still missing on the property. The dispatch will then fail again.",
     "autoProtokollGastUnbekannt": "Guest unknown",
     "autoProtokollHeuteLeerFelder": "Still empty on the property today: {felder}",
-    "autoProtokollSchliessen": "Close"
+    "autoProtokollSchliessen": "Close",
+    "autoStandFehlerOffen": "Last failed on {zeit} — details still missing:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Last failed on {zeit}. The details are now correct — the message was never sent:",
+    "autoStandFehlerGrund": "Last failed on {zeit}:",
+    "langClearEmptyHint": "There is no {sprache} version for this template — there is nothing to delete here. You can remove the language itself under \"Manage languages\"."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp is not connected yet. Add the credentials (Meta Cloud API) in the server settings to activate sending.",

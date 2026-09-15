@@ -25,6 +25,7 @@ import {
 import { zustandName } from "@/components/inbox/automation-stand-chips";
 import {
   type Automation,
+  type AutomationLuecke,
   type AutomationNachricht,
   listAutomationNachrichten,
   retryAllFailedAutomation,
@@ -34,44 +35,19 @@ import {
 const ERNEUT_ERLAUBT = new Set(["failed", "skipped", "cancelled"]);
 const ZEILEN = 50;
 
-type ObjektLuecke = {
-  property_id: string;
-  objekt: string;
-  felder: string[];
-  heuteLeer: string[];
-  anzahl: number;
-};
-
-/** Objekte mit fehlenden Angaben aus den Protokollzeilen verdichten. */
-function objektLuecken(zeilen: AutomationNachricht[]): ObjektLuecke[] {
-  const map = new Map<string, ObjektLuecke>();
-  for (const z of zeilen) {
-    if (z.fehlende_felder.length === 0 || !z.property_id) continue;
-    const e = map.get(z.property_id) ?? {
-      property_id: z.property_id,
-      objekt: z.objekt ?? z.property_id,
-      felder: [],
-      heuteLeer: [],
-      anzahl: 0,
-    };
-    e.anzahl += 1;
-    for (const f of z.fehlende_felder)
-      if (!e.felder.includes(f)) e.felder.push(f);
-    for (const f of z.heute_leer)
-      if (!e.heuteLeer.includes(f)) e.heuteLeer.push(f);
-    map.set(z.property_id, e);
-  }
-  return [...map.values()].sort((a, b) => b.anzahl - a.anzahl);
-}
-
 export function AutomationProtokollDialog({
   regel,
+  luecken,
   offen,
   onClose,
   onGeaendert,
   zeitpunktText,
 }: {
   regel: Automation | null;
+  /** Die betroffenen Objekte — kommen aus dem Zustand der Regel, damit Karte
+   *  und Protokoll dieselbe Rechnung zeigen (eine Quelle, kein zweiter
+   *  Verdichter im Browser). */
+  luecken: AutomationLuecke[];
   offen: boolean;
   onClose: () => void;
   /** Nach einem erneuten Einplanen — der Aufrufer lädt den Stand neu. */
@@ -129,7 +105,6 @@ export function AutomationProtokollDialog({
   const fehlgeschlagen = (zeilen ?? []).filter(
     (z) => z.status === "failed",
   ).length;
-  const luecken = objektLuecken(zeilen ?? []);
 
   return (
     <Dialog open={offen} onOpenChange={(o) => !o && onClose()}>
@@ -191,7 +166,7 @@ export function AutomationProtokollDialog({
 }
 
 /** Objekte, an denen Nachrichten scheiterten — mit „heute noch leer" je Feld. */
-function LueckenAbschnitt({ luecken }: { luecken: ObjektLuecke[] }) {
+function LueckenAbschnitt({ luecken }: { luecken: AutomationLuecke[] }) {
   const t = useTranslations("inbox");
   if (luecken.length === 0) return null;
   return (
@@ -200,7 +175,7 @@ function LueckenAbschnitt({ luecken }: { luecken: ObjektLuecke[] }) {
       <ul className="mt-2 flex flex-col gap-2">
         {luecken.map((l) => (
           <li key={l.property_id} className="flex flex-wrap items-center gap-2">
-            <span className="font-medium">{l.objekt}</span>
+            <span className="font-medium">{l.objekt ?? l.property_id}</span>
             <span className="text-muted-foreground">
               {t("autoProtokollLueckenFelder", { count: l.anzahl })}
             </span>
@@ -208,12 +183,12 @@ function LueckenAbschnitt({ luecken }: { luecken: ObjektLuecke[] }) {
               <span
                 key={f}
                 className={`rounded-full px-2 py-0.5 font-mono text-xs ${
-                  l.heuteLeer.includes(f)
+                  l.heute_leer.includes(f)
                     ? "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400"
                     : "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
                 }`}
                 title={
-                  l.heuteLeer.includes(f)
+                  l.heute_leer.includes(f)
                     ? t("autoProtokollHeuteLeer")
                     : t("autoProtokollInzwischenGepflegt")
                 }

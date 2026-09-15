@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Informații lipsă la proprietate. Trimiterea va eșua din nou.",
     "autoProtokollGastUnbekannt": "Oaspete necunoscut",
     "autoProtokollHeuteLeerFelder": "Încă gol la proprietate astăzi: {felder}",
-    "autoProtokollSchliessen": "Închide"
+    "autoProtokollSchliessen": "Închide",
+    "autoStandFehlerOffen": "Ultima eroare la {zeit} — datele lipsesc încă:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Ultima eroare la {zeit}. Datele sunt acum disponibile — mesajul nu a fost trimis niciodată:",
+    "autoStandFehlerGrund": "Ultima eroare la {zeit}:",
+    "langClearEmptyHint": "Nu există o versiune a acestui șablon în {sprache} — nu este nimic de șters aici. Puteți elimina limba însăși în „Gestionare limbi”."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nu este încă conectat. Introduceți datele de acces (Meta Cloud API) în setările serverului, apoi trimiterea este activă.",

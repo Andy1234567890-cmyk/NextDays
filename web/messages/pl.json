@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "W obiekcie brakuje jeszcze danych. Wysyłka ponownie się nie powiedzie.",
     "autoProtokollGastUnbekannt": "Gość nieznany",
     "autoProtokollHeuteLeerFelder": "W obiekcie dziś jeszcze puste: {felder}",
-    "autoProtokollSchliessen": "Zamknij"
+    "autoProtokollSchliessen": "Zamknij",
+    "autoStandFehlerOffen": "Ostatnia nieudana próba {zeit} — brak danych:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Ostatnia nieudana próba: {zeit}. Dane są już dostępne — wiadomość nigdy nie została wysłana:",
+    "autoStandFehlerGrund": "Ostatnia nieudana próba: {zeit}",
+    "langClearEmptyHint": "Brak wersji tego szablonu w języku {sprache} — nie ma tu nic do usunięcia. Język można usunąć w sekcji „Zarządzaj językami”."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp nie jest jeszcze połączony. Wprowadź dane dostępowe (Meta Cloud API) w ustawieniach serwera, aby aktywować wysyłkę.",

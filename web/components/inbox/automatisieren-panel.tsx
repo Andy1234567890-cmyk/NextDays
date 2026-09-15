@@ -254,6 +254,7 @@ export function AutomatisierenPanel({
         )}
         <AutomationProtokollDialog
           regel={protokollRegel}
+          luecken={protokollRegel ? (stand[protokollRegel.id]?.luecken ?? []) : []}
           offen={protokollRegel !== null}
           onClose={() => setProtokollRegel(null)}
           onGeaendert={() => void load()}

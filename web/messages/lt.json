@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Objekte vis dar trūksta duomenų. Siuntimas vėl nepavyks.",
     "autoProtokollGastUnbekannt": "Svečias nežinomas",
     "autoProtokollHeuteLeerFelder": "Objekte šiandien dar tuščia: {felder}",
-    "autoProtokollSchliessen": "Uždaryti"
+    "autoProtokollSchliessen": "Uždaryti",
+    "autoStandFehlerOffen": "Paskutinis nepavykęs {zeit} – duomenys dar nepateikti:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Paskutinis nepavykęs bandymas {zeit}. Duomenys dabar yra – pranešimas niekada nebuvo išsiųstas:",
+    "autoStandFehlerGrund": "Paskutinis nepavykęs bandymas {zeit}:",
+    "langClearEmptyHint": "Šiam šablonui nėra versijos {sprache} – čia nieko nereikia ištrinti. Pačią kalbą galite pašalinti skiltyje „Tvarkyti kalbas“."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp dar neprijungtas. Įveskite prisijungimo duomenis (Meta Cloud API) serverio nustatymuose, tada siuntimas bus aktyvus.",

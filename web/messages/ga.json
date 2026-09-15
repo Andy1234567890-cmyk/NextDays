@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Tá sonraí fós in easnamh ar an réadmhaoin. Teipfidh ar an seoladh arís.",
     "autoProtokollGastUnbekannt": "Aoi anaithnid",
     "autoProtokollHeuteLeerFelder": "Fós folamh ar an réadmhaoin inniu: {felder}",
-    "autoProtokollSchliessen": "Dún"
+    "autoProtokollSchliessen": "Dún",
+    "autoStandFehlerOffen": "Theip ar an seoladh is déanaí ar {zeit} — tá na sonraí fós in easnamh:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Theip air go deireanach ar {zeit}. Tá an fhaisnéis ann anois — níor seoladh an teachtaireacht riamh:",
+    "autoStandFehlerGrund": "Theip air go deireanach ar {zeit}:",
+    "langClearEmptyHint": "Níl leagan den teimpléad seo ar fáil i {sprache} — níl aon rud le scriosadh anseo. Is féidir leat an teanga féin a bhaint faoi “Bainistigh Teangacha”."
   },
   "whatsapp": {
     "notConfigured": "Níl WhatsApp nasctha fós. Cuir na dintiúir (Meta Cloud API) i socruithe an fhreastalaí, ansin beidh an seoladh gníomhach.",

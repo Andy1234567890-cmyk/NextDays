@@ -14,9 +14,10 @@
 // derselben Regel. Zwei Kopien liefen unweigerlich auseinander — genau so ist
 // aus einer Zeitplan-Zeile zweimal eine unterschiedliche geworden.
 import type React from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-import type { AutomationStand } from "@/lib/inbox";
+import type { AutomationLuecke, AutomationStand } from "@/lib/inbox";
 
 /** Die Zustände des Protokolls (0316) in der Reihenfolge des Ablaufs. */
 export const STAND_ZUSTAENDE = [
@@ -115,9 +116,11 @@ export function AutomationStandChips({
         ton={stand.sent > 0 ? "gut" : "still"}
       />
       {stand.failed > 0 && (
+        // Rot nur, solange es GILT. Ein seit Wochen behobener Stand sah sonst
+        // aus wie ein laufender Ausfall (15.09.2026).
         <Chip
           text={t("autoStandFailed", { count: stand.failed })}
-          ton="schlecht"
+          ton={stand.erledigt ? "still" : "schlecht"}
         />
       )}
       {stand.skipped > 0 && (
@@ -135,12 +138,40 @@ export function AutomationStandChips({
 }
 
 /**
- * Der letzte Fehlergrund im Klartext — rot, unter den Chips.
+ * Woran die Regel gescheitert ist — als SICHT auf die betroffenen Objekte.
  *
- * Der Grund kommt aus `last_error` und wird UNVERÄNDERT gezeigt. Ihn zu
- * verallgemeinern („Versand fehlgeschlagen") nähme dem Betrieb genau die
- * Angabe, mit der er es beheben kann (meist ein fehlender Platzhalter).
+ * Bis zum 15.09.2026 stand hier ein Satz: „Letzter Fehler: Diese Felder haben
+ * für diese Reservierung keinen Wert: door_code, wifi_password, wifi_ssid".
+ * Er nannte weder das Haus noch, ob die Angabe heute noch fehlt — der Betrieb
+ * musste sie erst irgendwo nachschlagen und fragte zu Recht: „wir sehen hier
+ * immer noch nicht, warum fehlgeschlagen". Jetzt steht je Objekt eine Zeile
+ * mit den Feldern, rot solange sie leer sind, und der Name springt in die
+ * Kartei.
+ *
+ * Der Ton hängt daran, ob es NOCH gilt (`erledigt`): wurde danach wieder
+ * zugestellt oder sind die betroffenen Aufenthalte vorbei, ist die Zahl
+ * Vergangenheit und wird ruhig gezeigt. Sonst rot. Vorher sah ein seit einem
+ * Monat erledigter Stand genauso alarmierend aus wie ein laufender Ausfall.
  */
+/** DREI Fälle, drei Sätze. Sie zu zweien zusammenzuziehen war falsch: ein
+ *  „Forbidden" von Booking.com bekam den Satz „Die Angaben stehen inzwischen",
+ *  obwohl es nie um eine fehlende Angabe ging (15.09.2026). */
+type FehlerFall = "offen" | "nachtrag" | "grund";
+
+const KOPFTEXT: Record<FehlerFall, string> = {
+  // Angaben fehlen weiterhin → nachtragen.
+  offen: "autoStandFehlerOffen",
+  // Angaben stehen, die Nachricht ging nie hinaus → erneut senden.
+  nachtrag: "autoStandFehlerNachtrag",
+  // Gar kein Platzhalter-Fehler → der Wortlaut des Portals zählt.
+  grund: "autoStandFehlerGrund",
+};
+
+function fehlerFall(luecken: number, offene: number): FehlerFall {
+  if (offene > 0) return "offen";
+  return luecken > 0 ? "nachtrag" : "grund";
+}
+
 export function AutomationStandFehler({
   stand,
   zeitpunktText,
@@ -150,13 +181,68 @@ export function AutomationStandFehler({
 }) {
   const t = useTranslations("inbox");
   if (!stand?.letzter_fehler) return null;
-  const wann = stand.letzter_fehler_am
-    ? ` (${zeitpunktText(stand.letzter_fehler_am)})`
-    : "";
+  // Objekte, an denen die Angabe HEUTE noch fehlt — nur sie sind Arbeit.
+  const offene = stand.luecken.filter((l) => l.heute_leer.length > 0);
+  // Erledigt und nichts mehr offen: die Karte schweigt. Die Zahlen stehen in
+  // den Chips, die Historie im Protokoll — eine Liste von neun Häusern, an
+  // denen nichts zu tun ist, ist Lärm („warum wird es angezeigt, wenn es
+  // behoben wurde", 15.09.2026).
+  if (stand.erledigt && offene.length === 0) return null;
+  const wann = stand.letzter_fehler_am ? zeitpunktText(stand.letzter_fehler_am) : null;
+  const fall = fehlerFall(stand.luecken.length, offene.length);
+  const ton = fall === "nachtrag" ? "text-amber-600 dark:text-amber-400" : "text-destructive";
   return (
-    <span className="mt-1 block text-xs text-destructive">
-      {t("autoStandLastError", { grund: stand.letzter_fehler })}
-      {wann}
-    </span>
+    <div className={`mt-1 flex flex-col gap-1 text-xs ${ton}`}>
+      <span>{t(KOPFTEXT[fall], { zeit: wann ?? "—" })}</span>
+      {fall === "grund" ? (
+        // Kein Platzhalter-Fehler (z. B. „Forbidden", „Service Temporary
+        // Unavailable") — der Grund bleibt im Wortlaut stehen, statt ihn zu
+        // glätten. Nur er sagt dem Betrieb, was das Portal abgelehnt hat.
+        <span>{t("autoStandLastError", { grund: stand.letzter_fehler })}</span>
+      ) : (
+        <ul className="flex flex-col gap-0.5">
+          {(fall === "offen" ? offene : stand.luecken).map((l) => (
+            <LueckeZeile key={l.property_id} luecke={l} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Ein betroffenes Objekt: Name (führt in die Kartei), Zahl, Felder. */
+function LueckeZeile({ luecke }: { luecke: AutomationLuecke }) {
+  const t = useTranslations("inbox");
+  return (
+    <li className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+      <Link
+        href={`/objekte/${luecke.property_id}/kartei`}
+        onClick={(e) => e.stopPropagation()}
+        className="font-medium underline-offset-2 hover:underline"
+      >
+        {luecke.objekt ?? luecke.property_id}
+      </Link>
+      <span className="text-muted-foreground">
+        {t("autoStandLueckeAnzahl", { count: luecke.anzahl })}
+      </span>
+      <span className="flex flex-wrap gap-1">
+        {luecke.felder.map((f) => {
+          const offen = luecke.heute_leer.includes(f);
+          return (
+            <span
+              key={f}
+              title={offen ? t("autoProtokollHeuteLeer") : t("autoProtokollInzwischenGepflegt")}
+              className={`rounded px-1.5 py-0.5 font-mono text-[0.68rem] ${
+                offen
+                  ? "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400"
+                  : "bg-emerald-100 text-emerald-700 line-through dark:bg-emerald-500/15 dark:text-emerald-400"
+              }`}
+            >
+              {f}
+            </span>
+          );
+        })}
+      </span>
+    </li>
   );
 }

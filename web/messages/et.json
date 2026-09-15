@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Objektil puuduvad veel andmed. Saatmine ebaõnnestub siis uuesti.",
     "autoProtokollGastUnbekannt": "Külaline teadmata",
     "autoProtokollHeuteLeerFelder": "Objektil täna veel tühjad: {felder}",
-    "autoProtokollSchliessen": "Sulge"
+    "autoProtokollSchliessen": "Sulge",
+    "autoStandFehlerOffen": "Viimati ebaõnnestus {zeit} — andmed puuduvad veel:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Viimati ebaõnnestus {zeit}. Andmed on nüüdseks olemas – sõnumit ei saadetud kunagi:",
+    "autoStandFehlerGrund": "Viimati ebaõnnestus {zeit}:",
+    "langClearEmptyHint": "Selle malli jaoks pole {sprache} versiooni – siin pole midagi kustutada. Keele saate eemaldada jaotisest „Halda keeli“."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp pole veel ühendatud. Sisesta juurdepääsuandmed (Meta Cloud API) serveri seadetesse, siis on saatmine aktiivne.",

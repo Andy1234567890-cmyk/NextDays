@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Faltan datos en la propiedad. El envío fallará de nuevo.",
     "autoProtokollGastUnbekannt": "Huésped desconocido",
     "autoProtokollHeuteLeerFelder": "Todavía vacío en la propiedad hoy: {felder}",
-    "autoProtokollSchliessen": "Cerrar"
+    "autoProtokollSchliessen": "Cerrar",
+    "autoStandFehlerOffen": "Último fallo el {zeit} — faltan los datos:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Último error el {zeit}. Los datos ya están disponibles — el mensaje nunca se envió:",
+    "autoStandFehlerGrund": "Último error el {zeit}:",
+    "langClearEmptyHint": "No hay ninguna versión de esta plantilla en {sprache} — no hay nada que eliminar aquí. Puede eliminar el idioma en «Gestionar idiomas»."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp aún no está conectado. Introduce las credenciales (Meta Cloud API) en los ajustes del servidor para activar el envío.",

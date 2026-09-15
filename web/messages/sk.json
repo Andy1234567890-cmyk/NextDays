@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "V objekte stále chýbajú údaje. Odoslanie potom znova zlyhá.",
     "autoProtokollGastUnbekannt": "Hosť neznámy",
     "autoProtokollHeuteLeerFelder": "V objekte dnes ešte prázdne: {felder}",
-    "autoProtokollSchliessen": "Zavrieť"
+    "autoProtokollSchliessen": "Zavrieť",
+    "autoStandFehlerOffen": "Naposledy zlyhalo {zeit} – údaje stále chýbajú:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Naposledy zlyhalo dňa {zeit}. Údaje sú už k dispozícii – správa nebola nikdy odoslaná:",
+    "autoStandFehlerGrund": "Naposledy zlyhalo dňa {zeit}:",
+    "langClearEmptyHint": "Pre túto šablónu neexistuje verzia v jazyku {sprache} – tu nie je čo odstrániť. Samotný jazyk odstránite v časti „Spravovať jazyky“."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp zatiaľ nie je prepojený. Zadajte prístupové údaje (Meta Cloud API) v nastaveniach servera, potom bude odosielanie aktívne.",

@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Der mangler stadig oplysninger om ejendommen. Forsendelsen vil mislykkes igen.",
     "autoProtokollGastUnbekannt": "Gæst ukendt",
     "autoProtokollHeuteLeerFelder": "Stadig tom på ejendommen i dag: {felder}",
-    "autoProtokollSchliessen": "Luk"
+    "autoProtokollSchliessen": "Luk",
+    "autoStandFehlerOffen": "Sidste mislykkede forsøg {zeit} – oplysninger mangler stadig:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Sidste mislykkede forsøg den {zeit}. Oplysningerne er nu tilgængelige – beskeden blev aldrig sendt ud:",
+    "autoStandFehlerGrund": "Sidste mislykkede forsøg {zeit}:",
+    "langClearEmptyHint": "Der findes ingen version af denne skabelon på {sprache} – her er intet at slette. Du fjerner selv sproget under „Administrer sprog“."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp er endnu ikke forbundet. Angiv adgangsoplysningerne (Meta Cloud API) i serverindstillingerne, så er afsendelse aktiv.",

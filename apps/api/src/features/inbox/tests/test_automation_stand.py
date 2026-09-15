@@ -308,3 +308,113 @@ def test_erneut_alle_nur_failed() -> None:
     db = _DB([{"id": "a1", "tenant_id": "t1"}], protokoll)
     assert erneut_alle_fehlgeschlagenen(db, _CTX, "a1") == 2
     assert [r["status"] for r in protokoll] == ["pending", "pending", "skipped", "sent"]
+
+
+def test_stand_zeigt_betroffene_objekte_statt_nur_des_fehlersatzes() -> None:
+    """Die Karte soll den Befund ZEIGEN: welches Objekt, welche Felder.
+
+    Anlass 15.09.2026: „Letzter Fehler: Diese Felder haben für diese
+    Reservierung keinen Wert: door_code, wifi_ssid" nannte weder das Haus noch,
+    ob die Angabe heute noch fehlt.
+    """
+    fehlt = "Diese Felder haben für diese Reservierung keinen Wert: door_code, wifi_ssid"
+    db = _DB(
+        [{"id": "a1", "tenant_id": "t1"}],
+        [
+            _zeile(id="s1", status="failed", thread_id="b1", last_error=fehlt,
+                   updated_at="2026-08-14T06:00:00+00:00"),
+            _zeile(id="s2", status="failed", thread_id="b2", last_error=fehlt,
+                   updated_at="2026-08-04T06:00:00+00:00"),
+        ],
+        channex_booking=[
+            {"id": "b1", "tenant_id": "t1", "property_id": "p1"},
+            {"id": "b2", "tenant_id": "t1", "property_id": "p1"},
+        ],
+        properties=[{"id": "p1", "tenant_id": "t1", "title": "Feriehus Line"}],
+        # Türcode inzwischen gepflegt, WLAN-Name weiterhin leer.
+        property_guest_portal=[
+            {"property_id": "p1", "door_code": "1234", "wifi_ssid": "",
+             "wifi_password": "geheim", "contact_phone": "+45"},
+        ],
+    )
+    (stand,) = stand_laden(db, _CTX).items
+    (luecke,) = stand.luecken
+    assert luecke.objekt == "Feriehus Line"
+    assert luecke.anzahl == 2
+    assert sorted(luecke.felder) == ["door_code", "wifi_ssid"]
+    # Nur das HEUTE noch leere Feld wird als offen geführt — der nachgetragene
+    # Türcode darf nicht weiter rot stehen.
+    assert luecke.heute_leer == ["wifi_ssid"]
+
+
+def test_stand_meldet_erledigt_wenn_danach_wieder_zugestellt_wurde() -> None:
+    """„fehlgeschlagen 14" ohne Zeitbezug liest sich wie ein laufender Ausfall.
+
+    Wurde nach dem jüngsten Fehlschlag wieder zugestellt, ist die Zahl
+    Vergangenheit — und die Oberfläche zeigt sie ruhig statt rot.
+    """
+    db = _DB(
+        [{"id": "a1", "tenant_id": "t1"}, {"id": "a2", "tenant_id": "t1"}],
+        [
+            _zeile(id="s1", status="failed", updated_at="2026-08-14T06:00:00+00:00",
+                   last_error="Service Temporary Unavailable"),
+            _zeile(id="s2", status="sent", updated_at="2026-09-13T06:00:00+00:00"),
+            # Zweite Regel: Fehlschlag NACH dem letzten Erfolg — bleibt offen.
+            _zeile(id="s3", automation_id="a2", status="sent",
+                   updated_at="2026-09-01T06:00:00+00:00"),
+            _zeile(id="s4", automation_id="a2", status="failed",
+                   updated_at="2026-09-12T06:00:00+00:00", last_error="Forbidden"),
+        ],
+    )
+    stand = {s.automation_id: s for s in stand_laden(db, _CTX).items}
+    assert stand["a1"].erledigt is True
+    assert stand["a1"].letzter_erfolg_am == "2026-09-13T06:00:00+00:00"
+    assert stand["a2"].erledigt is False
+    # Ohne Platzhalter-Fehler gibt es keine Objekt-Lücken — der Grund bleibt
+    # dann im Wortlaut stehen, statt ein leeres Objekt zu erfinden.
+    assert stand["a1"].luecken == []
+
+
+def test_stand_erledigt_wenn_der_aufenthalt_vorbei_ist() -> None:
+    """Ein Fehlschlag zu einer abgereisten Buchung ist Historie.
+
+    Live am 15.09.2026: „Forbidden" von Booking.com zu einem Aufenthalt vom
+    August. Danach kam nie wieder ein Versand — also nie ein Erfolg, der ihn
+    hätte ablösen können, und die Karte stand für immer rot („warum immer
+    noch"). An eine abgereiste Buchung nimmt kein Portal eine Nachricht an:
+    hier gibt es nichts zu tun.
+    """
+    db = _DB(
+        [{"id": "a1", "tenant_id": "t1"}, {"id": "a2", "tenant_id": "t1"}],
+        [
+            _zeile(id="s1", status="failed", thread_id="b_alt", last_error="Forbidden",
+                   updated_at="2026-09-15T05:27:37+00:00"),
+            _zeile(id="s2", automation_id="a2", status="failed", thread_id="b_neu",
+                   last_error="Forbidden", updated_at="2026-09-15T05:27:37+00:00"),
+        ],
+        channex_booking=[
+            {"id": "b_alt", "tenant_id": "t1", "property_id": "p1",
+             "departure_date": "2026-08-17"},
+            # Aufenthalt liegt weit in der Zukunft — da ist noch etwas zu tun.
+            {"id": "b_neu", "tenant_id": "t1", "property_id": "p1",
+             "departure_date": "2099-01-01"},
+        ],
+        properties=[{"id": "p1", "tenant_id": "t1", "title": "Haus"}],
+    )
+    stand = {s.automation_id: s for s in stand_laden(db, _CTX).items}
+    assert stand["a1"].erledigt is True
+    assert stand["a2"].erledigt is False
+
+
+def test_stand_haelt_fehlschlag_ohne_buchung_offen() -> None:
+    """Keine auflösbare Buchung → offen lassen.
+
+    Eine Panne stillzulegen, die niemand geprüft hat, wäre ein verschlucktes
+    Signal (Wurzel 5).
+    """
+    db = _DB(
+        [{"id": "a1", "tenant_id": "t1"}],
+        [_zeile(id="s1", status="failed", thread_id=None, last_error="Forbidden")],
+    )
+    (eintrag,) = stand_laden(db, _CTX).items
+    assert eintrag.erledigt is False

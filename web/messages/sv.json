@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Uppgifter saknas fortfarande på objektet. Sändningen kommer då att misslyckas igen.",
     "autoProtokollGastUnbekannt": "Gäst okänd",
     "autoProtokollHeuteLeerFelder": "Fortfarande tom på objektet idag: {felder}",
-    "autoProtokollSchliessen": "Stäng"
+    "autoProtokollSchliessen": "Stäng",
+    "autoStandFehlerOffen": "Senaste misslyckade försök {zeit} – uppgifter saknas fortfarande:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Senaste misslyckande: {zeit}. Uppgifterna är nu aktuella – meddelandet skickades aldrig:",
+    "autoStandFehlerGrund": "Senaste misslyckande: {zeit}",
+    "langClearEmptyHint": "Det finns ingen version av den här mallen på {sprache} – inget att radera här. Du kan ta bort språket under ”Hantera språk”."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp är ännu inte anslutet. Ange inloggningsuppgifterna (Meta Cloud API) i serverinställningarna, då är utskicket aktivt.",

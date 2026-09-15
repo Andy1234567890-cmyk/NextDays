@@ -823,6 +823,18 @@ export async function getAutomation(id: string): Promise<Result<Automation>> {
 
 // --- Zustand der Automatisierungen (Versandprotokoll) -------------------------
 /** Was eine Regel bisher getan hat — verdichtet aus `automation_scheduled_message`. */
+/** Ein Objekt, an dem Nachrichten dieser Regel gescheitert sind. */
+export type AutomationLuecke = {
+  property_id: string;
+  /** Name des Objekts; null, wenn es inzwischen gelöscht wurde. */
+  objekt: string | null;
+  /** Alle Platzhalter, die in den Fehlschlägen dieses Objekts fehlten. */
+  felder: string[];
+  /** Davon heute noch leer. Leere Liste = inzwischen gepflegt. */
+  heute_leer: string[];
+  anzahl: number;
+};
+
 export type AutomationStand = {
   automation_id: string;
   pending: number;
@@ -838,6 +850,14 @@ export type AutomationStand = {
   letzter_fehler_am: string | null;
   /** Frühester geplanter Versand über alle offenen Zeilen. */
   naechster_versand: string | null;
+  /** Wann zuletzt erfolgreich zugestellt wurde. */
+  letzter_erfolg_am: string | null;
+  /** Aus den Fehlschlägen folgt keine Arbeit mehr: danach wurde wieder
+   *  zugestellt, oder die betroffenen Aufenthalte sind vorbei. Die Zahl wird
+   *  dann ruhig statt alarmierend gezeigt. */
+  erledigt: boolean;
+  /** Die betroffenen Objekte mit ihren fehlenden Angaben. */
+  luecken: AutomationLuecke[];
 };
 
 export type AutomationStandListe = {

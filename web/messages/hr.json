@@ -1221,7 +1221,12 @@
     "autoProtokollErneutTrotzLuecke": "Na objektu još nedostaju podaci. Slanje će ponovno propasti.",
     "autoProtokollGastUnbekannt": "Gost nepoznat",
     "autoProtokollHeuteLeerFelder": "Na objektu danas još prazno: {felder}",
-    "autoProtokollSchliessen": "Zatvori"
+    "autoProtokollSchliessen": "Zatvori",
+    "autoStandFehlerOffen": "Zadnji neuspjeh {zeit} — podaci još nedostaju:",
+    "autoStandLueckeAnzahl": "{count}×",
+    "autoStandFehlerNachtrag": "Zadnji neuspjeh u {zeit}. Podaci su sada dostupni — poruka nikada nije poslana:",
+    "autoStandFehlerGrund": "Zadnji neuspjeh u {zeit}:",
+    "langClearEmptyHint": "Ne postoji verzija ovog predloška na jeziku {sprache} – ovdje nema ništa za brisanje. Jezik možete ukloniti pod „Upravljanje jezicima“."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp još nije povezan. Unesite pristupne podatke (Meta Cloud API) u postavkama poslužitelja, nakon toga je slanje aktivno.",
