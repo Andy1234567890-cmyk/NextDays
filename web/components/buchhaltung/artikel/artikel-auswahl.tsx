@@ -146,53 +146,73 @@ export function ArtikelAuswahl({
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {gefiltert.map((a) => {
-                  const fremdeWaehrung = Boolean(
-                    belegWaehrung && a.currency && a.currency !== belegWaehrung.toUpperCase(),
-                  );
-                  return (
-                    <li key={a.id}>
-                      <button
-                        type="button"
-                        onClick={() => uebernehmen(a)}
-                        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-secondary/40"
-                      >
-                        <Icon
-                          icon={a.isFavorite ? "ph:star-fill" : "ph:star"}
-                          className={`size-4 shrink-0 ${a.isFavorite ? "text-accent" : "text-muted-foreground/50"}`}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="truncate font-medium">{a.name}</span>
-                            <span className="shrink-0 text-xs text-muted-foreground">{a.itemNumber}</span>
-                          </div>
-                          <div className="truncate text-xs text-muted-foreground">
-                            {[a.category, a.description].filter(Boolean).join(" · ") || a.unit}
-                          </div>
-                        </div>
-                        <div className="shrink-0 text-right text-sm">
-                          <div className="font-medium tabular-nums">
-                            {formatCurrency(Number(a.unitPrice) || 0, a.currency)}
-                            <span className="text-xs text-muted-foreground"> / {a.unit}</span>
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {t("artikelAuswahl.taxRate", { rate: a.taxRate })}
-                            {fremdeWaehrung && (
-                              <span className="ml-2 rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">
-                                {t("artikelAuswahl.otherCurrency", { currency: a.currency })}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
+                {gefiltert.map((a) => (
+                  <ArtikelZeile
+                    key={a.id}
+                    artikel={a}
+                    belegWaehrung={belegWaehrung}
+                    onWaehlen={uebernehmen}
+                  />
+                ))}
               </ul>
             )}
           </div>
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+/** Eine Zeile der Artikelauswahl. Eigene Komponente, damit die Auswahl selbst
+ *  nur noch Laden, Suche und Zustand zeigt. */
+function ArtikelZeile({
+  artikel: a,
+  belegWaehrung,
+  onWaehlen,
+}: {
+  artikel: BillingItem;
+  belegWaehrung?: string;
+  onWaehlen: (a: BillingItem) => void;
+}) {
+  const t = useTranslations("finance");
+  const fremdeWaehrung = Boolean(
+    belegWaehrung && a.currency && a.currency !== belegWaehrung.toUpperCase(),
+  );
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onWaehlen(a)}
+        className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-secondary/40"
+      >
+        <Icon
+          icon={a.isFavorite ? "ph:star-fill" : "ph:star"}
+          className={`size-4 shrink-0 ${a.isFavorite ? "text-accent" : "text-muted-foreground/50"}`}
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="truncate font-medium">{a.name}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">{a.itemNumber}</span>
+          </div>
+          <div className="truncate text-xs text-muted-foreground">
+            {[a.category, a.description].filter(Boolean).join(" · ") || a.unit}
+          </div>
+        </div>
+        <div className="shrink-0 text-right text-sm">
+          <div className="font-medium tabular-nums">
+            {formatCurrency(Number(a.unitPrice) || 0, a.currency)}
+            <span className="text-xs text-muted-foreground"> / {a.unit}</span>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {t("artikelAuswahl.taxRate", { rate: a.taxRate })}
+            {fremdeWaehrung && (
+              <span className="ml-2 rounded-full bg-destructive/10 px-2 py-0.5 text-destructive">
+                {t("artikelAuswahl.otherCurrency", { currency: a.currency })}
+              </span>
+            )}
+          </div>
+        </div>
+      </button>
+    </li>
   );
 }

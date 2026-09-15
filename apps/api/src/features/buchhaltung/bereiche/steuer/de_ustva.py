@@ -62,7 +62,13 @@ def _add(
             update={"amount": alt.amount + betrag, "source": f"{alt.source}, {quelle}"}
         )
         return
-    ziel[code] = MappedFigure(code=code, label=label, amount=betrag, kind=kind, source=quelle)  # type: ignore[arg-type]
+    ziel[code] = MappedFigure(
+        code=code,
+        label=label,
+        amount=betrag,
+        kind=kind,  # type: ignore[arg-type]
+        source=quelle,
+    )
 
 
 def _umsatzzeile(ziel: dict[str, MappedFigure], zeile: SalesLine, warnungen: list[str]) -> None:

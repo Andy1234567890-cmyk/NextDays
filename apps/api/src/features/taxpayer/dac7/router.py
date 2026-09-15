@@ -322,8 +322,9 @@ def datei(
     lauf_id: str,
     ctx: CurrentUser,
     service: Dac7ServiceDep,
-    format: str = Query(
+    dateiformat: str = Query(
         default="csv",
+        alias="format",
         pattern="^(csv|xml)$",
         description=(
             "csv fuer das Meldejahr 2025 (TastSelv Erhverv), "
@@ -339,10 +340,10 @@ def datei(
     auffallen, nicht verborgen bleiben.
     """
     try:
-        inhalt = service.datei_neu_erzeugen(ctx, lauf_id, format=format)
+        inhalt = service.datei_neu_erzeugen(ctx, lauf_id, dateiformat=dateiformat)
     except Dac7Error as exc:
         raise _fehler(exc) from exc
-    ist_xml = format == "xml"
+    ist_xml = dateiformat == "xml"
     return PlainTextResponse(
         content=inhalt,
         media_type=(

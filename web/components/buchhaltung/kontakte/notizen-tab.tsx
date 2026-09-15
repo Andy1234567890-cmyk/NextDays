@@ -89,38 +89,15 @@ export function NotizenTab({ customerId, notizen }: { customerId: string; notize
 
   return (
     <div className="flex flex-col gap-3">
-      <Card className="flex flex-col gap-3 p-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="nz-text">{t("kontaktePage.notizen.newNote")}</Label>
-          <Textarea
-            id="nz-text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={t("kontaktePage.notizen.placeholder")}
-            maxLength={5000}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="nz-tags">{t("kontaktePage.notizen.tags")}</Label>
-          <Input
-            id="nz-tags"
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder={t("kontaktePage.notizen.tagsPlaceholder")}
-          />
-        </div>
-        {fehler && (
-          <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
-            {fehler}
-          </p>
-        )}
-        <div className="flex justify-end">
-          <Button onClick={anlegen} disabled={busy} className="gap-2">
-            <Icon icon="ph:note-pencil" className="size-4" />
-            {busy ? t("kontaktePage.saving") : t("kontaktePage.notizen.add")}
-          </Button>
-        </div>
-      </Card>
+      <NeueNotiz
+        text={text}
+        setText={setText}
+        tags={tags}
+        setTags={setTags}
+        busy={busy}
+        fehler={fehler}
+        onAnlegen={anlegen}
+      />
 
       {notizen.length === 0 ? (
         <Card className="flex flex-col items-center gap-2 p-10 text-center">
@@ -190,5 +167,61 @@ export function NotizenTab({ customerId, notizen }: { customerId: string; notize
         </ul>
       )}
     </div>
+  );
+}
+
+/** Das Formular für eine neue Notiz. */
+function NeueNotiz({
+  text,
+  setText,
+  tags,
+  setTags,
+  busy,
+  fehler,
+  onAnlegen,
+}: {
+  text: string;
+  setText: (v: string) => void;
+  tags: string;
+  setTags: (v: string) => void;
+  busy: boolean;
+  fehler: string | null;
+  onAnlegen: () => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <Card className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="nz-text">{t("kontaktePage.notizen.newNote")}</Label>
+        <Textarea
+          id="nz-text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={t("kontaktePage.notizen.placeholder")}
+          maxLength={5000}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="nz-tags">{t("kontaktePage.notizen.tags")}</Label>
+        <Input
+          id="nz-tags"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder={t("kontaktePage.notizen.tagsPlaceholder")}
+        />
+      </div>
+      {fehler && (
+        <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {fehler}
+        </p>
+      )}
+      <div className="flex justify-end">
+        <Button onClick={onAnlegen} disabled={busy} className="gap-2">
+          <Icon icon="ph:note-pencil" className="size-4" />
+          {busy ? t("kontaktePage.saving") : t("kontaktePage.notizen.add")}
+        </Button>
+      </div>
+    </Card>
+
   );
 }

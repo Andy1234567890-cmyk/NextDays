@@ -74,67 +74,7 @@ export function KundenDetail({
           <Icon icon="ph:arrow-left" className="size-4" />
           {kunde.is_supplier ? t("kontaktePage.backToSuppliers") : t("kontaktePage.backToCustomers")}
         </Link>
-        <Card className="flex flex-wrap items-center gap-4 p-4">
-          <Avatar className="size-14">
-            <AvatarFallback className="text-lg">{initialen(kunde.name)}</AvatarFallback>
-          </Avatar>
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-display text-2xl font-extrabold">{kunde.name}</h2>
-              {kunde.customer_number && (
-                <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                  {kunde.customer_number}
-                </span>
-              )}
-              <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                {kunde.customer_type === "private" ? t("kundenPage.typePrivate") : t("kundenPage.typeBusiness")}
-              </span>
-              {kunde.is_supplier && (
-                <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-                  {t("kundenPage.supplier")}
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              {kunde.email && (
-                <a href={`mailto:${kunde.email}`} className="inline-flex items-center gap-1 hover:text-foreground">
-                  <Icon icon="ph:envelope-simple" className="size-4" />
-                  {kunde.email}
-                </a>
-              )}
-              {kunde.phone && (
-                <a href={`tel:${kunde.phone}`} className="inline-flex items-center gap-1 hover:text-foreground">
-                  <Icon icon="ph:phone" className="size-4" />
-                  {kunde.phone}
-                </a>
-              )}
-              {kunde.vat_id && (
-                <span className="inline-flex items-center gap-1">
-                  <Icon icon="ph:identification-card" className="size-4" />
-                  {kunde.vat_id}
-                </span>
-              )}
-              {hauptkontakt && (
-                <span className="inline-flex items-center gap-1">
-                  <Icon icon="ph:user" className="size-4" />
-                  {t("kontaktePage.primaryContact")}: {hauptkontakt.name}
-                </span>
-              )}
-            </div>
-            {uebersicht.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {uebersicht.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-medium text-accent"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        </Card>
+        <KundenKopf kunde={kunde} uebersicht={uebersicht} hauptkontakt={hauptkontakt} />
         {kennzahlen}
       </div>
 
@@ -145,5 +85,81 @@ export function KundenDetail({
       {reiter === "adressen" && <AdressenTab customerId={kunde.id} kunde={kunde} anschriften={anschriften} />}
       {reiter === "notizen" && <NotizenTab customerId={kunde.id} notizen={notizen} />}
     </div>
+  );
+}
+
+/** Der Kopf der Kundenakte: Name, Kennzeichen, Erreichbarkeit, Schlagwörter. */
+function KundenKopf({
+  kunde,
+  uebersicht,
+  hauptkontakt,
+}: {
+  kunde: KundeDetail;
+  uebersicht: KundenUebersicht;
+  hauptkontakt: Ansprechpartner | null;
+}) {
+  const t = useTranslations("finance");
+  return (
+      <Card className="flex flex-wrap items-center gap-4 p-4">
+        <Avatar className="size-14">
+          <AvatarFallback className="text-lg">{initialen(kunde.name)}</AvatarFallback>
+        </Avatar>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="font-display text-2xl font-extrabold">{kunde.name}</h2>
+            {kunde.customer_number && (
+              <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                {kunde.customer_number}
+              </span>
+            )}
+            <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              {kunde.customer_type === "private" ? t("kundenPage.typePrivate") : t("kundenPage.typeBusiness")}
+            </span>
+            {kunde.is_supplier && (
+              <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                {t("kundenPage.supplier")}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            {kunde.email && (
+              <a href={`mailto:${kunde.email}`} className="inline-flex items-center gap-1 hover:text-foreground">
+                <Icon icon="ph:envelope-simple" className="size-4" />
+                {kunde.email}
+              </a>
+            )}
+            {kunde.phone && (
+              <a href={`tel:${kunde.phone}`} className="inline-flex items-center gap-1 hover:text-foreground">
+                <Icon icon="ph:phone" className="size-4" />
+                {kunde.phone}
+              </a>
+            )}
+            {kunde.vat_id && (
+              <span className="inline-flex items-center gap-1">
+                <Icon icon="ph:identification-card" className="size-4" />
+                {kunde.vat_id}
+              </span>
+            )}
+            {hauptkontakt && (
+              <span className="inline-flex items-center gap-1">
+                <Icon icon="ph:user" className="size-4" />
+                {t("kontaktePage.primaryContact")}: {hauptkontakt.name}
+              </span>
+            )}
+          </div>
+          {uebersicht.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {uebersicht.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-medium text-accent"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </Card>
   );
 }

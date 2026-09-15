@@ -114,46 +114,16 @@ export function ArtikelListe({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-60 flex-1">
-          <Icon
-            icon="ph:magnifying-glass"
-            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            value={suche}
-            onChange={(e) => setSuche(e.target.value)}
-            placeholder={t("artikelPage.searchPlaceholder")}
-            className="pl-9"
-            aria-label={t("artikelPage.searchPlaceholder")}
-          />
-        </div>
-        <NativeSelect
-          value={kategorie}
-          onChange={(e) => setKategorie(e.target.value)}
-          className="w-auto min-w-44"
-          aria-label={t("artikelPage.filterCategory")}
-        >
-          <option value={ALLE}>{t("artikelPage.allCategories")}</option>
-          {kategorien.map((k) => (
-            <option key={k.name} value={k.name}>
-              {k.name} ({k.itemCount})
-            </option>
-          ))}
-        </NativeSelect>
-        <label className="flex items-center gap-2 text-sm">
-          <Switch
-            checked={nurAktive}
-            onCheckedChange={setNurAktive}
-            aria-label={t("artikelPage.onlyActive")}
-          />
-          {t("artikelPage.onlyActive")}
-        </label>
-        <Button onClick={oeffnenNeu} className="gap-2">
-          <Icon icon="ph:plus" className="size-4" />
-          {t("artikelPage.newItem")}
-        </Button>
-      </div>
+      <ArtikelFilter
+        suche={suche}
+        setSuche={setSuche}
+        kategorie={kategorie}
+        setKategorie={setKategorie}
+        kategorien={kategorien}
+        nurAktive={nurAktive}
+        setNurAktive={setNurAktive}
+        onNeu={oeffnenNeu}
+      />
 
       {items.length === 0 ? (
         <EmptyState
@@ -190,77 +160,16 @@ export function ArtikelListe({
             </thead>
             <tbody className="divide-y divide-border">
               {gefiltert.map((a) => (
-                <tr
+                <ArtikelZeile
                   key={a.id}
-                  className={`transition-colors hover:bg-secondary/30 ${a.isActive ? "" : "text-muted-foreground"}`}
-                >
-                  <td className="px-3 py-2">
-                    <button
-                      type="button"
-                      disabled={laufend === a.id}
-                      onClick={() => favoritSetzen(a)}
-                      aria-pressed={a.isFavorite}
-                      aria-label={
-                        a.isFavorite
-                          ? t("artikelPage.removeFavorite")
-                          : t("artikelPage.addFavorite")
-                      }
-                      className="rounded-full p-1.5 transition-colors hover:bg-secondary disabled:opacity-50"
-                    >
-                      <Icon
-                        icon={a.isFavorite ? "ph:star-fill" : "ph:star"}
-                        className={`size-4 ${a.isFavorite ? "text-accent" : "text-muted-foreground"}`}
-                      />
-                    </button>
-                  </td>
-                  <td className="px-4 py-2 font-medium">{a.itemNumber}</td>
-                  <td className="px-4 py-2">
-                    <div className="font-medium text-foreground">{a.name}</div>
-                    {a.description && (
-                      <div className="line-clamp-1 text-xs text-muted-foreground">{a.description}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-2">{a.category || "—"}</td>
-                  <td className="px-4 py-2">{a.unit}</td>
-                  <td className="px-4 py-2 text-right font-medium tabular-nums">
-                    {formatPreis(a.unitPrice, a.currency)}
-                  </td>
-                  <td className="px-4 py-2 text-right tabular-nums">{formatSatz(a.taxRate, locale)}</td>
-                  <td className="px-4 py-2 text-right tabular-nums">{a.usageCount}</td>
-                  <td className="px-4 py-2">
-                    <Switch
-                      checked={a.isActive}
-                      disabled={laufend === a.id}
-                      onCheckedChange={(v) => aktivSetzen(a, v)}
-                      aria-label={t("artikelPage.columnActive")}
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        aria-label={t("artikelPage.edit")}
-                        onClick={() => oeffnenBearbeiten(a)}
-                      >
-                        <Icon icon="ph:pencil-simple" className="size-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 text-destructive"
-                        aria-label={t("artikelPage.delete")}
-                        disabled={laufend === a.id}
-                        onClick={() => loeschen(a)}
-                      >
-                        <Icon icon="ph:trash" className="size-4" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+                  artikel={a}
+                  locale={locale}
+                  laeuft={laufend === a.id}
+                  onFavorit={favoritSetzen}
+                  onAktiv={aktivSetzen}
+                  onBearbeiten={oeffnenBearbeiten}
+                  onLoeschen={loeschen}
+                />
               ))}
             </tbody>
           </table>
@@ -274,5 +183,164 @@ export function ArtikelListe({
         kategorien={kategorien}
       />
     </div>
+  );
+}
+
+/** Eine Tabellenzeile des Artikelstamms. */
+function ArtikelZeile({
+  artikel: a,
+  locale,
+  laeuft,
+  onFavorit,
+  onAktiv,
+  onBearbeiten,
+  onLoeschen,
+}: {
+  artikel: BillingItem;
+  locale: string;
+  laeuft: boolean;
+  onFavorit: (a: BillingItem) => void;
+  onAktiv: (a: BillingItem, aktiv: boolean) => void;
+  onBearbeiten: (a: BillingItem) => void;
+  onLoeschen: (a: BillingItem) => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+  <tr
+    key={a.id}
+    className={`transition-colors hover:bg-secondary/30 ${a.isActive ? "" : "text-muted-foreground"}`}
+  >
+    <td className="px-3 py-2">
+      <button
+        type="button"
+        disabled={laeuft}
+        onClick={() => onFavorit(a)}
+        aria-pressed={a.isFavorite}
+        aria-label={
+          a.isFavorite
+            ? t("artikelPage.removeFavorite")
+            : t("artikelPage.addFavorite")
+        }
+        className="rounded-full p-1.5 transition-colors hover:bg-secondary disabled:opacity-50"
+      >
+        <Icon
+          icon={a.isFavorite ? "ph:star-fill" : "ph:star"}
+          className={`size-4 ${a.isFavorite ? "text-accent" : "text-muted-foreground"}`}
+        />
+      </button>
+    </td>
+    <td className="px-4 py-2 font-medium">{a.itemNumber}</td>
+    <td className="px-4 py-2">
+      <div className="font-medium text-foreground">{a.name}</div>
+      {a.description && (
+        <div className="line-clamp-1 text-xs text-muted-foreground">{a.description}</div>
+      )}
+    </td>
+    <td className="px-4 py-2">{a.category || "—"}</td>
+    <td className="px-4 py-2">{a.unit}</td>
+    <td className="px-4 py-2 text-right font-medium tabular-nums">
+      {formatPreis(a.unitPrice, a.currency)}
+    </td>
+    <td className="px-4 py-2 text-right tabular-nums">{formatSatz(a.taxRate, locale)}</td>
+    <td className="px-4 py-2 text-right tabular-nums">{a.usageCount}</td>
+    <td className="px-4 py-2">
+      <Switch
+        checked={a.isActive}
+        disabled={laeuft}
+        onCheckedChange={(v) => onAktiv(a, v)}
+        aria-label={t("artikelPage.columnActive")}
+      />
+    </td>
+    <td className="px-3 py-2">
+      <div className="flex justify-end gap-1">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          aria-label={t("artikelPage.edit")}
+          onClick={() => onBearbeiten(a)}
+        >
+          <Icon icon="ph:pencil-simple" className="size-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8 text-destructive"
+          aria-label={t("artikelPage.delete")}
+          disabled={laeuft}
+          onClick={() => onLoeschen(a)}
+        >
+          <Icon icon="ph:trash" className="size-4" />
+        </Button>
+      </div>
+    </td>
+  </tr>
+  );
+}
+
+/** Suche, Kategoriefilter, Aktiv-Schalter und der Knopf »Neuer Artikel«. */
+function ArtikelFilter({
+  suche,
+  setSuche,
+  kategorie,
+  setKategorie,
+  kategorien,
+  nurAktive,
+  setNurAktive,
+  onNeu,
+}: {
+  suche: string;
+  setSuche: (v: string) => void;
+  kategorie: string;
+  setKategorie: (v: string) => void;
+  kategorien: BillingItemCategory[];
+  nurAktive: boolean;
+  setNurAktive: (v: boolean) => void;
+  onNeu: () => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+  <div className="flex flex-wrap items-center gap-3">
+    <div className="relative min-w-60 flex-1">
+      <Icon
+        icon="ph:magnifying-glass"
+        className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+      />
+      <Input
+        value={suche}
+        onChange={(e) => setSuche(e.target.value)}
+        placeholder={t("artikelPage.searchPlaceholder")}
+        className="pl-9"
+        aria-label={t("artikelPage.searchPlaceholder")}
+      />
+    </div>
+    <NativeSelect
+      value={kategorie}
+      onChange={(e) => setKategorie(e.target.value)}
+      className="w-auto min-w-44"
+      aria-label={t("artikelPage.filterCategory")}
+    >
+      <option value={ALLE}>{t("artikelPage.allCategories")}</option>
+      {kategorien.map((k) => (
+        <option key={k.name} value={k.name}>
+          {k.name} ({k.itemCount})
+        </option>
+      ))}
+    </NativeSelect>
+    <label className="flex items-center gap-2 text-sm">
+      <Switch
+        checked={nurAktive}
+        onCheckedChange={setNurAktive}
+        aria-label={t("artikelPage.onlyActive")}
+      />
+      {t("artikelPage.onlyActive")}
+    </label>
+    <Button onClick={onNeu} className="gap-2">
+      <Icon icon="ph:plus" className="size-4" />
+      {t("artikelPage.newItem")}
+    </Button>
+  </div>
   );
 }

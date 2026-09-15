@@ -82,7 +82,7 @@ def test_summen_je_satz_aus_positionen_und_kennzahlen_de() -> None:
                 "gross_amount": "238.00",
                 "tax_rate": "19",
                 "currency": "EUR",
-                "status": "booked",
+                "payment_status": "open",
             },
         ],
     )
@@ -285,7 +285,7 @@ def test_fehlende_ausgaben_tabelle_warnt_statt_500() -> None:
     assert a.payable == Decimal("19.00")
 
 
-def test_ausgaben_entwuerfe_zaehlen_nicht() -> None:
+def test_stornierte_ausgaben_zaehlen_nicht() -> None:
     svc, _ = _svc(
         expenses=[
             {
@@ -296,7 +296,7 @@ def test_ausgaben_entwuerfe_zaehlen_nicht() -> None:
                 "tax_amount": "19",
                 "tax_rate": "19",
                 "currency": "EUR",
-                "status": "draft",
+                "payment_status": "cancelled",
             },
             {
                 "id": "e2",
@@ -306,7 +306,7 @@ def test_ausgaben_entwuerfe_zaehlen_nicht() -> None:
                 "tax_amount": "1.90",
                 "tax_rate": "19",
                 "currency": "EUR",
-                "status": "booked",
+                "payment_status": "open",
             },
         ],
     )

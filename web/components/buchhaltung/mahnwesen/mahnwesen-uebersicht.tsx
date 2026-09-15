@@ -113,56 +113,15 @@ export function MahnwesenUebersicht({
         ]}
       />
 
-      {reiter === "overdue" &&
-        (overdue.length === 0 ? (
-          <Leer icon="ph:check-circle" titel={t("mahnwesenPage.overdueEmptyTitle")} text={t("mahnwesenPage.overdueEmptySubtitle")} />
-        ) : (
-          <Card className="overflow-x-auto p-0">
-            <table className="w-full text-sm">
-              <thead className="border-b bg-secondary/40 text-left text-xs text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 font-medium">{t("mahnwesenPage.colInvoice")}</th>
-                  <th className="px-4 py-3 font-medium">{t("mahnwesenPage.colCustomer")}</th>
-                  <th className="px-4 py-3 font-medium">{t("mahnwesenPage.colDue")}</th>
-                  <th className="px-4 py-3 text-right font-medium">{t("mahnwesenPage.colDaysOverdue")}</th>
-                  <th className="px-4 py-3 text-right font-medium">{t("mahnwesenPage.colOpen")}</th>
-                  <th className="px-4 py-3 font-medium">{t("mahnwesenPage.colLastLevel")}</th>
-                  <th className="px-4 py-3 text-right font-medium">{t("mahnwesenPage.colActions")}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {overdue.map((r) => (
-                  <tr key={r.id} className="transition-colors hover:bg-secondary/30">
-                    <td className="px-4 py-3 font-medium">{r.invoiceNumber ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.customerName ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{datum(r.dueDate)}</td>
-                    <td className="px-4 py-3 text-right">{r.daysOverdue}</td>
-                    <td className="px-4 py-3 text-right font-medium">{geld(r.amountOpen, r.currency)}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {r.lastLevel === 0
-                        ? t("mahnwesenPage.noReminderYet")
-                        : t("mahnwesenPage.levelLabel", { level: r.lastLevel })}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {r.nextLevel === null ? (
-                        <span className="text-xs text-muted-foreground">{t("mahnwesenPage.maxLevelReached")}</span>
-                      ) : (
-                        <Button size="sm" onClick={() => anlegen(r)} disabled={pendingId !== null}>
-                          {pendingId === r.id ? (
-                            <Icon icon="ph:spinner" className="size-4 animate-spin" />
-                          ) : (
-                            <Icon icon="ph:plus" className="size-4" />
-                          )}
-                          {t("mahnwesenPage.createReminder", { level: r.nextLevel })}
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-        ))}
+      {reiter === "overdue" && (
+        <UeberfaelligeTabelle
+          overdue={overdue}
+          pendingId={pendingId}
+          datum={datum}
+          geld={geld}
+          onAnlegen={anlegen}
+        />
+      )}
 
       {reiter === "reminders" &&
         (reminders.length === 0 ? (
@@ -226,6 +185,79 @@ function Leer({ icon, titel, text }: { icon: string; titel: string; text: string
         <p className="font-display text-lg font-extrabold">{titel}</p>
         <p className="text-sm text-muted-foreground">{text}</p>
       </div>
+    </Card>
+  );
+}
+
+/** Die Tabelle der überfälligen Rechnungen samt Knopf für die nächste Stufe. */
+function UeberfaelligeTabelle({
+  overdue,
+  pendingId,
+  datum,
+  geld,
+  onAnlegen,
+}: {
+  overdue: OverdueInvoice[];
+  pendingId: string | null;
+  datum: (iso: string) => string;
+  geld: (betrag: string, waehrung: string) => string;
+  onAnlegen: (r: OverdueInvoice) => void;
+}) {
+  const t = useTranslations("finance");
+  if (overdue.length === 0) {
+    return (
+      <Leer
+        icon="ph:check-circle"
+        titel={t("mahnwesenPage.overdueEmptyTitle")}
+        text={t("mahnwesenPage.overdueEmptySubtitle")}
+      />
+    );
+  }
+  return (
+    <Card className="overflow-x-auto p-0">
+          <table className="w-full text-sm">
+            <thead className="border-b bg-secondary/40 text-left text-xs text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 font-medium">{t("mahnwesenPage.colInvoice")}</th>
+                <th className="px-4 py-3 font-medium">{t("mahnwesenPage.colCustomer")}</th>
+                <th className="px-4 py-3 font-medium">{t("mahnwesenPage.colDue")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("mahnwesenPage.colDaysOverdue")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("mahnwesenPage.colOpen")}</th>
+                <th className="px-4 py-3 font-medium">{t("mahnwesenPage.colLastLevel")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("mahnwesenPage.colActions")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {overdue.map((r) => (
+                <tr key={r.id} className="transition-colors hover:bg-secondary/30">
+                  <td className="px-4 py-3 font-medium">{r.invoiceNumber ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{r.customerName ?? "—"}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{datum(r.dueDate)}</td>
+                  <td className="px-4 py-3 text-right">{r.daysOverdue}</td>
+                  <td className="px-4 py-3 text-right font-medium">{geld(r.amountOpen, r.currency)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {r.lastLevel === 0
+                      ? t("mahnwesenPage.noReminderYet")
+                      : t("mahnwesenPage.levelLabel", { level: r.lastLevel })}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {r.nextLevel === null ? (
+                      <span className="text-xs text-muted-foreground">{t("mahnwesenPage.maxLevelReached")}</span>
+                    ) : (
+                      <Button size="sm" onClick={() => onAnlegen(r)} disabled={pendingId !== null}>
+                        {pendingId === r.id ? (
+                          <Icon icon="ph:spinner" className="size-4 animate-spin" />
+                        ) : (
+                          <Icon icon="ph:plus" className="size-4" />
+                        )}
+                        {t("mahnwesenPage.createReminder", { level: r.nextLevel })}
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
     </Card>
   );
 }

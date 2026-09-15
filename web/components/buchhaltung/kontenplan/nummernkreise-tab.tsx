@@ -177,61 +177,97 @@ export function NummernkreiseTab({ sequences }: { sequences: NumberSequence[] })
         </table>
       </Card>
 
-      <Sheet open={aktiv !== null} onOpenChange={(o) => !o && setAktiv(null)}>
-        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
-          <SheetHeader className="border-b">
-            <SheetTitle className="font-display text-lg font-extrabold">
-              {t("kontenplanPage.editSequence", { type: aktiv?.type ?? "" })}
-            </SheetTitle>
-            <SheetDescription>{t("kontenplanPage.sequenceSheetDescription")}</SheetDescription>
-          </SheetHeader>
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="ns-prefix">{t("kontenplanPage.prefix")}</Label>
-                <Input id="ns-prefix" value={form.prefix} onChange={(e) => setForm({ ...form, prefix: e.target.value })} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="ns-padding">{t("kontenplanPage.padding")}</Label>
-                <Input id="ns-padding" inputMode="numeric" value={form.padding} onChange={(e) => setForm({ ...form, padding: e.target.value })} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="ns-suffix">{t("kontenplanPage.suffix")}</Label>
-                <Input id="ns-suffix" value={form.suffix} onChange={(e) => setForm({ ...form, suffix: e.target.value })} />
-              </div>
+      <NummernkreisSheet
+        aktiv={aktiv}
+        setAktiv={setAktiv}
+        form={form}
+        setForm={setForm}
+        busy={busy}
+        fehler={fehler}
+        gezogen={gezogen}
+        onSpeichern={speichern}
+      />
+    </div>
+  );
+}
+
+/** Das Sheet zum Ändern eines Nummernkreises. Der Startwert ist gesperrt,
+ *  sobald eine Nummer gezogen wurde (GoBD). */
+function NummernkreisSheet({
+  aktiv,
+  setAktiv,
+  form,
+  setForm,
+  busy,
+  fehler,
+  gezogen,
+  onSpeichern,
+}: {
+  aktiv: NumberSequence | null;
+  setAktiv: (s: NumberSequence | null) => void;
+  form: Formular;
+  setForm: React.Dispatch<React.SetStateAction<Formular>>;
+  busy: boolean;
+  fehler: string | null;
+  gezogen: (seq: NumberSequence) => boolean;
+  onSpeichern: () => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <Sheet open={aktiv !== null} onOpenChange={(o) => !o && setAktiv(null)}>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+        <SheetHeader className="border-b">
+          <SheetTitle className="font-display text-lg font-extrabold">
+            {t("kontenplanPage.editSequence", { type: aktiv?.type ?? "" })}
+          </SheetTitle>
+          <SheetDescription>{t("kontenplanPage.sequenceSheetDescription")}</SheetDescription>
+        </SheetHeader>
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ns-prefix">{t("kontenplanPage.prefix")}</Label>
+              <Input id="ns-prefix" value={form.prefix} onChange={(e) => setForm({ ...form, prefix: e.target.value })} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="flex items-center gap-1.5">
-                <Label htmlFor="ns-start">{t("kontenplanPage.startValue")}</Label>
-                <InfoHinweis ariaLabel={t("kontenplanPage.startValueHintAria")} text={t("kontenplanPage.startValueHint")} />
-              </span>
-              <Input
-                id="ns-start"
-                inputMode="numeric"
-                value={form.nextNumber}
-                disabled={aktiv ? gezogen(aktiv) : true}
-                onChange={(e) => setForm({ ...form, nextNumber: e.target.value })}
-              />
-              {aktiv && gezogen(aktiv) && (
-                <p className="text-xs text-muted-foreground">{t("kontenplanPage.startValueLocked")}</p>
-              )}
+              <Label htmlFor="ns-padding">{t("kontenplanPage.padding")}</Label>
+              <Input id="ns-padding" inputMode="numeric" value={form.padding} onChange={(e) => setForm({ ...form, padding: e.target.value })} />
             </div>
-            <div className="rounded-(--radius) border bg-secondary/40 px-3 py-2">
-              <p className="text-xs text-muted-foreground">{t("kontenplanPage.preview")}</p>
-              <p className="font-mono text-lg">{vorschau(form)}</p>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ns-suffix">{t("kontenplanPage.suffix")}</Label>
+              <Input id="ns-suffix" value={form.suffix} onChange={(e) => setForm({ ...form, suffix: e.target.value })} />
             </div>
-            {fehler && <p className="text-sm text-destructive">{fehler}</p>}
           </div>
-          <SheetFooter className="border-t">
-            <Button variant="outline" onClick={() => setAktiv(null)}>
-              {t("kontenplanPage.cancel")}
-            </Button>
-            <Button onClick={speichern} disabled={busy}>
-              {busy ? t("kontenplanPage.saving") : t("kontenplanPage.save")}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-    </div>
+          <div className="flex flex-col gap-1.5">
+            <span className="flex items-center gap-1.5">
+              <Label htmlFor="ns-start">{t("kontenplanPage.startValue")}</Label>
+              <InfoHinweis ariaLabel={t("kontenplanPage.startValueHintAria")} text={t("kontenplanPage.startValueHint")} />
+            </span>
+            <Input
+              id="ns-start"
+              inputMode="numeric"
+              value={form.nextNumber}
+              disabled={aktiv ? gezogen(aktiv) : true}
+              onChange={(e) => setForm({ ...form, nextNumber: e.target.value })}
+            />
+            {aktiv && gezogen(aktiv) && (
+              <p className="text-xs text-muted-foreground">{t("kontenplanPage.startValueLocked")}</p>
+            )}
+          </div>
+          <div className="rounded-(--radius) border bg-secondary/40 px-3 py-2">
+            <p className="text-xs text-muted-foreground">{t("kontenplanPage.preview")}</p>
+            <p className="font-mono text-lg">{vorschau(form)}</p>
+          </div>
+          {fehler && <p className="text-sm text-destructive">{fehler}</p>}
+        </div>
+        <SheetFooter className="border-t">
+          <Button variant="outline" onClick={() => setAktiv(null)}>
+            {t("kontenplanPage.cancel")}
+          </Button>
+          <Button onClick={onSpeichern} disabled={busy}>
+            {busy ? t("kontenplanPage.saving") : t("kontenplanPage.save")}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

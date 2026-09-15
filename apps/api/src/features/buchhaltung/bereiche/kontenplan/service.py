@@ -22,7 +22,15 @@ Vorschau). Die REGELN stehen hier und nur hier:
 
 Jede per-ID-Ladung läuft über `load_scoped` (Wurzel 3); Listen filtern immer
 auf `tenant_id`. Jede Zustandsänderung loggt Tenant + ID.
+
+Dieser Bereich liest den Koordinator (`BuchhaltungService`) bewusst an seinen
+internen Katalogen: `_DOC_TYPE_MAP`, `_PADDING_VORGABE` und `_kreis_als_bestand`
+sind die EINE Quelle der Bestands-Label und der Nummernkreis-Vorgaben. Eine
+Kopie hier wäre die zweite Wahrheit und liefe beim nächsten neuen Belegtyp
+auseinander. Die Stellen tragen je ein `# noqa: SLF001`; pylints
+`protected-access` ist deshalb modulweit aus.
 """
+# pylint: disable=protected-access
 
 from __future__ import annotations
 
@@ -512,7 +520,10 @@ class KontenplanService:
                 "doc_type": doc_type,
                 "prefix": felder.get("prefix", prefix_vorgabe),
                 "suffix": felder.get("suffix", ""),
-                "padding": felder.get("padding", BuchhaltungService._PADDING_VORGABE),  # noqa: SLF001
+                "padding": felder.get(
+                    "padding",
+                    BuchhaltungService._PADDING_VORGABE,  # noqa: SLF001
+                ),
             }
             if data.next_number is not None:
                 neu["next_value"] = data.next_number

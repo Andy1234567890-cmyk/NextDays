@@ -164,7 +164,7 @@ def test_profit_estimate_mit_parametern() -> None:
                 "tax_amount": "7.60",
                 "tax_rate": "19",
                 "currency": "EUR",
-                "status": "booked",
+                "payment_status": "open",
             }
         ],
         tax_settings=[

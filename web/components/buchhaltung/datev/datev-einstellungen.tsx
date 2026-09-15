@@ -64,6 +64,84 @@ export function feldLabel(t: ReturnType<typeof useTranslations>, feld: string): 
   return key ? t(`datevPage.feld.${key}`) : feld;
 }
 
+/** Der Formularzustand: alle Felder als Strings, wie das Formular sie hält. */
+type Formular = {
+  beraterNummer: string;
+  mandantenNummer: string;
+  kontenrahmen: Kontenrahmen | "";
+  sachkontenlaenge: string;
+  wjMonat: string;
+  erloes: string;
+  aufwand: string;
+  finanz: string;
+  debitorStart: string;
+  kreditorStart: string;
+  buErloes: BuZeile[];
+  buAufwand: BuZeile[];
+  festschreibung: boolean;
+};
+
+function zahl(v: number | null | undefined): string {
+  return v?.toString() ?? "";
+}
+
+function ausSettings(s: DatevSettings): Formular {
+  return {
+    beraterNummer: zahl(s.beraterNummer),
+    mandantenNummer: zahl(s.mandantenNummer),
+    kontenrahmen: s.kontenrahmen ?? "",
+    sachkontenlaenge: zahl(s.sachkontenlaenge),
+    wjMonat: zahl(s.wirtschaftsjahrBeginnMonat),
+    erloes: s.standardErloeskonto ?? "",
+    aufwand: s.standardAufwandskonto ?? "",
+    finanz: s.standardFinanzkonto ?? "",
+    debitorStart: zahl(s.debitorKontoStart),
+    kreditorStart: zahl(s.kreditorKontoStart),
+    buErloes: mapZuZeilen(s.buSchluesselErloes),
+    buAufwand: mapZuZeilen(s.buSchluesselAufwand),
+    festschreibung: s.festschreibung ?? false,
+  };
+}
+
+/** DATEV nimmt einen Stapel nur mit VOLLSTÄNDIGEN Stammdaten an — deshalb
+ *  Pflicht, nicht „nach Möglichkeit". */
+function vollstaendig(f: Formular): boolean {
+  const pflicht = [
+    f.beraterNummer,
+    f.mandantenNummer,
+    f.kontenrahmen,
+    f.sachkontenlaenge,
+    f.wjMonat,
+    f.erloes,
+    f.aufwand,
+    f.finanz,
+    f.debitorStart,
+    f.kreditorStart,
+  ];
+  return !pflicht.some((v) => v === "") && f.buErloes.length > 0 && f.buAufwand.length > 0;
+}
+
+function nutzlast(f: Formular, settings: DatevSettings): DatevSettingsInput {
+  return {
+    beraterNummer: Number(f.beraterNummer),
+    mandantenNummer: Number(f.mandantenNummer),
+    kontenrahmen: f.kontenrahmen as Kontenrahmen,
+    sachkontenlaenge: Number(f.sachkontenlaenge),
+    wirtschaftsjahrBeginnMonat: Number(f.wjMonat),
+    standardErloeskonto: f.erloes.trim(),
+    standardAufwandskonto: f.aufwand.trim(),
+    standardFinanzkonto: f.finanz.trim(),
+    debitorKontoStart: Number(f.debitorStart),
+    kreditorKontoStart: Number(f.kreditorStart),
+    buSchluesselErloes: zeilenZuMap(f.buErloes),
+    buSchluesselAufwand: zeilenZuMap(f.buAufwand),
+    // Zuordnung Zahlungskonto → Sachkonto bleibt hier unverändert (kein Editor
+    // in dieser Fassung); ohne Eintrag gilt das Standard-Finanzkonto.
+    finanzkonten: settings.finanzkonten ?? {},
+    festschreibung: f.festschreibung,
+  };
+}
+
 export function DatevEinstellungen({ settings }: { settings: DatevSettings }) {
   const t = useTranslations("finance");
   const router = useRouter();
@@ -71,50 +149,20 @@ export function DatevEinstellungen({ settings }: { settings: DatevSettings }) {
   const [fehler, setFehler] = useState<string | null>(null);
   const [bearbeiten, setBearbeiten] = useState(!settings.configured);
 
-  const [beraterNummer, setBeraterNummer] = useState(settings.beraterNummer?.toString() ?? "");
-  const [mandantenNummer, setMandantenNummer] = useState(settings.mandantenNummer?.toString() ?? "");
-  const [kontenrahmen, setKontenrahmen] = useState<Kontenrahmen | "">(settings.kontenrahmen ?? "");
-  const [sachkontenlaenge, setSachkontenlaenge] = useState(settings.sachkontenlaenge?.toString() ?? "");
-  const [wjMonat, setWjMonat] = useState(settings.wirtschaftsjahrBeginnMonat?.toString() ?? "");
-  const [erloes, setErloes] = useState(settings.standardErloeskonto ?? "");
-  const [aufwand, setAufwand] = useState(settings.standardAufwandskonto ?? "");
-  const [finanz, setFinanz] = useState(settings.standardFinanzkonto ?? "");
-  const [debitorStart, setDebitorStart] = useState(settings.debitorKontoStart?.toString() ?? "");
-  const [kreditorStart, setKreditorStart] = useState(settings.kreditorKontoStart?.toString() ?? "");
-  const [buErloes, setBuErloes] = useState<BuZeile[]>(mapZuZeilen(settings.buSchluesselErloes));
-  const [buAufwand, setBuAufwand] = useState<BuZeile[]>(mapZuZeilen(settings.buSchluesselAufwand));
-  const [festschreibung, setFestschreibung] = useState(settings.festschreibung ?? false);
+  const [f, setF] = useState<Formular>(() => ausSettings(settings));
+  const setzen = <K extends keyof Formular>(k: K, v: Formular[K]) =>
+    setF((p) => ({ ...p, [k]: v }));
 
   const monate = Array.from({ length: 12 }, (_, i) => i + 1);
 
   async function speichern() {
     setFehler(null);
-    const pflicht = [beraterNummer, mandantenNummer, kontenrahmen, sachkontenlaenge, wjMonat,
-      erloes, aufwand, finanz, debitorStart, kreditorStart];
-    if (pflicht.some((v) => v === "") || buErloes.length === 0 || buAufwand.length === 0) {
+    if (!vollstaendig(f)) {
       setFehler(t("datevPage.settings.errorMissing"));
       return;
     }
-    const input: DatevSettingsInput = {
-      beraterNummer: Number(beraterNummer),
-      mandantenNummer: Number(mandantenNummer),
-      kontenrahmen: kontenrahmen as Kontenrahmen,
-      sachkontenlaenge: Number(sachkontenlaenge),
-      wirtschaftsjahrBeginnMonat: Number(wjMonat),
-      standardErloeskonto: erloes.trim(),
-      standardAufwandskonto: aufwand.trim(),
-      standardFinanzkonto: finanz.trim(),
-      debitorKontoStart: Number(debitorStart),
-      kreditorKontoStart: Number(kreditorStart),
-      buSchluesselErloes: zeilenZuMap(buErloes),
-      buSchluesselAufwand: zeilenZuMap(buAufwand),
-      // Zuordnung Zahlungskonto → Sachkonto bleibt hier unverändert (kein Editor
-      // in dieser Fassung); ohne Eintrag gilt das Standard-Finanzkonto.
-      finanzkonten: settings.finanzkonten ?? {},
-      festschreibung,
-    };
     setBusy(true);
-    const res = await saveDatevSettings(input);
+    const res = await saveDatevSettings(nutzlast(f, settings));
     setBusy(false);
     if (!res.ok) {
       setFehler(res.error);
@@ -127,36 +175,7 @@ export function DatevEinstellungen({ settings }: { settings: DatevSettings }) {
   }
 
   if (!bearbeiten) {
-    return (
-      <Card className="flex flex-col gap-4 p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="font-display text-lg font-extrabold">{t("datevPage.settings.title")}</h3>
-            <p className="text-sm text-muted-foreground">{t("datevPage.settings.subtitle")}</p>
-          </div>
-          <Button type="button" variant="outline" size="sm" onClick={() => setBearbeiten(true)}>
-            <Icon icon="ph:pencil-simple" className="size-4" />
-            {t("datevPage.settings.edit")}
-          </Button>
-        </div>
-        <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
-          <Wert label={t("datevPage.feld.beraterNummer")} wert={settings.beraterNummer} />
-          <Wert label={t("datevPage.feld.mandantenNummer")} wert={settings.mandantenNummer} />
-          <Wert label={t("datevPage.feld.kontenrahmen")} wert={settings.kontenrahmen} />
-          <Wert label={t("datevPage.feld.sachkontenlaenge")} wert={settings.sachkontenlaenge} />
-          <Wert label={t("datevPage.feld.wirtschaftsjahrBeginnMonat")} wert={settings.wirtschaftsjahrBeginnMonat} />
-          <Wert label={t("datevPage.feld.standardErloeskonto")} wert={settings.standardErloeskonto} />
-          <Wert label={t("datevPage.feld.standardAufwandskonto")} wert={settings.standardAufwandskonto} />
-          <Wert label={t("datevPage.feld.standardFinanzkonto")} wert={settings.standardFinanzkonto} />
-          <Wert label={t("datevPage.feld.debitorKontoStart")} wert={settings.debitorKontoStart} />
-          <Wert label={t("datevPage.feld.kreditorKontoStart")} wert={settings.kreditorKontoStart} />
-          <Wert
-            label={t("datevPage.feld.festschreibung")}
-            wert={settings.festschreibung ? t("datevPage.yes") : t("datevPage.no")}
-          />
-        </dl>
-      </Card>
-    );
+    return <DatevUebersicht settings={settings} onBearbeiten={() => setBearbeiten(true)} />;
   }
 
   return (
@@ -175,20 +194,20 @@ export function DatevEinstellungen({ settings }: { settings: DatevSettings }) {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Feld label={t("datevPage.feld.beraterNummer")} hinweis={t("datevPage.hint.beraterNummer")} t={t}>
-          <Input inputMode="numeric" value={beraterNummer} onChange={(e) => setBeraterNummer(e.target.value)} />
+          <Input inputMode="numeric" value={f.beraterNummer} onChange={(e) => setzen("beraterNummer", e.target.value)} />
         </Feld>
         <Feld label={t("datevPage.feld.mandantenNummer")} hinweis={t("datevPage.hint.mandantenNummer")} t={t}>
-          <Input inputMode="numeric" value={mandantenNummer} onChange={(e) => setMandantenNummer(e.target.value)} />
+          <Input inputMode="numeric" value={f.mandantenNummer} onChange={(e) => setzen("mandantenNummer", e.target.value)} />
         </Feld>
         <Feld label={t("datevPage.feld.kontenrahmen")} hinweis={t("datevPage.hint.kontenrahmen")} t={t}>
-          <NativeSelect value={kontenrahmen} onChange={(e) => setKontenrahmen(e.target.value as Kontenrahmen | "")}>
+          <NativeSelect value={f.kontenrahmen} onChange={(e) => setzen("kontenrahmen", e.target.value as Kontenrahmen | "")}>
             <option value="">{t("datevPage.settings.choose")}</option>
             <option value="SKR03">SKR03</option>
             <option value="SKR04">SKR04</option>
           </NativeSelect>
         </Feld>
         <Feld label={t("datevPage.feld.sachkontenlaenge")} hinweis={t("datevPage.hint.sachkontenlaenge")} t={t}>
-          <NativeSelect value={sachkontenlaenge} onChange={(e) => setSachkontenlaenge(e.target.value)}>
+          <NativeSelect value={f.sachkontenlaenge} onChange={(e) => setzen("sachkontenlaenge", e.target.value)}>
             <option value="">{t("datevPage.settings.choose")}</option>
             {[4, 5, 6, 7, 8].map((n) => (
               <option key={n} value={n}>{n}</option>
@@ -196,7 +215,7 @@ export function DatevEinstellungen({ settings }: { settings: DatevSettings }) {
           </NativeSelect>
         </Feld>
         <Feld label={t("datevPage.feld.wirtschaftsjahrBeginnMonat")} hinweis={t("datevPage.hint.wirtschaftsjahrBeginnMonat")} t={t}>
-          <NativeSelect value={wjMonat} onChange={(e) => setWjMonat(e.target.value)}>
+          <NativeSelect value={f.wjMonat} onChange={(e) => setzen("wjMonat", e.target.value)}>
             <option value="">{t("datevPage.settings.choose")}</option>
             {monate.map((m) => (
               <option key={m} value={m}>{t(`datevPage.month.${m}`)}</option>
@@ -204,22 +223,22 @@ export function DatevEinstellungen({ settings }: { settings: DatevSettings }) {
           </NativeSelect>
         </Feld>
         <Feld label={t("datevPage.feld.standardErloeskonto")} hinweis={t("datevPage.hint.standardErloeskonto")} t={t}>
-          <Input inputMode="numeric" value={erloes} onChange={(e) => setErloes(e.target.value)} />
+          <Input inputMode="numeric" value={f.erloes} onChange={(e) => setzen("erloes", e.target.value)} />
         </Feld>
         <Feld label={t("datevPage.feld.standardAufwandskonto")} hinweis={t("datevPage.hint.standardAufwandskonto")} t={t}>
-          <Input inputMode="numeric" value={aufwand} onChange={(e) => setAufwand(e.target.value)} />
+          <Input inputMode="numeric" value={f.aufwand} onChange={(e) => setzen("aufwand", e.target.value)} />
         </Feld>
         <Feld label={t("datevPage.feld.standardFinanzkonto")} hinweis={t("datevPage.hint.standardFinanzkonto")} t={t}>
-          <Input inputMode="numeric" value={finanz} onChange={(e) => setFinanz(e.target.value)} />
+          <Input inputMode="numeric" value={f.finanz} onChange={(e) => setzen("finanz", e.target.value)} />
         </Feld>
         <Feld label={t("datevPage.feld.debitorKontoStart")} hinweis={t("datevPage.hint.debitorKontoStart")} t={t}>
-          <Input inputMode="numeric" value={debitorStart} onChange={(e) => setDebitorStart(e.target.value)} />
+          <Input inputMode="numeric" value={f.debitorStart} onChange={(e) => setzen("debitorStart", e.target.value)} />
         </Feld>
         <Feld label={t("datevPage.feld.kreditorKontoStart")} hinweis={t("datevPage.hint.kreditorKontoStart")} t={t}>
-          <Input inputMode="numeric" value={kreditorStart} onChange={(e) => setKreditorStart(e.target.value)} />
+          <Input inputMode="numeric" value={f.kreditorStart} onChange={(e) => setzen("kreditorStart", e.target.value)} />
         </Feld>
         <div className="flex items-center gap-3 pt-6">
-          <Switch checked={festschreibung} onCheckedChange={setFestschreibung} id="datev-festschreibung" />
+          <Switch checked={f.festschreibung} onCheckedChange={(v) => setzen("festschreibung", v)} id="datev-festschreibung" />
           <Label htmlFor="datev-festschreibung">{t("datevPage.feld.festschreibung")}</Label>
           <InfoHinweis text={t("datevPage.hint.festschreibung")} ariaLabel={`${t("datevPage.settings.infoAria")} ${t("datevPage.feld.festschreibung")}`} />
         </div>
@@ -229,15 +248,15 @@ export function DatevEinstellungen({ settings }: { settings: DatevSettings }) {
         <BuEditor
           titel={t("datevPage.feld.buSchluesselErloes")}
           hinweis={t("datevPage.hint.buSchluesselErloes")}
-          zeilen={buErloes}
-          setZeilen={setBuErloes}
+          zeilen={f.buErloes}
+          setZeilen={(z) => setzen("buErloes", z)}
           t={t}
         />
         <BuEditor
           titel={t("datevPage.feld.buSchluesselAufwand")}
           hinweis={t("datevPage.hint.buSchluesselAufwand")}
-          zeilen={buAufwand}
-          setZeilen={setBuAufwand}
+          zeilen={f.buAufwand}
+          setZeilen={(z) => setzen("buAufwand", z)}
           t={t}
         />
       </div>
@@ -351,5 +370,46 @@ function BuEditor({
         {t("datevPage.settings.buAdd")}
       </Button>
     </div>
+  );
+}
+
+/** Die gespeicherten DATEV-Stammdaten als reine Anzeige. */
+function DatevUebersicht({
+  settings,
+  onBearbeiten,
+}: {
+  settings: DatevSettings;
+  onBearbeiten: () => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+  <Card className="flex flex-col gap-4 p-5">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <h3 className="font-display text-lg font-extrabold">{t("datevPage.settings.title")}</h3>
+        <p className="text-sm text-muted-foreground">{t("datevPage.settings.subtitle")}</p>
+      </div>
+      <Button type="button" variant="outline" size="sm" onClick={onBearbeiten}>
+        <Icon icon="ph:pencil-simple" className="size-4" />
+        {t("datevPage.settings.edit")}
+      </Button>
+    </div>
+    <dl className="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+      <Wert label={t("datevPage.feld.beraterNummer")} wert={settings.beraterNummer} />
+      <Wert label={t("datevPage.feld.mandantenNummer")} wert={settings.mandantenNummer} />
+      <Wert label={t("datevPage.feld.kontenrahmen")} wert={settings.kontenrahmen} />
+      <Wert label={t("datevPage.feld.sachkontenlaenge")} wert={settings.sachkontenlaenge} />
+      <Wert label={t("datevPage.feld.wirtschaftsjahrBeginnMonat")} wert={settings.wirtschaftsjahrBeginnMonat} />
+      <Wert label={t("datevPage.feld.standardErloeskonto")} wert={settings.standardErloeskonto} />
+      <Wert label={t("datevPage.feld.standardAufwandskonto")} wert={settings.standardAufwandskonto} />
+      <Wert label={t("datevPage.feld.standardFinanzkonto")} wert={settings.standardFinanzkonto} />
+      <Wert label={t("datevPage.feld.debitorKontoStart")} wert={settings.debitorKontoStart} />
+      <Wert label={t("datevPage.feld.kreditorKontoStart")} wert={settings.kreditorKontoStart} />
+      <Wert
+        label={t("datevPage.feld.festschreibung")}
+        wert={settings.festschreibung ? t("datevPage.yes") : t("datevPage.no")}
+      />
+    </dl>
+  </Card>
   );
 }

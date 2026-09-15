@@ -181,140 +181,21 @@ export function BelegeTabelle({
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {items.map((b) => {
-              const busy = busyId === b.id;
-              const entwurf = b.status === "draft" && !b.number && !b.isLocked;
-              const gross = Number(b.grossAmount);
-              return (
-                <tr key={b.id} className="transition-colors hover:bg-secondary/30">
-                  <td className="px-4 py-3 font-medium">
-                    {b.number || (
-                      <span className="text-muted-foreground">{t("belegePage.draftLabel")}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">{b.customerName || "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {formatDate(b.issueDate, locale)}
-                  </td>
-                  {istRecurring ? (
-                    <>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {b.recurringInterval
-                          ? t(`belegePage.interval_${b.recurringInterval}`)
-                          : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {formatDate(b.recurringNextAt, locale)}
-                        {b.recurringEndAt && (
-                          <span className="ml-1 text-xs">
-                            ({t("belegePage.until")} {formatDate(b.recurringEndAt, locale)})
-                          </span>
-                        )}
-                      </td>
-                    </>
-                  ) : (
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {b.sourceQuoteId ? (
-                        <Link
-                          className="underline-offset-2 hover:underline"
-                          href="/buchhaltung/belege?type=quote"
-                        >
-                          {labels.quote}
-                        </Link>
-                      ) : b.sourceDocumentId ? (
-                        <span>{t("belegePage.fromDocument")}</span>
-                      ) : b.recurringTemplateId ? (
-                        <Link
-                          className="underline-offset-2 hover:underline"
-                          href="/buchhaltung/belege?type=recurring"
-                        >
-                          {labels.recurring}
-                        </Link>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                  )}
-                  <td className="px-4 py-3 text-right font-medium">
-                    {formatCurrency(Number.isFinite(gross) ? gross : 0, b.currency)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusKlasse(
-                        istRecurring ? b.recurringStatus ?? b.status : b.status,
-                      )}`}
-                    >
-                      {istRecurring
-                        ? t(`belegePage.recurring_${b.recurringStatus ?? "active"}`)
-                        : t.has(`belegePage.status_${b.status}`)
-                          ? t(`belegePage.status_${b.status}`)
-                          : b.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          disabled={busy}
-                          aria-label={t("belegePage.columnActions")}
-                        >
-                          <Icon
-                            icon={busy ? "ph:spinner" : "ph:dots-three-outline"}
-                            className={`size-5 ${busy ? "animate-spin" : ""}`}
-                          />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {ziele.length > 0 && (
-                          <>
-                            <DropdownMenuLabel>{t("belegePage.convertTo")}</DropdownMenuLabel>
-                            {ziele.map((ziel) => (
-                              <DropdownMenuItem key={ziel} onSelect={() => umwandeln(b, ziel)}>
-                                <Icon icon="ph:arrow-elbow-down-right" className="mr-2 size-4" />
-                                {labels[ziel]}
-                              </DropdownMenuItem>
-                            ))}
-                            <DropdownMenuSeparator />
-                          </>
-                        )}
-                        {art !== "quote" && !istRecurring && entwurf && (
-                          <DropdownMenuItem onSelect={() => ausstellen(b)}>
-                            <Icon icon="ph:seal-check" className="mr-2 size-4" />
-                            {t("belegePage.finalize")}
-                          </DropdownMenuItem>
-                        )}
-                        {art === "invoice" && !entwurf && (
-                          <DropdownMenuItem onSelect={() => setRecurringFuer(b)}>
-                            <Icon icon="ph:repeat" className="mr-2 size-4" />
-                            {t("belegePage.makeRecurring")}
-                          </DropdownMenuItem>
-                        )}
-                        {istRecurring && b.recurringStatus === "active" && (
-                          <DropdownMenuItem onSelect={() => pausieren(b, "paused")}>
-                            <Icon icon="ph:pause" className="mr-2 size-4" />
-                            {t("belegePage.pause")}
-                          </DropdownMenuItem>
-                        )}
-                        {istRecurring && b.recurringStatus === "paused" && (
-                          <DropdownMenuItem onSelect={() => pausieren(b, "active")}>
-                            <Icon icon="ph:play" className="mr-2 size-4" />
-                            {t("belegePage.resume")}
-                          </DropdownMenuItem>
-                        )}
-                        {ziele.length === 0 &&
-                          !(art !== "quote" && !istRecurring && entwurf) &&
-                          !(art === "invoice" && !entwurf) &&
-                          !istRecurring && (
-                            <DropdownMenuItem disabled>{t("belegePage.noActions")}</DropdownMenuItem>
-                          )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              );
-            })}
+            {items.map((b) => (
+              <BelegZeile
+                key={b.id}
+                b={b}
+                art={art}
+                labels={labels}
+                locale={locale}
+                busy={busyId === b.id}
+                ziele={ziele}
+                onUmwandeln={umwandeln}
+                onAusstellen={ausstellen}
+                onPausieren={pausieren}
+                onVorlage={setRecurringFuer}
+              />
+            ))}
           </tbody>
         </table>
       </Card>
@@ -425,5 +306,247 @@ function RecurringDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Eine Zeile der Belegtabelle samt Aktionsmenü. */
+function BelegZeile({
+  b,
+  art,
+  labels,
+  locale,
+  busy,
+  ziele,
+  onUmwandeln,
+  onAusstellen,
+  onPausieren,
+  onVorlage,
+}: {
+  b: BelegListItem;
+  art: Belegart;
+  labels: Record<Belegart, string>;
+  locale: string;
+  busy: boolean;
+  ziele: readonly Zielart[];
+  onUmwandeln: (b: BelegListItem, ziel: Zielart) => void;
+  onAusstellen: (b: BelegListItem) => void;
+  onPausieren: (b: BelegListItem, status: "active" | "paused") => void;
+  onVorlage: (b: BelegListItem) => void;
+}) {
+  const t = useTranslations("finance");
+  const istRecurring = art === "recurring";
+  const entwurf = b.status === "draft" && !b.number && !b.isLocked;
+  const gross = Number(b.grossAmount);
+  return (
+  <tr key={b.id} className="transition-colors hover:bg-secondary/30">
+    <td className="px-4 py-3 font-medium">
+      {b.number || (
+        <span className="text-muted-foreground">{t("belegePage.draftLabel")}</span>
+      )}
+    </td>
+    <td className="px-4 py-3 text-muted-foreground">{b.customerName || "—"}</td>
+    <td className="px-4 py-3 text-muted-foreground">
+      {formatDate(b.issueDate, locale)}
+    </td>
+    {istRecurring ? (
+      <WiederholungsZellen b={b} locale={locale} />
+    ) : (
+      <HerkunftZelle b={b} labels={labels} />
+    )}
+    <td className="px-4 py-3 text-right font-medium">
+      {formatCurrency(Number.isFinite(gross) ? gross : 0, b.currency)}
+    </td>
+    <td className="px-4 py-3">
+      <span
+        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${statusKlasse(
+          istRecurring ? b.recurringStatus ?? b.status : b.status,
+        )}`}
+      >
+        {istRecurring
+          ? t(`belegePage.recurring_${b.recurringStatus ?? "active"}`)
+          : t.has(`belegePage.status_${b.status}`)
+            ? t(`belegePage.status_${b.status}`)
+            : b.status}
+      </span>
+    </td>
+    <td className="px-4 py-3 text-right">
+      <BelegAktionen
+        b={b}
+        art={art}
+        labels={labels}
+        busy={busy}
+        ziele={ziele}
+        entwurf={entwurf}
+        onUmwandeln={onUmwandeln}
+        onAusstellen={onAusstellen}
+        onPausieren={onPausieren}
+        onVorlage={onVorlage}
+      />
+    </td>
+  </tr>
+  );
+}
+
+/** Das Aktionsmenü einer Belegzeile. Welche Einträge es gibt, hängt an der
+ *  Belegart und am Zustand — deshalb hier gebündelt statt in der Zeile. */
+/** Welche Menüeinträge dieser Beleg zulässt. Als Funktion, damit die
+ *  Komponente nur noch zeichnet und die Regeln an EINER Stelle stehen. */
+function aktionsLage(
+  b: BelegListItem,
+  art: Belegart,
+  entwurf: boolean,
+  ziele: readonly Zielart[],
+) {
+  const istRecurring = art === "recurring";
+  const kannAusstellen = art !== "quote" && !istRecurring && entwurf;
+  const kannVorlage = art === "invoice" && !entwurf;
+  const pausen = {
+    active: { ziel: "paused" as const, icon: "ph:pause", text: "belegePage.pause" },
+    paused: { ziel: "active" as const, icon: "ph:play", text: "belegePage.resume" },
+  };
+  const pause = istRecurring ? (pausen[b.recurringStatus as keyof typeof pausen] ?? null) : null;
+  return {
+    kannAusstellen,
+    kannVorlage,
+    pause,
+    leer: ziele.length === 0 && !kannAusstellen && !kannVorlage && !istRecurring,
+  };
+}
+
+function BelegAktionen({
+  b,
+  art,
+  labels,
+  busy,
+  ziele,
+  entwurf,
+  onUmwandeln,
+  onAusstellen,
+  onPausieren,
+  onVorlage,
+}: {
+  b: BelegListItem;
+  art: Belegart;
+  labels: Record<Belegart, string>;
+  busy: boolean;
+  ziele: readonly Zielart[];
+  entwurf: boolean;
+  onUmwandeln: (b: BelegListItem, ziel: Zielart) => void;
+  onAusstellen: (b: BelegListItem) => void;
+  onPausieren: (b: BelegListItem, status: "active" | "paused") => void;
+  onVorlage: (b: BelegListItem) => void;
+}) {
+  const t = useTranslations("finance");
+  const { kannAusstellen, kannVorlage, pause, leer } = aktionsLage(b, art, entwurf, ziele);
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" disabled={busy} aria-label={t("belegePage.columnActions")}>
+          <Icon
+            icon={busy ? "ph:spinner" : "ph:dots-three-outline"}
+            className={`size-5 ${busy ? "animate-spin" : ""}`}
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <UmwandelnEintraege b={b} ziele={ziele} labels={labels} onUmwandeln={onUmwandeln} />
+        {kannAusstellen && (
+          <DropdownMenuItem onSelect={() => onAusstellen(b)}>
+            <Icon icon="ph:seal-check" className="mr-2 size-4" />
+            {t("belegePage.finalize")}
+          </DropdownMenuItem>
+        )}
+        {kannVorlage && (
+          <DropdownMenuItem onSelect={() => onVorlage(b)}>
+            <Icon icon="ph:repeat" className="mr-2 size-4" />
+            {t("belegePage.makeRecurring")}
+          </DropdownMenuItem>
+        )}
+        {pause && (
+          <DropdownMenuItem onSelect={() => onPausieren(b, pause.ziel)}>
+            <Icon icon={pause.icon} className="mr-2 size-4" />
+            {t(pause.text)}
+          </DropdownMenuItem>
+        )}
+        {leer && <DropdownMenuItem disabled>{t("belegePage.noActions")}</DropdownMenuItem>}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Intervall und nächste Ausführung einer Vorlage. */
+function WiederholungsZellen({ b, locale }: { b: BelegListItem; locale: string }) {
+  const t = useTranslations("finance");
+  return (
+    <>
+      <td className="px-4 py-3 text-muted-foreground">
+        {b.recurringInterval ? t(`belegePage.interval_${b.recurringInterval}`) : "—"}
+      </td>
+      <td className="px-4 py-3 text-muted-foreground">
+        {formatDate(b.recurringNextAt, locale)}
+        {b.recurringEndAt && (
+          <span className="ml-1 text-xs">
+            ({t("belegePage.until")} {formatDate(b.recurringEndAt, locale)})
+          </span>
+        )}
+      </td>
+    </>
+  );
+}
+
+/** Woher der Beleg stammt: Angebot, Vorbeleg oder Vorlage. */
+function HerkunftZelle({
+  b,
+  labels,
+}: {
+  b: BelegListItem;
+  labels: Record<Belegart, string>;
+}) {
+  const t = useTranslations("finance");
+  const quelle = b.sourceQuoteId
+    ? { href: "/buchhaltung/belege?type=quote", text: labels.quote }
+    : b.recurringTemplateId
+      ? { href: "/buchhaltung/belege?type=recurring", text: labels.recurring }
+      : null;
+  return (
+    <td className="px-4 py-3 text-muted-foreground">
+      {quelle ? (
+        <Link className="underline-offset-2 hover:underline" href={quelle.href}>
+          {quelle.text}
+        </Link>
+      ) : b.sourceDocumentId ? (
+        <span>{t("belegePage.fromDocument")}</span>
+      ) : (
+        "—"
+      )}
+    </td>
+  );
+}
+
+/** Die erlaubten Umwandlungen dieses Belegs (Kette aus `KETTE`). */
+function UmwandelnEintraege({
+  b,
+  ziele,
+  labels,
+  onUmwandeln,
+}: {
+  b: BelegListItem;
+  ziele: readonly Zielart[];
+  labels: Record<Belegart, string>;
+  onUmwandeln: (b: BelegListItem, ziel: Zielart) => void;
+}) {
+  const t = useTranslations("finance");
+  if (ziele.length === 0) return null;
+  return (
+    <>
+      <DropdownMenuLabel>{t("belegePage.convertTo")}</DropdownMenuLabel>
+      {ziele.map((ziel) => (
+        <DropdownMenuItem key={ziel} onSelect={() => onUmwandeln(b, ziel)}>
+          <Icon icon="ph:arrow-elbow-down-right" className="mr-2 size-4" />
+          {labels[ziel]}
+        </DropdownMenuItem>
+      ))}
+      <DropdownMenuSeparator />
+    </>
   );
 }

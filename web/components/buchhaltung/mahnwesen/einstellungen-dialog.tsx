@@ -97,65 +97,7 @@ export function EinstellungenDialog({
 
         <div className="mt-4 flex flex-col gap-6">
           {LEVELS.map((lvl) => (
-            <fieldset key={lvl} className="rounded-2xl border border-border p-4">
-              <legend className="px-2 text-sm font-semibold">
-                {t("mahnwesenPage.level", { level: lvl })}
-              </legend>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor={`days-${lvl}`} className="flex items-center gap-1">
-                    {t("mahnwesenPage.days")}
-                    <InfoHinweis
-                      text={t("mahnwesenPage.daysHint")}
-                      ariaLabel={t("mahnwesenPage.daysHintAria")}
-                    />
-                  </Label>
-                  <Input
-                    id={`days-${lvl}`}
-                    type="number"
-                    min={0}
-                    max={365}
-                    inputMode="numeric"
-                    value={stufen[lvl].days}
-                    onChange={(e) => setFeld(lvl, "days", e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor={`fee-${lvl}`} className="flex items-center gap-1">
-                    {t("mahnwesenPage.fee")}
-                    <InfoHinweis
-                      text={t("mahnwesenPage.feeHint")}
-                      ariaLabel={t("mahnwesenPage.feeHintAria")}
-                    />
-                  </Label>
-                  <Input
-                    id={`fee-${lvl}`}
-                    inputMode="decimal"
-                    value={stufen[lvl].fee}
-                    onChange={(e) => setFeld(lvl, "fee", e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label htmlFor={`title-${lvl}`}>{t("mahnwesenPage.titleField")}</Label>
-                  <Input
-                    id={`title-${lvl}`}
-                    maxLength={120}
-                    value={stufen[lvl].title}
-                    onChange={(e) => setFeld(lvl, "title", e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="mt-3 flex flex-col gap-1">
-                <Label htmlFor={`text-${lvl}`}>{t("mahnwesenPage.textField")}</Label>
-                <Textarea
-                  id={`text-${lvl}`}
-                  maxLength={4000}
-                  rows={3}
-                  value={stufen[lvl].text}
-                  onChange={(e) => setFeld(lvl, "text", e.target.value)}
-                />
-              </div>
-            </fieldset>
+            <StufenFelder key={lvl} lvl={lvl} stufe={stufen[lvl]} setFeld={setFeld} />
           ))}
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -199,5 +141,79 @@ export function EinstellungenDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Die Felder EINER Mahnstufe: Frist, Gebühr, Überschrift und Text. */
+function StufenFelder({
+  lvl,
+  stufe,
+  setFeld,
+}: {
+  lvl: ReminderLevel;
+  stufe: StufeForm;
+  setFeld: (lvl: ReminderLevel, feld: keyof StufeForm, wert: string) => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+                  <fieldset key={lvl} className="rounded-2xl border border-border p-4">
+            <legend className="px-2 text-sm font-semibold">
+              {t("mahnwesenPage.level", { level: lvl })}
+            </legend>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="flex flex-col gap-1">
+                <Label htmlFor={`days-${lvl}`} className="flex items-center gap-1">
+                  {t("mahnwesenPage.days")}
+                  <InfoHinweis
+                    text={t("mahnwesenPage.daysHint")}
+                    ariaLabel={t("mahnwesenPage.daysHintAria")}
+                  />
+                </Label>
+                <Input
+                  id={`days-${lvl}`}
+                  type="number"
+                  min={0}
+                  max={365}
+                  inputMode="numeric"
+                  value={stufe.days}
+                  onChange={(e) => setFeld(lvl, "days", e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor={`fee-${lvl}`} className="flex items-center gap-1">
+                  {t("mahnwesenPage.fee")}
+                  <InfoHinweis
+                    text={t("mahnwesenPage.feeHint")}
+                    ariaLabel={t("mahnwesenPage.feeHintAria")}
+                  />
+                </Label>
+                <Input
+                  id={`fee-${lvl}`}
+                  inputMode="decimal"
+                  value={stufe.fee}
+                  onChange={(e) => setFeld(lvl, "fee", e.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label htmlFor={`title-${lvl}`}>{t("mahnwesenPage.titleField")}</Label>
+                <Input
+                  id={`title-${lvl}`}
+                  maxLength={120}
+                  value={stufe.title}
+                  onChange={(e) => setFeld(lvl, "title", e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="mt-3 flex flex-col gap-1">
+              <Label htmlFor={`text-${lvl}`}>{t("mahnwesenPage.textField")}</Label>
+              <Textarea
+                id={`text-${lvl}`}
+                maxLength={4000}
+                rows={3}
+                value={stufe.text}
+                onChange={(e) => setFeld(lvl, "text", e.target.value)}
+              />
+            </div>
+          </fieldset>
   );
 }

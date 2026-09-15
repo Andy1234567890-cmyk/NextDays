@@ -314,8 +314,8 @@ class VerknuepfungenMixin:
             aenderung["status"] = status_ohne_zahlung or str(rechnung["status"])
             aenderung["paid_at"] = None
         elif (
-            (brutto > 0 and summe >= brutto)
-            or (brutto < 0 and summe <= brutto)
+            (0 < brutto <= summe)
+            or (summe <= brutto < 0)
             or erledigt_trotz_differenz
         ):
             aenderung["status"] = "paid"

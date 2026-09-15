@@ -182,62 +182,97 @@ export function AnsprechpartnerTab({
         </Card>
       )}
 
-      <Sheet open={offen} onOpenChange={setOffen}>
-        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
-          <SheetHeader className="border-b">
-            <SheetTitle className="font-display text-lg font-extrabold">
-              {bearbeitet
-                ? t("kontaktePage.ansprechpartner.editTitle")
-                : t("kontaktePage.ansprechpartner.addTitle")}
-            </SheetTitle>
-            <SheetDescription>{t("kontaktePage.ansprechpartner.sheetDescription")}</SheetDescription>
-          </SheetHeader>
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ap-name">
-                {t("kontaktePage.ansprechpartner.name")} <span className="text-destructive">*</span>
-              </Label>
-              <Input id="ap-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ap-role">{t("kontaktePage.ansprechpartner.role")}</Label>
-              <Input id="ap-role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ap-email">{t("kontaktePage.ansprechpartner.email")}</Label>
-              <Input id="ap-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ap-phone">{t("kontaktePage.ansprechpartner.phone")}</Label>
-              <Input id="ap-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ap-notes">{t("kontaktePage.ansprechpartner.notes")}</Label>
-              <Textarea id="ap-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-            </div>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={form.isPrimary}
-                onCheckedChange={(v) => setForm({ ...form, isPrimary: v === true })}
-              />
-              {t("kontaktePage.ansprechpartner.primaryCheckbox")}
-            </label>
-            {fehler && (
-              <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {fehler}
-              </p>
-            )}
-          </div>
-          <SheetFooter className="flex-row gap-2 border-t">
-            <Button type="button" variant="outline" className="flex-1" disabled={busy} onClick={() => setOffen(false)}>
-              {t("kontaktePage.cancel")}
-            </Button>
-            <Button type="button" className="flex-1" disabled={busy} onClick={speichern}>
-              {busy ? t("kontaktePage.saving") : t("kontaktePage.save")}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <KontaktSheet
+        offen={offen}
+        setOffen={setOffen}
+        bearbeitet={bearbeitet}
+        form={form}
+        setForm={setForm}
+        busy={busy}
+        fehler={fehler}
+        onSpeichern={speichern}
+      />
     </div>
+  );
+}
+
+/** Das Sheet zum Anlegen und Bearbeiten eines Ansprechpartners. */
+function KontaktSheet({
+  offen,
+  setOffen,
+  bearbeitet,
+  form,
+  setForm,
+  busy,
+  fehler,
+  onSpeichern,
+}: {
+  offen: boolean;
+  setOffen: (v: boolean) => void;
+  bearbeitet: Ansprechpartner | null;
+  form: Formular;
+  setForm: React.Dispatch<React.SetStateAction<Formular>>;
+  busy: boolean;
+  fehler: string | null;
+  onSpeichern: () => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <Sheet open={offen} onOpenChange={setOffen}>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+        <SheetHeader className="border-b">
+          <SheetTitle className="font-display text-lg font-extrabold">
+            {bearbeitet
+              ? t("kontaktePage.ansprechpartner.editTitle")
+              : t("kontaktePage.ansprechpartner.addTitle")}
+          </SheetTitle>
+          <SheetDescription>{t("kontaktePage.ansprechpartner.sheetDescription")}</SheetDescription>
+        </SheetHeader>
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ap-name">
+              {t("kontaktePage.ansprechpartner.name")} <span className="text-destructive">*</span>
+            </Label>
+            <Input id="ap-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ap-role">{t("kontaktePage.ansprechpartner.role")}</Label>
+            <Input id="ap-role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ap-email">{t("kontaktePage.ansprechpartner.email")}</Label>
+            <Input id="ap-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ap-phone">{t("kontaktePage.ansprechpartner.phone")}</Label>
+            <Input id="ap-phone" type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ap-notes">{t("kontaktePage.ansprechpartner.notes")}</Label>
+            <Textarea id="ap-notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={form.isPrimary}
+              onCheckedChange={(v) => setForm({ ...form, isPrimary: v === true })}
+            />
+            {t("kontaktePage.ansprechpartner.primaryCheckbox")}
+          </label>
+          {fehler && (
+            <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {fehler}
+            </p>
+          )}
+        </div>
+        <SheetFooter className="flex-row gap-2 border-t">
+          <Button type="button" variant="outline" className="flex-1" disabled={busy} onClick={() => setOffen(false)}>
+            {t("kontaktePage.cancel")}
+          </Button>
+          <Button type="button" className="flex-1" disabled={busy} onClick={onSpeichern}>
+            {busy ? t("kontaktePage.saving") : t("kontaktePage.save")}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

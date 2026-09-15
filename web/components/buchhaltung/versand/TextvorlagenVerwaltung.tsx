@@ -178,53 +178,15 @@ export function TextvorlagenVerwaltung({ templates }: { templates: TextTemplate[
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5">
-          <div>
-            <h2 className="font-display text-2xl font-extrabold">{t("textvorlagenPage.title")}</h2>
-            <p className="text-sm text-muted-foreground">{t("textvorlagenPage.subtitle")}</p>
-          </div>
-          <InfoHinweis
-            ariaLabel={t("textvorlagenPage.infoAria")}
-            text={[t("textvorlagenPage.infoText1"), t("textvorlagenPage.infoText2")]}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-44">
-            <NativeSelect
-              aria-label={t("textvorlagenPage.filterCategory")}
-              value={filterKategorie}
-              onChange={(e) => setFilterKategorie(e.target.value as "" | TemplateCategory)}
-            >
-              <option value="">{t("textvorlagenPage.allCategories")}</option>
-              {TEMPLATE_CATEGORIES.map((k) => (
-                <option key={k} value={k}>
-                  {kategorieLabel(k)}
-                </option>
-              ))}
-            </NativeSelect>
-          </div>
-          <Button type="button" className="rounded-full" onClick={oeffnenNeu}>
-            <Icon icon="ph:plus" className="mr-1.5 size-4" />
-            {t("textvorlagenPage.newTemplate")}
-          </Button>
-        </div>
-      </div>
+      <VorlagenKopf
+        filterKategorie={filterKategorie}
+        setFilterKategorie={setFilterKategorie}
+        kategorieLabel={kategorieLabel}
+        onNeu={oeffnenNeu}
+      />
 
       {sichtbar.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
-          <span className="flex size-14 items-center justify-center rounded-full bg-secondary">
-            <Icon icon="ph:text-align-left" className="size-7 text-muted-foreground" />
-          </span>
-          <div>
-            <p className="font-display text-lg font-extrabold">{t("textvorlagenPage.emptyTitle")}</p>
-            <p className="text-sm text-muted-foreground">{t("textvorlagenPage.emptySubtitle")}</p>
-          </div>
-          <Button type="button" className="rounded-full" onClick={oeffnenNeu}>
-            <Icon icon="ph:plus" className="mr-1.5 size-4" />
-            {t("textvorlagenPage.newTemplate")}
-          </Button>
-        </Card>
+        <VorlagenLeer onNeu={oeffnenNeu} />
       ) : (
         <Card className="overflow-hidden p-0">
           <div className="overflow-x-auto">
@@ -242,66 +204,16 @@ export function TextvorlagenVerwaltung({ templates }: { templates: TextTemplate[
               </thead>
               <tbody className="divide-y divide-border">
                 {sichtbar.map((v) => (
-                  <tr key={v.id} className="transition-colors hover:bg-secondary/30">
-                    <td className="px-4 py-3 font-medium">
-                      <button
-                        type="button"
-                        className="text-left hover:underline"
-                        onClick={() => oeffnenBearbeiten(v)}
-                      >
-                        {v.name}
-                      </button>
-                      <p className="line-clamp-1 max-w-xs text-xs text-muted-foreground">{v.text}</p>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{kategorieLabel(v.category)}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{objektLabel(v.objectType)}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{positionLabel(v.textType)}</td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {v.language ? v.language.toUpperCase() : t("textvorlagenPage.allLanguages")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {v.isDefault && (
-                          <span className="inline-flex rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-medium text-accent">
-                            {t("textvorlagenPage.defaultBadge")}
-                          </span>
-                        )}
-                        {v.isPrivate && (
-                          <span className="inline-flex rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                            {t("textvorlagenPage.privateBadge")}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-full"
-                          aria-label={t("textvorlagenPage.edit")}
-                          onClick={() => oeffnenBearbeiten(v)}
-                        >
-                          <Icon icon="ph:pencil-simple" className="size-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-full text-destructive"
-                          aria-label={t("textvorlagenPage.delete")}
-                          disabled={loeschtId === v.id}
-                          onClick={() => void loeschen(v)}
-                        >
-                          <Icon
-                            icon={loeschtId === v.id ? "ph:spinner" : "ph:trash"}
-                            className={`size-4 ${loeschtId === v.id ? "animate-spin" : ""}`}
-                          />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                  <VorlagenZeile
+                    key={v.id}
+                    v={v}
+                    loescht={loeschtId === v.id}
+                    kategorieLabel={kategorieLabel}
+                    objektLabel={objektLabel}
+                    positionLabel={positionLabel}
+                    onBearbeiten={oeffnenBearbeiten}
+                    onLoeschen={loeschen}
+                  />
                 ))}
               </tbody>
             </table>
@@ -309,173 +221,420 @@ export function TextvorlagenVerwaltung({ templates }: { templates: TextTemplate[
         </Card>
       )}
 
-      <Sheet open={offen} onOpenChange={setOffen}>
-        <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-xl">
-          <SheetHeader>
-            <SheetTitle>
-              {bearbeitet ? t("textvorlagenPage.sheetEditTitle") : t("textvorlagenPage.sheetNewTitle")}
-            </SheetTitle>
-            <SheetDescription>{t("textvorlagenPage.sheetDescription")}</SheetDescription>
-          </SheetHeader>
+      <VorlagenSheet
+        offen={offen}
+        setOffen={setOffen}
+        bearbeitet={bearbeitet}
+        form={form}
+        setForm={setForm}
+        setKategorie={setKategorie}
+        textRef={textRef}
+        speichert={speichert}
+        onSpeichern={speichern}
+        onPlatzhalter={platzhalterEinfuegen}
+        kategorieLabel={kategorieLabel}
+        objektLabel={objektLabel}
+        positionLabel={positionLabel}
+      />
+    </div>
+  );
+}
 
-          <div className="flex flex-col gap-4 px-4 py-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="tv-name">{t("textvorlagenPage.fieldName")}</Label>
-              <Input
-                id="tv-name"
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder={t("textvorlagenPage.fieldNamePlaceholder")}
-                maxLength={200}
+/** Das Sheet zum Anlegen und Bearbeiten einer Textvorlage. */
+function VorlagenSheet({
+  offen,
+  setOffen,
+  bearbeitet,
+  form,
+  setForm,
+  setKategorie,
+  textRef,
+  speichert,
+  onSpeichern,
+  onPlatzhalter,
+  kategorieLabel,
+  objektLabel,
+  positionLabel,
+}: {
+  offen: boolean;
+  setOffen: (v: boolean) => void;
+  bearbeitet: TextTemplate | null;
+  form: Form;
+  setForm: React.Dispatch<React.SetStateAction<Form>>;
+  setKategorie: (k: TemplateCategory) => void;
+  textRef: React.RefObject<HTMLTextAreaElement | null>;
+  speichert: boolean;
+  onSpeichern: () => void;
+  onPlatzhalter: (ph: string) => void;
+  kategorieLabel: (k: TemplateCategory) => string;
+  objektLabel: (o: TemplateObjectType) => string;
+  positionLabel: (p: TemplateTextType) => string;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <Sheet open={offen} onOpenChange={setOffen}>
+      <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-xl">
+        <SheetHeader>
+          <SheetTitle>
+            {bearbeitet ? t("textvorlagenPage.sheetEditTitle") : t("textvorlagenPage.sheetNewTitle")}
+          </SheetTitle>
+          <SheetDescription>{t("textvorlagenPage.sheetDescription")}</SheetDescription>
+        </SheetHeader>
+
+        <div className="flex flex-col gap-4 px-4 py-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tv-name">{t("textvorlagenPage.fieldName")}</Label>
+            <Input
+              id="tv-name"
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder={t("textvorlagenPage.fieldNamePlaceholder")}
+              maxLength={200}
+            />
+          </div>
+
+          <VorlagenEinordnung
+            form={form}
+            setForm={setForm}
+            setKategorie={setKategorie}
+            kategorieLabel={kategorieLabel}
+            objektLabel={objektLabel}
+            positionLabel={positionLabel}
+          />
+
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="tv-language">{t("textvorlagenPage.fieldLanguage")}</Label>
+              <InfoHinweis
+                ariaLabel={t("textvorlagenPage.fieldLanguageInfoAria")}
+                text={t("textvorlagenPage.fieldLanguageInfo")}
               />
             </div>
+            <Input
+              id="tv-language"
+              value={form.language}
+              onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))}
+              placeholder={t("textvorlagenPage.fieldLanguagePlaceholder")}
+              maxLength={2}
+              className="w-28 uppercase"
+            />
+          </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="tv-category">{t("textvorlagenPage.fieldCategory")}</Label>
-                <NativeSelect
-                  id="tv-category"
-                  value={form.category}
-                  onChange={(e) => setKategorie(e.target.value as TemplateCategory)}
-                >
-                  {TEMPLATE_CATEGORIES.map((k) => (
-                    <option key={k} value={k}>
-                      {kategorieLabel(k)}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="tv-object">{t("textvorlagenPage.fieldObjectType")}</Label>
-                <NativeSelect
-                  id="tv-object"
-                  value={form.objectType}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, objectType: e.target.value as TemplateObjectType }))
-                  }
-                >
-                  {TEMPLATE_OBJECT_TYPES.map((o) => (
-                    <option key={o} value={o}>
-                      {objektLabel(o)}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="tv-position">{t("textvorlagenPage.fieldTextType")}</Label>
-                <NativeSelect
-                  id="tv-position"
-                  value={form.textType}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, textType: e.target.value as TemplateTextType }))
-                  }
-                >
-                  {TEXT_TYPES_JE_KATEGORIE[form.category].map((p) => (
-                    <option key={p} value={p}>
-                      {positionLabel(p)}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <Label htmlFor="tv-language">{t("textvorlagenPage.fieldLanguage")}</Label>
-                <InfoHinweis
-                  ariaLabel={t("textvorlagenPage.fieldLanguageInfoAria")}
-                  text={t("textvorlagenPage.fieldLanguageInfo")}
-                />
-              </div>
-              <Input
-                id="tv-language"
-                value={form.language}
-                onChange={(e) => setForm((f) => ({ ...f, language: e.target.value }))}
-                placeholder={t("textvorlagenPage.fieldLanguagePlaceholder")}
-                maxLength={2}
-                className="w-28 uppercase"
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="tv-text">{t("textvorlagenPage.fieldText")}</Label>
+              <InfoHinweis
+                ariaLabel={t("textvorlagenPage.fieldTextInfoAria")}
+                text={[t("textvorlagenPage.fieldTextInfo1"), t("textvorlagenPage.fieldTextInfo2")]}
               />
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-1.5">
-                <Label htmlFor="tv-text">{t("textvorlagenPage.fieldText")}</Label>
-                <InfoHinweis
-                  ariaLabel={t("textvorlagenPage.fieldTextInfoAria")}
-                  text={[t("textvorlagenPage.fieldTextInfo1"), t("textvorlagenPage.fieldTextInfo2")]}
-                />
-              </div>
-              <Textarea
-                id="tv-text"
-                ref={textRef}
-                rows={8}
-                value={form.text}
-                onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
-                placeholder={t("textvorlagenPage.fieldTextPlaceholder")}
-              />
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {PLATZHALTER.map((ph) => (
-                  <button
-                    key={ph}
-                    type="button"
-                    className="rounded-full border border-border bg-secondary/40 px-2.5 py-0.5 font-mono text-xs text-foreground transition-colors hover:bg-secondary"
-                    onClick={() => platzhalterEinfuegen(ph)}
-                  >
-                    {ph}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Label htmlFor="tv-default">{t("textvorlagenPage.fieldDefault")}</Label>
-                  <InfoHinweis
-                    ariaLabel={t("textvorlagenPage.fieldDefaultInfoAria")}
-                    text={t("textvorlagenPage.fieldDefaultInfo")}
-                  />
-                </div>
-                <Switch
-                  id="tv-default"
-                  checked={form.isDefault}
-                  onCheckedChange={(v: boolean) => setForm((f) => ({ ...f, isDefault: v }))}
-                />
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Label htmlFor="tv-private">{t("textvorlagenPage.fieldPrivate")}</Label>
-                  <InfoHinweis
-                    ariaLabel={t("textvorlagenPage.fieldPrivateInfoAria")}
-                    text={t("textvorlagenPage.fieldPrivateInfo")}
-                  />
-                </div>
-                <Switch
-                  id="tv-private"
-                  checked={form.isPrivate}
-                  onCheckedChange={(v: boolean) => setForm((f) => ({ ...f, isPrivate: v }))}
-                />
-              </div>
+            <Textarea
+              id="tv-text"
+              ref={textRef}
+              rows={8}
+              value={form.text}
+              onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
+              placeholder={t("textvorlagenPage.fieldTextPlaceholder")}
+            />
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {PLATZHALTER.map((ph) => (
+                <button
+                  key={ph}
+                  type="button"
+                  className="rounded-full border border-border bg-secondary/40 px-2.5 py-0.5 font-mono text-xs text-foreground transition-colors hover:bg-secondary"
+                  onClick={() => onPlatzhalter(ph)}
+                >
+                  {ph}
+                </button>
+              ))}
             </div>
           </div>
 
-          <SheetFooter className="mt-auto">
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-full"
-              onClick={() => setOffen(false)}
-              disabled={speichert}
+          <VorlagenSchalter form={form} setForm={setForm} />
+        </div>
+
+        <SheetFooter className="mt-auto">
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => setOffen(false)}
+            disabled={speichert}
+          >
+            {t("textvorlagenPage.cancel")}
+          </Button>
+          <Button type="button" className="rounded-full" onClick={onSpeichern} disabled={speichert}>
+            {speichert && <Icon icon="ph:spinner" className="mr-1.5 size-4 animate-spin" />}
+            {bearbeitet ? t("textvorlagenPage.save") : t("textvorlagenPage.create")}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/** Kategorie, Objekttyp und Textposition einer Vorlage. Die Textposition hängt
+ *  an der Kategorie — deshalb stehen die drei zusammen. */
+function VorlagenEinordnung({
+  form,
+  setForm,
+  setKategorie,
+  kategorieLabel,
+  objektLabel,
+  positionLabel,
+}: {
+  form: Form;
+  setForm: React.Dispatch<React.SetStateAction<Form>>;
+  setKategorie: (k: TemplateCategory) => void;
+  kategorieLabel: (k: TemplateCategory) => string;
+  objektLabel: (o: TemplateObjectType) => string;
+  positionLabel: (p: TemplateTextType) => string;
+}) {
+  const t = useTranslations("finance");
+  return (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tv-category">{t("textvorlagenPage.fieldCategory")}</Label>
+            <NativeSelect
+              id="tv-category"
+              value={form.category}
+              onChange={(e) => setKategorie(e.target.value as TemplateCategory)}
             >
-              {t("textvorlagenPage.cancel")}
-            </Button>
-            <Button type="button" className="rounded-full" onClick={() => void speichern()} disabled={speichert}>
-              {speichert && <Icon icon="ph:spinner" className="mr-1.5 size-4 animate-spin" />}
-              {bearbeitet ? t("textvorlagenPage.save") : t("textvorlagenPage.create")}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+              {TEMPLATE_CATEGORIES.map((k) => (
+                <option key={k} value={k}>
+                  {kategorieLabel(k)}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tv-object">{t("textvorlagenPage.fieldObjectType")}</Label>
+            <NativeSelect
+              id="tv-object"
+              value={form.objectType}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, objectType: e.target.value as TemplateObjectType }))
+              }
+            >
+              {TEMPLATE_OBJECT_TYPES.map((o) => (
+                <option key={o} value={o}>
+                  {objektLabel(o)}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tv-position">{t("textvorlagenPage.fieldTextType")}</Label>
+            <NativeSelect
+              id="tv-position"
+              value={form.textType}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, textType: e.target.value as TemplateTextType }))
+              }
+            >
+              {TEXT_TYPES_JE_KATEGORIE[form.category].map((p) => (
+                <option key={p} value={p}>
+                  {positionLabel(p)}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+        </div>
+
+  );
+}
+
+/** Standard- und Privat-Schalter einer Vorlage. */
+function VorlagenSchalter({
+  form,
+  setForm,
+}: {
+  form: Form;
+  setForm: React.Dispatch<React.SetStateAction<Form>>;
+}) {
+  const t = useTranslations("finance");
+  return (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="tv-default">{t("textvorlagenPage.fieldDefault")}</Label>
+              <InfoHinweis
+                ariaLabel={t("textvorlagenPage.fieldDefaultInfoAria")}
+                text={t("textvorlagenPage.fieldDefaultInfo")}
+              />
+            </div>
+            <Switch
+              id="tv-default"
+              checked={form.isDefault}
+              onCheckedChange={(v: boolean) => setForm((f) => ({ ...f, isDefault: v }))}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5">
+              <Label htmlFor="tv-private">{t("textvorlagenPage.fieldPrivate")}</Label>
+              <InfoHinweis
+                ariaLabel={t("textvorlagenPage.fieldPrivateInfoAria")}
+                text={t("textvorlagenPage.fieldPrivateInfo")}
+              />
+            </div>
+            <Switch
+              id="tv-private"
+              checked={form.isPrivate}
+              onCheckedChange={(v: boolean) => setForm((f) => ({ ...f, isPrivate: v }))}
+            />
+          </div>
+        </div>
+  );
+}
+
+/** Eine Zeile der Vorlagenliste. */
+function VorlagenZeile({
+  v,
+  loescht,
+  kategorieLabel,
+  objektLabel,
+  positionLabel,
+  onBearbeiten,
+  onLoeschen,
+}: {
+  v: TextTemplate;
+  loescht: boolean;
+  kategorieLabel: (k: TemplateCategory) => string;
+  objektLabel: (o: TemplateObjectType) => string;
+  positionLabel: (p: TemplateTextType) => string;
+  onBearbeiten: (v: TextTemplate) => void;
+  onLoeschen: (v: TextTemplate) => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+                              <tr key={v.id} className="transition-colors hover:bg-secondary/30">
+                  <td className="px-4 py-3 font-medium">
+                    <button
+                      type="button"
+                      className="text-left hover:underline"
+                      onClick={() => onBearbeiten(v)}
+                    >
+                      {v.name}
+                    </button>
+                    <p className="line-clamp-1 max-w-xs text-xs text-muted-foreground">{v.text}</p>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{kategorieLabel(v.category)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{objektLabel(v.objectType)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{positionLabel(v.textType)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {v.language ? v.language.toUpperCase() : t("textvorlagenPage.allLanguages")}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {v.isDefault && (
+                        <span className="inline-flex rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-medium text-accent">
+                          {t("textvorlagenPage.defaultBadge")}
+                        </span>
+                      )}
+                      {v.isPrivate && (
+                        <span className="inline-flex rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                          {t("textvorlagenPage.privateBadge")}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-full"
+                        aria-label={t("textvorlagenPage.edit")}
+                        onClick={() => onBearbeiten(v)}
+                      >
+                        <Icon icon="ph:pencil-simple" className="size-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-full text-destructive"
+                        aria-label={t("textvorlagenPage.delete")}
+                        disabled={loescht}
+                        onClick={() => onLoeschen(v)}
+                      >
+                        <Icon
+                          icon={loescht ? "ph:spinner" : "ph:trash"}
+                          className={`size-4 ${loescht ? "animate-spin" : ""}`}
+                        />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+  );
+}
+
+/** Überschrift, Kategoriefilter und der Knopf »Neue Vorlage«. */
+function VorlagenKopf({
+  filterKategorie,
+  setFilterKategorie,
+  kategorieLabel,
+  onNeu,
+}: {
+  filterKategorie: "" | TemplateCategory;
+  setFilterKategorie: (k: "" | TemplateCategory) => void;
+  kategorieLabel: (k: TemplateCategory) => string;
+  onNeu: () => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center gap-1.5">
+        <div>
+          <h2 className="font-display text-2xl font-extrabold">{t("textvorlagenPage.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("textvorlagenPage.subtitle")}</p>
+        </div>
+        <InfoHinweis
+          ariaLabel={t("textvorlagenPage.infoAria")}
+          text={[t("textvorlagenPage.infoText1"), t("textvorlagenPage.infoText2")]}
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-44">
+          <NativeSelect
+            aria-label={t("textvorlagenPage.filterCategory")}
+            value={filterKategorie}
+            onChange={(e) => setFilterKategorie(e.target.value as "" | TemplateCategory)}
+          >
+            <option value="">{t("textvorlagenPage.allCategories")}</option>
+            {TEMPLATE_CATEGORIES.map((k) => (
+              <option key={k} value={k}>
+                {kategorieLabel(k)}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+        <Button type="button" className="rounded-full" onClick={onNeu}>
+          <Icon icon="ph:plus" className="mr-1.5 size-4" />
+          {t("textvorlagenPage.newTemplate")}
+        </Button>
+      </div>
     </div>
+  );
+}
+
+/** Leerer Zustand der Textvorlagen. */
+function VorlagenLeer({ onNeu }: { onNeu: () => void }) {
+  const t = useTranslations("finance");
+  return (
+          <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
+        <span className="flex size-14 items-center justify-center rounded-full bg-secondary">
+          <Icon icon="ph:text-align-left" className="size-7 text-muted-foreground" />
+        </span>
+        <div>
+          <p className="font-display text-lg font-extrabold">{t("textvorlagenPage.emptyTitle")}</p>
+          <p className="text-sm text-muted-foreground">{t("textvorlagenPage.emptySubtitle")}</p>
+        </div>
+        <Button type="button" className="rounded-full" onClick={onNeu}>
+          <Icon icon="ph:plus" className="mr-1.5 size-4" />
+          {t("textvorlagenPage.newTemplate")}
+        </Button>
+      </Card>
   );
 }

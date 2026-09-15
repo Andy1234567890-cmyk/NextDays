@@ -139,92 +139,28 @@ export function AusgabenListe({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="font-display text-2xl font-extrabold">{t("ausgabenPage.title")}</h2>
-          <p className="text-sm text-muted-foreground">{t("ausgabenPage.subtitle")}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={() => setKategorienOffen(true)}>
-            <Icon icon="ph:tag" className="size-4" />
-            {t("ausgabenPage.categoriesButton")}
-          </Button>
-          <Button type="button" variant="outline" onClick={wiederholungen} disabled={laeuft === "recurring"}>
-            <Icon icon={laeuft === "recurring" ? "ph:circle-notch" : "ph:repeat"} className={`size-4 ${laeuft === "recurring" ? "animate-spin" : ""}`} />
-            {t("ausgabenPage.recurringRun")}
-          </Button>
-          <Button type="button" onClick={neu}>
-            <Icon icon="ph:plus" className="size-4" />
-            {t("ausgabenPage.newButton")}
-          </Button>
-        </div>
-      </div>
+      <AusgabenKopf
+        laeuftWiederholung={laeuft === "recurring"}
+        onKategorien={() => setKategorienOffen(true)}
+        onWiederholungen={wiederholungen}
+        onNeu={neu}
+      />
 
-      {/* Filter */}
-      <Card className="flex flex-wrap items-end gap-3 p-3">
-        <div className="flex min-w-[10rem] flex-1 flex-col gap-1">
-          <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterSearch")}</span>
-          <Input value={f.search ?? ""} placeholder={t("ausgabenPage.filterSearchPlaceholder")} onChange={(e) => setF((p) => ({ ...p, search: e.target.value }))} onKeyDown={(e) => { if (e.key === "Enter") anwenden(); }} />
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterFrom")}</span>
-          <DatePicker value={f.from ?? ""} onChange={(v) => setF((p) => ({ ...p, from: v || undefined }))} />
-        </div>
-        <div className="flex flex-col gap-1">
-          <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterTo")}</span>
-          <DatePicker value={f.to ?? ""} onChange={(v) => setF((p) => ({ ...p, to: v || undefined }))} />
-        </div>
-        <div className="flex w-36 flex-col gap-1">
-          <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterStatus")}</span>
-          <NativeSelect value={f.status ?? ""} onChange={(e) => setF((p) => ({ ...p, status: (e.target.value || undefined) as PaymentStatus | undefined }))}>
-            <option value="">{t("ausgabenPage.filterAll")}</option>
-            {PAYMENT_STATUSES.map((s) => (
-              <option key={s} value={s}>{t(`ausgabenPage.status_${s}`)}</option>
-            ))}
-          </NativeSelect>
-        </div>
-        <div className="flex w-44 flex-col gap-1">
-          <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterCategory")}</span>
-          <NativeSelect value={f.categoryId ?? ""} onChange={(e) => setF((p) => ({ ...p, categoryId: e.target.value || undefined }))}>
-            <option value="">{t("ausgabenPage.filterAll")}</option>
-            {aktive.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </NativeSelect>
-        </div>
-        <div className="flex w-40 flex-col gap-1">
-          <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterRecurring")}</span>
-          <NativeSelect value={f.recurring === undefined ? "" : String(f.recurring)} onChange={(e) => setF((p) => ({ ...p, recurring: e.target.value === "" ? undefined : e.target.value === "true" }))}>
-            <option value="">{t("ausgabenPage.filterAll")}</option>
-            <option value="true">{t("ausgabenPage.filterRecurringOnly")}</option>
-            <option value="false">{t("ausgabenPage.filterRecurringNone")}</option>
-          </NativeSelect>
-        </div>
-        <Button type="button" size="sm" onClick={anwenden}>
-          <Icon icon="ph:funnel" className="size-4" />
-          {t("ausgabenPage.filterApply")}
-        </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={() => { setF({}); router.push(pathname); }}>
-          {t("ausgabenPage.filterReset")}
-        </Button>
-      </Card>
+      <AusgabenFilter
+        f={f}
+        setF={setF}
+        kategorien={aktive}
+        onAnwenden={anwenden}
+        onZuruecksetzen={() => {
+          setF({});
+          router.push(pathname);
+        }}
+      />
 
       {ladeFehler ? (
         <Card className="p-5 text-sm text-destructive">{ladeFehler}</Card>
       ) : !liste || liste.items.length === 0 ? (
-        <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
-          <span className="flex size-14 items-center justify-center rounded-full bg-secondary">
-            <Icon icon="ph:receipt" className="size-7 text-muted-foreground" />
-          </span>
-          <div>
-            <p className="font-display text-lg font-extrabold">{t("ausgabenPage.emptyTitle")}</p>
-            <p className="text-sm text-muted-foreground">{t("ausgabenPage.emptySubtitle")}</p>
-          </div>
-          <Button type="button" onClick={neu}>
-            <Icon icon="ph:plus" className="size-4" />
-            {t("ausgabenPage.newButton")}
-          </Button>
-        </Card>
+        <AusgabenLeer onNeu={neu} />
       ) : (
         <>
           <div className="flex flex-wrap gap-3 text-sm">
@@ -252,62 +188,15 @@ export function AusgabenListe({
               </thead>
               <tbody className="divide-y divide-border">
                 {liste.items.map((e) => (
-                  <tr key={e.id} className="transition-colors hover:bg-secondary/30">
-                    <td className="px-4 py-3 text-muted-foreground">{datum(e.expenseDate, locale)}</td>
-                    <td className="px-4 py-3">
-                      <button type="button" className="text-left font-medium hover:underline" onClick={() => oeffnen(e)}>
-                        {e.title}
-                      </button>
-                      <div className="flex gap-2 text-xs text-muted-foreground">
-                        {e.receiptNumber && <span>{e.receiptNumber}</span>}
-                        {e.isRecurring && (
-                          <span title={t("ausgabenPage.recurringTemplate")}>
-                            <Icon icon="ph:repeat" className="inline size-3.5" /> {e.recurringInterval ? t(`ausgabenPage.interval_${e.recurringInterval}`) : ""}
-                          </span>
-                        )}
-                        {e.templateId && <span>{t("ausgabenPage.fromTemplate")}</span>}
-                        {e.isLocked && <Icon icon="ph:lock" className="inline size-3.5" aria-label={t("ausgabenPage.locked")} />}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{e.supplierName ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{e.categoryName ?? "—"}</td>
-                    <td className="px-4 py-3 text-right font-medium">{betrag(e.grossAmount, e.currency, locale)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASSES[e.paymentStatus]}`}>
-                        {t(`ausgabenPage.status_${e.paymentStatus}`)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1">
-                        {e.hasReceipt && (
-                          <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.openReceipt")} onClick={() => belegOeffnen(e)}>
-                            <Icon icon="ph:paperclip" className="size-4" />
-                          </Button>
-                        )}
-                        {e.paymentStatus === "open" && (
-                          <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.markPaid")} disabled={laeuft === e.id}
-                            onClick={() => aktion(e.id, () => updateExpense(e.id, { paymentStatus: "paid" }), t("ausgabenPage.markedPaid"))}>
-                            <Icon icon="ph:check-circle" className="size-4" />
-                          </Button>
-                        )}
-                        {!e.isLocked && (
-                          <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.lock")} disabled={laeuft === e.id}
-                            onClick={() => { if (window.confirm(t("ausgabenPage.lockConfirm"))) aktion(e.id, () => lockExpense(e.id), t("ausgabenPage.lockedNow")); }}>
-                            <Icon icon="ph:lock-key" className="size-4" />
-                          </Button>
-                        )}
-                        <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.edit")} onClick={() => oeffnen(e)}>
-                          <Icon icon="ph:pencil-simple" className="size-4" />
-                        </Button>
-                        {!e.isLocked && (
-                          <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.delete")} disabled={laeuft === e.id}
-                            onClick={() => { if (window.confirm(t("ausgabenPage.deleteConfirm", { title: e.title }))) aktion(e.id, () => deleteExpense(e.id), t("ausgabenPage.deleted")); }}>
-                            <Icon icon="ph:trash" className="size-4 text-destructive" />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                  <AusgabeZeile
+                    key={e.id}
+                    e={e}
+                    locale={locale}
+                    laeuft={laeuft === e.id}
+                    onOeffnen={oeffnen}
+                    onBeleg={belegOeffnen}
+                    onAktion={aktion}
+                  />
                 ))}
               </tbody>
             </table>
@@ -318,5 +207,210 @@ export function AusgabenListe({
       <AusgabeFormular open={formOffen} onOpenChange={setFormOffen} categories={aktive} bestand={bearbeitet} />
       <KategorienDialog open={kategorienOffen} onOpenChange={setKategorienOffen} categories={categories} />
     </div>
+  );
+}
+
+/** Die Filterleiste der Ausgabenliste. Sie hält nur den Entwurf der Filter;
+ *  angewendet werden sie über die URL (teilbarer Link, Zurück-Knopf). */
+function AusgabenFilter({
+  f,
+  setF,
+  kategorien,
+  onAnwenden,
+  onZuruecksetzen,
+}: {
+  f: ExpenseFilter;
+  setF: React.Dispatch<React.SetStateAction<ExpenseFilter>>;
+  kategorien: ExpenseCategory[];
+  onAnwenden: () => void;
+  onZuruecksetzen: () => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <Card className="flex flex-wrap items-end gap-3 p-3">
+    <div className="flex min-w-[10rem] flex-1 flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterSearch")}</span>
+      <Input value={f.search ?? ""} placeholder={t("ausgabenPage.filterSearchPlaceholder")} onChange={(e) => setF((p) => ({ ...p, search: e.target.value }))} onKeyDown={(e) => { if (e.key === "Enter") onAnwenden(); }} />
+    </div>
+    <div className="flex flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterFrom")}</span>
+      <DatePicker value={f.from ?? ""} onChange={(v) => setF((p) => ({ ...p, from: v || undefined }))} />
+    </div>
+    <div className="flex flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterTo")}</span>
+      <DatePicker value={f.to ?? ""} onChange={(v) => setF((p) => ({ ...p, to: v || undefined }))} />
+    </div>
+    <div className="flex w-36 flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterStatus")}</span>
+      <NativeSelect value={f.status ?? ""} onChange={(e) => setF((p) => ({ ...p, status: (e.target.value || undefined) as PaymentStatus | undefined }))}>
+        <option value="">{t("ausgabenPage.filterAll")}</option>
+        {PAYMENT_STATUSES.map((s) => (
+          <option key={s} value={s}>{t(`ausgabenPage.status_${s}`)}</option>
+        ))}
+      </NativeSelect>
+    </div>
+    <div className="flex w-44 flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterCategory")}</span>
+      <NativeSelect value={f.categoryId ?? ""} onChange={(e) => setF((p) => ({ ...p, categoryId: e.target.value || undefined }))}>
+        <option value="">{t("ausgabenPage.filterAll")}</option>
+        {kategorien.map((c) => (
+          <option key={c.id} value={c.id}>{c.name}</option>
+        ))}
+      </NativeSelect>
+    </div>
+    <div className="flex w-40 flex-col gap-1">
+      <span className="text-xs text-muted-foreground">{t("ausgabenPage.filterRecurring")}</span>
+      <NativeSelect value={f.recurring === undefined ? "" : String(f.recurring)} onChange={(e) => setF((p) => ({ ...p, recurring: e.target.value === "" ? undefined : e.target.value === "true" }))}>
+        <option value="">{t("ausgabenPage.filterAll")}</option>
+        <option value="true">{t("ausgabenPage.filterRecurringOnly")}</option>
+        <option value="false">{t("ausgabenPage.filterRecurringNone")}</option>
+      </NativeSelect>
+    </div>
+    <Button type="button" size="sm" onClick={onAnwenden}>
+      <Icon icon="ph:funnel" className="size-4" />
+      {t("ausgabenPage.filterApply")}
+    </Button>
+    <Button type="button" size="sm" variant="ghost" onClick={onZuruecksetzen}>
+      {t("ausgabenPage.filterReset")}
+    </Button>
+  </Card>
+  );
+}
+
+/** Eine Zeile der Ausgabenliste samt ihrer Aktionen. */
+function AusgabeZeile({
+  e,
+  locale,
+  laeuft,
+  onOeffnen,
+  onBeleg,
+  onAktion,
+}: {
+  e: Expense;
+  locale: string;
+  laeuft: boolean;
+  onOeffnen: (e: Expense) => void;
+  onBeleg: (e: Expense) => void;
+  onAktion: (
+    id: string,
+    lauf: () => Promise<{ ok: boolean; error?: string }>,
+    erfolg: string,
+  ) => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+                <tr key={e.id} className="transition-colors hover:bg-secondary/30">
+  <td className="px-4 py-3 text-muted-foreground">{datum(e.expenseDate, locale)}</td>
+  <td className="px-4 py-3">
+    <button type="button" className="text-left font-medium hover:underline" onClick={() => onOeffnen(e)}>
+      {e.title}
+    </button>
+    <div className="flex gap-2 text-xs text-muted-foreground">
+      {e.receiptNumber && <span>{e.receiptNumber}</span>}
+      {e.isRecurring && (
+        <span title={t("ausgabenPage.recurringTemplate")}>
+          <Icon icon="ph:repeat" className="inline size-3.5" /> {e.recurringInterval ? t(`ausgabenPage.interval_${e.recurringInterval}`) : ""}
+        </span>
+      )}
+      {e.templateId && <span>{t("ausgabenPage.fromTemplate")}</span>}
+      {e.isLocked && <Icon icon="ph:lock" className="inline size-3.5" aria-label={t("ausgabenPage.locked")} />}
+    </div>
+  </td>
+  <td className="px-4 py-3 text-muted-foreground">{e.supplierName ?? "—"}</td>
+  <td className="px-4 py-3 text-muted-foreground">{e.categoryName ?? "—"}</td>
+  <td className="px-4 py-3 text-right font-medium">{betrag(e.grossAmount, e.currency, locale)}</td>
+  <td className="px-4 py-3">
+    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASSES[e.paymentStatus]}`}>
+      {t(`ausgabenPage.status_${e.paymentStatus}`)}
+    </span>
+  </td>
+  <td className="px-4 py-3">
+    <div className="flex justify-end gap-1">
+      {e.hasReceipt && (
+        <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.openReceipt")} onClick={() => onBeleg(e)}>
+          <Icon icon="ph:paperclip" className="size-4" />
+        </Button>
+      )}
+      {e.paymentStatus === "open" && (
+        <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.markPaid")} disabled={laeuft}
+          onClick={() => onAktion(e.id, () => updateExpense(e.id, { paymentStatus: "paid" }), t("ausgabenPage.markedPaid"))}>
+          <Icon icon="ph:check-circle" className="size-4" />
+        </Button>
+      )}
+      {!e.isLocked && (
+        <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.lock")} disabled={laeuft}
+          onClick={() => { if (window.confirm(t("ausgabenPage.lockConfirm"))) onAktion(e.id, () => lockExpense(e.id), t("ausgabenPage.lockedNow")); }}>
+          <Icon icon="ph:lock-key" className="size-4" />
+        </Button>
+      )}
+      <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.edit")} onClick={() => onOeffnen(e)}>
+        <Icon icon="ph:pencil-simple" className="size-4" />
+      </Button>
+      {!e.isLocked && (
+        <Button type="button" variant="ghost" size="sm" aria-label={t("ausgabenPage.delete")} disabled={laeuft}
+          onClick={() => { if (window.confirm(t("ausgabenPage.deleteConfirm", { title: e.title }))) onAktion(e.id, () => deleteExpense(e.id), t("ausgabenPage.deleted")); }}>
+          <Icon icon="ph:trash" className="size-4 text-destructive" />
+        </Button>
+      )}
+    </div>
+  </td>
+</tr>
+  );
+}
+
+/** Leerer Zustand der Ausgabenliste. */
+function AusgabenLeer({ onNeu }: { onNeu: () => void }) {
+  const t = useTranslations("finance");
+  return (
+  <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
+    <span className="flex size-14 items-center justify-center rounded-full bg-secondary">
+      <Icon icon="ph:receipt" className="size-7 text-muted-foreground" />
+    </span>
+    <div>
+      <p className="font-display text-lg font-extrabold">{t("ausgabenPage.emptyTitle")}</p>
+      <p className="text-sm text-muted-foreground">{t("ausgabenPage.emptySubtitle")}</p>
+    </div>
+    <Button type="button" onClick={onNeu}>
+      <Icon icon="ph:plus" className="size-4" />
+      {t("ausgabenPage.newButton")}
+    </Button>
+  </Card>
+  );
+}
+
+/** Überschrift und die drei Kopfknöpfe der Ausgabenliste. */
+function AusgabenKopf({
+  laeuftWiederholung,
+  onKategorien,
+  onWiederholungen,
+  onNeu,
+}: {
+  laeuftWiederholung: boolean;
+  onKategorien: () => void;
+  onWiederholungen: () => void;
+  onNeu: () => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+  <div className="flex flex-wrap items-start justify-between gap-3">
+    <div>
+      <h2 className="font-display text-2xl font-extrabold">{t("ausgabenPage.title")}</h2>
+      <p className="text-sm text-muted-foreground">{t("ausgabenPage.subtitle")}</p>
+    </div>
+    <div className="flex flex-wrap gap-2">
+      <Button type="button" variant="outline" onClick={onKategorien}>
+        <Icon icon="ph:tag" className="size-4" />
+        {t("ausgabenPage.categoriesButton")}
+      </Button>
+      <Button type="button" variant="outline" onClick={onWiederholungen} disabled={laeuftWiederholung}>
+        <Icon icon={laeuftWiederholung ? "ph:circle-notch" : "ph:repeat"} className={`size-4 ${laeuftWiederholung ? "animate-spin" : ""}`} />
+        {t("ausgabenPage.recurringRun")}
+      </Button>
+      <Button type="button" onClick={onNeu}>
+        <Icon icon="ph:plus" className="size-4" />
+        {t("ausgabenPage.newButton")}
+      </Button>
+    </div>
+  </div>
   );
 }

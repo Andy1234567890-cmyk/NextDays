@@ -81,75 +81,14 @@ export function UmsatzListe({ liste, accounts, filter }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="flex flex-wrap items-end gap-3 p-4">
-        <div className="flex min-w-40 flex-col gap-1">
-          <label className="text-xs text-muted-foreground" htmlFor="f-account">
-            {t("zahlungenPage.filterAccount")}
-          </label>
-          <NativeSelect
-            id="f-account"
-            value={filter.accountId ?? ""}
-            onChange={(e) => setParam("konto", e.target.value)}
-          >
-            <option value="">{t("zahlungenPage.allAccounts")}</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name} ({a.currency})
-              </option>
-            ))}
-          </NativeSelect>
-        </div>
-        <div className="flex min-w-36 flex-col gap-1">
-          <label className="text-xs text-muted-foreground" htmlFor="f-status">
-            {t("zahlungenPage.filterStatus")}
-          </label>
-          <NativeSelect
-            id="f-status"
-            value={filter.status ?? "all"}
-            onChange={(e) => setParam("status", e.target.value === "all" ? "" : e.target.value)}
-          >
-            {STATUS.map((s) => (
-              <option key={s} value={s}>
-                {t(`zahlungenPage.status.${s}`)}
-              </option>
-            ))}
-          </NativeSelect>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-muted-foreground" htmlFor="f-from">
-            {t("zahlungenPage.filterFrom")}
-          </label>
-          <Input id="f-from" type="date" value={filter.from ?? ""} onChange={(e) => setParam("von", e.target.value)} />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="text-xs text-muted-foreground" htmlFor="f-to">
-            {t("zahlungenPage.filterTo")}
-          </label>
-          <Input id="f-to" type="date" value={filter.to ?? ""} onChange={(e) => setParam("bis", e.target.value)} />
-        </div>
-        <form
-          className="flex min-w-48 flex-1 flex-col gap-1"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setParam("suche", search.trim());
-          }}
-        >
-          <label className="text-xs text-muted-foreground" htmlFor="f-search">
-            {t("zahlungenPage.filterSearch")}
-          </label>
-          <div className="flex gap-2">
-            <Input
-              id="f-search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={t("zahlungenPage.searchPlaceholder")}
-            />
-            <Button type="submit" variant="outline" size="icon" aria-label={t("zahlungenPage.searchAria")}>
-              <Icon icon={pending ? "ph:spinner" : "ph:magnifying-glass"} className={`size-4 ${pending ? "animate-spin" : ""}`} />
-            </Button>
-          </div>
-        </form>
-      </Card>
+      <UmsatzFilter
+        filter={filter}
+        accounts={accounts}
+        search={search}
+        setSearch={setSearch}
+        pending={pending}
+        setParam={setParam}
+      />
 
       <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
         <span>{t("zahlungenPage.count", { count: liste.total })}</span>
@@ -189,73 +128,17 @@ export function UmsatzListe({ liste, accounts, filter }: Props) {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {liste.items.map((tx) => {
-                const negativ = Number(tx.amount) < 0;
-                const busy = busyId === tx.id;
-                return (
-                  <tr key={tx.id} className={`transition-colors hover:bg-secondary/30 ${tx.ignored ? "opacity-60" : ""}`}>
-                    <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
-                      {formatDatum(tx.bookingDate, locale)}
-                      {tx.paymentAccountName && (
-                        <span className="block text-xs">{tx.paymentAccountName}</span>
-                      )}
-                    </td>
-                    <td className="max-w-48 truncate px-4 py-3 font-medium">{tx.counterpartName || "—"}</td>
-                    <td className="max-w-72 px-4 py-3 text-muted-foreground">
-                      <span className="line-clamp-2">{tx.purpose || "—"}</span>
-                      {tx.linkedDocuments.length > 0 && (
-                        <span className="mt-1 flex flex-wrap gap-1">
-                          {tx.linkedDocuments.map((d) => (
-                            <span key={d.linkId} className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">
-                              <Icon icon="ph:link" className="size-3" />
-                              {d.documentNumber || d.documentId}
-                            </span>
-                          ))}
-                        </span>
-                      )}
-                      {tx.note && <span className="mt-1 block text-xs italic">{tx.note}</span>}
-                    </td>
-                    <td className={`whitespace-nowrap px-4 py-3 text-right font-semibold ${negativ ? "text-destructive" : "text-accent"}`}>
-                      {formatBetrag(tx.amount, tx.currency, locale)}
-                      {tx.linkCount > 0 && Number(tx.remainingAmount) !== 0 && (
-                        <span className="block text-xs font-normal text-muted-foreground">
-                          {t("zahlungenPage.remaining", { amount: formatBetrag(tx.remainingAmount, tx.currency, locale) })}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={tx.status} label={t(`zahlungenPage.status.${tx.status}`)} />
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-right">
-                      <div className="inline-flex gap-1">
-                        {tx.status !== "ignored" && !negativ && (
-                          <Button size="sm" variant="accent" disabled={busy} onClick={() => setZuordnen(tx)}>
-                            <Icon icon="ph:link" className="size-4" />
-                            {t("zahlungenPage.assign")}
-                          </Button>
-                        )}
-                        {tx.status === "matched" && (
-                          <Button size="sm" variant="outline" disabled={busy} onClick={() => loesen(tx)}>
-                            <Icon icon="ph:link-break" className="size-4" />
-                            {t("zahlungenPage.unlink")}
-                          </Button>
-                        )}
-                        {tx.status === "unmatched" && (
-                          <Button size="sm" variant="ghost" disabled={busy} onClick={() => ignorieren(tx, true)} aria-label={t("zahlungenPage.ignore")}>
-                            <Icon icon="ph:eye-slash" className="size-4" />
-                          </Button>
-                        )}
-                        {tx.status === "ignored" && (
-                          <Button size="sm" variant="ghost" disabled={busy} onClick={() => ignorieren(tx, false)}>
-                            <Icon icon="ph:arrow-counter-clockwise" className="size-4" />
-                            {t("zahlungenPage.restore")}
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+              {liste.items.map((tx) => (
+                <UmsatzZeile
+                  key={tx.id}
+                  tx={tx}
+                  locale={locale}
+                  busy={busyId === tx.id}
+                  onZuordnen={setZuordnen}
+                  onLoesen={loesen}
+                  onIgnorieren={ignorieren}
+                />
+              ))}
             </tbody>
           </table>
         </Card>
@@ -277,5 +160,179 @@ function StatusBadge({ status, label }: { status: TransactionStatus; label: stri
     <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASSES[status]}`}>
       {label}
     </span>
+  );
+}
+
+/** Eine Zeile der Umsatzliste samt Aktionen. */
+function UmsatzZeile({
+  tx,
+  locale,
+  busy,
+  onZuordnen,
+  onLoesen,
+  onIgnorieren,
+}: {
+  tx: BankTransaction;
+  locale: string;
+  busy: boolean;
+  onZuordnen: (tx: BankTransaction) => void;
+  onLoesen: (tx: BankTransaction) => void;
+  onIgnorieren: (tx: BankTransaction, ignored: boolean) => void;
+}) {
+  const t = useTranslations("finance");
+  const negativ = Number(tx.amount) < 0;
+  return (
+                                                                      <tr key={tx.id} className={`transition-colors hover:bg-secondary/30 ${tx.ignored ? "opacity-60" : ""}`}>
+                  <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
+                    {formatDatum(tx.bookingDate, locale)}
+                    {tx.paymentAccountName && (
+                      <span className="block text-xs">{tx.paymentAccountName}</span>
+                    )}
+                  </td>
+                  <td className="max-w-48 truncate px-4 py-3 font-medium">{tx.counterpartName || "—"}</td>
+                  <td className="max-w-72 px-4 py-3 text-muted-foreground">
+                    <span className="line-clamp-2">{tx.purpose || "—"}</span>
+                    {tx.linkedDocuments.length > 0 && (
+                      <span className="mt-1 flex flex-wrap gap-1">
+                        {tx.linkedDocuments.map((d) => (
+                          <span key={d.linkId} className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-xs text-accent">
+                            <Icon icon="ph:link" className="size-3" />
+                            {d.documentNumber || d.documentId}
+                          </span>
+                        ))}
+                      </span>
+                    )}
+                    {tx.note && <span className="mt-1 block text-xs italic">{tx.note}</span>}
+                  </td>
+                  <td className={`whitespace-nowrap px-4 py-3 text-right font-semibold ${negativ ? "text-destructive" : "text-accent"}`}>
+                    {formatBetrag(tx.amount, tx.currency, locale)}
+                    {tx.linkCount > 0 && Number(tx.remainingAmount) !== 0 && (
+                      <span className="block text-xs font-normal text-muted-foreground">
+                        {t("zahlungenPage.remaining", { amount: formatBetrag(tx.remainingAmount, tx.currency, locale) })}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={tx.status} label={t(`zahlungenPage.status.${tx.status}`)} />
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                    <div className="inline-flex gap-1">
+                      {tx.status !== "ignored" && !negativ && (
+                        <Button size="sm" variant="accent" disabled={busy} onClick={() => onZuordnen(tx)}>
+                          <Icon icon="ph:link" className="size-4" />
+                          {t("zahlungenPage.assign")}
+                        </Button>
+                      )}
+                      {tx.status === "matched" && (
+                        <Button size="sm" variant="outline" disabled={busy} onClick={() => onLoesen(tx)}>
+                          <Icon icon="ph:link-break" className="size-4" />
+                          {t("zahlungenPage.unlink")}
+                        </Button>
+                      )}
+                      {tx.status === "unmatched" && (
+                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => onIgnorieren(tx, true)} aria-label={t("zahlungenPage.ignore")}>
+                          <Icon icon="ph:eye-slash" className="size-4" />
+                        </Button>
+                      )}
+                      {tx.status === "ignored" && (
+                        <Button size="sm" variant="ghost" disabled={busy} onClick={() => onIgnorieren(tx, false)}>
+                          <Icon icon="ph:arrow-counter-clockwise" className="size-4" />
+                          {t("zahlungenPage.restore")}
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+  );
+}
+
+/** Die Filterleiste der Umsatzliste. Die Filter stehen in der URL — ein Link
+ *  auf eine gefilterte Sicht bleibt damit teilbar. */
+function UmsatzFilter({
+  filter,
+  accounts,
+  search,
+  setSearch,
+  pending,
+  setParam,
+}: {
+  filter: Props["filter"];
+  accounts: Props["accounts"];
+  search: string;
+  setSearch: (v: string) => void;
+  pending: boolean;
+  setParam: (key: string, value: string) => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <Card className="flex flex-wrap items-end gap-3 p-4">
+      <div className="flex min-w-40 flex-col gap-1">
+        <label className="text-xs text-muted-foreground" htmlFor="f-account">
+          {t("zahlungenPage.filterAccount")}
+        </label>
+        <NativeSelect
+          id="f-account"
+          value={filter.accountId ?? ""}
+          onChange={(e) => setParam("konto", e.target.value)}
+        >
+          <option value="">{t("zahlungenPage.allAccounts")}</option>
+          {accounts.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name} ({a.currency})
+            </option>
+          ))}
+        </NativeSelect>
+      </div>
+      <div className="flex min-w-36 flex-col gap-1">
+        <label className="text-xs text-muted-foreground" htmlFor="f-status">
+          {t("zahlungenPage.filterStatus")}
+        </label>
+        <NativeSelect
+          id="f-status"
+          value={filter.status ?? "all"}
+          onChange={(e) => setParam("status", e.target.value === "all" ? "" : e.target.value)}
+        >
+          {STATUS.map((s) => (
+            <option key={s} value={s}>
+              {t(`zahlungenPage.status.${s}`)}
+            </option>
+          ))}
+        </NativeSelect>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs text-muted-foreground" htmlFor="f-from">
+          {t("zahlungenPage.filterFrom")}
+        </label>
+        <Input id="f-from" type="date" value={filter.from ?? ""} onChange={(e) => setParam("von", e.target.value)} />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs text-muted-foreground" htmlFor="f-to">
+          {t("zahlungenPage.filterTo")}
+        </label>
+        <Input id="f-to" type="date" value={filter.to ?? ""} onChange={(e) => setParam("bis", e.target.value)} />
+      </div>
+      <form
+        className="flex min-w-48 flex-1 flex-col gap-1"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setParam("suche", search.trim());
+        }}
+      >
+        <label className="text-xs text-muted-foreground" htmlFor="f-search">
+          {t("zahlungenPage.filterSearch")}
+        </label>
+        <div className="flex gap-2">
+          <Input
+            id="f-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t("zahlungenPage.searchPlaceholder")}
+          />
+          <Button type="submit" variant="outline" size="icon" aria-label={t("zahlungenPage.searchAria")}>
+            <Icon icon={pending ? "ph:spinner" : "ph:magnifying-glass"} className={`size-4 ${pending ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }

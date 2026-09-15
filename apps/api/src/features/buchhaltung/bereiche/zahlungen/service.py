@@ -71,7 +71,8 @@ _SEITE = 1000
 _MAX_FEHLER_IM_ERGEBNIS = 20
 
 
-def _seitenweise(fabrik: Callable[[], Any]) -> list[dict]:  # noqa: ANN401 — Query-Builder ist untypisiert
+# noqa: ANN401 — der Query-Builder von supabase-py ist untypisiert.
+def _seitenweise(fabrik: Callable[[], Any]) -> list[dict]:  # noqa: ANN401
     """Alle Zeilen einer Abfrage in 1000er-Seiten. `fabrik` baut die Abfrage
     jedes Mal neu (der Builder ist zustandsbehaftet)."""
     zeilen: list[dict] = []
@@ -529,7 +530,9 @@ class ZahlungenService(VerknuepfungenMixin):
             if wort:
                 muster = f"%{wort}%"
                 query = query.or_(
-                    f"purpose.ilike.{muster},counterpart_name.ilike.{muster},reference.ilike.{muster}"
+                    f"purpose.ilike.{muster},"
+                    f"counterpart_name.ilike.{muster},"
+                    f"reference.ilike.{muster}"
                 )
         rows = query.execute().data or []
         items = self._umsaetze_anreichern(tenant_id, rows)

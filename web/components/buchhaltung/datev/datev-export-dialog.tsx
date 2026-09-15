@@ -143,32 +143,18 @@ export function DatevExportDialog({ configured }: { configured: boolean }) {
               </NativeSelect>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="datev-von">{t("datevPage.export.from")}</Label>
-                <Input
-                  id="datev-von"
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => {
-                    setDateFrom(e.target.value);
-                    reset();
-                  }}
-                />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="datev-bis">{t("datevPage.export.to")}</Label>
-                <Input
-                  id="datev-bis"
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => {
-                    setDateTo(e.target.value);
-                    reset();
-                  }}
-                />
-              </div>
-            </div>
+            <Zeitraum
+              von={dateFrom}
+              bis={dateTo}
+              setVon={(v) => {
+                setDateFrom(v);
+                reset();
+              }}
+              setBis={(v) => {
+                setDateTo(v);
+                reset();
+              }}
+            />
 
             {exportType === "buchungsstapel" && (
               <fieldset className="flex flex-col gap-2">
@@ -185,42 +171,8 @@ export function DatevExportDialog({ configured }: { configured: boolean }) {
               </fieldset>
             )}
 
-            {vorschau && (
-              <div className="rounded-(--radius) border border-border bg-secondary/40 p-3 text-sm">
-                <p className="font-medium">
-                  {t("datevPage.export.previewTitle", { anzahl: vorschau.anzahlGesamt })}
-                </p>
-                <ul className="mt-1 grid gap-0.5 text-muted-foreground sm:grid-cols-2">
-                  {Object.entries(vorschau.anzahlJeBelegart).map(([art, n]) => (
-                    <li key={art}>
-                      {art === "personenkonten"
-                        ? t("datevPage.export.personenkonten")
-                        : t(`datevPage.belegart.${art as Belegart}`)}
-                      : {n}
-                    </li>
-                  ))}
-                </ul>
-                {vorschau.warnungen.length > 0 && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {t("datevPage.export.warnings", { anzahl: vorschau.warnungen.length })}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {(fehler || probleme.length > 0) && (
-              <div className="rounded-(--radius) border border-destructive/40 bg-destructive/5 p-3 text-sm">
-                {fehler && <p className="font-medium text-destructive">{fehler}</p>}
-                {probleme.length > 0 && (
-                  <ul className="mt-1 max-h-48 list-disc space-y-0.5 overflow-y-auto pl-5 text-destructive/90">
-                    {probleme.slice(0, 50).map((p, i) => (
-                      <li key={i}>{p}</li>
-                    ))}
-                    {probleme.length > 50 && <li>{t("datevPage.export.moreProblems", { anzahl: probleme.length - 50 })}</li>}
-                  </ul>
-                )}
-              </div>
-            )}
+            <VorschauKasten vorschau={vorschau} />
+            <ProblemKasten fehler={fehler} probleme={probleme} />
           </div>
 
           <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
@@ -244,5 +196,82 @@ export function DatevExportDialog({ configured }: { configured: boolean }) {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+/** Was der Export enthalten wird — Zahl je Belegart plus Hinweiszähler. */
+function VorschauKasten({ vorschau }: { vorschau: Vorschau | null }) {
+  const t = useTranslations("finance");
+  if (!vorschau) return null;
+  return (
+    <div className="rounded-(--radius) border border-border bg-secondary/40 p-3 text-sm">
+      <p className="font-medium">
+        {t("datevPage.export.previewTitle", { anzahl: vorschau.anzahlGesamt })}
+      </p>
+      <ul className="mt-1 grid gap-0.5 text-muted-foreground sm:grid-cols-2">
+        {Object.entries(vorschau.anzahlJeBelegart).map(([art, n]) => (
+          <li key={art}>
+            {art === "personenkonten"
+              ? t("datevPage.export.personenkonten")
+              : t(`datevPage.belegart.${art as Belegart}`)}
+            : {n}
+          </li>
+        ))}
+      </ul>
+      {vorschau.warnungen.length > 0 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t("datevPage.export.warnings", { anzahl: vorschau.warnungen.length })}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Fehler und Einzelprobleme des Laufs. Die Liste wird bei 50 gekappt — der
+ *  Rest steht als Zahl daneben, statt den Dialog zu sprengen. */
+function ProblemKasten({ fehler, probleme }: { fehler: string | null; probleme: string[] }) {
+  const t = useTranslations("finance");
+  if (!fehler && probleme.length === 0) return null;
+  return (
+    <div className="rounded-(--radius) border border-destructive/40 bg-destructive/5 p-3 text-sm">
+      {fehler && <p className="font-medium text-destructive">{fehler}</p>}
+      {probleme.length > 0 && (
+        <ul className="mt-1 max-h-48 list-disc space-y-0.5 overflow-y-auto pl-5 text-destructive/90">
+          {probleme.slice(0, 50).map((p, i) => (
+            <li key={i}>{p}</li>
+          ))}
+          {probleme.length > 50 && (
+            <li>{t("datevPage.export.moreProblems", { anzahl: probleme.length - 50 })}</li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Von/Bis des Exports. */
+function Zeitraum({
+  von,
+  bis,
+  setVon,
+  setBis,
+}: {
+  von: string;
+  bis: string;
+  setVon: (v: string) => void;
+  setBis: (v: string) => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="datev-von">{t("datevPage.export.from")}</Label>
+        <Input id="datev-von" type="date" value={von} onChange={(e) => setVon(e.target.value)} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="datev-bis">{t("datevPage.export.to")}</Label>
+        <Input id="datev-bis" type="date" value={bis} onChange={(e) => setBis(e.target.value)} />
+      </div>
+    </div>
   );
 }

@@ -137,45 +137,15 @@ export function KostenstellenTab({ costCenters }: { costCenters: CostCenter[] })
         </Card>
       )}
 
-      <Sheet open={sheet.offen} onOpenChange={(o) => !o && setSheet({ offen: false, ks: null })}>
-        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
-          <SheetHeader className="border-b">
-            <SheetTitle className="font-display text-lg font-extrabold">
-              {sheet.ks ? t("kontenplanPage.editCostCenter") : t("kontenplanPage.newCostCenter")}
-            </SheetTitle>
-            <SheetDescription>{t("kontenplanPage.costCenterSheetDescription")}</SheetDescription>
-          </SheetHeader>
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-            <div className="grid grid-cols-3 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="ks-number">{t("kontenplanPage.columnNumber")}</Label>
-                <Input id="ks-number" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />
-              </div>
-              <div className="col-span-2 flex flex-col gap-1.5">
-                <Label htmlFor="ks-name">{t("kontenplanPage.columnName")}</Label>
-                <Input id="ks-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ks-desc">{t("kontenplanPage.columnDescription")}</Label>
-              <Input id="ks-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </div>
-            <div className="flex items-center justify-between rounded-(--radius) border px-3 py-2">
-              <Label htmlFor="ks-active">{t("kontenplanPage.active")}</Label>
-              <Switch id="ks-active" checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
-            </div>
-            {fehler && <p className="text-sm text-destructive">{fehler}</p>}
-          </div>
-          <SheetFooter className="border-t">
-            <Button variant="outline" onClick={() => setSheet({ offen: false, ks: null })}>
-              {t("kontenplanPage.cancel")}
-            </Button>
-            <Button onClick={speichern} disabled={busy || !form.name.trim() || !form.number.trim()}>
-              {busy ? t("kontenplanPage.saving") : t("kontenplanPage.save")}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <KostenstelleSheet
+        sheet={sheet}
+        setSheet={setSheet}
+        form={form}
+        setForm={setForm}
+        busy={busy}
+        fehler={fehler}
+        onSpeichern={speichern}
+      />
 
       <BestaetigenDialog
         open={loeschen !== null}
@@ -188,5 +158,67 @@ export function KostenstellenTab({ costCenters }: { costCenters: CostCenter[] })
         onClose={() => setLoeschen(null)}
       />
     </div>
+  );
+}
+
+/** Das Sheet zum Anlegen und Bearbeiten einer Kostenstelle. */
+function KostenstelleSheet({
+  sheet,
+  setSheet,
+  form,
+  setForm,
+  busy,
+  fehler,
+  onSpeichern,
+}: {
+  sheet: { offen: boolean; ks: CostCenter | null };
+  setSheet: (s: { offen: boolean; ks: CostCenter | null }) => void;
+  form: Formular;
+  setForm: React.Dispatch<React.SetStateAction<Formular>>;
+  busy: boolean;
+  fehler: string | null;
+  onSpeichern: () => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <Sheet open={sheet.offen} onOpenChange={(o) => !o && setSheet({ offen: false, ks: null })}>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+        <SheetHeader className="border-b">
+          <SheetTitle className="font-display text-lg font-extrabold">
+            {sheet.ks ? t("kontenplanPage.editCostCenter") : t("kontenplanPage.newCostCenter")}
+          </SheetTitle>
+          <SheetDescription>{t("kontenplanPage.costCenterSheetDescription")}</SheetDescription>
+        </SheetHeader>
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ks-number">{t("kontenplanPage.columnNumber")}</Label>
+              <Input id="ks-number" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} />
+            </div>
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label htmlFor="ks-name">{t("kontenplanPage.columnName")}</Label>
+              <Input id="ks-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ks-desc">{t("kontenplanPage.columnDescription")}</Label>
+            <Input id="ks-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+          <div className="flex items-center justify-between rounded-(--radius) border px-3 py-2">
+            <Label htmlFor="ks-active">{t("kontenplanPage.active")}</Label>
+            <Switch id="ks-active" checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
+          </div>
+          {fehler && <p className="text-sm text-destructive">{fehler}</p>}
+        </div>
+        <SheetFooter className="border-t">
+          <Button variant="outline" onClick={() => setSheet({ offen: false, ks: null })}>
+            {t("kontenplanPage.cancel")}
+          </Button>
+          <Button onClick={onSpeichern} disabled={busy || !form.name.trim() || !form.number.trim()}>
+            {busy ? t("kontenplanPage.saving") : t("kontenplanPage.save")}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

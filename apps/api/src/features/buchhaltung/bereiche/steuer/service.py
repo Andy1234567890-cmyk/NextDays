@@ -80,8 +80,12 @@ _RETURN_KIND = "vat"
 _MAX_LISTE = 500
 # PostgreSQL: undefined_table — die Ausgaben-Tabelle des Nachbar-Bereichs fehlt noch.
 _PG_UNDEFINED_TABLE = "42P01"
-# Ausgaben-Status, die als Eingangsbeleg zählen. `draft` nie; storniert nie.
-_AUSGABEN_STATUS_AUS: frozenset[str] = frozenset({"draft", "cancelled", "rejected"})
+# Zahlstatus einer Ausgabe, der NICHT als Eingangsbeleg zählt. Die Spalte heißt
+# `payment_status` (0656) und kennt genau open | paid | cancelled — hier stand
+# bis zum 14.09.2026 `status` mit erfundenen Werten (draft/rejected): die Spalte
+# gibt es nicht, PostgREST warf 42703 und die Umsatzsteuer-Voranmeldung starb
+# mit 500.
+_AUSGABEN_STATUS_AUS: frozenset[str] = frozenset({"cancelled"})
 
 # Steuerregel der Rechnung → Kategorie der neutralen Zeile.
 _REGEL_KATEGORIE: dict[str, str] = {
@@ -332,7 +336,7 @@ class SteuerService:
                 self._db.table("expenses")
                 .select(
                     "id, expense_date, net_amount, tax_amount, gross_amount, tax_rate, "
-                    "currency, status"
+                    "currency, payment_status"
                 )
                 .eq("tenant_id", tenant_id)
                 .gte("expense_date", start.isoformat())
@@ -348,7 +352,7 @@ class SteuerService:
                 "Vorsteuer = 0."
             )
             return []
-        return [r for r in rows if (r.get("status") or "") not in _AUSGABEN_STATUS_AUS]
+        return [r for r in rows if (r.get("payment_status") or "") not in _AUSGABEN_STATUS_AUS]
 
     def _vorsteuerzeilen(
         self, tenant_id: str, periode: Periode, currency: str, warnungen: list[str]

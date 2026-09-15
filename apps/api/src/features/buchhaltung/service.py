@@ -907,6 +907,67 @@ class BuchhaltungService:
         return payload
 
 
+    def _positionszeilen(
+        self, items: list[dict], invoice_id: str, *, is_klein: bool
+    ) -> list[dict]:
+        """Die Positionszeilen einer Rechnung aus dem Editor-Payload.
+
+        Eigene Methode, damit `create_invoice_from_bestand` den Ablauf zeigt
+        (prüfen → Nummer ziehen → Kopf → Positionen) und nicht zusätzlich die
+        Rechenregeln JE Zeile.
+        """
+        line_rows: list[dict] = []
+        for pos, it in enumerate(items, start=1):
+            # BEIDE Schreibweisen tolerieren (wie _compute_totals): sonst berechnet
+            # der Kopf bei snake_case-Payload korrekte Beträge, während jede Position
+            # auf 0 fiele → Σ Positionen ≠ Kopf (GoBD-Widerspruch, unlöschbar).
+            qty = Decimal(str(it.get("quantity") or 0))
+            price = Decimal(str(it.get("unitPrice") or it.get("unit_price") or 0))
+            disc = Decimal(
+                str(it.get("discountPercent") or it.get("discount_percent") or 0)
+            )
+            # Kleinunternehmer (§19 UStG): der Beleg weist KEINE USt aus. Der
+            # Kopf steht bereits auf tax_amount=0/gross=net — die Positionen
+            # MÜSSEN dazu passen (sonst Σ Positionen ≠ Kopf, GoBD-widersprüchlich,
+            # und ein späterer Storno erfände eine Steuerzeile). Satz je Position
+            # daher auf 0 zwingen, egal was das Formular schickt.
+            rate = (
+                Decimal("0") if is_klein
+                else Decimal(str(it.get("taxRate") or it.get("tax_rate") or 0))
+            )
+            if it.get("category") == "discount":
+                price = -abs(price)
+            gross_unit = qty * price
+            net = _q(gross_unit - gross_unit * (disc / Decimal(100)))
+            tax = _q(net * (rate / Decimal(100)))
+            basis = it.get("basis")
+            if basis is not None and basis not in POSITIONS_BASEN:
+                raise BuchhaltungError(
+                    f"Position {pos}: unbekannte Abrechnungsbasis „{basis}“.", status_code=422
+                )
+            try:
+                aufenthalt = aufenthalt_aus_bestand(it)
+            except ValueError as exc:
+                raise BuchhaltungError(
+                    f"Position {pos}: {exc}", status_code=422
+                ) from exc
+            line_rows.append({
+                "invoice_id": invoice_id,
+                "position": pos,
+                "description": it.get("description") or "",
+                "quantity": str(qty),
+                "unit": it.get("unit") or "Stk",
+                "basis": basis,
+                **aufenthalt,
+                "unit_price": str(price),
+                "tax_rate": str(rate),
+                "discount_percent": str(disc),
+                "net_amount": str(net),
+                "tax_amount": str(tax),
+                "gross_amount": str(_q(net + tax)),
+            })
+        return line_rows
+
     def create_invoice_from_bestand(self, ctx: AuthContext, payload: dict) -> dict:
         """Rechnung aus dem reichen camelCase-Payload des Buchhaltungs-Bestands
         anlegen. Mappt auf die GoBD-Tabelle (Migration 0023); Beträge werden
@@ -1055,56 +1116,7 @@ class BuchhaltungService:
         # Positionen speichern. Rabatt-Positionen negativ persistieren (siehe
         # _compute_totals) — sonst verliert der Beleg das Vorzeichen und ein
         # Storno würde den Rabatt als Zuschlag negieren.
-        line_rows = []
-        for pos, it in enumerate(items, start=1):
-            # BEIDE Schreibweisen tolerieren (wie _compute_totals): sonst berechnet
-            # der Kopf bei snake_case-Payload korrekte Beträge, während jede Position
-            # auf 0 fiele → Σ Positionen ≠ Kopf (GoBD-Widerspruch, unlöschbar).
-            qty = Decimal(str(it.get("quantity") or 0))
-            price = Decimal(str(it.get("unitPrice") or it.get("unit_price") or 0))
-            disc = Decimal(
-                str(it.get("discountPercent") or it.get("discount_percent") or 0)
-            )
-            # Kleinunternehmer (§19 UStG): der Beleg weist KEINE USt aus. Der
-            # Kopf steht bereits auf tax_amount=0/gross=net — die Positionen
-            # MÜSSEN dazu passen (sonst Σ Positionen ≠ Kopf, GoBD-widersprüchlich,
-            # und ein späterer Storno erfände eine Steuerzeile). Satz je Position
-            # daher auf 0 zwingen, egal was das Formular schickt.
-            rate = (
-                Decimal("0") if is_klein
-                else Decimal(str(it.get("taxRate") or it.get("tax_rate") or 0))
-            )
-            if it.get("category") == "discount":
-                price = -abs(price)
-            gross_unit = qty * price
-            net = _q(gross_unit - gross_unit * (disc / Decimal(100)))
-            tax = _q(net * (rate / Decimal(100)))
-            basis = it.get("basis")
-            if basis is not None and basis not in POSITIONS_BASEN:
-                raise BuchhaltungError(
-                    f"Position {pos}: unbekannte Abrechnungsbasis „{basis}“.", status_code=422
-                )
-            try:
-                aufenthalt = aufenthalt_aus_bestand(it)
-            except ValueError as exc:
-                raise BuchhaltungError(
-                    f"Position {pos}: {exc}", status_code=422
-                ) from exc
-            line_rows.append({
-                "invoice_id": invoice_id,
-                "position": pos,
-                "description": it.get("description") or "",
-                "quantity": str(qty),
-                "unit": it.get("unit") or "Stk",
-                "basis": basis,
-                **aufenthalt,
-                "unit_price": str(price),
-                "tax_rate": str(rate),
-                "discount_percent": str(disc),
-                "net_amount": str(net),
-                "tax_amount": str(tax),
-                "gross_amount": str(_q(net + tax)),
-            })
+        line_rows = self._positionszeilen(items, invoice_id, is_klein=is_klein)
         if line_rows:
             try:
                 self._db.table("invoice_line_items").insert(line_rows).execute()

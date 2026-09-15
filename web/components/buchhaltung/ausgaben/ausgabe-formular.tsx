@@ -109,37 +109,128 @@ function leer(vorgabeSatz: string): Form {
   };
 }
 
+/** Leerer String statt null — die Felder des Formulars sind immer Strings. */
+function txt(v: string | null | undefined): string {
+  return v ?? "";
+}
+
 function ausBestand(e: Expense): Form {
   return {
     title: e.title,
-    supplierName: e.supplierName ?? "",
-    supplierAddress: e.supplierAddress ?? "",
-    supplierVatId: e.supplierVatId ?? "",
-    supplierEmail: e.supplierEmail ?? "",
-    receiptNumber: e.receiptNumber ?? "",
+    supplierName: txt(e.supplierName),
+    supplierAddress: txt(e.supplierAddress),
+    supplierVatId: txt(e.supplierVatId),
+    supplierEmail: txt(e.supplierEmail),
+    receiptNumber: txt(e.receiptNumber),
     expenseDate: e.expenseDate,
-    dueDate: e.dueDate ?? "",
+    dueDate: txt(e.dueDate),
     grossAmount: e.grossAmount,
     netAmount: e.netAmount,
     taxRate: e.taxRate,
     currency: e.currency,
-    categoryId: e.categoryId ?? "",
-    bookingAccount: e.bookingAccount ?? "",
+    categoryId: txt(e.categoryId),
+    bookingAccount: txt(e.bookingAccount),
     paymentStatus: e.paymentStatus,
-    paymentMethod: e.paymentMethod ?? "",
-    paidAt: e.paidAt ?? "",
+    paymentMethod: txt(e.paymentMethod),
+    paidAt: txt(e.paidAt),
     isRecurring: e.isRecurring,
     recurringInterval: e.recurringInterval ?? "monthly",
-    nextDueDate: e.nextDueDate ?? "",
+    nextDueDate: txt(e.nextDueDate),
     taxDeductible: e.taxDeductible ?? true,
-    description: e.description ?? "",
-    notes: e.notes ?? "",
+    description: txt(e.description),
+    notes: txt(e.notes),
   };
 }
 
 function oderNull(s: string): string | null {
   const t = s.trim();
   return t ? t : null;
+}
+
+/** Felder, die der Belegausleser 1:1 füllt — nur, wenn das Feld leer ist.
+ *  Tabelle statt Kette: eine neue Übernahme ist ein Eintrag, kein Zweig. */
+const OCR_FELDER = [
+  "supplierName",
+  "supplierAddress",
+  "supplierVatId",
+  "supplierEmail",
+  "receiptNumber",
+  "dueDate",
+  "grossAmount",
+  "netAmount",
+  "taxRate",
+  "currency",
+  "description",
+] as const;
+
+function ocrUebernehmen(alt: Form, v: ReceiptExtraction): Form {
+  const neu: Form = { ...alt };
+  for (const k of OCR_FELDER) neu[k] = alt[k] || txt(v[k]);
+  if (!alt.title && v.supplierName) {
+    neu.title = v.receiptNumber ? `${v.supplierName} ${v.receiptNumber}` : v.supplierName;
+  }
+  neu.expenseDate = v.expenseDate ?? alt.expenseDate;
+  return neu;
+}
+
+/** Erste verletzte Pflichtangabe als fertige Meldung, sonst null. */
+function pruefen(form: Form, t: (key: string) => string): string | null {
+  if (!form.title.trim()) return t("ausgabenPage.errorTitleRequired");
+  if (!form.taxRate.trim()) return t("ausgabenPage.errorTaxRateRequired");
+  if (!form.grossAmount.trim() && !form.netAmount.trim()) {
+    return t("ausgabenPage.errorAmountRequired");
+  }
+  if (form.isRecurring && !form.nextDueDate) return t("ausgabenPage.errorNextDueRequired");
+  return null;
+}
+
+function nutzlast(form: Form, ocr: ReceiptExtraction | null, bestand: boolean): ExpenseInput {
+  return {
+    title: form.title.trim(),
+    description: oderNull(form.description),
+    supplierName: oderNull(form.supplierName),
+    supplierAddress: oderNull(form.supplierAddress),
+    supplierVatId: oderNull(form.supplierVatId),
+    supplierEmail: oderNull(form.supplierEmail),
+    receiptNumber: oderNull(form.receiptNumber),
+    expenseDate: form.expenseDate,
+    dueDate: oderNull(form.dueDate),
+    grossAmount: oderNull(form.grossAmount.replace(",", ".")),
+    netAmount: oderNull(form.netAmount.replace(",", ".")),
+    taxRate: form.taxRate.replace(",", ".").trim(),
+    currency: oderNull(form.currency.toUpperCase()),
+    taxDeductible: form.taxDeductible,
+    categoryId: oderNull(form.categoryId),
+    bookingAccount: oderNull(form.bookingAccount),
+    paymentStatus: form.paymentStatus,
+    paymentMethod: oderNull(form.paymentMethod),
+    paidAt: oderNull(form.paidAt),
+    isRecurring: form.isRecurring,
+    recurringInterval: form.isRecurring ? form.recurringInterval : null,
+    nextDueDate: form.isRecurring ? oderNull(form.nextDueDate) : null,
+    notes: oderNull(form.notes),
+    ocrRaw: ocr?.raw ?? undefined,
+    source: bestand ? undefined : ocr ? "ocr" : "manual",
+  };
+}
+
+/** Gesperrter Beleg (GoBD): die festgeschriebenen Felder gar nicht erst senden —
+ *  der Server weist sie ab, und die Meldung wäre für den Nutzer sinnlos. */
+const GESPERRTE_FELDER = [
+  "grossAmount",
+  "netAmount",
+  "taxRate",
+  "currency",
+  "expenseDate",
+  "receiptNumber",
+  "supplierName",
+  "title",
+] as const;
+
+function ohneGesperrte(input: ExpenseInput): ExpenseUpdateInput {
+  const body: ExpenseUpdateInput = { ...input };
+  for (const k of GESPERRTE_FELDER) delete body[k];
+  return body;
 }
 
 export function AusgabeFormular({
@@ -195,9 +286,6 @@ export function AusgabeFormular({
     setDatei(f);
   };
 
-  const istHeic = datei ? /\.(heic|heif)$/i.test(datei.name) || /heic|heif/.test(datei.type) : false;
-  const istPdf = datei ? datei.type === "application/pdf" || /\.pdf$/i.test(datei.name) : false;
-
   const belegAuslesen = async () => {
     if (!datei) return;
     setLiest(true);
@@ -209,82 +297,23 @@ export function AusgabeFormular({
     }
     const v = res.data;
     setOcr(v);
-    // Nur LEERE Felder füllen — Eingaben des Menschen bleiben stehen.
-    setForm((p) => ({
-      ...p,
-      title: p.title || (v.supplierName ? `${v.supplierName}${v.receiptNumber ? ` ${v.receiptNumber}` : ""}` : p.title),
-      supplierName: p.supplierName || (v.supplierName ?? ""),
-      supplierAddress: p.supplierAddress || (v.supplierAddress ?? ""),
-      supplierVatId: p.supplierVatId || (v.supplierVatId ?? ""),
-      supplierEmail: p.supplierEmail || (v.supplierEmail ?? ""),
-      receiptNumber: p.receiptNumber || (v.receiptNumber ?? ""),
-      expenseDate: v.expenseDate ?? p.expenseDate,
-      dueDate: p.dueDate || (v.dueDate ?? ""),
-      grossAmount: p.grossAmount || (v.grossAmount ?? ""),
-      netAmount: p.netAmount || (v.netAmount ?? ""),
-      taxRate: p.taxRate || (v.taxRate ?? ""),
-      currency: p.currency || (v.currency ?? ""),
-      description: p.description || (v.description ?? ""),
-    }));
+    setForm((p) => ocrUebernehmen(p, v));
     toast.success(
-      t("ausgabenPage.ocrDone", { confidence: v.confidence ? t(`ausgabenPage.confidence_${v.confidence}`) : "—" }),
+      t("ausgabenPage.ocrDone", {
+        confidence: v.confidence ? t(`ausgabenPage.confidence_${v.confidence}`) : "—",
+      }),
     );
   };
 
   const speichern = async () => {
-    setFehler(null);
-    if (!form.title.trim()) return setFehler(t("ausgabenPage.errorTitleRequired"));
-    if (!form.taxRate.trim()) return setFehler(t("ausgabenPage.errorTaxRateRequired"));
-    if (!form.grossAmount.trim() && !form.netAmount.trim()) {
-      return setFehler(t("ausgabenPage.errorAmountRequired"));
-    }
-    if (form.isRecurring && !form.nextDueDate) {
-      return setFehler(t("ausgabenPage.errorNextDueRequired"));
-    }
+    const meldung = pruefen(form, t);
+    setFehler(meldung);
+    if (meldung) return;
     setSpeichert(true);
-    const input: ExpenseInput = {
-      title: form.title.trim(),
-      description: oderNull(form.description),
-      supplierName: oderNull(form.supplierName),
-      supplierAddress: oderNull(form.supplierAddress),
-      supplierVatId: oderNull(form.supplierVatId),
-      supplierEmail: oderNull(form.supplierEmail),
-      receiptNumber: oderNull(form.receiptNumber),
-      expenseDate: form.expenseDate,
-      dueDate: oderNull(form.dueDate),
-      grossAmount: oderNull(form.grossAmount.replace(",", ".")),
-      netAmount: oderNull(form.netAmount.replace(",", ".")),
-      taxRate: form.taxRate.replace(",", ".").trim(),
-      currency: oderNull(form.currency.toUpperCase()),
-      taxDeductible: form.taxDeductible,
-      categoryId: oderNull(form.categoryId),
-      bookingAccount: oderNull(form.bookingAccount),
-      paymentStatus: form.paymentStatus,
-      paymentMethod: oderNull(form.paymentMethod),
-      paidAt: oderNull(form.paidAt),
-      isRecurring: form.isRecurring,
-      recurringInterval: form.isRecurring ? form.recurringInterval : null,
-      nextDueDate: form.isRecurring ? oderNull(form.nextDueDate) : null,
-      notes: oderNull(form.notes),
-      ocrRaw: ocr?.raw ?? undefined,
-      source: bestand ? undefined : ocr ? "ocr" : "manual",
-    };
-    let res;
-    if (bestand) {
-      const body: ExpenseUpdateInput = { ...input };
-      if (gesperrt) {
-        // Gesperrt: nur, was der Server noch annimmt (Zahlstatus, Kategorie, Notizen …).
-        for (const k of [
-          "grossAmount", "netAmount", "taxRate", "currency", "expenseDate", "receiptNumber",
-          "supplierName", "title",
-        ] as const) {
-          delete body[k];
-        }
-      }
-      res = await updateExpense(bestand.id, body);
-    } else {
-      res = await createExpense(input);
-    }
+    const input = nutzlast(form, ocr, Boolean(bestand));
+    const res = bestand
+      ? await updateExpense(bestand.id, gesperrt ? ohneGesperrte(input) : input)
+      : await createExpense(input);
     if (!res.ok) {
       setSpeichert(false);
       setFehler(res.error);
@@ -307,9 +336,7 @@ export function AusgabeFormular({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col gap-0 overflow-y-auto sm:max-w-2xl">
         <SheetHeader>
-          <SheetTitle>
-            {bestand ? t("ausgabenPage.editTitle") : t("ausgabenPage.newTitle")}
-          </SheetTitle>
+          <SheetTitle>{bestand ? t("ausgabenPage.editTitle") : t("ausgabenPage.newTitle")}</SheetTitle>
           <SheetDescription>{t("ausgabenPage.formSubtitle")}</SheetDescription>
         </SheetHeader>
 
@@ -321,186 +348,19 @@ export function AusgabeFormular({
         )}
 
         <div className="mt-4 flex flex-col gap-5 pb-4">
-          {/* Beleg */}
-          <section className="rounded-(--radius) border border-border p-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <Label>{t("ausgabenPage.receiptLabel")}</Label>
-                <InfoHinweis
-                  ariaLabel={t("ausgabenPage.receiptHelpAria")}
-                  text={[t("ausgabenPage.receiptHelp1"), t("ausgabenPage.receiptHelp2")]}
-                />
-              </div>
-              {bestand?.hasReceipt && !datei && (
-                <span className="text-xs text-muted-foreground">
-                  <Icon icon="ph:paperclip" className="mr-1 inline size-3.5" />
-                  {bestand.receiptFilename}
-                </span>
-              )}
-            </div>
-            <input
-              ref={dateiRef}
-              type="file"
-              accept={ACCEPT}
-              className="hidden"
-              onChange={(e) => dateiWaehlen(e.target.files?.[0] ?? null)}
-            />
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={gesperrt && Boolean(bestand?.hasReceipt)}
-                onClick={() => dateiRef.current?.click()}
-              >
-                <Icon icon="ph:upload-simple" className="size-4" />
-                {datei ? t("ausgabenPage.replaceFile") : t("ausgabenPage.chooseFile")}
-              </Button>
-              {datei && (
-                <>
-                  <span className="max-w-[14rem] truncate text-xs text-muted-foreground">
-                    {datei.name} · {(datei.size / 1024 / 1024).toFixed(1)} MB
-                  </span>
-                  <Button type="button" size="sm" onClick={belegAuslesen} disabled={liest}>
-                    {liest ? (
-                      <Icon icon="ph:circle-notch" className="size-4 animate-spin" />
-                    ) : (
-                      <Icon icon="ph:sparkle" className="size-4" />
-                    )}
-                    {t("ausgabenPage.extract")}
-                  </Button>
-                  <Button type="button" variant="ghost" size="sm" onClick={() => dateiWaehlen(null)}>
-                    <Icon icon="ph:x" className="size-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-            {datei && vorschauUrl && (
-              <div className="mt-3 overflow-hidden rounded-(--radius) border border-border bg-muted">
-                {istHeic ? (
-                  <p className="p-3 text-xs text-muted-foreground">{t("ausgabenPage.heicNoPreview")}</p>
-                ) : istPdf ? (
-                  <iframe title={datei.name} src={vorschauUrl} className="h-72 w-full" />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element -- lokale Objekt-URL, kein Optimizer
-                  <img src={vorschauUrl} alt={datei.name} className="max-h-72 w-full object-contain" />
-                )}
-              </div>
-            )}
-          </section>
-
-          {/* Kopf */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Feld label={t("ausgabenPage.fieldTitle")} required className="sm:col-span-2">
-              <Input value={form.title} disabled={gesperrt} onChange={(e) => set("title", e.target.value)} />
-            </Feld>
-            <Feld label={t("ausgabenPage.fieldSupplier")}>
-              <Input value={form.supplierName} disabled={gesperrt} onChange={(e) => set("supplierName", e.target.value)} />
-            </Feld>
-            <Feld label={t("ausgabenPage.fieldReceiptNumber")}>
-              <Input value={form.receiptNumber} disabled={gesperrt} onChange={(e) => set("receiptNumber", e.target.value)} />
-            </Feld>
-            <Feld label={t("ausgabenPage.fieldExpenseDate")} required>
-              <DatePicker value={form.expenseDate} disabled={gesperrt} onChange={(v) => set("expenseDate", v)} />
-            </Feld>
-            <Feld label={t("ausgabenPage.fieldDueDate")}>
-              <DatePicker value={form.dueDate} onChange={(v) => set("dueDate", v)} />
-            </Feld>
-          </div>
-
-          {/* Beträge */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-            <Feld label={t("ausgabenPage.fieldGross")} hint={t("ausgabenPage.amountHelp")}>
-              <Input inputMode="decimal" value={form.grossAmount} disabled={gesperrt} onChange={(e) => set("grossAmount", e.target.value)} />
-            </Feld>
-            <Feld label={t("ausgabenPage.fieldNet")}>
-              <Input inputMode="decimal" value={form.netAmount} disabled={gesperrt} onChange={(e) => set("netAmount", e.target.value)} />
-            </Feld>
-            <Feld label={t("ausgabenPage.fieldTaxRate")} required hint={t("ausgabenPage.taxRateHelp")}>
-              <Input inputMode="decimal" value={form.taxRate} disabled={gesperrt} placeholder="—" onChange={(e) => set("taxRate", e.target.value)} />
-            </Feld>
-            <Feld label={t("ausgabenPage.fieldCurrency")} hint={t("ausgabenPage.currencyHelp")}>
-              <Input maxLength={3} value={form.currency} disabled={gesperrt} placeholder={t("ausgabenPage.currencyPlaceholder")} onChange={(e) => set("currency", e.target.value.toUpperCase())} />
-            </Feld>
-          </div>
-
-          {/* Zuordnung */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Feld label={t("ausgabenPage.fieldCategory")}>
-              <NativeSelect value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
-                <option value="">{t("ausgabenPage.noCategory")}</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </NativeSelect>
-            </Feld>
-            <Feld label={t("ausgabenPage.fieldBookingAccount")}>
-              <Input value={form.bookingAccount} onChange={(e) => set("bookingAccount", e.target.value)} />
-            </Feld>
-            <Feld label={t("ausgabenPage.fieldPaymentStatus")}>
-              <NativeSelect value={form.paymentStatus} onChange={(e) => set("paymentStatus", e.target.value as PaymentStatus)}>
-                {PAYMENT_STATUSES.map((s) => (
-                  <option key={s} value={s}>{t(`ausgabenPage.status_${s}`)}</option>
-                ))}
-              </NativeSelect>
-            </Feld>
-            {form.paymentStatus === "paid" && (
-              <>
-                <Feld label={t("ausgabenPage.fieldPaidAt")}>
-                  <DatePicker value={form.paidAt} onChange={(v) => set("paidAt", v)} />
-                </Feld>
-                <Feld label={t("ausgabenPage.fieldPaymentMethod")}>
-                  <Input value={form.paymentMethod} onChange={(e) => set("paymentMethod", e.target.value)} />
-                </Feld>
-              </>
-            )}
-          </div>
-
-          {/* Wiederkehrend */}
-          <section className="rounded-(--radius) border border-border p-3">
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <Label htmlFor="ausgabe-wiederkehrend">{t("ausgabenPage.recurringLabel")}</Label>
-                <InfoHinweis ariaLabel={t("ausgabenPage.recurringHelpAria")} text={t("ausgabenPage.recurringHelp")} />
-              </div>
-              <Switch
-                id="ausgabe-wiederkehrend"
-                checked={form.isRecurring}
-                disabled={Boolean(bestand?.templateId)}
-                onCheckedChange={(v) => set("isRecurring", v)}
-              />
-            </div>
-            {form.isRecurring && (
-              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Feld label={t("ausgabenPage.fieldInterval")}>
-                  <NativeSelect value={form.recurringInterval} onChange={(e) => set("recurringInterval", e.target.value as RecurringInterval)}>
-                    {RECURRING_INTERVALS.map((i) => (
-                      <option key={i} value={i}>{t(`ausgabenPage.interval_${i}`)}</option>
-                    ))}
-                  </NativeSelect>
-                </Feld>
-                <Feld label={t("ausgabenPage.fieldNextDue")} required>
-                  <DatePicker value={form.nextDueDate} onChange={(v) => set("nextDueDate", v)} />
-                </Feld>
-              </div>
-            )}
-          </section>
-
-          {/* Weiteres */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5">
-              <Label htmlFor="ausgabe-abzug">{t("ausgabenPage.taxDeductible")}</Label>
-              <InfoHinweis ariaLabel={t("ausgabenPage.taxDeductibleHelpAria")} text={t("ausgabenPage.taxDeductibleHelp")} />
-            </div>
-            <Switch id="ausgabe-abzug" checked={form.taxDeductible} onCheckedChange={(v) => set("taxDeductible", v)} />
-          </div>
-          <Feld label={t("ausgabenPage.fieldDescription")}>
-            <Textarea rows={2} value={form.description} onChange={(e) => set("description", e.target.value)} />
-          </Feld>
-          <Feld label={t("ausgabenPage.fieldNotes")}>
-            <Textarea rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
-          </Feld>
-
+          <BelegAbschnitt
+            t={t}
+            bestand={bestand ?? null}
+            datei={datei}
+            dateiRef={dateiRef}
+            vorschauUrl={vorschauUrl}
+            liest={liest}
+            gesperrt={gesperrt}
+            waehlen={dateiWaehlen}
+            auslesen={belegAuslesen}
+          />
+          <Stammfelder t={t} form={form} set={set} gesperrt={gesperrt} categories={categories} />
+          <WeitereFelder t={t} form={form} set={set} bestand={bestand ?? null} />
           {fehler && <p className="text-sm text-destructive">{fehler}</p>}
         </div>
 
@@ -542,5 +402,306 @@ function Feld({
       </div>
       {children}
     </div>
+  );
+}
+
+type Uebersetzer = ReturnType<typeof useTranslations<"finance">>;
+type Setzer = <K extends keyof Form>(k: K, v: Form[K]) => void;
+
+function BelegAbschnitt({
+  t,
+  bestand,
+  datei,
+  dateiRef,
+  vorschauUrl,
+  liest,
+  gesperrt,
+  waehlen,
+  auslesen,
+}: {
+  t: Uebersetzer;
+  bestand: Expense | null;
+  datei: File | null;
+  dateiRef: React.RefObject<HTMLInputElement | null>;
+  vorschauUrl: string | null;
+  liest: boolean;
+  gesperrt: boolean;
+  waehlen: (f: File | null) => void;
+  auslesen: () => void;
+}) {
+  return (
+    <section className="rounded-(--radius) border border-border p-3">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <Label>{t("ausgabenPage.receiptLabel")}</Label>
+          <InfoHinweis
+            ariaLabel={t("ausgabenPage.receiptHelpAria")}
+            text={[t("ausgabenPage.receiptHelp1"), t("ausgabenPage.receiptHelp2")]}
+          />
+        </div>
+        {bestand?.hasReceipt && !datei && (
+          <span className="text-xs text-muted-foreground">
+            <Icon icon="ph:paperclip" className="mr-1 inline size-3.5" />
+            {bestand.receiptFilename}
+          </span>
+        )}
+      </div>
+      <input
+        ref={dateiRef}
+        type="file"
+        accept={ACCEPT}
+        className="hidden"
+        onChange={(e) => waehlen(e.target.files?.[0] ?? null)}
+      />
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={gesperrt && Boolean(bestand?.hasReceipt)}
+          onClick={() => dateiRef.current?.click()}
+        >
+          <Icon icon="ph:upload-simple" className="size-4" />
+          {datei ? t("ausgabenPage.replaceFile") : t("ausgabenPage.chooseFile")}
+        </Button>
+        {datei && (
+          <>
+            <span className="max-w-[14rem] truncate text-xs text-muted-foreground">
+              {datei.name} · {(datei.size / 1024 / 1024).toFixed(1)} MB
+            </span>
+            <Button type="button" size="sm" onClick={auslesen} disabled={liest}>
+              {liest ? (
+                <Icon icon="ph:circle-notch" className="size-4 animate-spin" />
+              ) : (
+                <Icon icon="ph:sparkle" className="size-4" />
+              )}
+              {t("ausgabenPage.extract")}
+            </Button>
+            <Button type="button" variant="ghost" size="sm" onClick={() => waehlen(null)}>
+              <Icon icon="ph:x" className="size-4" />
+            </Button>
+          </>
+        )}
+      </div>
+      <BelegVorschau t={t} datei={datei} url={vorschauUrl} />
+    </section>
+  );
+}
+
+/** HEIC vom iPhone hat keine Browser-Vorschau (`heic2any` ist bewusst nicht
+ *  installiert) — die Datei wird trotzdem angenommen. */
+function BelegVorschau({ t, datei, url }: { t: Uebersetzer; datei: File | null; url: string | null }) {
+  if (!datei || !url) return null;
+  const istHeic = /\.(heic|heif)$/i.test(datei.name) || /heic|heif/.test(datei.type);
+  const istPdf = datei.type === "application/pdf" || /\.pdf$/i.test(datei.name);
+  return (
+    <div className="mt-3 overflow-hidden rounded-(--radius) border border-border bg-muted">
+      {istHeic ? (
+        <p className="p-3 text-xs text-muted-foreground">{t("ausgabenPage.heicNoPreview")}</p>
+      ) : istPdf ? (
+        <iframe title={datei.name} src={url} className="h-72 w-full" />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element -- lokale Objekt-URL, kein Optimizer
+        <img src={url} alt={datei.name} className="max-h-72 w-full object-contain" />
+      )}
+    </div>
+  );
+}
+
+function Stammfelder({
+  t,
+  form,
+  set,
+  gesperrt,
+  categories,
+}: {
+  t: Uebersetzer;
+  form: Form;
+  set: Setzer;
+  gesperrt: boolean;
+  categories: ExpenseCategory[];
+}) {
+  return (
+    <>
+      {/* Kopf */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Feld label={t("ausgabenPage.fieldTitle")} required className="sm:col-span-2">
+          <Input value={form.title} disabled={gesperrt} onChange={(e) => set("title", e.target.value)} />
+        </Feld>
+        <Feld label={t("ausgabenPage.fieldSupplier")}>
+          <Input
+            value={form.supplierName}
+            disabled={gesperrt}
+            onChange={(e) => set("supplierName", e.target.value)}
+          />
+        </Feld>
+        <Feld label={t("ausgabenPage.fieldReceiptNumber")}>
+          <Input
+            value={form.receiptNumber}
+            disabled={gesperrt}
+            onChange={(e) => set("receiptNumber", e.target.value)}
+          />
+        </Feld>
+        <Feld label={t("ausgabenPage.fieldExpenseDate")} required>
+          <DatePicker value={form.expenseDate} disabled={gesperrt} onChange={(v) => set("expenseDate", v)} />
+        </Feld>
+        <Feld label={t("ausgabenPage.fieldDueDate")}>
+          <DatePicker value={form.dueDate} onChange={(v) => set("dueDate", v)} />
+        </Feld>
+      </div>
+
+      {/* Beträge */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+        <Feld label={t("ausgabenPage.fieldGross")} hint={t("ausgabenPage.amountHelp")}>
+          <Input
+            inputMode="decimal"
+            value={form.grossAmount}
+            disabled={gesperrt}
+            onChange={(e) => set("grossAmount", e.target.value)}
+          />
+        </Feld>
+        <Feld label={t("ausgabenPage.fieldNet")}>
+          <Input
+            inputMode="decimal"
+            value={form.netAmount}
+            disabled={gesperrt}
+            onChange={(e) => set("netAmount", e.target.value)}
+          />
+        </Feld>
+        <Feld label={t("ausgabenPage.fieldTaxRate")} required hint={t("ausgabenPage.taxRateHelp")}>
+          <Input
+            inputMode="decimal"
+            value={form.taxRate}
+            disabled={gesperrt}
+            placeholder="—"
+            onChange={(e) => set("taxRate", e.target.value)}
+          />
+        </Feld>
+        <Feld label={t("ausgabenPage.fieldCurrency")} hint={t("ausgabenPage.currencyHelp")}>
+          <Input
+            maxLength={3}
+            value={form.currency}
+            disabled={gesperrt}
+            placeholder={t("ausgabenPage.currencyPlaceholder")}
+            onChange={(e) => set("currency", e.target.value.toUpperCase())}
+          />
+        </Feld>
+      </div>
+
+      {/* Zuordnung */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Feld label={t("ausgabenPage.fieldCategory")}>
+          <NativeSelect value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
+            <option value="">{t("ausgabenPage.noCategory")}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </Feld>
+        <Feld label={t("ausgabenPage.fieldBookingAccount")}>
+          <Input value={form.bookingAccount} onChange={(e) => set("bookingAccount", e.target.value)} />
+        </Feld>
+        <Feld label={t("ausgabenPage.fieldPaymentStatus")}>
+          <NativeSelect
+            value={form.paymentStatus}
+            onChange={(e) => set("paymentStatus", e.target.value as PaymentStatus)}
+          >
+            {PAYMENT_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {t(`ausgabenPage.status_${s}`)}
+              </option>
+            ))}
+          </NativeSelect>
+        </Feld>
+        {form.paymentStatus === "paid" && (
+          <>
+            <Feld label={t("ausgabenPage.fieldPaidAt")}>
+              <DatePicker value={form.paidAt} onChange={(v) => set("paidAt", v)} />
+            </Feld>
+            <Feld label={t("ausgabenPage.fieldPaymentMethod")}>
+              <Input value={form.paymentMethod} onChange={(e) => set("paymentMethod", e.target.value)} />
+            </Feld>
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+function WeitereFelder({
+  t,
+  form,
+  set,
+  bestand,
+}: {
+  t: Uebersetzer;
+  form: Form;
+  set: Setzer;
+  bestand: Expense | null;
+}) {
+  return (
+    <>
+      {/* Wiederkehrend */}
+      <section className="rounded-(--radius) border border-border p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="ausgabe-wiederkehrend">{t("ausgabenPage.recurringLabel")}</Label>
+            <InfoHinweis
+              ariaLabel={t("ausgabenPage.recurringHelpAria")}
+              text={t("ausgabenPage.recurringHelp")}
+            />
+          </div>
+          <Switch
+            id="ausgabe-wiederkehrend"
+            checked={form.isRecurring}
+            disabled={Boolean(bestand?.templateId)}
+            onCheckedChange={(v) => set("isRecurring", v)}
+          />
+        </div>
+        {form.isRecurring && (
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Feld label={t("ausgabenPage.fieldInterval")}>
+              <NativeSelect
+                value={form.recurringInterval}
+                onChange={(e) => set("recurringInterval", e.target.value as RecurringInterval)}
+              >
+                {RECURRING_INTERVALS.map((i) => (
+                  <option key={i} value={i}>
+                    {t(`ausgabenPage.interval_${i}`)}
+                  </option>
+                ))}
+              </NativeSelect>
+            </Feld>
+            <Feld label={t("ausgabenPage.fieldNextDue")} required>
+              <DatePicker value={form.nextDueDate} onChange={(v) => set("nextDueDate", v)} />
+            </Feld>
+          </div>
+        )}
+      </section>
+
+      {/* Weiteres */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor="ausgabe-abzug">{t("ausgabenPage.taxDeductible")}</Label>
+          <InfoHinweis
+            ariaLabel={t("ausgabenPage.taxDeductibleHelpAria")}
+            text={t("ausgabenPage.taxDeductibleHelp")}
+          />
+        </div>
+        <Switch
+          id="ausgabe-abzug"
+          checked={form.taxDeductible}
+          onCheckedChange={(v) => set("taxDeductible", v)}
+        />
+      </div>
+      <Feld label={t("ausgabenPage.fieldDescription")}>
+        <Textarea rows={2} value={form.description} onChange={(e) => set("description", e.target.value)} />
+      </Feld>
+      <Feld label={t("ausgabenPage.fieldNotes")}>
+        <Textarea rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} />
+      </Feld>
+    </>
   );
 }

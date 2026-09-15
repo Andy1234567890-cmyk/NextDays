@@ -247,97 +247,134 @@ export function AdressenTab({
         </div>
       )}
 
-      <Sheet open={offen} onOpenChange={setOffen}>
-        <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
-          <SheetHeader className="border-b">
-            <SheetTitle className="font-display text-lg font-extrabold">
-              {bearbeitet ? t("kontaktePage.adressen.editTitle") : t("kontaktePage.adressen.addTitle")}
-            </SheetTitle>
-            <SheetDescription>{t("kontaktePage.adressen.sheetDescription")}</SheetDescription>
-          </SheetHeader>
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ad-type">{t("kontaktePage.adressen.type")}</Label>
-              <NativeSelect
-                id="ad-type"
-                value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value as AdressArt })}
-              >
-                {ADRESS_ARTEN.map((art) => (
-                  <option key={art} value={art}>
-                    {artText(art)}
-                  </option>
-                ))}
-              </NativeSelect>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ad-label">{t("kontaktePage.adressen.label")}</Label>
-              <Input id="ad-label" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ad-recipient">{t("kontaktePage.adressen.recipient")}</Label>
-              <Input id="ad-recipient" value={form.recipient} onChange={(e) => setForm({ ...form, recipient: e.target.value })} />
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="col-span-2 flex flex-col gap-1.5">
-                <Label htmlFor="ad-street">{t("kontaktePage.adressen.street")}</Label>
-                <Input id="ad-street" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="ad-no">{t("kontaktePage.adressen.houseNumber")}</Label>
-                <Input id="ad-no" value={form.houseNumber} onChange={(e) => setForm({ ...form, houseNumber: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="ad-plz">{t("kontaktePage.adressen.postalCode")}</Label>
-                <Input id="ad-plz" value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} />
-              </div>
-              <div className="col-span-2 flex flex-col gap-1.5">
-                <Label htmlFor="ad-city">{t("kontaktePage.adressen.city")}</Label>
-                <Input id="ad-city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ad-country">
-                {t("kontaktePage.adressen.country")} <span className="text-destructive">*</span>
-              </Label>
-              <NativeSelect
-                id="ad-country"
-                value={form.country}
-                onChange={(e) => setForm({ ...form, country: e.target.value })}
-              >
-                <option value="">—</option>
-                {COUNTRIES.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {landName(c.code, locale)}
-                  </option>
-                ))}
-              </NativeSelect>
-            </div>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={form.isDefault}
-                onCheckedChange={(v) => setForm({ ...form, isDefault: v === true })}
-              />
-              {t("kontaktePage.adressen.defaultCheckbox")}
-            </label>
-            {fehler && (
-              <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                {fehler}
-              </p>
-            )}
-          </div>
-          <SheetFooter className="flex-row gap-2 border-t">
-            <Button type="button" variant="outline" className="flex-1" disabled={busy} onClick={() => setOffen(false)}>
-              {t("kontaktePage.cancel")}
-            </Button>
-            <Button type="button" className="flex-1" disabled={busy} onClick={speichern}>
-              {busy ? t("kontaktePage.saving") : t("kontaktePage.save")}
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+      <AnschriftSheet
+        offen={offen}
+        setOffen={setOffen}
+        bearbeitet={bearbeitet}
+        form={form}
+        setForm={setForm}
+        busy={busy}
+        fehler={fehler}
+        onSpeichern={speichern}
+      />
     </div>
+  );
+}
+
+/** Das Sheet zum Anlegen und Bearbeiten einer Anschrift. */
+function AnschriftSheet({
+  offen,
+  setOffen,
+  bearbeitet,
+  form,
+  setForm,
+  busy,
+  fehler,
+  onSpeichern,
+}: {
+  offen: boolean;
+  setOffen: (v: boolean) => void;
+  bearbeitet: Anschrift | null;
+  form: Formular;
+  setForm: React.Dispatch<React.SetStateAction<Formular>>;
+  busy: boolean;
+  fehler: string | null;
+  onSpeichern: () => void;
+}) {
+  const t = useTranslations("finance");
+  const locale = useLocale();
+  const artText = (art: AdressArt) => t(`kontaktePage.adressen.art.${art}`);
+  return (
+    <Sheet open={offen} onOpenChange={setOffen}>
+      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+        <SheetHeader className="border-b">
+          <SheetTitle className="font-display text-lg font-extrabold">
+            {bearbeitet ? t("kontaktePage.adressen.editTitle") : t("kontaktePage.adressen.addTitle")}
+          </SheetTitle>
+          <SheetDescription>{t("kontaktePage.adressen.sheetDescription")}</SheetDescription>
+        </SheetHeader>
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ad-type">{t("kontaktePage.adressen.type")}</Label>
+            <NativeSelect
+              id="ad-type"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value as AdressArt })}
+            >
+              {ADRESS_ARTEN.map((art) => (
+                <option key={art} value={art}>
+                  {artText(art)}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ad-label">{t("kontaktePage.adressen.label")}</Label>
+            <Input id="ad-label" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ad-recipient">{t("kontaktePage.adressen.recipient")}</Label>
+            <Input id="ad-recipient" value={form.recipient} onChange={(e) => setForm({ ...form, recipient: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label htmlFor="ad-street">{t("kontaktePage.adressen.street")}</Label>
+              <Input id="ad-street" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ad-no">{t("kontaktePage.adressen.houseNumber")}</Label>
+              <Input id="ad-no" value={form.houseNumber} onChange={(e) => setForm({ ...form, houseNumber: e.target.value })} />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="ad-plz">{t("kontaktePage.adressen.postalCode")}</Label>
+              <Input id="ad-plz" value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} />
+            </div>
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label htmlFor="ad-city">{t("kontaktePage.adressen.city")}</Label>
+              <Input id="ad-city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ad-country">
+              {t("kontaktePage.adressen.country")} <span className="text-destructive">*</span>
+            </Label>
+            <NativeSelect
+              id="ad-country"
+              value={form.country}
+              onChange={(e) => setForm({ ...form, country: e.target.value })}
+            >
+              <option value="">—</option>
+              {COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {landName(c.code, locale)}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={form.isDefault}
+              onCheckedChange={(v) => setForm({ ...form, isDefault: v === true })}
+            />
+            {t("kontaktePage.adressen.defaultCheckbox")}
+          </label>
+          {fehler && (
+            <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {fehler}
+            </p>
+          )}
+        </div>
+        <SheetFooter className="flex-row gap-2 border-t">
+          <Button type="button" variant="outline" className="flex-1" disabled={busy} onClick={() => setOffen(false)}>
+            {t("kontaktePage.cancel")}
+          </Button>
+          <Button type="button" className="flex-1" disabled={busy} onClick={onSpeichern}>
+            {busy ? t("kontaktePage.saving") : t("kontaktePage.save")}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

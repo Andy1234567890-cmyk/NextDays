@@ -169,149 +169,13 @@ export function ArtikelFormular({
           <SheetDescription>{t("artikelFormular.description")}</SheetDescription>
         </SheetHeader>
 
-        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label htmlFor="art-name">{t("artikelFormular.nameLabel")}</Label>
-              <Input
-                id="art-name"
-                value={entwurf.name}
-                maxLength={200}
-                onChange={(e) => setzen("name", e.target.value)}
-                placeholder={t("artikelFormular.namePlaceholder")}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="art-nummer">{t("artikelFormular.numberLabel")}</Label>
-                <InfoHinweis
-                  ariaLabel={t("artikelFormular.numberHintAria")}
-                  text={t("artikelFormular.numberHint")}
-                />
-              </div>
-              <Input
-                id="art-nummer"
-                value={entwurf.itemNumber}
-                maxLength={40}
-                disabled={bearbeiten}
-                onChange={(e) => setzen("itemNumber", e.target.value)}
-                placeholder={t("artikelFormular.numberPlaceholder")}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="art-beschreibung">{t("artikelFormular.descriptionLabel")}</Label>
-            <Textarea
-              id="art-beschreibung"
-              rows={3}
-              maxLength={2000}
-              value={entwurf.description}
-              onChange={(e) => setzen("description", e.target.value)}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="art-einheit">{t("artikelFormular.unitLabel")}</Label>
-              <Input
-                id="art-einheit"
-                value={entwurf.unit}
-                maxLength={40}
-                onChange={(e) => setzen("unit", e.target.value)}
-                placeholder={t("artikelFormular.unitPlaceholder")}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="art-preis">{t("artikelFormular.priceLabel")}</Label>
-              <Input
-                id="art-preis"
-                inputMode="decimal"
-                value={entwurf.unitPrice}
-                onChange={(e) => setzen("unitPrice", e.target.value)}
-                placeholder="0,00"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="art-steuer">{t("artikelFormular.taxRateLabel")}</Label>
-                <InfoHinweis
-                  ariaLabel={t("artikelFormular.taxRateHintAria")}
-                  text={t("artikelFormular.taxRateHint")}
-                />
-              </div>
-              <Input
-                id="art-steuer"
-                inputMode="decimal"
-                value={entwurf.taxRate}
-                onChange={(e) => setzen("taxRate", e.target.value)}
-                placeholder="%"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="art-waehrung">{t("artikelFormular.currencyLabel")}</Label>
-                <InfoHinweis
-                  ariaLabel={t("artikelFormular.currencyHintAria")}
-                  text={t("artikelFormular.currencyHint")}
-                />
-              </div>
-              <Input
-                id="art-waehrung"
-                value={entwurf.currency}
-                maxLength={3}
-                className="uppercase"
-                onChange={(e) => setzen("currency", e.target.value)}
-                placeholder={t("artikelFormular.currencyPlaceholder")}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="art-kategorie">{t("artikelFormular.categoryLabel")}</Label>
-            <Input
-              id="art-kategorie"
-              list="art-kategorien"
-              value={entwurf.category}
-              maxLength={80}
-              onChange={(e) => setzen("category", e.target.value)}
-              placeholder={t("artikelFormular.categoryPlaceholder")}
-            />
-            <datalist id="art-kategorien">
-              {kategorien.map((k) => (
-                <option key={k.name} value={k.name} />
-              ))}
-            </datalist>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <label className="flex items-center justify-between gap-3 rounded-(--radius) border border-border px-3 py-2 text-sm">
-              <span>{t("artikelFormular.activeLabel")}</span>
-              <Switch
-                checked={entwurf.isActive}
-                onCheckedChange={(v) => setzen("isActive", v)}
-                aria-label={t("artikelFormular.activeLabel")}
-              />
-            </label>
-            <label className="flex items-center justify-between gap-3 rounded-(--radius) border border-border px-3 py-2 text-sm">
-              <span className="flex items-center gap-1.5">
-                <Icon icon="ph:star" className="size-4 text-accent" />
-                {t("artikelFormular.favoriteLabel")}
-              </span>
-              <Switch
-                checked={entwurf.isFavorite}
-                onCheckedChange={(v) => setzen("isFavorite", v)}
-                aria-label={t("artikelFormular.favoriteLabel")}
-              />
-            </label>
-          </div>
-
-          {error && (
-            <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          )}
-        </div>
+        <ArtikelFelder
+          entwurf={entwurf}
+          setzen={setzen}
+          bearbeiten={bearbeiten}
+          kategorien={kategorien}
+          error={error}
+        />
 
         <SheetFooter className="flex-row gap-2 border-t">
           <Button
@@ -329,5 +193,181 @@ export function ArtikelFormular({
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+/** Die Felder des Artikels. Eigene Komponente, damit das Sheet selbst nur noch
+ *  Laden, Speichern und Fehler führt. */
+function ArtikelFelder({
+  entwurf,
+  setzen,
+  bearbeiten,
+  kategorien,
+  error,
+}: {
+  entwurf: Entwurf;
+  setzen: <K extends keyof Entwurf>(k: K, v: Entwurf[K]) => void;
+  bearbeiten: boolean;
+  kategorien: BillingItemCategory[];
+  error: string | null;
+}) {
+  const t = useTranslations("finance");
+  return (
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label htmlFor="art-name">{t("artikelFormular.nameLabel")}</Label>
+            <Input
+              id="art-name"
+              value={entwurf.name}
+              maxLength={200}
+              onChange={(e) => setzen("name", e.target.value)}
+              placeholder={t("artikelFormular.namePlaceholder")}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1">
+              <Label htmlFor="art-nummer">{t("artikelFormular.numberLabel")}</Label>
+              <InfoHinweis
+                ariaLabel={t("artikelFormular.numberHintAria")}
+                text={t("artikelFormular.numberHint")}
+              />
+            </div>
+            <Input
+              id="art-nummer"
+              value={entwurf.itemNumber}
+              maxLength={40}
+              disabled={bearbeiten}
+              onChange={(e) => setzen("itemNumber", e.target.value)}
+              placeholder={t("artikelFormular.numberPlaceholder")}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="art-beschreibung">{t("artikelFormular.descriptionLabel")}</Label>
+          <Textarea
+            id="art-beschreibung"
+            rows={3}
+            maxLength={2000}
+            value={entwurf.description}
+            onChange={(e) => setzen("description", e.target.value)}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="art-einheit">{t("artikelFormular.unitLabel")}</Label>
+            <Input
+              id="art-einheit"
+              value={entwurf.unit}
+              maxLength={40}
+              onChange={(e) => setzen("unit", e.target.value)}
+              placeholder={t("artikelFormular.unitPlaceholder")}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="art-preis">{t("artikelFormular.priceLabel")}</Label>
+            <Input
+              id="art-preis"
+              inputMode="decimal"
+              value={entwurf.unitPrice}
+              onChange={(e) => setzen("unitPrice", e.target.value)}
+              placeholder="0,00"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1">
+              <Label htmlFor="art-steuer">{t("artikelFormular.taxRateLabel")}</Label>
+              <InfoHinweis
+                ariaLabel={t("artikelFormular.taxRateHintAria")}
+                text={t("artikelFormular.taxRateHint")}
+              />
+            </div>
+            <Input
+              id="art-steuer"
+              inputMode="decimal"
+              value={entwurf.taxRate}
+              onChange={(e) => setzen("taxRate", e.target.value)}
+              placeholder="%"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-1">
+              <Label htmlFor="art-waehrung">{t("artikelFormular.currencyLabel")}</Label>
+              <InfoHinweis
+                ariaLabel={t("artikelFormular.currencyHintAria")}
+                text={t("artikelFormular.currencyHint")}
+              />
+            </div>
+            <Input
+              id="art-waehrung"
+              value={entwurf.currency}
+              maxLength={3}
+              className="uppercase"
+              onChange={(e) => setzen("currency", e.target.value)}
+              placeholder={t("artikelFormular.currencyPlaceholder")}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="art-kategorie">{t("artikelFormular.categoryLabel")}</Label>
+          <Input
+            id="art-kategorie"
+            list="art-kategorien"
+            value={entwurf.category}
+            maxLength={80}
+            onChange={(e) => setzen("category", e.target.value)}
+            placeholder={t("artikelFormular.categoryPlaceholder")}
+          />
+          <datalist id="art-kategorien">
+            {kategorien.map((k) => (
+              <option key={k.name} value={k.name} />
+            ))}
+          </datalist>
+        </div>
+
+        <ArtikelSchalter entwurf={entwurf} setzen={setzen} />
+
+        {error && (
+          <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+      </div>
+  );
+}
+
+function ArtikelSchalter({
+  entwurf,
+  setzen,
+}: {
+  entwurf: Entwurf;
+  setzen: <K extends keyof Entwurf>(k: K, v: Entwurf[K]) => void;
+}) {
+  const t = useTranslations("finance");
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <label className="flex items-center justify-between gap-3 rounded-(--radius) border border-border px-3 py-2 text-sm">
+        <span>{t("artikelFormular.activeLabel")}</span>
+        <Switch
+          checked={entwurf.isActive}
+          onCheckedChange={(v) => setzen("isActive", v)}
+          aria-label={t("artikelFormular.activeLabel")}
+        />
+      </label>
+      <label className="flex items-center justify-between gap-3 rounded-(--radius) border border-border px-3 py-2 text-sm">
+        <span className="flex items-center gap-1.5">
+          <Icon icon="ph:star" className="size-4 text-accent" />
+          {t("artikelFormular.favoriteLabel")}
+        </span>
+        <Switch
+          checked={entwurf.isFavorite}
+          onCheckedChange={(v) => setzen("isFavorite", v)}
+          aria-label={t("artikelFormular.favoriteLabel")}
+        />
+      </label>
+    </div>
   );
 }

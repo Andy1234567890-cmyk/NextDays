@@ -416,7 +416,7 @@ class Dac7Service:
         )
 
     def datei_neu_erzeugen(
-        self, ctx: AuthContext, lauf_id: str, *, format: str = "csv"
+        self, ctx: AuthContext, lauf_id: str, *, dateiformat: str = "csv"
     ) -> str:
         """Die Datei eines gespeicherten Laufs erneut erzeugen.
 
@@ -425,7 +425,7 @@ class Dac7Service:
         weicht sie ab, haben sich die zugrunde liegenden Daten geändert, und
         genau das muss auffallen.
 
-        `format` wählt den Serialisierer: `csv` für das Meldejahr 2025
+        `dateiformat` wählt den Serialisierer: `csv` für das Meldejahr 2025
         (TastSelv Erhverv), `xml` für das DPI-XML ab 2026. Beide lesen
         DENSELBEN gerechneten Baum — die Meldung entsteht einmal, nur ihre
         Schreibweise unterscheidet sich.
@@ -453,7 +453,7 @@ class Dac7Service:
             )
             raise Dac7Error(msg, status_code=409)
 
-        if format == "xml":
+        if dateiformat == "xml":
             return schreiben_xml(meldung)
 
         datei = schreiben(meldung)
