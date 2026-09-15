@@ -121,6 +121,15 @@ FUNKTIONEN = frozenset(
         "personal_prognose",
         "personal_autoplan",
         "personal_assistent",
+        # Antwortvorschlag an einen EIGENTÜMER (0611-Chat, 0708). Derselbe
+        # Zwang wie oben: hier UND im DB-Check.
+        #
+        # Getrennt von 'gast_antwort', obwohl beide einen Antwortvorschlag im
+        # Posteingang erzeugen: Der eine geht an einen Gast und schöpft aus
+        # Buchung und Gästemappe, der andere an einen Geschäftspartner und
+        # schöpft aus Objekt, Aufgaben und Belegung. In einem Topf liesse sich
+        # nicht sagen, welcher Knopf den Deckel gesprengt hat.
+        "eigentuemer_antwort",
     }
 )
 

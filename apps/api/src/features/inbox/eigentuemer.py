@@ -196,6 +196,31 @@ def _klartext(body: str) -> str:
     return "[Ältere Nachricht — nur in der App lesbar]"
 
 
+def objekt_zu_thread(db: Client, tenant_id: str, thread_id: str) -> str:
+    """`owner_threads.property_id` dieses Threads — 404, wenn fremd oder fehlend.
+
+    Der Faden hängt am OBJEKT (siehe Modulkopf), nicht am Eigentümer. Wer
+    Kontext zu diesem Gespräch bauen will — etwa der KI-Vorschlag in
+    `ki_eigentuemer` — braucht genau diese eine Kennung.
+
+    Load und Scope bleiben zusammen (Wurzel 3): `tenant_id` steht an der
+    Abfrage. Eine Zeile ohne `property_id` gilt als nicht gefunden, statt einen
+    leeren Objektbezug weiterzureichen — `threads_lesen` überspringt solche
+    Zeilen aus demselben Grund.
+    """
+    zeilen = (
+        db.table("owner_threads")
+        .select("property_id")
+        .eq("id", thread_aus_id(thread_id))
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    if not zeilen or not zeilen[0].get("property_id"):
+        raise InboxError("Thread nicht gefunden.", status_code=404)
+    return str(zeilen[0]["property_id"])
+
+
 def verlauf_antwort(
     db: Client, tenant_id: str, thread_id: str
 ) -> InboxMessagesResponse:

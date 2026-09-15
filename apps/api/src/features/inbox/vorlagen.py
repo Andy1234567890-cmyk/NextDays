@@ -11,6 +11,12 @@ from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.site_config.ki_nutzung import buchen, deckel_pruefen
 
+from . import ki_eigentuemer
+from .eigentuemer import (
+    ist_eigentuemer_thread,
+    objekt_zu_thread,
+    verlauf_antwort,
+)
 from .errors import InboxError
 from .felder import html_zu_text, unbekannte_felder
 from .ki_antwort import FUNKTION, markierungen_trennen, vorschlag_erzeugen
@@ -41,7 +47,15 @@ class VorlagenMixin:
         beim WhatsApp-Pfad. Vorher las jeder Pfad seine eigene, auf die Fakten
         der Wissensdatenbank beschränkte Auswahl; die Gästemappe (live 700.628
         Zeichen) erreichte das Modell nie.
+
+        Eigentümer-Threads (`eig:`) nehmen einen EIGENEN Weg: sie haben keine
+        Zeile in `channex_booking`, und der Empfänger ist Geschäftspartner
+        statt Gast. Der Zweig steht hier ganz vorn — genau wie in
+        `get_messages` —, weil der reguläre Ladepfad sonst mit 404 abbräche
+        („Kein Vorschlag" in der App, 15.09.2026).
         """
+        if ist_eigentuemer_thread(thread_id):
+            return self._ai_reply_eigentuemer(ctx, thread_id)
         db, tenant_id = self._require(ctx)
         # Verlauf laden (best effort, inkl. Sandbox-Mock) + Reservierungskontext.
         history: list[InboxMessage] = []
@@ -148,6 +162,91 @@ class VorlagenMixin:
         return AiReplyResponse(
             reply=text,
             sources=vorschlag.quellen + hinweise,
+            fehlende_angabe=luecke,
+            eskaliert=bool(stimmung),
+        )
+
+    def _ai_reply_eigentuemer(
+        self, ctx: AuthContext, thread_id: str
+    ) -> AiReplyResponse:
+        """KI-Antwortvorschlag an den EIGENTÜMER (0611, `eig:`).
+
+        Bewusst schlanker als der Gastpfad, und zwar an drei Stellen:
+
+        * Keine Regeln/Zustellart. Die Regeln in `ki_regeln` entscheiden über
+          automatische GAST-Antworten. Ein Eigentümer-Gespräch geht nie von
+          selbst raus — hier drückt immer ein Mensch den Knopf.
+        * Kein `_property_for_thread`. Das Objekt hängt direkt am Thread
+          (`owner_threads.property_id`), nicht über eine Buchung.
+        * Eigener Deckel-Topf (`ki_eigentuemer.FUNKTION`).
+
+        Was gleich bleibt, bleibt absichtlich gleich: Deckel VOR dem bezahlten
+        Aufruf (nicht danach beklagen), Markierungszeilen abtrennen, bevor der
+        Text irgendwohin geht, und protokollieren wie jede andere KI-Antwort.
+        """
+        db, tenant_id = self._require(ctx)
+        property_id = objekt_zu_thread(db, tenant_id, thread_id)
+        verlauf = verlauf_antwort(db, tenant_id, thread_id).items
+        settings = self.get_ai_settings(ctx)
+
+        try:
+            deckel_pruefen(db, tenant_id)
+            vorschlag = ki_eigentuemer.vorschlag_erzeugen(
+                db,
+                tenant_id,
+                property_id=property_id,
+                verlauf=verlauf,
+                einstellungen=settings,
+            )
+        except KiError as exc:
+            raise InboxError(exc.message, status_code=exc.status_code) from exc
+        buchen(
+            db,
+            tenant_id,
+            user_id=ctx.user_id,
+            funktion=ki_eigentuemer.FUNKTION,
+            antwort=vorschlag.antwort,
+        )
+        text, luecke, stimmung = markierungen_trennen(vorschlag.text)
+
+        # Ein verärgerter Eigentümer ist derselbe Anlass wie ein verärgerter
+        # Gast: Die Betriebsleitung soll es in der Liste sehen, bevor daraus
+        # eine Kündigung wird. Keine Meldung — der Mitarbeiter steht davor.
+        if stimmung:
+            self.eskalation_setzen(
+                db,
+                tenant_id,
+                thread_id=thread_id,
+                quelle="inbox",
+                ausloeser="stimmung",
+                grund=stimmung,
+                nachricht_auszug=vorschlag.frage,
+                property_id=property_id,
+                benachrichtigen=False,
+            )
+
+        self.protokollieren(
+            db,
+            tenant_id,
+            thread_id=thread_id,
+            quelle="inbox",
+            regel_id=None,
+            frage=vorschlag.frage,
+            antwort=text,
+            zustellart="entwurf",
+            gesendet=False,
+            quellen=vorschlag.quellen,
+            weggelassen=vorschlag.kontext.weggelassen,
+            grund=None,
+            eskaliert=bool(stimmung),
+            modell=vorschlag.antwort.modell,
+            region=vorschlag.antwort.region,
+            tokens_ein=vorschlag.antwort.tokens_ein,
+            tokens_aus=vorschlag.antwort.tokens_aus,
+        )
+        return AiReplyResponse(
+            reply=text,
+            sources=vorschlag.quellen + list(vorschlag.kontext.weggelassen),
             fehlende_angabe=luecke,
             eskaliert=bool(stimmung),
         )

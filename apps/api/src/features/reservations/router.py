@@ -23,6 +23,7 @@ from .schemas import (
     DashboardListe,
     DashboardListeResponse,
     DashboardResponse,
+    DashboardVerlaufResponse,
     PropertyStats,
     RequestDecline,
     ReservationArchiveUpdate,
@@ -93,6 +94,28 @@ def dashboard_kpi(
     """
     try:
         return service.dashboard_kpi(ctx, metrik, zeitraum)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/dashboard/verlauf", response_model=DashboardVerlaufResponse)
+def dashboard_verlauf(
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    metrik: Annotated[DashboardKpiMetrik, Query()],
+    zeitraum: Annotated[str, Query()] = STANDARD_ZEITRAUM,
+) -> DashboardVerlaufResponse:
+    """Die ZEITREIHE einer Kachel — dieselbe Zahl, nur aufgelöst.
+
+    Steht wie `/dashboard/kpi` VOR `/{reservation_id}`, sonst nähme FastAPI
+    „dashboard" als ID. Gleiche Fähigkeit und gleicher Scope wie die Kachel
+    selbst: Es ist derselbe Wert, feiner aufgelöst (Wurzel 9).
+
+    Die Körnung (Tag/Woche/Monat) bestimmt der Server aus dem Zeitraum und
+    schickt sie MIT — 365 Tagespunkte ergäben auf einem Telefon einen Strich.
+    """
+    try:
+        return service.dashboard_verlauf(ctx, metrik, zeitraum)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

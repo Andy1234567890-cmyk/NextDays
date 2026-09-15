@@ -639,6 +639,42 @@ class DashboardKpiMetrik(StrEnum):
     confirmed = "confirmed"
 
 
+class Koernung(StrEnum):
+    """Wie fein die Punkte einer Zeitreihe liegen.
+
+    Steht in der ANTWORT, nicht nur in der Anfrage: Die Oberfläche muss die
+    Achse beschriften können („3. Sep" vs. „KW 36" vs. „Sep"), und sie darf
+    das nicht aus der Tageszahl zurückrechnen — dann gäbe es zwei Stellen, an
+    denen dieselbe Regel steht, und sie liefen auseinander.
+    """
+
+    tag = "tag"
+    woche = "woche"
+    monat = "monat"
+
+
+class VerlaufPunkt(BaseModel):
+    """Ein Punkt der Zeitreihe: Beginn des Bündels und sein Wert."""
+
+    am: date
+    wert: float
+
+
+class DashboardVerlaufResponse(BaseModel):
+    """Die Zeitreihe EINER Kennzahl — die Datengrundlage einer Kurve."""
+
+    metrik: DashboardKpiMetrik
+    zeitraum: str
+    tage: int
+    koernung: Koernung
+    currency: str = ""
+    # None heißt „diese Reihe gibt es für dich nicht" (fehlende
+    # Betrags-Sichtbarkeit §4.2, gemischte Währungen) — ausdrücklich NICHT
+    # eine Reihe aus Nullen, die wie ein umsatzloser Monat aussähe. Eine leere
+    # Liste dagegen heißt „Fenster ohne jede Buchung".
+    punkte: list[VerlaufPunkt] | None = None
+
+
 class DashboardKpiResponse(BaseModel):
     """Eine einzelne KPI-Kachel für einen gewählten Zeitraum."""
 

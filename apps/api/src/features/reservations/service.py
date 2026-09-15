@@ -20,6 +20,7 @@ from ._base import (
 )
 from .dashboard import DashboardMixin
 from .reads import ReadsMixin
+from .verlauf import VerlaufMixin
 from .writes import WritesMixin
 
 __all__ = [
@@ -30,5 +31,5 @@ __all__ = [
 ]
 
 
-class ReservationsService(WritesMixin, ReadsMixin, DashboardMixin):
+class ReservationsService(WritesMixin, ReadsMixin, DashboardMixin, VerlaufMixin):
     """Reservations-Slice: Schreib- + Lesepfad über der geteilten Basis."""
