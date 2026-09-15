@@ -397,11 +397,13 @@ function FilterChip({
         paddingVertical: 8,
         borderRadius: 999,
         borderWidth: 1,
-        borderColor: active ? t.palette.ink : t.palette.line,
-        backgroundColor: active ? t.palette.ink : t.palette.surface,
+        // Aktiver Filter in der MARKENFARBE statt in Schwarz — dieselbe
+        // Regel wie bei den Reitern der Übersicht (15.09.2026).
+        borderColor: active ? t.palette.accent : t.palette.line,
+        backgroundColor: active ? t.palette.accent : t.palette.surface,
       }}
     >
-      <Txt v="sm" color={active ? t.palette.surface : t.palette.ink}>{label}</Txt>
+      <Txt v="sm" color={active ? t.palette.accentInk : t.palette.ink}>{label}</Txt>
     </Pressable>
   );
 }

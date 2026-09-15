@@ -15,14 +15,26 @@ export const NIC: Record<string, string> = {
   home: "M3 11l9-7.5L21 11M5.5 9.5V20h13V9.5M10 20v-5.5h4V20",
   chat: "M4 5.5h16v10H10l-4.5 4v-4H4zM8.5 10h7M8.5 13h4",
   bell: "M6 16.5V10a6 6 0 0112 0v6.5l1.8 2H4.2zM9.5 21.5a2.5 2.5 0 005 0",
-  cog: "M12 9a3 3 0 100 6 3 3 0 000-6M19.4 13l1.5-1-1.6-3.3-1.8.6-1.6-.9-.7-1.9h-3.6l-.7 1.9-1.6.9-1.8-.6L4.6 12l1.5 1v.1l-1.5 1 1.6 3.3 1.8-.6 1.6.9.7 1.9h3.6l.7-1.9 1.6-.9 1.8.6 1.6-3.3-1.5-1z",
+  // Zahnrad mit BREITEN, gerundeten Zähnen statt der feinen Zacken des
+  // Kit-Originals. Grund (gemeldet am 15.09.2026: „oben erkennt man das
+  // Zahnrad-Icon nicht"): die alten Zähne waren nur ~0,6 von 24 Einheiten tief
+  // — bei der Anzeigegröße von 20 px sind das unter 0,5 px Lücke, und mit
+  // Strichstärke 2 lief die Kontur zu einem dunklen Klecks zu. Die Form muss
+  // bei 20-24 px lesbar sein, nicht in der Vorschau bei 100 %.
+  cog: "M12 9a3 3 0 100 6 3 3 0 000-6M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z",
   back: "M15 4.5l-7 7.5 7 7.5",
   fwd: "M9 4.5l7 7.5-7 7.5",
   plus: "M12 5v14M5 12h14",
   minus: "M5 12h14",
   filter: "M3 5.5h18M6 12h12M10 18.5h4",
   wifi: "M4 10a13 13 0 0116 0M7 13.5a8 8 0 0110 0M10 17a3 3 0 014 0M12 20.5h.01",
-  key: "M15.5 7.5a4 4 0 11-3.6 6L5 20.5 7.5 23M15.5 7.5l2-2M10.5 13l2.5 2.5",
+  // Schlüssel: geschlossener Ring (Mitte 8/15, r=4), Schaft nach rechts oben,
+  // zwei Bartzähne. Der vorherige Pfad hatte einen OFFENEN Bogen
+  // (`a4 4 0 11-3.6 6` endet, wo es weitergeht, statt zum Start zurück) — das
+  // Motiv sah aus wie ein Haken mit Strich, nicht wie ein Schlüssel. Sichtbar
+  // war das an sechs Stellen (Aufgaben-Detail, Objekt-Kartei, Buchungs-Panel,
+  // Übersicht), ohne dass es je als Fehler gemeldet wurde.
+  key: "M8 11a4 4 0 100 8 4 4 0 000-8M11 12l9-9M17 6l2 2M14.5 8.5l2 2",
   share: "M16 6l-4-3-4 3M12 3v13M5 12v7a1 1 0 001 1h12a1 1 0 001-1v-7",
   check: "M5 12.5l4.5 4.5L19 7",
   clock: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 8v4.5l3 1.8",

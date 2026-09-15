@@ -145,16 +145,27 @@ export function ZeitWahl<T extends string>({
             paddingRight: 8,
             paddingVertical: 6,
             borderRadius: t.radius.pill,
-            backgroundColor: t.palette.surface2,
+            // Markenfarbe, sanft getönt (`accentSoft` = 12 % Akzent auf Weiß).
+            // Vorher war die Pille grau auf grauem Grund und las sich wie eine
+            // Beschriftung statt wie ein Bedienelement — man sah ihr nicht an,
+            // dass sich der Zeitraum überhaupt umstellen lässt. Bewusst
+            // GETÖNT und nicht gefüllt: Gefüllt trägt in dieser Übersicht der
+            // aktive Reiter, und zwei gleich laute rote Flächen nebeneinander
+            // nähmen einander die Bedeutung.
+            backgroundColor: t.palette.accentSoft,
             opacity: laedt ? 0.6 : pressed ? 0.7 : 1,
           })}
         >
-          <Txt v="xs" soft style={{ fontFamily: t.fonts.semibold, fontSize: 12 }}>
+          <Txt
+            v="xs"
+            color={t.palette.accent}
+            style={{ fontFamily: t.fonts.semibold, fontSize: 12 }}
+          >
             {aktuell?.label ?? wert}
           </Txt>
           {/* Während des Nachladens zeigt der Pfeil nach unten wie sonst — ein
               Drehkreis hier wäre ein zweiter Ladeanzeiger neben dem der Kachel. */}
-          <Icon n="caretdown" s={11} sw={2.2} c={t.palette.soft} />
+          <Icon n="caretdown" s={11} sw={2.2} c={t.palette.accent} />
         </Pressable>
       </View>
 
@@ -204,7 +215,11 @@ export function ZeitWahl<T extends string>({
                     height: ZEILE,
                     justifyContent: "center",
                     paddingHorizontal: 14,
-                    backgroundColor: pressed ? t.palette.surface2 : "transparent",
+                    backgroundColor: pressed
+                      ? t.palette.surface2
+                      : an
+                        ? t.palette.accentSoft
+                        : "transparent",
                   })}
                 >
                   <Row gap={10} style={{ alignItems: "center" }}>

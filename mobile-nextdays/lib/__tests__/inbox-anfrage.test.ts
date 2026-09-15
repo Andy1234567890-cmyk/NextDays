@@ -15,6 +15,8 @@ type Modul = typeof import("../inbox");
 const {
   istAnfrageThread,
   istBuchungsThread,
+  kannKiVorschlag,
+  THREAD_PRAEFIXE,
   ABLEHNUNGSGRUENDE,
   nachAktivitaet,
   zeitWert,
@@ -46,6 +48,7 @@ describe("istBuchungsThread", () => {
 
   it.each([
     ["anfrage:abc", "Portal-Anfrage"],
+    ["eig:abc", "Eigentümer-Chat"],
     ["mb:abc", "myBestDays-Marktplatz"],
     ["ue:abc", "übernommener Verlauf"],
     ["wa:abc", "WhatsApp"],
@@ -53,6 +56,35 @@ describe("istBuchungsThread", () => {
   ])("schliesst %s aus (%s)", (id) => {
     expect(istBuchungsThread(id)).toBe(false);
   });
+
+  it("deckt sich mit der Präfixliste des Servers", () => {
+    // Handkopie von `inbox/service.py:_NEBENQUELLEN_PRAEFIXE` — es gibt kein
+    // Skript, das beide deckungsgleich hält. `eig:` fehlte hier bis zum
+    // 15.09.2026, und weil `istBuchungsThread` die Liste negiert, galt ein
+    // Eigentümer-Thread als Buchungs-Thread: alle vier Antwort-Werkzeuge
+    // wurden angeboten und liefen in einen 404.
+    expect([...THREAD_PRAEFIXE]).toEqual(["anfrage:", "eig:", "mb:", "ue:", "wa:"]);
+  });
+});
+
+describe("kannKiVorschlag", () => {
+  // Eigene Regel, nicht dieselbe wie `istBuchungsThread`: Der Eigentümer-Chat
+  // hat keine Buchungszeile, bekommt seinen Vorschlag aber aus Objekt,
+  // Aufgaben und Belegung (`inbox/ki_eigentuemer.py`, 0708).
+  it("erlaubt eine Buchung", () => {
+    expect(kannKiVorschlag("3f0c9d1e-1111-4111-8111-111111111111")).toBe(true);
+  });
+
+  it("erlaubt den Eigentümer-Chat", () => {
+    expect(kannKiVorschlag("eig:abc")).toBe(true);
+  });
+
+  it.each([["anfrage:abc"], ["mb:abc"], ["ue:abc"], ["wa:abc"]])(
+    "schliesst %s aus — dort gibt es serverseitig keinen Vorschlagsweg",
+    (id) => {
+      expect(kannKiVorschlag(id)).toBe(false);
+    },
+  );
 });
 
 describe("ABLEHNUNGSGRUENDE", () => {

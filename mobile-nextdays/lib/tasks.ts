@@ -498,3 +498,48 @@ export async function setTaskStatus(
     body: { status },
   });
 }
+
+// --- Startseiten-Kachel: die Bestände der Teamaufgaben -----------------------
+
+/** Was an Teamaufgaben ANLIEGT. Ist-Stand, kein Verlauf.
+ *  Zwilling zu `web/lib/tasks.ts:TeamaufgabenStand`. */
+export type TeamaufgabenStand = {
+  /** Alles Offene (`open`/`accepted`/`in_progress`) — der Bestand. */
+  offen: number;
+  /** Davon überfällig. 0, wenn der Server die Tagesgrenzen nicht bekam —
+   *  ohne zu wissen, welcher Tag beim Leser läuft, ist das nicht bestimmbar. */
+  ueberfaellig: number;
+  /** Offene Aufgaben, die heute fällig sind. */
+  heute: number;
+  /** Offene Aufgaben ohne Zuständige:n — der stille Ausfall: niemand bekommt
+   *  eine Benachrichtigung, niemand fühlt sich zuständig. */
+  ohne_zustaendige: number;
+  /** Wartet auf Abnahme (`inspection_state='to_review'`). */
+  zur_abnahme: number;
+  /** Früheste Fälligkeit unter den überfälligen; null = nichts überfällig. */
+  aeltester_faellig_am: string | null;
+};
+
+/**
+ * Die Zahlen der Startseiten-Kachel.
+ *
+ * `tagesbeginn`/`tagesende` sind die Grenzen des laufenden Tages BEIM NUTZER,
+ * in dessen eigener Zone. Der Server rechnet sie NICHT selbst: der Kalendertag
+ * einer Aufgabe hängt an der Zone des Objekts, und live haben 24 von 43
+ * Objekten keine gepflegte Zone — eine dort unterstellte Zone wäre ein
+ * erfundener Wert (Wurzel 4). Ohne die Grenzen liefert der Server den reinen
+ * Bestand und lässt „überfällig"/„heute" auf 0.
+ *
+ * Nur mit `manage_tasks` abrufen: Die Kachel zählt FREMDE Aufgaben, und wer
+ * die Liste nicht öffnen darf, darf auch ihre Summe nicht sehen (Wurzel 9 —
+ * gleicher Scope wie der List-Pfad).
+ */
+export async function getTeamaufgabenStand(grenzen?: {
+  tagesbeginn: string;
+  tagesende: string;
+}): Promise<Result<TeamaufgabenStand>> {
+  const p = grenzen
+    ? `?tagesbeginn=${encodeURIComponent(grenzen.tagesbeginn)}&tagesende=${encodeURIComponent(grenzen.tagesende)}`
+    : "";
+  return call(`/tasks/startseite${p}`);
+}

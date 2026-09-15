@@ -85,3 +85,31 @@ export async function getBoard(
   for (const id of propertyIds) p.append("property_ids", id);
   return call(`/calendar/board?${p.toString()}`);
 }
+
+// --- Startseiten-Kachel: Eigentümer-Vorgänge ---------------------------------
+
+/** Die drei Bestände der Eigentümer-Vorgänge für die Übersicht.
+ *  Zwilling zu `web/lib/calendar.ts:EigentuemerVorgaenge`. */
+export type EigentuemerVorgaenge = {
+  /** Anträge, die auf die Entscheidung der Agentur warten. */
+  offen: number;
+  /** Aufhebungswünsche zu schon genehmigten Sperren — der umgekehrte
+   *  Handgriff: hier gibt die Agentur Nächte WIEDER FREI. */
+  aufhebung_offen: number;
+  /** Angekündigte Vertragsenden aus genehmigten Kündigungs-Anträgen (0377). */
+  kuendigungen: number;
+  /** Der älteste offene Antrag; null, wenn nichts offen ist. */
+  aeltester_offen_am: string | null;
+};
+
+/**
+ * Zählt, ohne die ganze Liste samt Titeln und Leistungen zu laden.
+ *
+ * Nur mit `approve_block` abrufen (dieselbe Fähigkeit wie im Web-Katalog):
+ * Wer nicht entscheiden darf, dem sagt die Zahl nichts, was er tun könnte.
+ */
+export async function getEigentuemerVorgaenge(): Promise<
+  Result<EigentuemerVorgaenge>
+> {
+  return call("/calendar/block-requests/vorgaenge");
+}

@@ -1,6 +1,16 @@
-// Gastgeber · Übersicht. Dieselbe Startseite wie im Web-Dashboard und aus
-// denselben zwei Quellen: GET /api/v1/reservations/dashboard (Reservierungen,
-// Kennzahlen, Objektbestand) und GET /api/v1/inbox/kennzahlen (Nachrichten).
+// Gastgeber · Übersicht. Dieselbe Startseite wie im Web-Dashboard, aus vier
+// Quellen:
+//   GET /api/v1/reservations/dashboard      Reservierungen, Kennzahlen, Objekte
+//   GET /api/v1/inbox/unread-count          offene Konversationen (Hinweiszeile)
+//   GET /api/v1/inbox/kennzahlen            Nachrichten-Durchsatz  (pm_chat)
+//   GET /api/v1/calendar/block-requests/vorgaenge  Eigentümer (approve_block)
+//   GET /api/v1/tasks/startseite            Teamaufgaben          (manage_tasks)
+//
+// Die drei rollen-gebundenen Quellen werden NUR abgefragt, wenn `can(me, …)`
+// es hergibt — dieselben Regeln wie im Web-Katalog
+// (`web/lib/dashboard-katalog.ts`), damit App und Web derselben Rolle dieselbe
+// Kachel zeigen. Fehlt die Berechtigung, entfällt der Block; es wird nicht
+// gefragt und kein 403 als Ergebnis ausgegeben (Wurzel 5).
 //
 // Lade-/Fehler-/Leerzustand getrennt. KEIN Demo-Fallback: eine Übersicht mit
 // lauter Nullen ist von einem echten ruhigen Tag nicht zu unterscheiden und
@@ -8,14 +18,20 @@
 // Backend nicht erreichbar, steht das da — mit Wiederholen.
 // Beträge/Währung aus den Daten (§4.2: revenue_30d = null → keine Umsatz-Kachel).
 //
-// Der Screen zeigt ALLE Felder, die die Endpunkte liefern. Zweimal war er
+// Der Screen zeigt ALLE Felder, die die Endpunkte liefern. DREIMAL war er
 // dahinter zurück, ohne dass es auffiel: bis Juli 2026 fehlten `checkins_30d`
 // sowie Kanal, Status und der zweite Datumswert jeder Zeile; bis August 2026
 // fehlten die Listen „Freigabe nötig" und „Gäste im Haus", der Umsatz je
-// Buchung, die Zeitraum-/Zeitfenster-Umschaltung, die gebuchten
-// Zusatzleistungen, der gesamte Nachrichten-Block und der Objektbestand. Beide
-// Male sah die App nicht kaputt aus, sondern nur leer — deshalb steht der
+// Buchung, die Zeitraum-/Zeitfenster-Umschaltung und die gebuchten
+// Zusatzleistungen; bis zum 15.09.2026 fehlten der gesamte Nachrichten-Block,
+// die Eigentümer-Vorgänge, der Stand der Teamaufgaben und `objekte_aktiv`.
+// Jedes Mal sah die App nicht kaputt aus, sondern nur leer — deshalb steht der
 // Vergleich mit dem Contract in `lib/dashboard.ts` ausdrücklich dabei.
+//
+// Bekannt fehlt weiterhin: `neu_eingegangen`/`neu_gesamt`. Der Server rechnet
+// die Liste „zuletzt hereingekommen" (sortiert nach dem ECHTEN
+// Buchungszeitpunkt, Wurzel 5b) bei jedem Aufruf, und weder App noch Web
+// zeigen sie. Das ist keine Auslassung mit Grund, sondern eine offene Lücke.
 import { useCallback, useEffect, useState } from "react";
 import { Image, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -23,14 +39,25 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BuchungsPanel } from "@/components/buchung/BuchungsPanel";
 import { BuchungsReiter } from "@/components/dashboard/BuchungsReiter";
 import { KennzahlenAbschnitt } from "@/components/dashboard/KennzahlenAbschnitt";
+import { NachrichtenAbschnitt } from "@/components/dashboard/NachrichtenAbschnitt";
+import {
+  EigentuemerKachel,
+  TeamaufgabenKachel,
+} from "@/components/dashboard/VorgangsKacheln";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Avatar, Btn, Col, Row, Spinner, Txt } from "@/components/ui/kit";
 import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import { initialenAus } from "@/lib/initialen";
+import {
+  getEigentuemerVorgaenge,
+  type EigentuemerVorgaenge,
+} from "@/lib/calendar";
 import { getDashboard, type Dashboard } from "@/lib/dashboard";
-import { heuteLabel } from "@/lib/kalendertag";
+import { heuteLabel, tagesbeginnIso, tagesendeIso } from "@/lib/kalendertag";
 import { getInboxUnreadCount } from "@/lib/inbox";
+import { can } from "@/lib/permissions";
+import { getTeamaufgabenStand, type TeamaufgabenStand } from "@/lib/tasks";
 import { useRealtime } from "@/lib/realtime";
 import { useUnterkante } from "@/lib/unterkante";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -110,6 +137,12 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
   // zugänglich (der Endpunkt sagt ab) — dann entfällt der Hinweis, statt „0"
   // zu behaupten, obwohl nichts geladen wurde.
   const [ungelesen, setUngelesen] = useState<number | null>(null);
+  // Die zwei Bestands-Kacheln des Web-Dashboards. null = diese Rolle sieht sie
+  // nicht oder der Abruf ging schief — beides führt dazu, dass die Kachel
+  // entfällt, statt Nullen zu zeigen, die von einem ruhigen Tag nicht zu
+  // unterscheiden wären (Wurzel 4).
+  const [vorgaenge, setVorgaenge] = useState<EigentuemerVorgaenge | null>(null);
+  const [teamaufgaben, setTeamaufgaben] = useState<TeamaufgabenStand | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Zählt jede erfolgreiche Grundabfrage. Die Unterblöcke halten eigenen Zustand
   // (gewähltes Fenster, nachgeladene Zeilen) und erkennen daran, dass frische
@@ -118,14 +151,35 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
   const [version, setVersion] = useState(0);
   const [offeneBuchung, setOffeneBuchung] = useState<string | null>(null);
 
+  // Wer die zwei Bestands-Kacheln überhaupt sehen darf — dieselben Regeln wie
+  // im Web-Katalog (`web/lib/dashboard-katalog.ts`), damit App und Web
+  // derselben Rolle dieselbe Kachel zeigen. Gefragt wird gar nicht erst, wenn
+  // die Rolle es nicht darf: Der Server antwortet dort mit 403/404, und einen
+  // erwartbaren Fehler zu erzeugen und als Ergebnis auszugeben ist Wurzel 5.
+  const darfVorgaenge = can(me, "approve_block");
+  const darfTeamaufgaben = can(me, "manage_tasks");
+
   const load = useCallback(async () => {
-    // Beide Quellen parallel. Die Zahl der offenen Konversationen ist NICHT
-    // kritisch: wer keinen Zugang zum Posteingang hat, bekommt dort eine Absage
-    // — dann entfällt der Hinweis, statt die ganze Übersicht zu kippen.
-    const [res, offen] = await Promise.all([
+    // Alle Quellen parallel. Nur die Grundabfrage ist kritisch: Wer keinen
+    // Zugang zum Posteingang, zu den Sperranträgen oder zu fremden Aufgaben
+    // hat, bekommt dort eine Absage — dann entfällt der jeweilige Block, statt
+    // die ganze Übersicht zu kippen.
+    const [res, offen, vorg, team] = await Promise.all([
       getDashboard(),
       getInboxUnreadCount(),
+      darfVorgaenge ? getEigentuemerVorgaenge() : null,
+      darfTeamaufgaben
+        ? getTeamaufgabenStand({
+            // Die Tagesgrenzen kommen vom GERÄT: „überfällig" und „heute
+            // fällig" hängen daran, welcher Tag beim Leser läuft. Ohne sie
+            // liefert der Server nur den Bestand und lässt beide auf 0.
+            tagesbeginn: tagesbeginnIso(),
+            tagesende: tagesendeIso(),
+          })
+        : null,
     ]);
+    setVorgaenge(vorg?.ok ? vorg.data : null);
+    setTeamaufgaben(team?.ok ? team.data : null);
     if (res.ok) {
       setData(res.data);
       setError(null);
@@ -137,7 +191,7 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
       setError(res.error);
     }
     setUngelesen(offen.ok ? offen.data.ungelesen : null);
-  }, []);
+  }, [darfVorgaenge, darfTeamaufgaben]);
 
   useEffect(() => {
     load();
@@ -151,6 +205,19 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
   // auslösen (Wurzel 4 — kein Element ohne Wirkung).
   useRealtime({ table: "reservations", onChange: load });
   useRealtime({ table: "properties", onChange: load });
+  // Teamaufgaben-Kachel: `tasks` ist freigeschaltet (select für authenticated
+  // UND in `supabase_realtime`, am 15.09.2026 gegen die Live-DB geprüft) und
+  // wird in HostTasks/TaskDetail schon abonniert. Nur für die Rolle, die die
+  // Kachel überhaupt sieht — sonst liefe bei jeder fremden Aufgabe ein Abruf,
+  // dessen Ergebnis niemand anzeigt.
+  useRealtime({ table: "tasks", onChange: load, enabled: darfTeamaufgaben });
+  // KEIN Abo für `block_requests` und `portal_messages`, obwohl sie die
+  // Eigentümer- und die Nachrichten-Kachel speisen: Beide haben KEIN `select`
+  // für `authenticated` (gemessen 15.09.2026), `portal_messages` steht
+  // zusätzlich nicht in der Publikation. Ein Abo darauf wäre eine stumme
+  // Attrappe — die Oberfläche sähe live aus und aktualisierte nie. Diese zwei
+  // Kacheln kommen beim Öffnen, beim Herunterziehen und bei jeder
+  // Buchungsänderung frisch; das ist ehrlicher als ein totes Abo.
 
   const zuBuchungen = useCallback(() => navigation.navigate("Reservations"), [navigation]);
   // Die Buchung öffnet als Panel ÜBER der Übersicht — kein Screen-Wechsel,
@@ -162,6 +229,7 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
   );
   const zumPosteingang = useCallback(() => navigation.navigate("HostInbox"), [navigation]);
   const zuObjekten = useCallback(() => navigation.navigate("Listings"), [navigation]);
+  const zuAufgaben = useCallback(() => navigation.navigate("Tasks"), [navigation]);
   // Offene Anfragen sind die Buchungsliste mit gesetztem Status-Filter — keine
   // eigene Seite: es sind dieselben Buchungen, nur eine Teilmenge.
   const zuAnfragen = useCallback(
@@ -291,14 +359,36 @@ export default function HostDashboard({ navigation }: { navigation: any }) {
 
         <KennzahlenAbschnitt data={data} />
 
-        {/* Objektbestand als eine Zeile, nicht als Kachelreihe: gesamt, inaktiv
-            und Entwurf sind Einrichtungszahlen — man arbeitet mit ihnen unter
-            „Inserate", nicht auf der Tagesübersicht. */}
+        {/* Nachrichten-Durchsatz (`nachricht:*` im Web-Katalog). Nur mit
+            `pm_chat` — ohne die Berechtigung antwortet `/inbox/kennzahlen` mit
+            403, und die Kachel bliebe für diese Rolle ohnehin leer. */}
+        {can(me, "pm_chat") && <NachrichtenAbschnitt />}
+
+        {/* Die zwei Bestands-Kacheln. Sie stehen NACH den Kennzahlen und vor
+            dem Objektbestand: erst was heute läuft, dann was entschieden
+            werden muss, zuletzt die Einrichtungszahlen. */}
+        {/* Die Eigentümer-Kachel ist BEWUSST nicht antippbar: Einen
+            Sperrantrag entscheidet man im Dashboard, diese App hat dafür
+            keinen Bildschirm. Ein Pfeil, der nirgends hinführt, wäre eine
+            Attrappe — die Zahl allein sagt, dass jemand wartet, und das ist
+            unterwegs die nützliche Hälfte. */}
+        {vorgaenge && <EigentuemerKachel daten={vorgaenge} />}
+        {teamaufgaben && (
+          <TeamaufgabenKachel daten={teamaufgaben} onPress={zuAufgaben} />
+        )}
+
+        {/* Objektbestand als eine Zeile, nicht als Kachelreihe: gesamt, aktiv,
+            inaktiv und Entwurf sind Einrichtungszahlen — man arbeitet mit ihnen
+            unter „Inserate", nicht auf der Tagesübersicht.
+            `objekte_aktiv` stand bis zum 15.09.2026 im Contract, ohne dass es
+            jemand anzeigte: Die Zeile nannte nur, was NICHT verkauft (inaktiv,
+            Entwurf) — die Zahl, die zählt, fehlte. */}
         <HinweisZeile
           icon="home"
           text={`${data.objekte_gesamt} ${data.objekte_gesamt === 1 ? "Objekt" : "Objekte"}${
-            data.objekte_inaktiv || data.objekte_entwurf
+            data.objekte_aktiv || data.objekte_inaktiv || data.objekte_entwurf
               ? ` · ${[
+                  data.objekte_aktiv ? `${data.objekte_aktiv} aktiv` : null,
                   data.objekte_inaktiv ? `${data.objekte_inaktiv} inaktiv` : null,
                   data.objekte_entwurf ? `${data.objekte_entwurf} Entwurf` : null,
                 ]

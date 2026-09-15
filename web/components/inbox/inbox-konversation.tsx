@@ -21,6 +21,7 @@ import { AnfrageKarte } from "@/components/inbox/inbox-anfrage";
 import { istAnfrageThread } from "@/lib/inbox-anfrage-typen";
 import {
   hatBuchungszeile,
+  kannKiVorschlag,
   istEigentuemerThread,
 } from "@/components/inbox/inbox-eigentuemer";
 import { kanalSchluessel } from "@/lib/chat-format";
@@ -1008,8 +1009,13 @@ export function Conversation({
             Wissenslücke gemeldet hat. DAS ist der Punkt, an dem sich die
             Wissensdatenbank von selbst füllt — der Betrieb sieht die Lücke in
             dem Moment, in dem sie ihn stört. Ohne diesen Weg bleibt sie leer,
-            egal wie gut die Verwaltungsmaske ist. */}
-        {aiLuecke && !aiLueckeWeg && (
+            egal wie gut die Verwaltungsmaske ist.
+
+            NICHT beim Eigentümer-Chat: Der Fakt landete in der GÄSTE-Wissens-
+            datenbank, die der Eigentümer-Kontext nicht liest — gespeicherte
+            Arbeit ohne Wirkung, und niemand würde es merken. Die Lücke selbst
+            steht weiterhin im Vorschlag. */}
+        {aiLuecke && !aiLueckeWeg && hatBuchungszeile(thread.id) && (
           <div className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/40 p-4">
             <div className="flex items-start justify-between gap-2">
               <span className="flex items-center gap-1.5 text-sm font-medium">
@@ -1247,6 +1253,12 @@ export function Conversation({
                 als letzter Block immer auf der ersten Zeile rechts. */}
             <div className="@container flex items-start gap-1.5 px-2 pb-2">
               <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+              {/* Vorlagen, geplantes Senden und Anhänge hängen an der
+                  Buchungszeile: ihre Endpunkte laden über `_load_thread_scoped`
+                  und antworten für jede Nebenquelle mit 404. Sie hier trotzdem
+                  anzubieten hieße, einen erwartbaren Fehler als Knopf
+                  auszustellen (Wurzel 5). */}
+              {hatBuchungszeile(thread.id) && (
               <Button
                 type="button"
                 variant="ghost"
@@ -1257,6 +1269,11 @@ export function Conversation({
                 <Icon icon="ph:note" className="size-4" />
                 <span className="hidden @xl:inline">{t("tabTemplates")}</span>
               </Button>
+              )}
+              {/* Der KI-Knopf hat eine EIGENE Bedingung: Der Eigentümer-Chat
+                  hat keine Buchungszeile, aber seit 0708 einen eigenen
+                  Vorschlagsweg. */}
+              {kannKiVorschlag(thread.id) && (
               <Button
                 data-testid="inbox-ai-reply-button"
                 type="button"
@@ -1272,7 +1289,9 @@ export function Conversation({
                 />
                 <span className="hidden @xl:inline">{t("aiSuggest")}</span>
               </Button>
+              )}
               {/* Geplant senden (Uhr) */}
+              {hatBuchungszeile(thread.id) && (
               <Button
                 type="button"
                 variant="ghost"
@@ -1283,8 +1302,10 @@ export function Conversation({
                 <Icon icon="ph:clock" className="size-4" />
                 <span className="hidden @xl:inline">{t("scheduleSend")}</span>
               </Button>
+              )}
               {/* Anhang. Der Text im Feld reist als Begleitnachricht mit, damit
                   „Hier die Anfahrt:" und die Datei beim Gast zusammen ankommen. */}
+              {hatBuchungszeile(thread.id) && (
               <Button
                 type="button"
                 variant="ghost"
@@ -1299,6 +1320,7 @@ export function Conversation({
                 />
                 <span className="hidden @xl:inline">{t("attach")}</span>
               </Button>
+              )}
               <input
                 ref={dateiFeld}
                 type="file"

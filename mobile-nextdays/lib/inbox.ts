@@ -237,7 +237,18 @@ export function nachAktivitaet(a: InboxThread, b: InboxThread): number {
   return zeitWert(b.letzte_aktivitaet) - zeitWert(a.letzte_aktivitaet);
 }
 
-export const THREAD_PRAEFIXE = ["anfrage:", "mb:", "ue:", "wa:"] as const;
+/**
+ * Die Präfixe des Servers (`inbox/service.py:_NEBENQUELLEN_PRAEFIXE`).
+ *
+ * Handkopie — es gibt kein Prüfskript, das die Listen deckungsgleich hält.
+ * `eig:` fehlte hier bis zum 15.09.2026, und weil `istBuchungsThread` die
+ * Liste negiert, galt ein Eigentümer-Thread als Buchungs-Thread: Alle vier
+ * Antwort-Werkzeuge wurden angeboten, und alle vier liefen in den 404 ihres
+ * Ladepfads. Sichtbar wurde davon nur der KI-Knopf („Kein Vorschlag —
+ * Konversation nicht gefunden"), weil er als einziger seinen Fehler in einem
+ * Alert zeigt; die anderen drei schwiegen (Wurzel 5).
+ */
+export const THREAD_PRAEFIXE = ["anfrage:", "eig:", "mb:", "ue:", "wa:"] as const;
 
 /** Thread-IDs von Anfragen tragen diesen Präfix (Server: `anfragen.PREFIX`). */
 export function istAnfrageThread(threadId: string): boolean {
@@ -256,6 +267,24 @@ export function istAnfrageThread(threadId: string): boolean {
  */
 export function istBuchungsThread(threadId: string): boolean {
   return !THREAD_PRAEFIXE.some((p) => threadId.startsWith(p));
+}
+
+/**
+ * Kann dieser Thread einen KI-Antwortvorschlag bekommen?
+ *
+ * Nicht dasselbe wie `istBuchungsThread`, und der Unterschied ist der Grund
+ * für diese eigene Funktion: Der Eigentümer-Chat hat KEINE Buchungszeile,
+ * bekommt aber seit 0708 einen eigenen Vorschlag — aus Objekt, offenen
+ * Aufgaben und Belegung statt aus Buchung und Gästemappe
+ * (`inbox/ki_eigentuemer.py`).
+ *
+ * Für Anfragen, Marktplatz, Übernahmen und WhatsApp gibt es serverseitig
+ * keinen Vorschlagsweg. Dort den Knopf zu zeigen hieße, einen erwartbaren
+ * Fehler anzubieten — genau die Attrappe, die `istBuchungsThread` für die
+ * anderen Werkzeuge schon verhindert.
+ */
+export function kannKiVorschlag(threadId: string): boolean {
+  return istBuchungsThread(threadId) || istEigentuemerThread(threadId);
 }
 
 /** Die vier von Airbnb erlaubten Ablehnungsgründe — ein eigener wäre ein 422. */
@@ -600,14 +629,59 @@ export async function setInboxStatus(
  * Aufenthaltsdaten zu laden wäre eine Datenlast, die niemand anzeigt — dazu
  * Gastdaten in einem Bildschirm, der sie nicht braucht.
  *
- * Die Durchsatz-Kennzahlen des Postfachs (gesendet/empfangen/Automation, Ø je
- * Tag) stehen absichtlich nicht in der App: das ist eine Auswertung, kein
- * Handlungsobjekt am Telefon. Sie bleiben im Web-Dashboard.
+ * Hier stand bis zum 15.09.2026, die Durchsatz-Kennzahlen des Postfachs
+ * gehörten „absichtlich nicht in die App", weil sie eine Auswertung seien und
+ * kein Handlungsobjekt am Telefon. Diese Entscheidung ist umgekehrt: Die
+ * Übersicht soll dieselben Kacheln tragen wie das Web-Dashboard
+ * (`getNachrichtenKennzahlen` unten). Der Grund gegen die Umkehr war nie ein
+ * technischer, und wer unterwegs sieht, dass die Automation heute nichts
+ * verschickt hat, merkt einen Ausfall früher als am Schreibtisch.
  */
 export async function getInboxUnreadCount(): Promise<
   Result<{ ungelesen: number }>
 > {
   return call("/inbox/unread-count");
+}
+
+/** Eine Durchsatz-Kennzahl des Postfachs samt Tagesschnitt und Vergleich. */
+export type NachrichtenKennzahl = {
+  value: number;
+  /** Schnitt je Tag über den Zeitraum — eigene Zahl daneben. */
+  per_day: number;
+  /** null = keine Vorperiode; dann steht „—" statt erfundener +100 %. */
+  change_pct: number | null;
+};
+
+/** Zwilling zu `web/lib/inbox.ts:NachrichtenKennzahlen`. */
+export type NachrichtenKennzahlen = {
+  gesendet: NachrichtenKennzahl;
+  empfangen: NachrichtenKennzahl;
+  /** Nur, was der Automail-Dispatch selbst als solches geschrieben hat (0400). */
+  automation: NachrichtenKennzahl;
+  ungelesen: number;
+  zeitraum: string;
+  tage: number;
+};
+
+/**
+ * Die Kennzahlen des Portal-Postfachs für die Übersicht.
+ *
+ * Ausdrücklich NUR das Portal-/OTA-Postfach: Marktplatz-Threads und WhatsApp
+ * sind eigene Töpfe mit eigenen Richtungsfeldern, und drei Zählweisen in einer
+ * Zahl zu mischen wäre irreführend.
+ *
+ * `ungelesen_threads` wird bewusst NICHT übernommen, obwohl der Server sie
+ * mitschickt: Das sind Gastnamen und Vorschautexte für eine Kachel, die nur
+ * Zahlen zeigt — die Liste steht im Posteingang, einen Tabwechsel entfernt.
+ *
+ * Ohne `pm_chat` antwortet der Server mit 403; die Übersicht fragt dann gar
+ * nicht erst (`can(me, "pm_chat")`), statt einen erwartbaren Fehler zu
+ * erzeugen und ihn als Ergebnis auszugeben (Wurzel 5).
+ */
+export async function getNachrichtenKennzahlen(
+  zeitraum: string = "30d",
+): Promise<Result<NachrichtenKennzahlen>> {
+  return call(`/inbox/kennzahlen?zeitraum=${encodeURIComponent(zeitraum)}`);
 }
 
 // --- Verwaltung (Etappe 4) ---------------------------------------------------

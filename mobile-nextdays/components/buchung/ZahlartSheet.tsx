@@ -114,12 +114,12 @@ export function ZahlartSheet({
                       paddingHorizontal: 13,
                       borderRadius: t.radius.pill,
                       borderWidth: 1,
-                      borderColor: an ? t.palette.ink : t.palette.line,
-                      backgroundColor: an ? t.palette.ink : "transparent",
+                      borderColor: an ? t.palette.accent : t.palette.line,
+                      backgroundColor: an ? t.palette.accent : "transparent",
                       opacity: pressed ? 0.7 : 1,
                     })}
                   >
-                    <Txt v="xs" color={an ? t.palette.bg : t.palette.ink}>
+                    <Txt v="xs" color={an ? t.palette.accentInk : t.palette.ink}>
                       {m}
                     </Txt>
                   </Pressable>

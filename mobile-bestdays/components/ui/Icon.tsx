@@ -22,7 +22,13 @@ export const NIC: Record<string, string> = {
   minus: "M5 12h14",
   filter: "M3 5.5h18M6 12h12M10 18.5h4",
   wifi: "M4 10a13 13 0 0116 0M7 13.5a8 8 0 0110 0M10 17a3 3 0 014 0M12 20.5h.01",
-  key: "M15.5 7.5a4 4 0 11-3.6 6L5 20.5 7.5 23M15.5 7.5l2-2M10.5 13l2.5 2.5",
+  // Schlüssel: geschlossener Ring (Mitte 8/15, r=4), Schaft nach rechts oben,
+  // zwei Bartzähne. Der vorherige Pfad hatte einen OFFENEN Bogen
+  // (`a4 4 0 11-3.6 6` endet, wo es weitergeht, statt zum Start zurück) — das
+  // Motiv sah aus wie ein Haken mit Strich, nicht wie ein Schlüssel. Sichtbar
+  // war das an sechs Stellen (Aufgaben-Detail, Objekt-Kartei, Buchungs-Panel,
+  // Übersicht), ohne dass es je als Fehler gemeldet wurde.
+  key: "M8 11a4 4 0 100 8 4 4 0 000-8M11 12l9-9M17 6l2 2M14.5 8.5l2 2",
   share: "M16 6l-4-3-4 3M12 3v13M5 12v7a1 1 0 001 1h12a1 1 0 001-1v-7",
   check: "M5 12.5l4.5 4.5L19 7",
   clock: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 8v4.5l3 1.8",

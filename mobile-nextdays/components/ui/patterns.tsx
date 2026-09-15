@@ -165,7 +165,8 @@ export function CategoryTabs({
                 height: 2,
                 width: "100%",
                 borderRadius: 2,
-                backgroundColor: on ? t.palette.ink : "transparent",
+                // Der Unterstrich des aktiven Reiters trägt die Marke.
+                backgroundColor: on ? t.palette.accent : "transparent",
               }}
             />
           </Pressable>

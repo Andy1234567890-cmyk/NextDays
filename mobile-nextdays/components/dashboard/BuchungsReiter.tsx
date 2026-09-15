@@ -242,7 +242,14 @@ export function BuchungsReiter({
                 paddingVertical: 8,
                 paddingHorizontal: 14,
                 borderRadius: t.radius.pill,
-                backgroundColor: an ? t.palette.ink : "transparent",
+                // Der aktive Reiter trägt die MARKENFARBE, nicht Schwarz.
+                // Vorher war er schwarz auf weißem Grund: Auf dem ganzen
+                // Bildschirm kam die Marke damit nur im Logo und am aktiven
+                // Tab-Symbol vor, und die Übersicht las sich als reine
+                // Graustufen-Seite. Die inaktiven liegen jetzt auf `surface`
+                // (Weiß) statt auf „transparent" — seit der Grund getönt ist,
+                // wäre transparent eine graue, eingedrückt wirkende Pille.
+                backgroundColor: an ? t.palette.accent : t.palette.surface,
                 borderWidth: an ? 0 : 1,
                 borderColor: t.palette.line,
                 opacity: pressed && !an ? 0.6 : 1,
@@ -250,14 +257,14 @@ export function BuchungsReiter({
             >
               <Txt
                 v="sm"
-                color={an ? t.palette.bg : t.palette.ink}
+                color={an ? t.palette.accentInk : t.palette.ink}
                 style={{ fontFamily: t.fonts.semibold }}
               >
                 {r.titel}
               </Txt>
               {/* Die Zahl gehört an den Reiter: sonst muss man jeden einzeln
                   antippen, um zu sehen, wo Arbeit liegt. */}
-              <Txt v="xs" color={an ? t.palette.bg : t.palette.soft}>
+              <Txt v="xs" color={an ? t.palette.accentInk : t.palette.soft}>
                 {stand[r.liste].fehler ? "—" : zahl}
               </Txt>
             </Pressable>

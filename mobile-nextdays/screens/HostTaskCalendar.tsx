@@ -280,13 +280,13 @@ function TagZelle({
           borderRadius: 17,
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: gewaehlt ? t.palette.ink : "transparent",
+          backgroundColor: gewaehlt ? t.palette.accent : "transparent",
           // Der heutige Tag bleibt erkennbar, auch wenn ein anderer gewählt ist.
           borderWidth: !gewaehlt && heute ? 1 : 0,
-          borderColor: t.palette.ink,
+          borderColor: t.palette.accent,
         }}
       >
-        <Txt v="sm" color={gewaehlt ? t.palette.bg : t.palette.ink}>
+        <Txt v="sm" color={gewaehlt ? t.palette.accentInk : t.palette.ink}>
           {d}
         </Txt>
       </View>

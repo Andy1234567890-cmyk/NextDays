@@ -62,15 +62,47 @@ export type Palette = {
   accentInk: string;
   accentSoft: string;
   star: string;
+  // Richtungsfarben für Veränderungen (Trend). Sie GEHÖREN in die Palette:
+  // Vorher stand im `Trend` ein festes `#1F8A5B` — ein sattes Grün neben dem
+  // warmen Neutralton dieses Themes und dem Marken-Akzent. Auf der Übersicht
+  // trug damit jede Zahl eine grelle Zeile, und die Karte las sich wie eine
+  // Ampel statt wie eine Auswertung.
+  //
+  // Gedämpft und warm abgestimmt, nicht knallig: Die Richtung soll beim
+  // Überfliegen erkennbar sein, ohne die Zahl zu überstrahlen. Bewusst NICHT
+  // der Akzent für „abwärts" — der ist die Markenfarbe und markiert
+  // Handlungsbedarf; ein gesunkener Umsatz ist eine Information, kein Knopf.
+  positiv: string;
+  negativ: string;
 };
 
-// Light-Palette. Die Fläche ist weiß (Airbnb-Muster), Abgrenzung entsteht über
-// feine Linien statt über eingefärbte Flächen.
+// Light-Palette.
+//
+// GRUND UND FIGUR (geändert am 15.09.2026): `bg` und `surface` waren BEIDE
+// reines Weiß. Eine Karte hob sich damit allein durch eine Haarlinie mit 12 %
+// Deckkraft ab — auf einem Telefon bei Tageslicht praktisch gar nicht. Die
+// Übersicht las sich als eine weiße Fläche mit Strichen darin, und der
+// Befund des Auftraggebers dazu war schlicht „unsere App ist nur weiß".
+//
+// Dass es ein Fehler und keine Haltung war, zeigt die Dark-Palette direkt
+// darunter: dort ist `surface` (#1C1A18) HELLER als `bg` (#141210) — die
+// Abstufung existierte also, nur im Hellmodus nicht. Hier stand zur
+// Begründung „Airbnb-Muster"; Airbnb legt seine Karten aber auf Weiß OHNE
+// Rahmen und trennt über Bilder und Weißraum, während diese App gerahmte
+// Datenkarten stapelt. Übernommen war die halbe Regel.
+//
+// Der Ton ist WARM (nicht #F7F7F7): Er teilt sich den Farbton mit `ink`
+// (#181614) und `soft` (#6F6864). Ein neutralgraues Grau darunter hätte die
+// warme Schrift kühl aussehen lassen — der häufigste Weg, wie eine Oberfläche
+// „billig" wirkt, ohne dass man sagen kann, woran es liegt.
 export function lightPalette(accent: string): Palette {
   return {
-    bg: "#FFFFFF",
+    bg: "#F5F3F0",
     surface: "#FFFFFF",
-    surface2: "#F7F7F7",
+    // Eingelassene Flächen INNERHALB einer Karte (Eingabefelder, Sheet-Zeilen).
+    // Muss dunkler als `bg` sein, sonst verschwindet die Einlassung, sobald
+    // der Grund selbst getönt ist.
+    surface2: "#EBE7E2",
     ink: "#181614",
     soft: "#6F6864",
     faint: "#A8A29C",
@@ -85,6 +117,10 @@ export function lightPalette(accent: string): Palette {
     // ebenso. Deshalb 0.88.
     accentSoft: mix(accent, "#FFFFFF", 0.88),
     star: "#181614",
+    // Gedecktes Waldgrün und ein warmes Ziegelrot — beide entsättigt, damit
+    // sie neben dem warmen Neutralton (`ink` #181614) sitzen und nicht davor.
+    positiv: "#2F6B4F",
+    negativ: "#9E3B2E",
   };
 }
 
@@ -104,6 +140,10 @@ export function darkPalette(accent: string): Palette {
     // Akzent auf dem dunklen Grund heißt 0.76.
     accentSoft: mix(accent, "#1C1A18", 0.76),
     star: "#F4F1ED",
+    // Auf dunklem Grund aufgehellt statt abgedunkelt: dieselben Töne wären
+    // hier nicht mehr lesbar.
+    positiv: "#86BBA1",
+    negativ: "#D98A7B",
   };
 }
 

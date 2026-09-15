@@ -12,8 +12,12 @@
 // (§4.2) — dann wird auch nicht nachgeladen, sonst wäre die Umschaltung ein
 // zweiter Weg zu demselben Wert (Wurzel 9).
 import { useCallback, useEffect, useRef, useState } from "react";
+import { View } from "react-native";
 
+import { StatGitter, type Stat } from "@/components/dashboard/Statzahl";
+import { Verlaufskurve } from "@/components/dashboard/Verlaufskurve";
 import { Trend } from "@/components/dashboard/Trend";
+import { Icon } from "@/components/ui/Icon";
 import {
   ZEITRAEUME,
   ZEITRAUM_TEXT,
@@ -23,6 +27,8 @@ import { Card, Col, Divider, Row, Txt } from "@/components/ui/kit";
 import { formatCurrency } from "@/lib/currency";
 import {
   getDashboardKpi,
+  getDashboardVerlauf,
+  type DashboardVerlauf,
   type Dashboard,
   type DashboardKpi,
   type DashboardKpiMetrik,
@@ -69,6 +75,14 @@ export function KennzahlenAbschnitt({ data }: { data: Dashboard }) {
   // ohne diesen Zähler überschreibt die langsamere Antwort die neuere und die
   // Kachel zeigt Zahlen eines Zeitraums, der nicht mehr gewählt ist (Wurzel 2).
   const lauf = useRef(0);
+
+  // Die Reihe für die Kurve unter der Leitzahl. `null` heißt „noch nicht da
+  // oder nicht verfügbar" — dann steht keine Kurve, nie eine flache Linie auf
+  // erfundenen Nullen (Wurzel 4).
+  const [verlauf, setVerlauf] = useState<DashboardVerlauf | null>(null);
+  // Breite der Karte, gemessen statt geraten: Ein SVG braucht eine Zahl, und
+  // die Kartenbreite hängt an Bildschirmbreite und Polsterung.
+  const [breite, setBreite] = useState(0);
 
   // Nach außen synchron: gerufen wird aus einem Ereignis-Handler und aus einem
   // Effekt, die beide mit einem Promise nichts anfangen können. Der Lauf steckt
@@ -124,6 +138,31 @@ export function KennzahlenAbschnitt({ data }: { data: Dashboard }) {
     [zeigtUmsatz, zeigtUmsatzJeBuchung],
   );
 
+  // Die Kurve zur Leitzahl. EIGENER Ladeweg statt mit den Kacheln zusammen:
+  // Die Kacheln holt `laden` nur beim WECHSEL des Zeitraums — der Startwert
+  // (30 Tage) steckt schon in den Grunddaten. Die Reihe steckt dort nicht, sie
+  // muss also auch beim ersten Anzeigen geholt werden.
+  //
+  // Eigener Zähler, gleiche Regel wie oben: Nur die jüngste Anfrage darf
+  // schreiben, sonst zeigt die Kurve nach zwei schnellen Wechseln einen
+  // anderen Zeitraum als die Zahl darüber (Wurzel 2).
+  const kurvenLauf = useRef(0);
+  useEffect(() => {
+    if (!zeigtUmsatz) {
+      setVerlauf(null);
+      return;
+    }
+    const meins = (kurvenLauf.current += 1);
+    getDashboardVerlauf("revenue", zeitraum).then((r) => {
+      if (kurvenLauf.current !== meins) return;
+      // Fehler → keine Kurve. Eine Linie auf dem letzten Zeitraum wäre eine
+      // Aussage über Tage, die gerade nicht gemeint sind.
+      setVerlauf(r.ok ? r.data : null);
+    });
+    // `data` als Auslöser: Frische Grunddaten heißen, dass sich auch die
+    // Reihe geändert haben kann (Realtime lädt die Übersicht neu).
+  }, [zeigtUmsatz, zeitraum, data]);
+
   const wechsel = useCallback(
     (neu: Zeitraum) => {
       setZeitraum(neu);
@@ -161,7 +200,11 @@ export function KennzahlenAbschnitt({ data }: { data: Dashboard }) {
   return (
     <Card style={{ padding: 16 }}>
       <Col gap={14}>
+        {/* Symbol + Überschrift + Steuerung — derselbe Kartenkopf wie in den
+            übrigen drei Karten der Übersicht. Vorher trug nur die Hälfte von
+            ihnen ein Symbol, und die Köpfe begannen auf verschiedenen Höhen. */}
         <Row style={{ alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <Icon n="chart" s={16} sw={2} c={t.palette.faint} />
           <Txt v="eyebrow" soft numberOfLines={1} style={{ flex: 1 }}>
             {ZEITRAUM_TEXT[zeitraum]}
           </Txt>
@@ -195,6 +238,29 @@ export function KennzahlenAbschnitt({ data }: { data: Dashboard }) {
                   {betrag(stand.revenue)}
                 </Txt>
                 <Trend change={stand.revenue.kpi?.change_pct ?? null} />
+                {/* Die Kurve unter der Leitzahl — sie beantwortet, was der
+                    Pfeil nicht kann: ob der Verlauf gleichmäßig war. Steht
+                    NUR, wenn eine Reihe da ist; `punkte: null` heißt „für
+                    dich nicht verfügbar" (§4.2) und nicht „alles null". */}
+                {verlauf?.punkte && verlauf.punkte.length > 1 && (
+                  // Die Kurve ist ein SVG und braucht eine Zahl. Dieser
+                  // Rahmen MISST sich selbst, statt sie aus Bildschirmbreite
+                  // minus Polsterung zu rechnen — sonst stünde die Polsterung
+                  // als Konstante im Code und liefe beim nächsten
+                  // Layout-Wechsel auseinander.
+                  <View
+                    style={{ marginTop: 10 }}
+                    onLayout={(e) => setBreite(e.nativeEvent.layout.width)}
+                  >
+                    {breite > 0 && (
+                      <Verlaufskurve
+                        punkte={verlauf.punkte}
+                        koernung={verlauf.koernung}
+                        breite={breite}
+                      />
+                    )}
+                  </View>
+                )}
               </>
             )}
           </Col>
@@ -202,64 +268,33 @@ export function KennzahlenAbschnitt({ data }: { data: Dashboard }) {
 
         <Divider />
 
-        <Row gap={12} style={{ alignItems: "flex-start" }}>
-          {zeigtUmsatzJeBuchung && (
-            <Nebenzahl
-              label="Je Buchung"
-              wert={betrag(stand.revenue_per_booking)}
-              change={stand.revenue_per_booking.kpi?.change_pct ?? null}
-              fehler={stand.revenue_per_booking.fehler}
-            />
-          )}
-          <Nebenzahl
-            label="Check-ins"
-            wert={zahl(stand.checkins)}
-            change={stand.checkins.kpi?.change_pct ?? null}
-            fehler={stand.checkins.fehler}
-          />
-          <Nebenzahl
-            label="Bestätigt"
-            wert={zahl(stand.confirmed)}
-            change={stand.confirmed.kpi?.change_pct ?? null}
-            fehler={stand.confirmed.fehler}
-          />
-        </Row>
+        {/* Dasselbe Raster wie in den anderen Karten der Übersicht — vorher
+            baute jede ihre Spalten selbst, und keine Zahl stand auf der Höhe
+            der nächsten (`Statzahl.tsx`). */}
+        <StatGitter
+          stats={[
+            ...(zeigtUmsatzJeBuchung
+              ? [nebenzahl("Je Buchung", stand.revenue_per_booking, betrag)]
+              : []),
+            nebenzahl("Check-ins", stand.checkins, zahl),
+            nebenzahl("Bestätigt", stand.confirmed, zahl),
+          ]}
+        />
       </Col>
     </Card>
   );
 }
 
-// Eine der drei Nebenzahlen. Kleiner gesetzt als die Leitzahl und ohne eigenen
-// Rahmen: sie gehören zusammen und werden in einem Blick gelesen.
-function Nebenzahl({
-  label,
-  wert,
-  change,
-  fehler,
-}: {
-  label: string;
-  wert: string;
-  change: number | null;
-  fehler: boolean;
-}) {
-  const t = useTheme();
-  return (
-    <Col gap={2} style={{ flex: 1 }}>
-      <Txt v="xs" soft numberOfLines={1}>
-        {label}
-      </Txt>
-      {fehler ? (
-        <Txt v="sm" color={t.palette.accent}>
-          —
-        </Txt>
-      ) : (
-        <>
-          <Txt v="h2" numberOfLines={1}>
-            {wert}
-          </Txt>
-          <Trend change={change} />
-        </>
-      )}
-    </Col>
-  );
+/** Eine Nebenzahl als `Stat` — Formatierung bleibt beim Aufrufer. */
+function nebenzahl(
+  label: string,
+  s: Stand,
+  form: (s: Stand) => string,
+): Stat {
+  return {
+    label,
+    wert: form(s),
+    trend: s.kpi?.change_pct ?? null,
+    fehler: s.fehler,
+  };
 }

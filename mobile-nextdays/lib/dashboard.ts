@@ -183,3 +183,45 @@ export async function getDashboardKpi(
 ): Promise<Result<DashboardKpiAntwort>> {
   return call(`/reservations/dashboard/kpi?metrik=${metrik}&zeitraum=${zeitraum}`);
 }
+
+// --- Zeitreihe einer Kachel (Kurve) -----------------------------------------
+
+/** Wie fein die Punkte liegen — der Server entscheidet es und sagt es mit. */
+export type Koernung = "tag" | "woche" | "monat";
+
+/** Ein Punkt: Beginn des Bündels und sein Wert. */
+export type VerlaufPunkt = { am: string; wert: number };
+
+export type DashboardVerlauf = {
+  metrik: DashboardKpiMetrik;
+  zeitraum: string;
+  tage: number;
+  koernung: Koernung;
+  currency: string;
+  /**
+   * `null` heißt „diese Reihe gibt es für dich nicht" (fehlende
+   * Betrags-Sichtbarkeit §4.2, gemischte Währungen) — ausdrücklich NICHT eine
+   * Reihe aus Nullen, die wie ein umsatzloser Monat aussähe. Eine LEERE Liste
+   * dagegen heißt „Fenster ohne jede Buchung", und die Kurve zeigt dann eine
+   * Nulllinie, weil genau das die Auskunft ist.
+   */
+  punkte: VerlaufPunkt[] | null;
+};
+
+/**
+ * Die Zeitreihe EINER Kachel.
+ *
+ * Getrennt von `getDashboardKpi`, obwohl beide dieselbe Kennzahl liefern: Die
+ * Kachel braucht zwei Zahlen (Wert + Vergleich), die Kurve n Punkte. In einer
+ * Antwort wären die Punkte für jede Kachel mitgeladen, auch für die drei, die
+ * keine Kurve zeigen.
+ */
+export async function getDashboardVerlauf(
+  metrik: DashboardKpiMetrik,
+  zeitraum: Zeitraum,
+): Promise<Result<DashboardVerlauf>> {
+  return call(
+    `/reservations/dashboard/verlauf?metrik=${encodeURIComponent(metrik)}` +
+      `&zeitraum=${encodeURIComponent(zeitraum)}`,
+  );
+}

@@ -225,7 +225,11 @@ function ThreadList({
                 hitSlop={8}
                 style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.6 : 1 })}
               >
-                <Icon n="cog" s={20} sw={2} c={t.palette.ink} />
+                {/* 22 statt 20 und dünnerer Strich: das Zahnrad braucht mehr
+                    Fläche als ein Pfeil, sonst füllen sich seine Zwischenräume
+                    zu. Es steht neben der großen Überschrift und darf sie nicht
+                    überstrahlen — deshalb `soft` statt `ink`. */}
+                <Icon n="cog" s={22} sw={1.75} c={t.palette.soft} />
               </Pressable>
             )}
             <ZeitWahl
@@ -1376,7 +1380,9 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
             width: 42,
             height: 42,
             borderRadius: 999,
-            backgroundColor: draft.trim() ? t.palette.ink : t.palette.surface2,
+            // Senden ist die Haupthandlung dieses Bildschirms — sie gehört
+            // in die Markenfarbe, nicht in Schwarz.
+            backgroundColor: draft.trim() ? t.palette.accent : t.palette.surface2,
             alignItems: "center",
             justifyContent: "center",
           }}
@@ -1384,7 +1390,7 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
           <Icon
             n="send"
             s={20}
-            c={draft.trim() ? t.palette.bg : t.palette.faint}
+            c={draft.trim() ? t.palette.accentInk : t.palette.faint}
           />
         </Pressable>
       </Row>

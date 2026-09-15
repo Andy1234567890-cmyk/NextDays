@@ -96,3 +96,31 @@ export function heuteIso(): string {
   const t = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${m}-${t}`;
 }
+
+/**
+ * Der BEGINN des laufenden Tages BEIM NUTZER, als ISO-Zeitpunkt.
+ *
+ * Gegenstück: `tagesendeIso`. Mit beiden Grenzen lässt sich „überfällig" (vor
+ * dem Beginn) von „heute fällig" (dazwischen) trennen. Mit nur einer Grenze
+ * landete eine drei Wochen alte Aufgabe unter „heute" — deshalb verlangt
+ * `/tasks/startseite` beide oder keine.
+ *
+ * Auf dem GERÄT gerechnet und nicht auf dem Server: Der Kalendertag einer
+ * Aufgabe hängt an der Zone des Objekts, und live haben 24 von 43 Objekten
+ * keine gepflegte Zone — eine dort unterstellte Zone wäre ein erfundener Wert
+ * (Wurzel 4).
+ *
+ * Zwilling zu `web/lib/aufgaben-konstanten.ts`.
+ */
+export function tagesbeginnIso(): string {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+}
+
+/** Das ENDE des laufenden Tages beim Nutzer (= Beginn des Folgetages). */
+export function tagesendeIso(): string {
+  const d = new Date();
+  d.setHours(24, 0, 0, 0);
+  return d.toISOString();
+}

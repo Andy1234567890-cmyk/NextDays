@@ -42,6 +42,8 @@ import {
   deleteAttachment,
   getAiReply,
   istBuchungsThread,
+  istEigentuemerThread,
+  kannKiVorschlag,
   listAttachments,
   uploadAttachment,
   listScheduled,
@@ -417,14 +419,25 @@ export function AntwortWerkzeuge({
         header={<Txt v="title">Antworten mit …</Txt>}
       >
         <Col>
-          {werkzeug("doc", "Vorlage einfügen", "Mit den Daten dieser Buchung gefüllt", () => {
+          {/* Die Vorlage wird serverseitig mit den Buchungsdaten gefüllt
+              (`/render`) — ohne Buchungszeile gibt es nichts zu füllen. */}
+          {istBuchungsThread(threadId) &&
+            werkzeug("doc", "Vorlage einfügen", "Mit den Daten dieser Buchung gefüllt", () => {
             onSchliessen();
             vorlagenOeffnen();
           })}
-          {werkzeug(
+          {/* Zwei Quellen, ein Knopf: Bei einer Buchung entsteht der Entwurf
+              aus Verlauf und Buchung, beim Eigentümer-Chat aus Objekt,
+              offenen Aufgaben und Belegung. Für die übrigen Nebenquellen gibt
+              es serverseitig keinen Weg — dort bleibt der Knopf weg, statt
+              einen 404 als „Kein Vorschlag" auszugeben. */}
+          {kannKiVorschlag(threadId) &&
+            werkzeug(
             "sparkle",
             kiLaeuft ? "Vorschlag wird erstellt …" : "KI-Vorschlag",
-            "Entwurf aus Verlauf und Buchung — du schickst ihn ab",
+            istEigentuemerThread(threadId)
+              ? "Entwurf aus Objekt, Aufgaben und Belegung — du schickst ihn ab"
+              : "Entwurf aus Verlauf und Buchung — du schickst ihn ab",
             () => {
               onSchliessen();
               kiVorschlag();
@@ -449,6 +462,15 @@ export function AntwortWerkzeuge({
               onSchliessen();
               anhaengeOeffnen();
             })}
+          {/* Bleibt nichts übrig (Anfrage, Marktplatz, übernommener Verlauf,
+              WhatsApp), steht hier der Grund. Ein leeres Sheet sähe aus wie
+              ein Ladefehler und verschwiege ihn (Wurzel 5). */}
+          {!istBuchungsThread(threadId) && !kannKiVorschlag(threadId) && (
+            <Txt v="sm" soft>
+              Für diesen Verlauf gibt es keine Werkzeuge — sie hängen an einer
+              Buchung, und dieser Vorgang hat keine.
+            </Txt>
+          )}
         </Col>
       </Sheet>
 
@@ -621,7 +643,15 @@ export function AntwortWerkzeuge({
                     Dazu fehlt der KI eine Angabe: {ki.fehlende_angabe}
                   </Txt>
                 </Row>
-                {lernOffen ? (
+                {/* „Beibringen" schreibt in die GÄSTE-Wissensdatenbank
+                    (`inbox_knowledge_fact`). Der Eigentümer-Kontext liest sie
+                    nicht — er schöpft aus Objekt, Aufgaben und Belegung
+                    (`ki_eigentuemer.kontext_bauen`). Den Knopf dort anzubieten
+                    hieße, einen Fakt zu speichern, der nie wieder auftaucht:
+                    Arbeit ohne Wirkung, und niemand würde es merken. Die
+                    Lücke selbst steht trotzdem oben — sie sagt dem
+                    Mitarbeiter, was er klären muss. */}
+                {!istBuchungsThread(threadId) ? null : lernOffen ? (
                   <Col gap={8}>
                     <TextInput
                       value={lernText}

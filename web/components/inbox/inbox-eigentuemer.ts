@@ -41,6 +41,22 @@ export function hatBuchungszeile(threadId: string): boolean {
 }
 
 /**
+ * Kann dieser Thread einen KI-Antwortvorschlag bekommen?
+ *
+ * Nicht dasselbe wie `hatBuchungszeile`, und genau darum eine eigene Funktion:
+ * Der Eigentümer-Chat hat keine Buchungszeile, bekommt aber seit 0708 einen
+ * eigenen Vorschlag — aus Objekt, offenen Aufgaben und Belegung statt aus
+ * Buchung und Gästemappe (`inbox/ki_eigentuemer.py`).
+ *
+ * Für Anfragen, Marktplatz, Übernahmen und WhatsApp gibt es serverseitig
+ * keinen Vorschlagsweg; dort lief der Knopf bis zum 15.09.2026 in den 404
+ * „Konversation nicht gefunden" und gab ihn als Ergebnis aus.
+ */
+export function kannKiVorschlag(threadId: string): boolean {
+  return hatBuchungszeile(threadId) || istEigentuemerThread(threadId);
+}
+
+/**
  * Die Präfixe des Servers (`inbox/service.py:_NEBENQUELLEN_PRAEFIXE`).
  *
  * Handkopie — es gibt kein Prüfskript, das beide Listen deckungsgleich hält.
