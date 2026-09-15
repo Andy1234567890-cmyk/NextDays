@@ -29,6 +29,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import urlencode
 
 from supabase import Client
 
@@ -36,6 +37,7 @@ from src.core.config import get_settings
 from src.core.logging import get_logger
 
 from .client import WhatsAppClient, WhatsAppError
+from .schemas import OnboardingStartLink
 from .templates import rollout
 
 log = get_logger("nextdays.whatsapp.onboarding")
@@ -208,3 +210,66 @@ class WhatsAppOnboarding:
         if not isinstance(wert, int) or wert <= 0:
             return None
         return datetime.fromtimestamp(wert, tz=UTC).isoformat()
+
+
+# Metas gehostete Onboarding-Seite (Business-Suite-Domain, NICHT graph.facebook.com).
+_SIGNUP_HOST = "https://business.facebook.com"
+
+
+def startlink() -> OnboardingStartLink:
+    """Die Adresse von Metas gehosteter Embedded-Signup-Seite (Schritt 1 oben).
+
+    Serverseitig gebaut, damit App- und Konfigurations-ID nicht im
+    Frontend-Bundle stehen und sich ohne Neu-Deploy des Frontends ändern
+    lassen — beim Wechsel auf eine neue Meta-App ist das der ganze Aufwand.
+
+    Drei Ausgänge, und alle drei sagen die Wahrheit statt eine kaputte URL zu
+    liefern (Wurzel 4):
+
+    * **Pause** — der Verbinden-Weg ist bewusst abgeschaltet (Neuaufbau der
+      Meta-App). Geprüft VOR der Konfiguration: während eines Neuaufbaus zeigen
+      App- und Konfigurations-ID noch auf die alte, tote App. Der Link wäre
+      baubar und führte den Betrieb geradewegs in Metas nichtssagendes
+      „Feature nicht verfügbar" — was aussieht, als sei UNSER Produkt kaputt.
+    * **Nicht konfiguriert** — eine der beiden IDs fehlt.
+    * **Bereit** — die fertige Adresse.
+
+    Die Pause hält NUR das Verbinden an. Bestehende Kunden senden und empfangen
+    weiter; dafür bleiben `whatsapp_app_id` und die Token gültig. Genau deshalb
+    ist es ein eigener Schalter und nicht das Leeren der App-ID: die hängt auch
+    am Token-Tausch und an `debug_token` für BESTEHENDE Verbindungen (Wurzel 1 —
+    wer sie leert, legt nebenbei den Bestand lahm).
+    """
+    s = get_settings()
+    if s.whatsapp_onboarding_pause:
+        return OnboardingStartLink(
+            available=False,
+            reason=(
+                s.whatsapp_onboarding_pause_grund.strip()
+                or (
+                    "Das Verbinden neuer WhatsApp-Nummern ist gerade "
+                    "vorübergehend nicht möglich — wir richten den Zugang "
+                    "bei WhatsApp neu ein. Bestehende Verbindungen laufen "
+                    "normal weiter. Wir melden uns, sobald es wieder geht."
+                )
+            ),
+        )
+    if not s.whatsapp_app_id or not s.whatsapp_signup_config_id:
+        return OnboardingStartLink(
+            available=False,
+            reason=(
+                "Das WhatsApp-Onboarding ist noch nicht konfiguriert "
+                "(App- oder Konfigurations-ID fehlt)."
+            ),
+        )
+    query = urlencode(
+        {
+            "app_id": s.whatsapp_app_id,
+            "config_id": s.whatsapp_signup_config_id,
+            "extras": '{"version":"v4"}',
+        }
+    )
+    return OnboardingStartLink(
+        available=True,
+        url=f"{_SIGNUP_HOST}/messaging/whatsapp/onboard/?{query}",
+    )

@@ -1286,3 +1286,90 @@ def test_trennen_wirkt_nur_auf_den_eigenen_betrieb(monkeypatch) -> None:  # noqa
     verbleibend = db.store["whatsapp_account"]
     assert [r["tenant_id"] for r in verbleibend] == ["t2"]
     assert client.abgemeldet == ["w1"]
+
+
+# --- Onboarding-Pause: Neuaufbau der Meta-App -------------------------------
+#
+# Der Anlass (15.09.2026): das Business-Portfolio, dem die Meta-App gehörte,
+# wurde versehentlich gelöscht. Damit stirbt der Embedded Signup, Meta
+# antwortet Kunden aber nur mit „Feature nicht verfügbar" — was aussieht, als
+# sei UNSER Produkt kaputt. Die Pause schaltet den Verbinden-Weg ab und sagt
+# stattdessen die Wahrheit.
+
+
+class _FakeSettings:
+    """Nur die Felder, die `onboarding_startlink` liest."""
+
+    def __init__(self, **werte: object) -> None:
+        self.whatsapp_app_id = "111"
+        self.whatsapp_signup_config_id = "222"
+        self.whatsapp_onboarding_pause = False
+        self.whatsapp_onboarding_pause_grund = ""
+        for k, v in werte.items():
+            setattr(self, k, v)
+
+
+def _startlink(monkeypatch, **werte: object):  # noqa: ANN001, ANN202
+    """Gerufen wird ueber den SERVICE, gepatcht wird in `onboarding`.
+
+    Absicht: der Test geht denselben Weg wie der Router
+    (`service.onboarding_startlink()`) und haelt damit fest, dass die
+    Durchreiche steht — waere sie kaputt, faellt es hier auf und nicht erst
+    beim Kunden.
+    """
+    from src.features.whatsapp import onboarding as wa_onboarding
+
+    monkeypatch.setattr(wa_onboarding, "get_settings", lambda: _FakeSettings(**werte))
+    return WhatsAppService.onboarding_startlink()
+
+
+def test_startlink_normal(monkeypatch) -> None:  # noqa: ANN001
+    res = _startlink(monkeypatch)
+    assert res.available is True
+    assert res.url is not None
+    assert "app_id=111" in res.url
+    assert "config_id=222" in res.url
+
+
+def test_pause_haelt_das_verbinden_an(monkeypatch) -> None:  # noqa: ANN001
+    """Kein Link, und der Grund ist für den BETRIEB geschrieben, nicht für uns."""
+    res = _startlink(monkeypatch, whatsapp_onboarding_pause=True)
+    assert res.available is False
+    assert res.url is None
+    assert "vorübergehend nicht möglich" in (res.reason or "")
+    # Die Zusage, die den Betrieb wirklich beruhigt: Bestand läuft weiter.
+    assert "Bestehende Verbindungen" in (res.reason or "")
+
+
+def test_pause_gilt_auch_bei_gesetzter_alter_app(monkeypatch) -> None:  # noqa: ANN001
+    """Der Kern: App- und Konfigurations-ID zeigen noch auf die TOTE App.
+
+    Ohne die Pause wäre der Link baubar — und führte den Betrieb geradewegs in
+    Metas nichtssagende Fehlermeldung.
+    """
+    res = _startlink(
+        monkeypatch,
+        whatsapp_onboarding_pause=True,
+        whatsapp_app_id="1767530547737119",
+        whatsapp_signup_config_id="2149219288968730",
+    )
+    assert res.available is False
+    assert res.url is None
+
+
+def test_eigener_pausentext_schlaegt_den_standard(monkeypatch) -> None:  # noqa: ANN001
+    """Ohne Deploy ein genauerer Stand — leer bleibt der Standardtext."""
+    res = _startlink(
+        monkeypatch,
+        whatsapp_onboarding_pause=True,
+        whatsapp_onboarding_pause_grund="  Zurück ab dem 20.09.  ",
+    )
+    assert res.reason == "Zurück ab dem 20.09."
+
+
+def test_ohne_pause_und_ohne_konfiguration_bleibt_die_alte_meldung(
+    monkeypatch,  # noqa: ANN001
+) -> None:
+    res = _startlink(monkeypatch, whatsapp_signup_config_id="")
+    assert res.available is False
+    assert "nicht konfiguriert" in (res.reason or "")

@@ -489,6 +489,21 @@ class Settings(BaseSettings):
     # Redirect-URI im App-Dashboard („Von Meta gehostetes Embedded Signup").
     # Ohne sie kann der Betrieb den Verbinden-Vorgang nicht starten.
     whatsapp_signup_config_id: str = ""
+    # onboarding_pause: hält NUR den Verbinden-Vorgang an, nicht den Betrieb.
+    # Gebraucht, wenn die Meta-App neu aufgebaut wird: bestehende Kunden senden
+    # und empfangen weiter (dafür bleiben app_id und Token gültig), aber ein
+    # neuer Betrieb läuft nicht mehr in Metas nichtssagendes „Feature nicht
+    # verfügbar" — er bekommt von UNS eine ehrliche Auskunft.
+    #
+    # Warum ein eigener Schalter und nicht einfach die Konfigurations-ID leeren:
+    # `whatsapp_app_id` hängt auch am Token-Tausch und an `debug_token` für
+    # BESTEHENDE Verbindungen. Wer sie leert, um das Onboarding zu stoppen,
+    # legt nebenbei die Bestandskunden lahm (Wurzel 1 — der Gegenzustand).
+    whatsapp_onboarding_pause: bool = False
+    # Was dem Betrieb während der Pause angezeigt wird. Leer → ein neutraler
+    # Standardtext aus dem Service; hier lässt sich ohne Deploy ein genauerer
+    # Stand hinterlegen („zurück ab 20.09.").
+    whatsapp_onboarding_pause_grund: str = ""
     whatsapp_verify_token: SecretStr = SecretStr("")
     whatsapp_app_secret: SecretStr = SecretStr("")
     whatsapp_graph_version: str = "v25.0"

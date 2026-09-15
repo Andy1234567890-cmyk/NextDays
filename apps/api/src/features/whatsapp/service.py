@@ -9,7 +9,6 @@ bestehende Konversation bzw. den konfigurierten Default-Tenant — nie geraten.
 """
 import re
 from datetime import UTC, datetime, timedelta
-from urllib.parse import urlencode
 
 from supabase import Client
 
@@ -44,7 +43,7 @@ from . import sendezustand, trennen
 from .client import WhatsAppClient, WhatsAppError
 from .fehler import WhatsAppServiceError
 from .fehler import als_service_fehler as _als_service_fehler
-from .onboarding import OnboardingError, WhatsAppOnboarding
+from .onboarding import OnboardingError, WhatsAppOnboarding, startlink
 from .reservierungs_kontext import kontext_aus_reservierung
 from .schemas import (
     OnboardingResult,
@@ -73,8 +72,6 @@ log = get_logger("nextdays.whatsapp")
 # No Resale) eine unzulässige "fee for your Customers' use of the WhatsApp
 # Business Platform" — erlaubt sind nur Gebühren für Leistungen, die von der
 # Plattform-Nutzung unabhängig sind. Deshalb steht hier bewusst kein Feature-Gate.
-# Metas gehostete Onboarding-Seite (Business-Suite-Domain, NICHT graph.facebook.com).
-_SIGNUP_HOST = "https://business.facebook.com"
 
 # Wie viel Verlauf aus der DB geholt wird. Begrenzt, weil ein Prompt, der mit
 # der Konversation waechst, irgendwann teuer und ungenau wird (Wurzel 8).
@@ -129,32 +126,11 @@ class WhatsAppService:
     def onboarding_startlink() -> OnboardingStartLink:
         """Die Adresse von Metas gehosteter Embedded-Signup-Seite.
 
-        Wird serverseitig gebaut, damit App- und Konfigurations-ID nicht im
-        Frontend-Bundle stehen und sich ohne Neu-Deploy des Frontends ändern
-        lassen. Fehlt eine der beiden IDs, ist der Vorgang nicht startbar —
-        dann sagt der Endpunkt das klar, statt eine kaputte URL zu liefern
-        (Wurzel 4).
+        Gebaut wird sie in `onboarding.startlink` — dort, wo auch der Rest des
+        Vorgangs steht. Hier bleibt nur die Durchreiche, damit der Router
+        weiterhin `service.onboarding_startlink()` ruft.
         """
-        s = get_settings()
-        if not s.whatsapp_app_id or not s.whatsapp_signup_config_id:
-            return OnboardingStartLink(
-                available=False,
-                reason=(
-                    "Das WhatsApp-Onboarding ist noch nicht konfiguriert "
-                    "(App- oder Konfigurations-ID fehlt)."
-                ),
-            )
-        query = urlencode(
-            {
-                "app_id": s.whatsapp_app_id,
-                "config_id": s.whatsapp_signup_config_id,
-                "extras": '{"version":"v4"}',
-            }
-        )
-        return OnboardingStartLink(
-            available=True,
-            url=f"{_SIGNUP_HOST}/messaging/whatsapp/onboard/?{query}",
-        )
+        return startlink()
 
     def onboarding_verbinden(
         self, ctx: AuthContext, *, code: str
