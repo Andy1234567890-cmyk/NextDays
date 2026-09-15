@@ -17,8 +17,16 @@ Agentur (§4.2 read-only-Portal, kein Finanz-/Vertriebseinblick).
 from typing import Annotated
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response
+
+# Starlettes `UploadFile` und NICHT FastAPIs gleichnamige Unterklasse: der
+# Multipart-Parser erzeugt Starlette-Instanzen, `isinstance(teil,
+# fastapi.UploadFile)` ist für die also IMMER False. Mit FastAPIs Klasse blieb
+# die Bilderliste in `melde_schaden` leer, und der Service wies JEDE
+# Schadensmeldung mit „Ohne Foto keine Schadensmeldung" ab — auch die mit Foto.
+# Dieselbe Quelle wie in `core.uploads`.
+from starlette.datastructures import UploadFile
 
 from src.core.security import CurrentUser
 from src.core.uploads import MAX_UPLOAD_BYTES, read_upload_named
