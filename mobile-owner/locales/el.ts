@@ -215,7 +215,6 @@ export const el: Katalog = {
   "mehr.auslastungText": "Πληρότητα και πηγές κρατήσεων",
   "mehr.sprache": "Γλώσσα",
   "mehr.spracheWaehlen": "Επιλέξτε γλώσσα",
-  "mehr.andereAppText": "Η εφαρμογή για τη διαχείριση — αν νοικιάζετε εσείς",
   "mehr.abmelden": "Αποσύνδεση",
   "mehr.wirdAbgemeldet": "Αποσύνδεση…",
   "stat.titel": "Πληρότητα & Κανάλια",

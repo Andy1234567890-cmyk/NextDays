@@ -215,7 +215,6 @@ export const mt: Katalog = {
   "mehr.auslastungText": "Okkupanza u sorsi ta' prenotazzjoni",
   "mehr.sprache": "Lingwa",
   "mehr.spracheWaehlen": "Agħżel lingwa",
-  "mehr.andereAppText": "L-app għall-maniġment — jekk tikri int stess",
   "mehr.abmelden": "Idħol barra",
   "mehr.wirdAbgemeldet": "Qed toħroġ…",
   "stat.titel": "Okkupanza u Kanali",

@@ -215,7 +215,6 @@ export const fi: Katalog = {
   "mehr.auslastungText": "Käyttöaste ja varauslähteet",
   "mehr.sprache": "Kieli",
   "mehr.spracheWaehlen": "Valitse kieli",
-  "mehr.andereAppText": "Hallintasovellus – jos vuokraat itse",
   "mehr.abmelden": "Kirjaudu ulos",
   "mehr.wirdAbgemeldet": "Kirjaudutaan ulos…",
   "stat.titel": "Käyttöaste ja kanavat",

@@ -215,7 +215,6 @@ export const lt: Katalog = {
   "mehr.auslastungText": "Užimtumas ir užsakymų šaltiniai",
   "mehr.sprache": "Kalba",
   "mehr.spracheWaehlen": "Pasirinkti kalbą",
-  "mehr.andereAppText": "Valdymo programėlė – jei nuomojate patys",
   "mehr.abmelden": "Atsijungti",
   "mehr.wirdAbgemeldet": "Atsijungiama…",
   "stat.titel": "Užimtumas ir kanalai",

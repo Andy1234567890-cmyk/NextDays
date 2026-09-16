@@ -215,7 +215,6 @@ export const lv: Katalog = {
   "mehr.auslastungText": "Aizpildījums un rezervēšanas avoti",
   "mehr.sprache": "Valoda",
   "mehr.spracheWaehlen": "Izvēlēties valodu",
-  "mehr.andereAppText": "Lietotne administrācijai — ja izīrējat pats",
   "mehr.abmelden": "Izrakstīties",
   "mehr.wirdAbgemeldet": "Notiek atteikšanās...",
   "stat.titel": "Noslogojums un kanāli",

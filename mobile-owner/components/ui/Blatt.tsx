@@ -185,7 +185,7 @@ export function BlattOption({
           </Txt>
         ) : null}
       </View>
-      {aktiv ? <Icon n="check" s={18} sw={2.2} c={t.palette.accent} /> : null}
+      {aktiv ? <Icon n="check" s={18} sw={2.2} c={t.palette.accentText} /> : null}
     </Pressable>
   );
 }

@@ -215,7 +215,6 @@ export const ga: Katalog = {
   "mehr.auslastungText": "Áitiú agus Foinsí Áirithinte",
   "mehr.sprache": "Teanga",
   "mehr.spracheWaehlen": "Roghnaigh Teanga",
-  "mehr.andereAppText": "An aip don bhainistíocht — má dhéanann tú féin cíos",
   "mehr.abmelden": "Logáil Amach",
   "mehr.wirdAbgemeldet": "Á bhaint den chuntas …",
   "stat.titel": "Áitíocht & Cainéil",

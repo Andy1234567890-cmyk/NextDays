@@ -10,8 +10,8 @@ import {
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useStripe } from "@stripe/stripe-react-native";
-import { useCallback, useEffect } from "react";
-import { Linking } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Linking, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -74,36 +74,49 @@ const linking: LinkingOptions<RootStackParamList> = {
 
 function Root() {
   const { status } = useGuestAuth();
-
-  // Token-Check läuft noch → Splash hält den Screen (kein Flackern).
-  if (status === "loading") return <Splash />;
+  // Hält den Splash, bis SEINE Bewegung durch ist — unabhängig davon, wie
+  // schnell der Auth-Status steht. WICHTIG: wie alle Hooks vor den frühen
+  // Abbrüchen (Rules of Hooks).
+  const [splashFertig, setSplashFertig] = useState(false);
 
   const angemeldet = status === "signedIn";
 
+  // Token-Check läuft noch → nur der Splash steht.
+  const bereit = status !== "loading";
+
+  // Der Splash liegt als Overlay ÜBER der Navigation und wird NICHT vom
+  // Auth-Status ausgehängt, sondern von seiner eigenen Meldung (`onFertig`).
+  // Erst beides zusammen ergibt den gewollten Ablauf: das Logo fliegt ein,
+  // steht, blendet aus — und darunter liegt schon der fertige Screen.
   return (
-    <NavigationContainer linking={linking} fallback={<Splash />}>
-      <Stack.Navigator initialRouteName="GuestTabs" screenOptions={{ headerShown: false }}>
-        {/* Immer verfügbar: der öffentliche Marktplatz. */}
-        <Stack.Screen name="GuestTabs" component={GuestTabs} />
-        <Stack.Screen name="ListingDetail" component={ListingDetail} />
-        {/* Buchen geht auch ohne Gast-Konto (Kontaktdaten im Formular) — so
-            arbeitet die öffentliche Buchungsstrecke des Backends. */}
-        <Stack.Screen name="Checkout" component={Checkout} options={{ presentation: "card" }} />
-        {angemeldet ? (
-          <>
-            {/* Nur mit Gast-Session: eigene Buchungen, Gastmappe, Merklisten.
-                Ohne Session existieren diese Routen nicht (Deep-Link-Guard). */}
-            <Stack.Screen name="Checkin" component={Checkin} options={{ presentation: "card" }} />
-            <Stack.Screen name="TripDetail" component={TripDetail} />
-            <Stack.Screen name="WishlistDetail" component={WishlistDetail} />
-            <Stack.Screen name="GuestAccount" component={GuestAccount} />
-            <Stack.Screen name="GuestMessages" component={GuestMessages} />
-          </>
-        ) : (
-          <Stack.Screen name="GuestLogin" component={GuestLogin} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={{ flex: 1 }}>
+      {bereit && (
+        <NavigationContainer linking={linking} fallback={<Splash />}>
+          <Stack.Navigator initialRouteName="GuestTabs" screenOptions={{ headerShown: false }}>
+            {/* Immer verfügbar: der öffentliche Marktplatz. */}
+            <Stack.Screen name="GuestTabs" component={GuestTabs} />
+            <Stack.Screen name="ListingDetail" component={ListingDetail} />
+            {/* Buchen geht auch ohne Gast-Konto (Kontaktdaten im Formular) — so
+                arbeitet die öffentliche Buchungsstrecke des Backends. */}
+            <Stack.Screen name="Checkout" component={Checkout} options={{ presentation: "card" }} />
+            {angemeldet ? (
+              <>
+                {/* Nur mit Gast-Session: eigene Buchungen, Gastmappe, Merklisten.
+                    Ohne Session existieren diese Routen nicht (Deep-Link-Guard). */}
+                <Stack.Screen name="Checkin" component={Checkin} options={{ presentation: "card" }} />
+                <Stack.Screen name="TripDetail" component={TripDetail} />
+                <Stack.Screen name="WishlistDetail" component={WishlistDetail} />
+                <Stack.Screen name="GuestAccount" component={GuestAccount} />
+                <Stack.Screen name="GuestMessages" component={GuestMessages} />
+              </>
+            ) : (
+              <Stack.Screen name="GuestLogin" component={GuestLogin} />
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      )}
+      {!splashFertig && <Splash onFertig={() => setSplashFertig(true)} />}
+    </View>
   );
 }
 

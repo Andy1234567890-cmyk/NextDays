@@ -138,7 +138,7 @@ export default function Zaehlerstand({ route }: { route: Route }) {
           {sendet ? txt("zaehler.wirdGespeichert") : txt("zaehler.speichern")}
         </Btn>
         {fehler ? (
-          <Txt v="xs" color={t.palette.accent} style={{ marginTop: 10 }}>
+          <Txt v="xs" color={t.palette.accentText} style={{ marginTop: 10 }}>
             {fehler}
           </Txt>
         ) : null}

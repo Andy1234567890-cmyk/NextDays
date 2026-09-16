@@ -215,7 +215,6 @@ export const cs: Katalog = {
   "mehr.auslastungText": "Obsazenost a zdroje rezervací",
   "mehr.sprache": "Jazyk",
   "mehr.spracheWaehlen": "Vybrat jazyk",
-  "mehr.andereAppText": "Aplikace pro správu – pokud pronajímáte sami",
   "mehr.abmelden": "Odhlásit se",
   "mehr.wirdAbgemeldet": "Odhlášení probíhá…",
   "stat.titel": "Vytížení a kanály",

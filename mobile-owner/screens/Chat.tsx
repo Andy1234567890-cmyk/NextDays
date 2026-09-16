@@ -30,6 +30,7 @@ import {
 
 import { Icon } from "@/components/ui/Icon";
 import { Btn, Kachel, Txt } from "@/components/ui/kit";
+import { Blatt, BlattOption } from "@/components/ui/Blatt";
 import { useT } from "@/contexts/SprachContext";
 import {
   bilderOeffnen,
@@ -223,7 +224,7 @@ export function Chat({ route }: Props) {
   // BEIDES: einen Meldeweg für Inhalte UND Menschen, und einen Weg heraus.
   // Der Wortlaut steht in `apps/api/.../owner_chat/moderation.py`.
   //
-  // `Alert` statt eines eigenen Blattes: die Auswahl ist vier Zeilen lang und
+  // Frueher `Alert` statt eines Blattes — siehe die Begruendung unten:
   // muss aus JEDER Nachricht heraus erreichbar sein. Ein Bottom-Sheet dafür
   // wäre mehr Bauteil als Nutzen — und der Meldeweg muss vor allem GEFUNDEN
   // werden, nicht schön sein.
@@ -241,30 +242,28 @@ export function Chat({ route }: Props) {
     [threadId, t],
   );
 
-  const meldeMenue = useCallback(
-    (messageId?: string) => {
-      Alert.alert(t("chat.melden"), t("chat.meldenGrund"), [
-        {
-          text: t("chat.grundBeleidigung"),
-          onPress: () => void meldenAusfuehren("beleidigung", messageId),
-        },
-        {
-          text: t("chat.grundBetrug"),
-          onPress: () => void meldenAusfuehren("betrug", messageId),
-        },
-        {
-          text: t("chat.grundUnerwuenscht"),
-          onPress: () => void meldenAusfuehren("unerwuenscht", messageId),
-        },
-        {
-          text: t("chat.grundAnderes"),
-          onPress: () => void meldenAusfuehren("anderes", messageId),
-        },
-        { text: t("chat.abbrechen"), style: "cancel" },
-      ]);
-    },
-    [meldenAusfuehren, t],
-  );
+  // MELDEN LÄUFT ÜBER EIN BLATT, NICHT ÜBER `Alert` (15.09.2026).
+  //
+  // `Alert.alert` nimmt auf ANDROID hoechstens DREI Knoepfe entgegen
+  // (neutral/negativ/positiv) und verwirft den Rest still
+  // (`Libraries/Alert/Alert.js`: `buttons.slice(0, 3)`). Die Auswahl hier ist
+  // vier Gruende lang plus Abbrechen — auf der Plattform, die eingereicht
+  // wird, fehlten damit "Anderes" und "Abbrechen". Der Meldeweg funktionierte
+  // noch, aber abgeschnitten, und ein Pruefer sieht ein halbes Menue.
+  //
+  // Das Blatt kennt keine Knopfgrenze und ist auf beiden Plattformen dasselbe.
+  const [meldeFuer, setMeldeFuer] = useState<{ messageId?: string } | null>(null);
+
+  const meldeMenue = useCallback((messageId?: string) => {
+    setMeldeFuer({ messageId });
+  }, []);
+
+  const meldeGruende: { schluessel: Meldegrund; label: string }[] = [
+    { schluessel: "beleidigung", label: t("chat.grundBeleidigung") },
+    { schluessel: "betrug", label: t("chat.grundBetrug") },
+    { schluessel: "unerwuenscht", label: t("chat.grundUnerwuenscht") },
+    { schluessel: "anderes", label: t("chat.grundAnderes") },
+  ];
 
   const beenden = useCallback(() => {
     Alert.alert(t("chat.beenden"), t("chat.beendenErklaerung"), [
@@ -451,6 +450,31 @@ export function Chat({ route }: Props) {
         </Btn>
       </View>
       )}
+
+      {/* Meldegruende als Blatt. Jede Zeile ist ein eigener Eintrag, kein
+          Knopf eines Systemdialogs — damit gibt es keine Dreier-Grenze und
+          alle vier Gruende sind auf beiden Plattformen erreichbar. */}
+      <Blatt
+        offen={meldeFuer !== null}
+        titel={t("chat.melden")}
+        schliessen={() => setMeldeFuer(null)}
+      >
+        <Txt v="xs" soft style={{ marginBottom: 10 }}>
+          {t("chat.meldenGrund")}
+        </Txt>
+        {meldeGruende.map((g) => (
+          <BlattOption
+            key={g.schluessel}
+            label={g.label}
+            aktiv={false}
+            auf={() => {
+              const fuer = meldeFuer;
+              setMeldeFuer(null);
+              void meldenAusfuehren(g.schluessel, fuer?.messageId);
+            }}
+          />
+        ))}
+      </Blatt>
     </KeyboardAvoidingView>
   );
 }
@@ -482,12 +506,22 @@ function Nachricht({ blase, melden }: { blase: Blase; melden: () => void }) {
           {blase.sender_name}
         </Txt>
       ) : null}
+      {/* Die Hinweiszeilen tragen dieselbe Farbregel wie der Text unten:
+          auf der EIGENEN Blase steht `accentInk` auf dem Markenrot, sonst der
+          gedämpfte Ton auf Weiss. Bis zum 15.09.2026 stand hier fest `soft`
+          bzw. `star` — beides ist ein dunkler Grauton und auf der roten Blase
+          praktisch unlesbar. Ein Hinweis, den man nicht lesen kann, ist
+          derselbe Fehler wie gar keiner. */}
       {blase.manipuliert ? (
-        <Txt v="klein" color={theme.palette.star}>
+        <Txt v="klein" color={eigene ? theme.palette.accentInk : theme.palette.star}>
           {t("chat.manipuliert")}
         </Txt>
       ) : blase.klartext === null ? (
-        <Txt v="klein" soft style={{ fontStyle: "italic" }}>
+        <Txt
+          v="klein"
+          color={eigene ? theme.palette.accentInk : theme.palette.soft}
+          style={{ fontStyle: "italic", opacity: eigene ? 0.9 : 1 }}
+        >
           {t("chat.nichtLesbar")}
         </Txt>
       ) : null}

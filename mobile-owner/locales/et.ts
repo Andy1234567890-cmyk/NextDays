@@ -215,7 +215,6 @@ export const et: Katalog = {
   "mehr.auslastungText": "Täituvus ja broneerimisallikad",
   "mehr.sprache": "Keel",
   "mehr.spracheWaehlen": "Vali keel",
-  "mehr.andereAppText": "Haldusrakendus – kui üürite ise välja",
   "mehr.abmelden": "Logi välja",
   "mehr.wirdAbgemeldet": "Logitakse välja …",
   "stat.titel": "Täituvus ja kanalid",

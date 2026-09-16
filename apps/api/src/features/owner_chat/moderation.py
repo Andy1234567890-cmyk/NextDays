@@ -15,14 +15,22 @@ Der Eigentümer-Chat (0611) ist beides zugleich: geschlossener, eingeladener
 Nutzerkreis UND Direktnachricht zwischen zwei Seiten. Eine Ausnahme für
 geschäftliche Kommunikation nennt die Richtlinie nicht.
 
-WAS DER SERVER DABEI NICHT KANN — und das gehört in die Prüfungs-Antwort, nicht
-unter den Teppich: Er kann den gemeldeten Text nicht lesen. Der Chat ist
-Ende-zu-Ende verschlüsselt (ADR-0029); `owner_messages.body` trägt Chiffretext.
-Moderiert wird deshalb über den METADATEN-Faden: wer hat wen gemeldet, wie oft,
-in welchem Gespräch — und über die Beschreibung des Melders. Das ist die
-„moderation … as is reasonable and consistent with the type of UGC hosted",
-die die Richtlinie verlangt; ein Auszug des Textes wäre nur zu haben, wenn man
-die Verschlüsselung aufhebt.
+WAS DER SERVER DABEI KANN — und das gehört in die Prüfungs-Antwort, richtig und
+nicht schöngefärbt: Er KANN den gemeldeten Text lesen. Seit dem Umbau am
+09.09.2026 verschlüsselt und entschlüsselt der Server selbst
+(`owner_chat/serverkrypto.py`, AES-256-GCM mit einem Schlüssel aus seiner
+Umgebung); `owner_messages.body` trägt Chiffretext, den der Server öffnen kann.
+
+Bis zum 15.09.2026 stand hier das Gegenteil — noch aus der Zeit vor dem Umbau,
+als ADR-0029 echte Ende-zu-Ende-Verschlüsselung vorsah. Diese Zeilen waren die
+Quelle, aus der die Formularantwort an Google abgeschrieben wurde: eine
+Falschaussage genau an der Stelle, an der die UGC-Richtlinie entscheidet, ob die
+Moderation „reasonable and consistent with the type of UGC hosted" ist. Dass der
+Server mitlesen kann, ist für diese Prüfung das BESSERE Ergebnis — es
+falsch anzugeben wäre teurer als die Wahrheit.
+
+Moderiert wird trotzdem primär über den METADATEN-Faden: wer hat wen gemeldet,
+wie oft, in welchem Gespräch — und über die Beschreibung des Melders.
 
 WARUM STOPP UND NICHT BLOCKIEREN: siehe Migration 0615. Die Gegenseite ist die
 Verwaltung der eigenen Objekte; ein Knopf „Verwaltung blockieren" wäre eine
@@ -205,6 +213,32 @@ def ist_gestoppt(db: Client, *, thread_id: str, user_id: str) -> bool:
         .select("id")
         .eq("thread_id", thread_id)
         .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+    ).data or []
+    return bool(zeilen)
+
+
+def faden_gestoppt(db: Client, *, thread_id: str) -> bool:
+    """Hat IRGENDJEMAND diesen Faden beendet?
+
+    Die Gegenfrage zu `ist_gestoppt`, und sie fehlte bis zum 15.09.2026.
+    `ist_gestoppt` fragt nach EINER Person und schuetzt damit nur den, der
+    beendet hat, vor sich selbst: der Eigentuemer konnte nicht mehr schreiben,
+    bekam aber weiter Nachrichten UND Push von der Verwaltung, weil der
+    Agentur-Pfad (`inbox/router.chat_senden`) gar nicht fragte.
+
+    Googles UGC-Richtlinie verlangt fuer 1:1-Nachrichten ausdruecklich eine
+    Moeglichkeit, NUTZER ZU BLOCKIEREN. Ein Stopp, der nur die eigene Stimme
+    abschaltet, ist keine — er ist eine Stummschaltung. Deshalb sperrt eine
+    beliebige Stopp-Zeile den Faden fuer BEIDE Seiten.
+    """
+    if not thread_id:
+        return False
+    zeilen = (
+        db.table(STOPPS)
+        .select("id")
+        .eq("thread_id", thread_id)
         .limit(1)
         .execute()
     ).data or []

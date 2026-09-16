@@ -215,7 +215,6 @@ export const hu: Katalog = {
   "mehr.auslastungText": "Foglaltág és foglalási források",
   "mehr.sprache": "Nyelv",
   "mehr.spracheWaehlen": "Nyelv kiválasztása",
-  "mehr.andereAppText": "Az alkalmazás az adminisztrációhoz – ha Ön maga adja bérbe",
   "mehr.abmelden": "Kijelentkezés",
   "mehr.wirdAbgemeldet": "Kijelentkezés folyamatban…",
   "stat.titel": "Kihasználtság és csatornák",

@@ -8,7 +8,7 @@
 // Vornamen, EIN Logo — darunter aber die Summe ALLER Einheiten dieser Nacht.
 // Der Betrag stimmte, die Zuordnung war falsch. Ein Chip je Aufenthalt und
 // Einheit beantwortet beides eindeutig: wer, woher, was bringt die Nacht.
-import type { PortalCalendarDay, PortalSeason } from "@/lib/ownerPortal";
+import type { PortalCalendarDay } from "@/lib/ownerPortal";
 import type { TextSchluessel } from "@/lib/sprache";
 import type { Uebersetzer } from "@/lib/zeitraum";
 
@@ -238,26 +238,6 @@ export function bahnenVerteilen(segmente: Segment[]): {
     sichtbar.push({ segment: seg, bahn });
   }
   return { sichtbar, ueberlauf };
-}
-
-/** Für jeden Tag die geltende Saison — letzte Zuweisung gewinnt (wie im Web). */
-export function saisonProTag(seasons: PortalSeason[]): Map<string, PortalSeason> {
-  const map = new Map<string, PortalSeason>();
-  for (const s of seasons) {
-    for (const a of s.assignments) {
-      // Über ISO-Strings iterieren, ohne Date-Objekte in lokaler Zeit —
-      // kein Zeitzonen-Versatz (siehe `iso` im Kalender-Screen).
-      const [y, m, d] = a.start_date.split("-").map(Number);
-      const [ey, em, ed] = a.end_date.split("-").map(Number);
-      const cursor = new Date(Date.UTC(y, m - 1, d));
-      const ende = new Date(Date.UTC(ey, em - 1, ed));
-      while (cursor <= ende) {
-        map.set(cursor.toISOString().slice(0, 10), s);
-        cursor.setUTCDate(cursor.getUTCDate() + 1);
-      }
-    }
-  }
-  return map;
 }
 
 // Dieselben Texte wie das Web (web/messages/de.json, portal.calendar). Ein

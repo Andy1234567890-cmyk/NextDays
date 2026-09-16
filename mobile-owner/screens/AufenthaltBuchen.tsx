@@ -495,7 +495,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
             und abgerechnet — nach Genehmigung. Ohne Auswahl keine Aufgabe. */}
         {leistungenFehler ? (
           <Kachel>
-            <Txt v="sm" color={t.palette.accent}>
+            <Txt v="sm" color={t.palette.accentText}>
               {leistungenFehler}
             </Txt>
           </Kachel>
@@ -593,7 +593,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
 
         {fehler ? (
           <Kachel>
-            <Txt v="sm" color={t.palette.accent}>
+            <Txt v="sm" color={t.palette.accentText}>
               {fehler}
             </Txt>
           </Kachel>
@@ -612,7 +612,7 @@ export default function AufenthaltBuchen({ navigation, route }: { navigation: Na
           backgroundColor: t.palette.surface2,
         }}
       >
-        <Btn variant="dark" block iconR="fwd" disabled={!fertigGewaehlt || !objektId || laeuft} onPress={() => void senden()}>
+        <Btn variant="primary" block iconR="fwd" disabled={!fertigGewaehlt || !objektId || laeuft} onPress={() => void senden()}>
           {txt(laeuft ? "allg.wirdGesendet" : "buchen.bestaetigen")}
         </Btn>
       </View>
@@ -736,14 +736,14 @@ function Zelle({
           justifyContent: "center",
           // Der Abreisetag bleibt UNGEFÜLLT und wird nur umrandet: er ist
           // keine gebuchte Nacht. Die Anreise ist gefüllt.
-          backgroundColor: istVon ? t.palette.ink : "transparent",
+          backgroundColor: istVon ? t.palette.accent : "transparent",
           borderWidth: istBis && bereich?.bis ? 2 : 0,
-          borderColor: t.palette.ink,
+          borderColor: t.palette.accent,
         }}
       >
         <Txt
           v="sm"
-          color={istVon ? t.palette.bg : inaktiv ? t.palette.faint : t.palette.ink}
+          color={istVon ? t.palette.accentInk : inaktiv ? t.palette.faint : t.palette.ink}
           style={{
             fontFamily: gewaehlt ? t.fonts.semibold : t.fonts.regular,
             textDecorationLine: belegt && !vergangen && !gewaehlt ? "line-through" : "none",

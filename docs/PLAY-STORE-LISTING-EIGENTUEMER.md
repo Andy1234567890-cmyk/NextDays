@@ -62,15 +62,15 @@ WAS SIE TUN KÖNNEN
 • Eigennutzung beantragen: Zeitraum wählen, Personenzahl und Wünsche angeben, absenden. Die Verwaltung entscheidet und sperrt die Nächte — Sie sperren nicht selbst.
 • Zählerstände melden: Strom, Wasser, Gas, direkt vom Zählerkasten.
 • Zugewiesene Aufgaben zurückmelden: Manche Eigentümer reinigen oder empfangen selbst. Was Ihnen zugewiesen wurde, sehen Sie hier und melden Anfang und Ende.
-• Der Verwaltung schreiben: ein Gespräch je Objekt, mit Bildanhang, Ende-zu-Ende verschlüsselt.
+• Der Verwaltung schreiben: ein Gespräch je Objekt, mit Bildanhang, verschlüsselt gespeichert.
 
 ZU DEN ZAHLEN
 
 Wo in dieser App Geld steht, ist es immer dieselbe Zahl: Ihre Netto-Auszahlung. Kein Gastpreis, kein Bruttoumsatz, kein Ertrag der Verwaltung. Kann ein Betrag nicht ausgewiesen werden, steht dort ein Strich — nie eine Null. Eine Null hieße „nichts verdient", ein Strich heißt „liegt uns nicht vor". Das ist ein Unterschied, und die App macht ihn.
 
-ZUR VERSCHLÜSSELUNG DER NACHRICHTEN
+ZU IHREN NACHRICHTEN
 
-Der Chat mit Ihrer Verwaltung wird auf Ihrem Gerät verschlüsselt und erst auf dem Gerät des Empfängers wieder geöffnet. Wir können ihn nicht mitlesen. Das hat einen Preis, den wir offen nennen: Es gibt keine Vorschau in der Übersicht, keinen Text in der Benachrichtigung, und Nachrichten, die älter sind als Ihr Gerät, bleiben verschlossen, bis Ihre Verwaltung den Verlauf freigibt. Der Sicherungscode beim Einrichten ist der einzige Weg, den Verlauf auf ein neues Gerät zu holen — schreiben Sie ihn auf.
+Ihre Nachrichten werden verschlüsselt übertragen und verschlüsselt gespeichert. Lesen kann sie Ihre Verwaltung — das ist der Zweck des Gesprächs. Was wir NICHT behaupten: dass niemand sonst sie technisch öffnen könnte. Der Schlüssel liegt auf unserem Server, nicht allein auf Ihrem Gerät. Wir schreiben das hin, weil eine Zusage, die man nicht halten kann, schlimmer ist als keine. Es gibt keine Vorschau in der Übersicht und keinen Text in der Benachrichtigung.
 
 WAS DIE APP NICHT TUT
 
@@ -126,15 +126,15 @@ WHAT YOU CAN DO
 • Request your own stay: pick the dates, state the number of guests and any wishes, send it. Your property manager decides and blocks the nights — you do not block them yourself.
 • Submit meter readings: electricity, water, gas, straight from the meter.
 • Report back on assigned tasks: some owners clean or welcome guests themselves. What has been assigned to you appears here, and you report start and finish.
-• Message your property manager: one conversation per property, with image attachments, end-to-end encrypted.
+• Message your property manager: one conversation per property, with image attachments, stored encrypted.
 
 ABOUT THE NUMBERS
 
 Wherever money appears in this app it is always the same figure: your net payout. Not the guest price, not gross revenue, not the manager's margin. Where an amount cannot be stated, you see a dash — never a zero. A zero would mean "earned nothing", a dash means "not available to us". That is a difference, and the app makes it.
 
-ABOUT MESSAGE ENCRYPTION
+ABOUT YOUR MESSAGES
 
-Your conversation with your property manager is encrypted on your device and only opened again on the recipient's device. We cannot read it. That has a price, and we name it openly: no preview in the overview, no text in the notification, and messages older than your device stay locked until your manager releases the history. The recovery code shown during setup is the only way to move the history to a new device — write it down.
+Your messages are encrypted in transit and encrypted at rest. Your property manager can read them — that is the point of the conversation. What we do not claim: that nobody else could technically open them. The key is held on our server, not on your device alone. We state this plainly, because a promise that cannot be kept is worse than none. There is no preview in the overview and no message text in notifications.
 
 WHAT THE APP DOES NOT DO
 
@@ -263,3 +263,23 @@ as long"). `screencapture` scheidet aus (keine Aufnahmeberechtigung, CLAUDE.md);
 | Enthält Werbung | Nein |
 | Government apps | Nein |
 | Finanzfunktionen | Keine — die App zeigt Beträge an, bewegt aber kein Geld |
+
+
+---
+
+## Warum hier keine Ende-zu-Ende-Zusage mehr steht (15.09.2026)
+
+Bis heute stand in beiden Sprachfassungen woertlich „Wir koennen ihn nicht
+mitlesen" bzw. „We cannot read it". Das Binary tut das Gegenteil:
+`mobile-owner/lib/chat.ts` sendet KLARTEXT, und
+`apps/api/.../owner_chat/serverkrypto.py` ver- UND entschluesselt mit einem
+Schluessel aus der Server-Umgebung — damit die Verwaltung im Dashboard
+mitlesen kann. Die App hatte die Zusage laengst zurueckgenommen
+(`locales/de.ts`, Schluessel `chat.*`), und `docs/APP-STORE-ANGABEN.md`
+verbietet den Satz ausdruecklich; nur dieses Listing trug ihn noch.
+
+Das waere gegenueber Google eine falsche Angabe zu Funktion UND Sicherheit
+(Misrepresentation, und im Data-Safety-Formular die Zeile „Data is
+end-to-end encrypted"). Der Satz zum Sicherungscode ist mit entfallen: der
+Einrichtungsbildschirm dafuer (`screens/ChatEinrichten.tsx`) ist in keinem
+Navigator registriert — es gibt den beschriebenen Ablauf nicht.

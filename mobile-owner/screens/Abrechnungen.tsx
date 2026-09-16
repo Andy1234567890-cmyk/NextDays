@@ -94,9 +94,9 @@ export default function Abrechnungen({ navigation }: { navigation: Nav }) {
                     paddingVertical: 8,
                     paddingHorizontal: 14,
                     borderRadius: 999,
-                    backgroundColor: aktiv ? t.palette.ink : t.palette.surface,
+                    backgroundColor: aktiv ? t.palette.accent : t.palette.surface,
                     borderWidth: 1,
-                    borderColor: aktiv ? t.palette.ink : t.palette.line,
+                    borderColor: aktiv ? t.palette.accent : t.palette.line,
                   }}
                 >
                   <Txt v="xs" color={aktiv ? t.palette.bg : t.palette.ink} style={{ fontFamily: t.fonts.medium }}>

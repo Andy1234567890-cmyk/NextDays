@@ -151,6 +151,20 @@ export function naechte(vonIso: string, bisIso: string): number {
   return Math.max(0, Math.round(ms / 86_400_000));
 }
 
+/**
+ * Tagesdifferenz MIT Vorzeichen: negativ, wenn `bisIso` frueher liegt.
+ *
+ * Abgegrenzt von `naechte()`, das mit `Math.max(0, …)` klemmt — richtig fuer
+ * eine Naechtezaehlung, falsch als Richtung. Genau diese Verwechslung liess
+ * bis zum 15.09.2026 keinen Kalender-Chip nach frueher ziehen: der Versatz
+ * wurde 0, die Vorschau ruehrte sich nicht, und das Loslassen brach ohne
+ * Meldung ab. Wer eine Bewegung braucht, nimmt das hier.
+ */
+export function tageDifferenz(vonIso: string, bisIso: string): number {
+  const ms = ausIso(bisIso).getTime() - ausIso(vonIso).getTime();
+  return Math.round(ms / 86_400_000);
+}
+
 /** Tag um n Tage verschoben, als ISO. */
 export function tagPlus(iso: string, n: number): string {
   const d = ausIso(iso);

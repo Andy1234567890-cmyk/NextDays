@@ -215,7 +215,6 @@ export const sl: Katalog = {
   "mehr.auslastungText": "Zasedenost in viri rezervacij",
   "mehr.sprache": "Jezik",
   "mehr.spracheWaehlen": "Izberite jezik",
-  "mehr.andereAppText": "Aplikacija za administracijo — če oddajate sami",
   "mehr.abmelden": "Odjava",
   "mehr.wirdAbgemeldet": "Odjava v teku …",
   "stat.titel": "Zasedenost in kanali",

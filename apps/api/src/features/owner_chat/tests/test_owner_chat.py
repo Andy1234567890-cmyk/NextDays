@@ -1260,6 +1260,27 @@ def test_stopp_gilt_nur_fuer_den_der_ihn_gesetzt_hat() -> None:
     assert not moderation.ist_gestoppt(db, thread_id="faden-1", user_id="user-familie")
 
 
+def test_faden_gestoppt_sperrt_auch_die_agentur() -> None:
+    """Die Gegenfrage zu `ist_gestoppt` — sie fehlte bis zum 15.09.2026.
+
+    `ist_gestoppt` fragt nach EINER Person und schuetzt damit nur den, der
+    beendet hat, vor sich selbst. Der Agentur-Pfad
+    (`inbox/router.chat_senden`) fragte gar nicht: der Eigentuemer konnte nach
+    "Gespraech beenden" nicht mehr schreiben, bekam aber weiter Nachrichten
+    UND Push. Das ist eine Stummschaltung der eigenen Stimme, kein
+    Blockieren — und Googles UGC-Richtlinie verlangt Letzteres.
+    """
+    db = _DB(_mod_basis())
+    moderation.stopp_setzen(
+        db, tenant_id=T, user_id="user-owner", thread_id="faden-1", grund=None
+    )
+    assert moderation.faden_gestoppt(db, thread_id="faden-1") is True
+    # Die Asymmetrie, die die Luecke war: fuer einen anderen Nutzer meldet
+    # `ist_gestoppt` weiterhin False.
+    assert not moderation.ist_gestoppt(db, thread_id="faden-1", user_id="user-agentur")
+    assert moderation.faden_gestoppt(db, thread_id="faden-2") is False
+
+
 def test_zweimal_stoppen_ist_ein_stopp() -> None:
     """Wurzel 2: der zweite Druck darf kein 23505 werfen."""
     db = _DB(_mod_basis())

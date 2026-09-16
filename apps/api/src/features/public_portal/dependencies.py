@@ -77,6 +77,73 @@ DienstleistungsServiceDep = Annotated[
 ]
 
 
+def require_portal_faehigkeit(cap: Capability) -> Callable[..., AuthContext]:
+    """Guard für eine Fähigkeit MIT Familien-Deckelung, ohne granulares Recht.
+
+    WOZU, und warum `require_permission` hier nicht reicht (gefunden
+    15.09.2026): Ein Familienmitglied trägt in `users` ebenfalls
+    `role='owner'`. `require_permission` wählt für Fähigkeiten, die weder in
+    `_PM_CAPABILITIES` noch in `_DB_ROLLE_ERFORDERLICH` stehen, den reinen
+    Rollenpfad und fragt `has_capability(ctx.role, cap)` — also die VOLLE
+    Eigentümer-Matrix. Die Deckelung aus 0389 (`owner_family_members.access`)
+    kam nur über `require_portal_recht`, und das hing an fünf Lese-Routen.
+
+    Damit stand `MOVE_OWN_RESERVATION` faktisch jedem Familienmitglied offen,
+    obwohl der Kommentar an `_MOVE` ausdrücklich das Gegenteil begründet: die
+    Tochter mit der Stufe `nutzung` konnte die bezahlte Buchung eines fremden
+    Gastes umlegen — samt Freigabe der alten Nächte und Nachzug an die
+    Portale. Dasselbe galt für `BOOK_SERVICES` (ein berechneter Auftrag) und
+    `ADD_METER_READING`.
+
+    Der Unterschied zu `require_portal_recht`: dort wird ZUSÄTZLICH ein
+    granulares Recht (`users.permissions`) verlangt. Für diese drei Fähigkeiten
+    gibt es keines — sie hängen allein an Rolle und Familienstufe. Deshalb
+    dieser zweite, schmalere Guard statt eines erfundenen `Permission`-Werts.
+
+    Rolle kommt aus der DATENBANK, nicht aus dem JWT (Wurzel 7). Fail-closed
+    (Wurzel 5): unbekannter Zustand → 403.
+    """
+
+    def _guard(
+        ctx: Annotated[AuthContext, Depends(get_current_user)],
+        konto: AccountServiceDep,
+        familie: OwnerFamilyServiceDep,
+    ) -> AuthContext:
+        role, stored = konto.role_and_permissions(ctx)
+        try:
+            stufe = familie.stufe(ctx)
+        except FamilieError as exc:
+            log.info(
+                "portal_faehigkeit_abgelehnt",
+                grund="kein_konto",
+                faehigkeit=cap.value,
+                user_id=ctx.user_id,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail=_ABGELEHNT
+            ) from exc
+        caps = effective_capabilities(
+            role,
+            has_pm_access=has_pm_access(role, stored),
+            family_access=stufe,
+        )
+        if cap not in caps:
+            log.info(
+                "portal_faehigkeit_abgelehnt",
+                grund="capability",
+                faehigkeit=cap.value,
+                user_id=ctx.user_id,
+                rolle=role.value if role else None,
+                familienstufe=stufe,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail=_ABGELEHNT
+            )
+        return ctx
+
+    return _guard
+
+
 def require_portal_recht(
     perm: Permission, cap: Capability
 ) -> Callable[..., AuthContext]:

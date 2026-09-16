@@ -222,7 +222,6 @@ export const de = {
   "mehr.auslastungText": "Belegung und Buchungsquellen",
   "mehr.sprache": "Sprache",
   "mehr.spracheWaehlen": "Sprache wählen",
-  "mehr.andereAppText": "Die App für die Verwaltung — falls Sie selbst vermieten",
   "mehr.abmelden": "Abmelden",
   "mehr.wirdAbgemeldet": "Wird abgemeldet …",
   "stat.titel": "Auslastung & Kanäle",

@@ -215,7 +215,6 @@ export const bg: Katalog = {
   "mehr.auslastungText": "Заетост и източници на резервации",
   "mehr.sprache": "Език",
   "mehr.spracheWaehlen": "Изберете език",
-  "mehr.andereAppText": "Приложението за управление — ако отдавате под наем сами",
   "mehr.abmelden": "Изход",
   "mehr.wirdAbgemeldet": "Излизане от профила...",
   "stat.titel": "Заетост и канали",

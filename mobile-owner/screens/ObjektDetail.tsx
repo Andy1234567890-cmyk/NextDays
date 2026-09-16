@@ -141,7 +141,7 @@ export default function ObjektDetail({
               wert={
                 objekt.size_value === null
                   ? null
-                  : `${objekt.size_value}${objekt.size_unit ? ` ${objekt.size_unit}` : ""}`
+                  : `${objekt.size_value}${flaechenEinheit(objekt.size_unit)}`
               }
             />
             <Zeile label={txt("obj.baujahr")} wert={objekt.year_built} />
@@ -179,7 +179,7 @@ export default function ObjektDetail({
           >
             <Kachel>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                <Icon n="sliders" s={22} c={t.palette.accent} />
+                <Icon n="sliders" s={22} c={t.palette.accentText} />
                 <View style={{ flex: 1 }}>
                   <Txt v="title">{txt("zaehler.titel")}</Txt>
                   <Txt v="xs" soft>
@@ -194,6 +194,27 @@ export default function ObjektDetail({
       ) : null}
     </ScrollView>
   );
+}
+
+/**
+ * Die Flächeneinheit als Zeichen, nicht als Datenbank-Kürzel.
+ *
+ * `properties.size_unit` trägt `sqm` bzw. `sqft` — ein Speicherwert, kein
+ * Text für den Bildschirm. Bis zum 15.09.2026 stand er hier ROH in der
+ * Zeile, und ein deutscher Eigentümer las „65 sqm". Das PMS bildet ihn längst
+ * ab (`web/components/objekte/property-overview.tsx`), nur diese App nicht —
+ * dieselbe Klasse wie das Wort „None" aus dem Kanal-Backstop (CLAUDE.md).
+ *
+ * `m²`/`ft²` sind Zeichen und keine Wörter, sie brauchen keine Übersetzung.
+ * Ein UNBEKANNTES Kürzel wird unverändert durchgereicht statt geraten: dann
+ * steht ein fremdes Kürzel da, und das ist sichtbar falsch — ein stillschweigend
+ * angenommenes „m²" wäre eine Falschaussage über die Grösse (Wurzel 4).
+ */
+export function flaechenEinheit(einheit: string | null): string {
+  if (!einheit) return "";
+  if (einheit === "sqm") return " m²";
+  if (einheit === "sqft") return " ft²";
+  return ` ${einheit}`;
 }
 
 /** Eine Eckdaten-Zeile. Fehlender Wert → „—", nie 0 oder erfunden (Wurzel 4). */

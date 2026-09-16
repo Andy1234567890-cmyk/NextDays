@@ -58,30 +58,17 @@
 			<key>NSPrivacyCollectedDataTypeTracking</key>
 			<false/>
 		</dict>
-		<dict>
-			<key>NSPrivacyCollectedDataType</key>
-			<string>NSPrivacyCollectedDataTypeName</string>
-			<key>NSPrivacyCollectedDataTypeLinked</key>
-			<true/>
-			<key>NSPrivacyCollectedDataTypePurposes</key>
-			<array>
-				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
-			</array>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
-		</dict>
-		<dict>
-			<key>NSPrivacyCollectedDataType</key>
-			<string>NSPrivacyCollectedDataTypePhoneNumber</string>
-			<key>NSPrivacyCollectedDataTypeLinked</key>
-			<true/>
-			<key>NSPrivacyCollectedDataTypePurposes</key>
-			<array>
-				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
-			</array>
-			<key>NSPrivacyCollectedDataTypeTracking</key>
-			<false/>
-		</dict>
+		<!-- NSPrivacyCollectedDataTypeName ENTFERNT (15.09.2026).
+		     Begruendung wie bei der Telefonnummer: `sender_name` wird nur
+		     EMPFANGEN und angezeigt (lib/chat.ts, screens/Chat.tsx). Kein
+		     ausgehender Rumpf der App traegt einen Namen - geprueft ueber alle
+		     `body:`-Stellen in lib/. Empfangen ist nicht erhoben. -->
+		<!-- NSPrivacyCollectedDataTypePhoneNumber ENTFERNT (15.09.2026).
+		     Die App sendet nirgends eine Telefonnummer; geprueft ueber alle
+		     ausgehenden Rumpfe in lib/. docs/APP-STORE-ANGABEN.md hat die Zeile
+		     am 09.09.2026 gestrichen und behauptete seither, diese Datei sei
+		     deckungsgleich - sie war es nicht. Eine Angabe, die das Binary
+		     nicht hergibt, ist bei Apple ein Sperrgrund. -->
 		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeUserID</string>

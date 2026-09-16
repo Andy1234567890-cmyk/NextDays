@@ -186,7 +186,7 @@ export default function Auszahlungen({ navigation }: { navigation: Nav }) {
             <Pressable onPress={() => navigation.navigate("Tabs", { screen: "Abrechnungen" })}>
               <Kachel>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-                  <Icon n="doc" s={22} c={t.palette.accent} />
+                  <Icon n="doc" s={22} c={t.palette.accentText} />
                   <View style={{ flex: 1 }}>
                     <Txt v="title">{txt("auszahlung.abrechnungen")}</Txt>
                     <Txt v="xs" soft>

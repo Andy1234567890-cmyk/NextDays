@@ -71,7 +71,7 @@ export function Nachrichten({ navigation }: Props) {
       }
     >
       {fehler ? (
-        <Txt v="klein" color={theme.palette.star}>
+        <Txt v="klein" color={theme.palette.accentText}>
           {fehler}
         </Txt>
       ) : null}

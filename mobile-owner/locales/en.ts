@@ -260,7 +260,6 @@ export const en: Katalog = {
   "mehr.auslastungText": "Bookings and booking channels",
   "mehr.sprache": "Language",
   "mehr.spracheWaehlen": "Choose language",
-  "mehr.andereAppText": "The app for management — if you rent out yourself",
   "mehr.abmelden": "Sign out",
   "mehr.wirdAbgemeldet": "Signing out …",
 

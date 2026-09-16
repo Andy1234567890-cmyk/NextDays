@@ -2,9 +2,11 @@
 <resources>
     <color name="splash_background_color">#FFFFFF</color>
     <!-- Hintergrund des adaptiven App-Icons. Der Wert ist AUS DEM ICON
-         gemessen (#0A0A0A, dieselbe Flaeche wie in AppIcon-1024.png), nicht
-         geschaetzt: Foreground und Background muessen exakt zusammenpassen,
-         sonst sitzt das Chevron auf einer anderen Schwarzstufe als das
-         Legacy-Icon daneben. -->
+         gemessen, nicht geschaetzt: Foreground und Background muessen exakt
+         zusammenpassen, sonst sitzt das Chevron auf einer anderen Flaeche als
+         das Legacy-Icon daneben. #B82028 ist die EIGENTUEMER-Flaeche (seit
+         09.09.2026, `scripts/mobile/icon-eigentuemer-erzeugen.py`); die
+         #0A0A0A aus dem alten Kommentar sind die der PMS-App und standen hier
+         noch aus der Zeit, als beide Apps dasselbe Symbol trugen. -->
     <color name="ic_launcher_background">#B82028</color>
 </resources>

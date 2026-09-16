@@ -234,7 +234,7 @@ export function ChatEinrichten({ onFertig }: Props) {
           }}
         />
         {fehler ? (
-          <Txt v="klein" color={theme.palette.star}>
+          <Txt v="klein" color={theme.palette.accentText}>
             {fehler}
           </Txt>
         ) : null}
@@ -260,7 +260,7 @@ export function ChatEinrichten({ onFertig }: Props) {
         {t("chat.einrichtenText")}
       </Txt>
       {fehler ? (
-        <Txt v="klein" color={theme.palette.star}>
+        <Txt v="klein" color={theme.palette.accentText}>
           {fehler}
         </Txt>
       ) : null}

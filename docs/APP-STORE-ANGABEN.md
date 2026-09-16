@@ -8,7 +8,7 @@ Berechtigungen), nicht geschätzt.
 Drei Apps = drei vollständige Sätze (ADR-0022). Vertauschen ist ein
 Ablehnungsgrund, weil Apple das Privacy Label gegen das Manifest im jeweiligen
 Binary prüft — und weil die drei Apps unterschiedlich viel dürfen: die
-Eigentümer-App hat bewusst KEINE Kamera- und Medienberechtigung, ein von
+Eigentümer-App hatte bis zum 09.09.2026 KEINE Kamera- und Medienberechtigung — SEITHER SCHON (Chat-Bildanhang, 0611: `CAMERA` im Manifest, beide Usage-Descriptions in der `Info.plist`). Wer das Formular aus diesem Kopfteil füllt, UNTER-deklariert Fotos; maßgeblich ist Abschnitt 2. Ein von
 myNextDays kopierter Satz würde also Zugriffe angeben, die es im Binary nicht
 gibt.
 
@@ -229,7 +229,7 @@ das Formular kennt keine anderen.
 | Google-Kategorie → Datenart | erhoben | mit Identität verknüpft | für Tracking | Zweck | Beleg im Binary |
 |---|---|---|---|---|---|
 | Personal info → **Email address** | ja | ja | nein | App-Funktionalität | `lib/auth.ts` (Anmeldung) |
-| Personal info → **Name** | ja | ja | nein | App-Funktionalität | `sender_name` an jeder Chat-Nachricht |
+| Personal info → **Name** | ~~ja~~ **nein** | – | – | – | **RAUS (15.09.2026):** `sender_name` wird nur EMPFANGEN und angezeigt (`lib/chat.ts`, `screens/Chat.tsx`). Kein ausgehender Rumpf der App trägt einen Namen — geprüft über alle `body:`-Stellen in `lib/`. Dieselbe Begründung, mit der am 09.09.2026 die Telefonnummer gestrichen wurde: empfangen ist nicht erhoben. |
 | Personal info → **User IDs** | ja | ja | nein | App-Funktionalität | jeder Aufruf über `lib/api.ts` im Auth-Kontext |
 | **Messages → Other in-app messages** | ja | ja | nein | App-Funktionalität | `lib/chat.ts` → `POST /public-portal/chat/objekt/{id}` |
 | Photos and videos → **Photos** | ja | ja | nein | App-Funktionalität | `lib/chat-bild.ts` + `POST /owner-chat/bilder` |
@@ -337,7 +337,8 @@ eine Prüfrunde.
   Gespräch ist es nicht. Danach nimmt der Server nichts mehr an (409), das
   Eingabefeld verschwindet, und der Weg zurück steht daneben.
 
-**Formularantwort zur Moderation, falls gefragt:** Der Inhalt ist Ende-zu-Ende
+**Formularantwort zur Moderation, falls gefragt (richtiggestellt 15.09.2026):**
+Der Server KANN eine gemeldete Nachricht lesen. Die frühere Antwort behauptete Ende-zu-Ende
 verschlüsselt (ADR-0029); der Server hat Chiffretext und kann eine gemeldete
 Nachricht nicht lesen. Moderiert wird über die Metadaten — wer meldet wen, wie
 oft, in welchem Gespräch — und über die Beschreibung des Melders. Das ist die
@@ -561,3 +562,19 @@ der Bestätigung hingewiesen.
    Barrierefreiheitserklärung (European Accessibility Act, seit 28.06.2025), die
    DSA-/P2B-Texte für Gastgeber sowie die Registrierungsnummer der Unterkunft
    nach EU-Verordnung 2024/1028 (Frist 20.05.2026 verstrichen).
+
+
+---
+
+## Richtigstellung 15.09.2026 — die E2E-Aussagen
+
+Drei Stellen behaupteten Ende-zu-Ende-Verschlüsselung, obwohl das Binary seit
+dem 09.09.2026 Klartext sendet und der Server mit eigenem Schlüssel ver- und
+entschlüsselt (`owner_chat/serverkrypto.py`): das Play-Listing, die
+Moderations-Formularantwort hier und der Docstring in
+`owner_chat/moderation.py`, aus dem sie stammte. Alle drei sind korrigiert.
+
+Gegenüber Google ist das doppelt relevant: als Angabe im Store-Text
+(Misrepresentation) und als Data-Safety-Zeile „Data is end-to-end encrypted".
+Richtig ist: verschlüsselt übertragen, verschlüsselt gespeichert, vom Anbieter
+technisch lesbar.

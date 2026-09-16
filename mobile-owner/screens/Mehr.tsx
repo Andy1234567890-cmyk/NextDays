@@ -1,9 +1,10 @@
-// Mehr — Konto, App-Wechsel, Rechtliches, Abmelden.
+// Mehr — Konto, Rechtliches, Abmelden.
 //
-// Der Sprung in die PMS-App ist ein APP-WECHSEL, keine Navigation
-// (`lib/appwechsel.ts`, ADR-0019): ist sie nicht installiert, führt der Weg in
-// den Store. Er steht hier, weil manche Eigentümer ihre Objekte auch selbst
-// verwalten — dann brauchen sie beide Apps, und dieser Weg ist der einzige.
+// KEIN Weg in die PMS-App. Bis zum 15.09.2026 stand hier eine Kachel
+// „myNextDays öffnen" (App-Wechsel über `lib/appwechsel.ts`, ADR-0019), für
+// Eigentümer, die ihre Objekte auch selbst verwalten. Sie ist entfernt: die
+// Eigentümer-App bedient GENAU EINE Rolle, und ein Verweis auf eine zweite
+// App, die die meisten nicht haben, ist im Menü ein Fremdkörper.
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,7 +17,6 @@ import { Btn, Kachel, Txt } from "@/components/ui/kit";
 import { Kopf } from "@/components/ui/Kopf";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSprache } from "@/contexts/SprachContext";
-import { zurAnderenApp } from "@/lib/appwechsel";
 import { useUnterkante } from "@/lib/unterkante";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -107,21 +107,6 @@ export default function Mehr({ navigation }: { navigation: Nav }) {
             erste={false}
           />
         </Kachel>
-
-        <Pressable onPress={() => void zurAnderenApp(t.marke.andereApp, "")}>
-          <Kachel>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <Icon n="share" s={22} c={t.palette.accent} />
-              <View style={{ flex: 1 }}>
-                <Txt v="title">{t.marke.andereApp.name} öffnen</Txt>
-                <Txt v="xs" soft>
-                  {txt("mehr.andereAppText")}
-                </Txt>
-              </View>
-              <Icon n="fwd" s={18} c={t.palette.faint} />
-            </View>
-          </Kachel>
-        </Pressable>
 
         <RechtlichesBlock />
 

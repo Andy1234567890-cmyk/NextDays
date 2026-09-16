@@ -176,7 +176,7 @@ export default function Anmelden() {
           )}
 
           {fehler ? (
-            <Txt v="xs" color={t.palette.accent} style={{ marginTop: 10 }}>
+            <Txt v="xs" color={t.palette.accentText} style={{ marginTop: 10 }}>
               {fehler}
             </Txt>
           ) : null}

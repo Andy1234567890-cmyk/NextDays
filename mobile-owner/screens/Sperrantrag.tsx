@@ -160,7 +160,7 @@ export default function Sperrantrag({
                       borderTopColor: t.palette.line,
                     }}
                   >
-                    <Txt v="title" color={aktiv ? t.palette.accent : t.palette.ink}>
+                    <Txt v="title" color={aktiv ? t.palette.accentText : t.palette.ink}>
                       {aktiv ? "● " : "○ "}
                       {o.title}
                     </Txt>
@@ -185,7 +185,7 @@ export default function Sperrantrag({
               durch die Verwaltung. Ohne Auswahl entsteht keine Aufgabe. */}
           {leistungenFehler ? (
             <Kachel>
-              <Txt v="sm" color={t.palette.accent}>
+              <Txt v="sm" color={t.palette.accentText}>
                 {leistungenFehler}
               </Txt>
             </Kachel>
@@ -215,7 +215,7 @@ export default function Sperrantrag({
                       borderTopColor: t.palette.line,
                     }}
                   >
-                    <Txt v="title" color={aktiv ? t.palette.accent : t.palette.ink}>
+                    <Txt v="title" color={aktiv ? t.palette.accentText : t.palette.ink}>
                       {aktiv ? "☑ " : "☐ "}
                       {l.name}
                     </Txt>
@@ -227,7 +227,7 @@ export default function Sperrantrag({
 
           {fehler ? (
             <Kachel>
-              <Txt v="sm" color={t.palette.accent}>
+              <Txt v="sm" color={t.palette.accentText}>
                 {fehler}
               </Txt>
             </Kachel>

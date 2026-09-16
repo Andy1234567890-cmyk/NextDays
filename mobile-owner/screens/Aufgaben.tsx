@@ -20,7 +20,7 @@ import { RefreshControl, ScrollView, View } from "react-native";
 import type { TextSchluessel } from "@/lib/sprache";
 import { useT } from "@/contexts/SprachContext";
 import { Icon } from "@/components/ui/Icon";
-import { Btn, Kachel, KachelKopf, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Kachel, Spinner, Txt } from "@/components/ui/kit";
 import {
   completeOwnerTask,
   getOwnerTasks,
@@ -203,22 +203,22 @@ export default function Aufgaben() {
 
       {fehler ? (
         <Kachel>
-          <Txt v="xs" style={{ color: t.palette.accent }}>
+          <Txt v="xs" style={{ color: t.palette.accentText }}>
             {fehler}
           </Txt>
         </Kachel>
       ) : null}
       {meldung ? (
         <Kachel>
-          <Txt v="xs" style={{ color: t.palette.accent }}>
+          <Txt v="xs" style={{ color: t.palette.accentText }}>
             {meldung}
           </Txt>
         </Kachel>
       ) : null}
 
-      <Kachel pad={0}>
-        <KachelKopf titel="Offen" />
-      </Kachel>
+      <Txt v="xs" soft style={{ fontFamily: t.fonts.semibold, marginTop: 4 }}>
+        OFFEN
+      </Txt>
       {laedt ? (
         <Spinner />
       ) : offen.length === 0 ? (
@@ -231,9 +231,9 @@ export default function Aufgaben() {
         offen.map((a) => karte(a, true))
       )}
 
-      <Kachel pad={0}>
-        <KachelKopf titel="Erledigt" />
-      </Kachel>
+      <Txt v="xs" soft style={{ fontFamily: t.fonts.semibold, marginTop: 4 }}>
+        ERLEDIGT
+      </Txt>
       {!laedt && erledigt.length === 0 ? (
         <Kachel>
           <Txt v="xs" soft>

@@ -61,6 +61,24 @@ export type Palette = {
   accent: string;
   accentInk: string;
   accentSoft: string;
+  /**
+   * Der Akzent als SCHRIFT auf einer Themefläche — nicht als Fläche.
+   *
+   * Warum ein eigener Token (15.09.2026): `accent` muss zwei Rollen erfüllen,
+   * die sich im Dunkeln widersprechen. Als FLÄCHE trägt er weiße Schrift
+   * (`accentInk`, 5,59:1) und darf deshalb nicht heller werden. Als SCHRIFT
+   * steht er auf `surface`/`surface2`/`bg` — und dort kommt `#C42B3A` im
+   * Dunkeln nur auf 3,10 / 2,83 / 3,34:1, liegt also unter der Schwelle.
+   * Gemessen, nicht geschätzt.
+   *
+   * Betroffen war genau das, was gelesen werden MUSS: der Login-Fehler, der
+   * Klartext einer 422-Antwort, die negativen Verrechnungsposten, das aktive
+   * Reiter-Label. Im Hellen war dieselbe Stelle immer unauffällig — deshalb
+   * fiel es nie auf.
+   *
+   * Hell ist er identisch mit `accent` (4,54–5,59:1, überall ausreichend).
+   */
+  accentText: string;
   star: string;
   // Richtungsfarben für Veränderungen (Trend). Sie GEHÖREN in die Palette:
   // Vorher stand im `Trend` ein festes `#1F8A5B` — ein sattes Grün neben dem
@@ -105,7 +123,14 @@ export function lightPalette(accent: string): Palette {
     surface2: "#EBE7E2",
     ink: "#181614",
     soft: "#6F6864",
-    faint: "#A8A29C",
+    // 25 % Richtung `ink`. Bis zum 15.09.2026 stand hier #A8A29C — 2,53:1
+    // auf `surface`, 2,05:1 auf `surface2`, also unter der 3:1-Schwelle,
+    // die schon fuer GRAFISCHE Objekte gilt. Der Ton ist als Dekoration
+    // gedacht, wird aber ueberall gegriffen, wo Text zuruecktreten soll:
+    // der Status einer Abrechnung, die einzige Bedienanleitung des
+    // Kalenders, das ⓘ-Tippziel neben der Auszahlung, 14 Symbole. Statt
+    // 30 Aufrufstellen umzuschreiben, traegt jetzt der Ton selbst.
+    faint: "#847F7A",
     line: "rgba(24,22,20,0.12)",
     accent,
     accentInk: "#FFFFFF",
@@ -116,6 +141,9 @@ export function lightPalette(accent: string): Palette {
     // „1 offene Konversation" wie eine Warnung, und ein offener Zusatzposten
     // ebenso. Deshalb 0.88.
     accentSoft: mix(accent, "#FFFFFF", 0.88),
+    // Hell braucht der Akzent keine Aufhellung: auf `surface2`, der dunkelsten
+    // hellen Fläche, sind es 4,54:1.
+    accentText: accent,
     star: "#181614",
     // Gedecktes Waldgrün und ein warmes Ziegelrot — beide entsättigt, damit
     // sie neben dem warmen Neutralton (`ink` #181614) sitzen und nicht davor.
@@ -132,13 +160,27 @@ export function darkPalette(accent: string): Palette {
     surface2: "#252220",
     ink: "#F4F1ED",
     soft: "#A9A29B",
-    faint: "#726B64",
+    // Dunkel dieselbe Rechnung: 3,01:1 auf `surface2` war ebenfalls zu
+    // knapp, jetzt 4,01:1.
+    faint: "#867F79",
     line: "rgba(255,255,255,0.14)",
     accent,
     accentInk: "#FFFFFF",
-    // Wie in der Light-Palette: der Anteil gehört der zweiten Farbe. 24 %
-    // Akzent auf dem dunklen Grund heißt 0.76.
-    accentSoft: mix(accent, "#1C1A18", 0.76),
+    // Wie in der Light-Palette: der Anteil gehört der zweiten Farbe. 16 %
+    // Akzent auf dem dunklen Grund heißt 0.84.
+    //
+    // Bis zum 15.09.2026 stand hier 0.76 (24 % Akzent). Darauf kam `accentText`
+    // nur auf 4,28:1 — die Statuspille „Abgelehnt" war damit die letzte Stelle
+    // unter der Schwelle. 0.84 ergibt 4,59:1, ohne dass die Fläche als Tönung
+    // aufhört zu wirken. Die Hell-Fassung bleibt bei 0.88 und liegt mit 4,65:1
+    // ohnehin darüber.
+    accentSoft: mix(accent, "#1C1A18", 0.84),
+    // 30 % Richtung Weiß — der KLEINSTE Schritt, mit dem die schlechteste
+    // dunkle Fläche (`surface2`) 4,5:1 erreicht: 4,68:1. Bei 25 % wären es
+    // 4,26:1. Gerechnet aus `accent`, nicht als Hexwert hinterlegt, damit ein
+    // Markenwechsel durchschlägt. Dieselbe Begründung wie bei
+    // `positiv`/`negativ` weiter unten.
+    accentText: mix(accent, "#FFFFFF", 0.3),
     star: "#F4F1ED",
     // Auf dunklem Grund aufgehellt statt abgedunkelt: dieselben Töne wären
     // hier nicht mehr lesbar.
@@ -220,6 +262,39 @@ export const type: Record<string, TextStyle> = {
 };
 
 // Lineare Farbmischung (Ersatz für CSS color-mix) — t=0 → a, t=1 → b.
+/**
+ * Schwarz oder Weiss — je nachdem, was auf DIESER Flaeche lesbar ist.
+ *
+ * Fuer Flaechen, deren Farbe aus DATEN kommt (Kanalfarben, vom Betrieb
+ * gesetzte Hexwerte) oder die mit dem Thema mitdrehen. Eine Konstante geht
+ * dort zwangslaeufig irgendwann daneben: `CHIP_TEXT = "#FFFFFF"` im Kalender
+ * stand auf der Eigennutzungs-Flaeche (`soft`), und die ist im Dunkeln HELL —
+ * gemessen 2,52:1. Auf Airbnbs `#ff5a5f` waren es 3,05:1.
+ *
+ * Gewaehlt wird ueber die relative Luminanz nach WCAG, nicht ueber eine
+ * Helligkeitsschaetzung: `#ff5a5f` und `#71717a` haben aehnliche Mittelwerte
+ * und sehr verschiedene Luminanz.
+ */
+export function schriftAuf(hintergrund: string): string {
+  const l = luminanz(hintergrund);
+  // Kontrast gegen Weiss bzw. gegen den dunkelsten Textton, und der Sieger
+  // gewinnt. Kein fester Schwellwert: der waere fuer Grenzfaelle geraten.
+  const gegenWeiss = 1.05 / (l + 0.05);
+  const gegenSchwarz = (l + 0.05) / (luminanz("#181614") + 0.05);
+  return gegenWeiss >= gegenSchwarz ? "#FFFFFF" : "#181614";
+}
+
+/** Relative Luminanz (WCAG 2.1). */
+function luminanz(hex: string): number {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
+  const teil = (v: number) => {
+    const x = v / 255;
+    return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+  };
+  return 0.2126 * teil(rgb.r) + 0.7152 * teil(rgb.g) + 0.0722 * teil(rgb.b);
+}
+
 function mix(a: string, b: string, t: number): string {
   const ca = hexToRgb(a);
   const cb = hexToRgb(b);

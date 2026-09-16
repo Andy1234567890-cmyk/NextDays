@@ -243,8 +243,12 @@ export default function HostLogin() {
           }}
           accessibilityLabel={t.marke.name}
         />
+        {/* NICHT „Gastgeber": das ist der Begriff der Marktplatz-Welt
+            (myBestDays). Diese App ist das PMS und der Kanalmanager des
+            BETRIEBS — sie heißt hier wie im Web-Dashboard schlicht „Anmelden"
+            (web/messages/de.json → login.title). */}
         <Txt v="display" style={{ textAlign: "center" }}>
-          Gastgeber-Login
+          Anmelden
         </Txt>
         <Txt v="body" soft style={{ textAlign: "center" }}>
           Melde dich mit deinem Betriebskonto an — dasselbe wie im Dashboard.

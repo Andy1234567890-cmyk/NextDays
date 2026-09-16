@@ -62,7 +62,11 @@ from src.features.owner_statements.service import (
     OwnerStatementsService,
     StatementError,
 )
-from src.features.reservations._base import ReservationError, _require_uuid
+from src.features.reservations._base import (
+    ReservationError,
+    _as_date,
+    _require_uuid,
+)
 from src.features.tasks.regel_uebersetzung import (
     lesersprache,
     namen_in_sprache,
@@ -93,9 +97,6 @@ from .schemas import (
     PortalProperty,
     PortalPropertyDetail,
     PortalPropertyList,
-    PortalSeason,
-    PortalSeasonAssignment,
-    PortalSeasonList,
     PortalStatementItem,
     PortalStatementList,
     PortalStatisticsResponse,
@@ -324,53 +325,6 @@ class PublicPortalService:
     def require_own_property(self, ctx: AuthContext, property_id: str) -> None:
         """404, wenn das Objekt nicht zu diesem Portal-Nutzer gehört."""
         self._require_own(ctx, property_id)
-
-    # --- Saisons -------------------------------------------------------------
-
-    def seasons(self, ctx: AuthContext, property_id: str) -> PortalSeasonList:
-        """Saisons EINES eigenen Objekts — Name, Farbe, Zeiträume.
-
-        WARUM EIN EIGENER ENDPUNKT (07.09.2026): Der Web-Kalender des Portals
-        holt die Saisons über `/calendar/seasons`, einen Endpunkt des
-        PMS-Slice. Die Eigentümer-App spricht laut ihrer Regel AUSSCHLIESSLICH
-        `/public-portal/*` — ohne diesen Weg konnte sie die Tage nicht wie das
-        Web nach Saison färben. Derselbe Objekt-Scope wie jeder andere Lesepfad
-        hier (`_require_own`, fail-closed, Wurzel 3/9): ein fremdes Objekt ist
-        404, nicht leer.
-
-        Es wird NUR gelesen, was der Eigentümer sehen darf: `mode`/`amount`
-        (die Preisregel) bleiben weg — siehe `PortalSeason`.
-        """
-        self._require_own(ctx, property_id)
-        saisons = (
-            self._db.table("property_seasons")
-            .select("id, name, color")
-            .eq("property_id", property_id)
-            .order("created_at")
-            .execute()
-        ).data or []
-        zeitraeume = (
-            self._db.table("property_season_assignments")
-            .select("season_id, start_date, end_date")
-            .eq("property_id", property_id)
-            .order("start_date")
-            .execute()
-        ).data or []
-        je_saison: dict[str, list[PortalSeasonAssignment]] = {}
-        for z in zeitraeume:
-            je_saison.setdefault(str(z["season_id"]), []).append(
-                PortalSeasonAssignment(start_date=z["start_date"], end_date=z["end_date"])
-            )
-        items = [
-            PortalSeason(
-                id=str(r["id"]),
-                name=str(r["name"]),
-                color=str(r["color"]),
-                assignments=je_saison.get(str(r["id"]), []),
-            )
-            for r in saisons
-        ]
-        return PortalSeasonList(items=items, total=len(items))
 
     def _darf_berichte(self, ctx: AuthContext) -> bool:
         """Finanzfreigabe dieses Zugangs (0389) — Regel in `familie.py`."""
@@ -2084,7 +2038,7 @@ class PublicPortalService:
 
         res = (
             self._db.table("reservations")
-            .select("id, property_id, status")
+            .select("id, property_id, status, check_in, check_out")
             .eq("id", reservation_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -2101,6 +2055,20 @@ class PublicPortalService:
         from src.features.reservations.schemas import ReservationMove
         from src.features.reservations.service import ReservationsService
 
+        # Die WAHREN Grenzen des Aufenthalts — nur sie duerfen die Rechnung
+        # tragen. Die App kennt sie nicht vollstaendig (ihr Chip ist am
+        # Monatsrand beschnitten), deshalb schickt sie eine Verschiebung.
+        try:
+            alt_ein = _as_date(zeile["check_in"])
+            alt_aus = _as_date(zeile["check_out"])
+        except (KeyError, TypeError, ValueError) as fehler:
+            # Eine Buchung ohne verwertbare Daten ist ein Datenfehler, kein
+            # Fall fuer einen erfundenen Ersatzwert (Wurzel 4).
+            raise PortalError(
+                "Zu dieser Buchung fehlt der Zeitraum.", status_code=422
+            ) from fehler
+        versatz = timedelta(days=req.tage)
+
         dienst = ReservationsService(self._db)
         try:
             dienst.move(
@@ -2108,8 +2076,8 @@ class PublicPortalService:
                 reservation_id,
                 ReservationMove(
                     property_id=property_id,
-                    check_in=req.check_in,
-                    check_out=req.check_out,
+                    check_in=alt_ein + versatz,
+                    check_out=alt_aus + versatz,
                 ),
             )
         except ReservationError as fehler:
@@ -2132,6 +2100,17 @@ class PublicPortalService:
         self._require_own(ctx, req.property_id)
         if req.end_date < req.start_date:
             raise PortalError("Enddatum vor Startdatum.", status_code=400)
+        # Kein Antrag fuer VERGANGENE Tage (15.09.2026). Weder Client noch
+        # Server prueften das: im Kalender liessen sich am Monatsanfang zwei
+        # freie vergangene Tage ueberziehen, der Knopf wurde aktiv, und die
+        # Verwaltung bekam einen Antrag fuer Naechte, die vorbei sind. Der
+        # Riegel in `AufenthaltBuchen` greift nur beim manuellen Tippen.
+        # `date.today()` ist hier legitim: es geht um UNSERE Entscheidung
+        # jetzt, nicht um den Zeitpunkt eines fremden Ereignisses (Wurzel 5b).
+        if req.start_date < date.today():
+            raise PortalError(
+                "Der Zeitraum liegt in der Vergangenheit.", status_code=422
+            )
         unit_id = self._require_own_unit(tenant_id, req.property_id, req.unit_id)
         # Bestellte Leistungen (0510) VOR dem Insert prüfen: eine Regel-ID aus
         # einem fremden Mandanten würde sonst am Antrag hängen und bei der

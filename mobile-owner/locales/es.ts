@@ -215,7 +215,6 @@ export const es: Katalog = {
   "mehr.auslastungText": "Ocupación y fuentes de reserva",
   "mehr.sprache": "Idioma",
   "mehr.spracheWaehlen": "Seleccionar idioma",
-  "mehr.andereAppText": "La aplicación para la administración — si usted mismo alquila",
   "mehr.abmelden": "Cerrar sesión",
   "mehr.wirdAbgemeldet": "Cerrando sesión…",
   "stat.titel": "Ocupación y canales",

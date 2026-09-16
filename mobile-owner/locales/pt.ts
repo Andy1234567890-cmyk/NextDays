@@ -215,7 +215,6 @@ export const pt: Katalog = {
   "mehr.auslastungText": "Ocupação e fontes de reserva",
   "mehr.sprache": "Idioma",
   "mehr.spracheWaehlen": "Selecionar idioma",
-  "mehr.andereAppText": "O aplicativo para administração — caso você mesmo alugue",
   "mehr.abmelden": "Sair",
   "mehr.wirdAbgemeldet": "A sair…",
   "stat.titel": "Ocupação e canais",

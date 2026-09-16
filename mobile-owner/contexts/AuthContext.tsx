@@ -13,7 +13,7 @@ import {
 } from "react";
 
 import { protokolliereAbsturz } from "@/lib/absturzmeldung";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 import { pushAbmelden, pushEinrichten, pushTapVerdrahten } from "@/lib/push";
 import {
   getToken,
@@ -135,8 +135,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Kein Name — die Oberfläche fällt auf die E-Mail zurück.
       }
       return true;
-    } catch {
+    } catch (e) {
+      // NUR ein 401 heisst „nicht mehr angemeldet". Alles andere — kein Netz,
+      // Backend down (`ApiError(…, 503)` aus `lib/api.ts`), ein 500 — sagt
+      // NICHTS ueber die Sitzung aus. Bis zum 15.09.2026 fing hier ein blindes
+      // `catch`, setzte `me = null`, und der Aufrufer machte daraus
+      // `signedOut`: beim Kaltstart ohne Netz landete der Eigentuemer auf dem
+      // Anmeldebildschirm und hielt sich fuer ausgeloggt, obwohl gueltige
+      // Tokens im Schluesselbund lagen. `refreshSession` unterscheidet das
+      // laengst richtig (`auth.ts`, loescht nur bei 401) — diese Stelle nicht.
       setMe(null);
+      if (e instanceof ApiError && e.status !== 401) throw e;
       return false;
     }
   }, []);
@@ -169,7 +178,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
       }
-      setStatus((await fetchMe()) ? "signedIn" : "signedOut");
+      try {
+        setStatus((await fetchMe()) ? "signedIn" : "signedOut");
+      } catch (e) {
+        // Das Token ist gueltig, nur der Server war nicht erreichbar. Die
+        // Sitzung bleibt — abmelden waere hier eine Falschaussage. Die
+        // Oberflaeche zeigt den Ladefehler ihres eigenen Abrufs; der
+        // Anmeldebildschirm waere die falsche Antwort auf ein Netzproblem.
+        protokolliereAbsturz(e);
+        setStatus("signedIn");
+      }
     })().catch((e) => {
       // Kein stiller Prozesstod: protokollieren und sauber ausloggen, statt
       // die App im Splash sterben zu lassen (Wurzel 5, fail-closed).

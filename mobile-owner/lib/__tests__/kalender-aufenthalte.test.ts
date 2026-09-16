@@ -5,7 +5,6 @@ import {
   aufenthalteBilden,
   bahnenVerteilen,
   grundText,
-  saisonProTag,
   segmenteBilden,
   wochenBilden,
 } from "@/lib/kalender-aufenthalte";
@@ -192,19 +191,6 @@ describe("bahnenVerteilen", () => {
     ];
     const { ueberlauf } = bahnenVerteilen(segmenteBilden(woche, aufenthalteBilden(tage)));
     expect(ueberlauf.get(1)).toMatchObject({ anzahl: 2, summe: 40, currency: "EUR", grund: null });
-  });
-});
-
-describe("saisonProTag", () => {
-  it("färbt jeden Tag des Zeitraums inklusive beider Enden, letzte Zuweisung gewinnt", () => {
-    const map = saisonProTag([
-      { id: "s1", name: "Neben", color: "#111111", assignments: [{ start_date: "2026-09-01", end_date: "2026-09-30" }] },
-      { id: "s2", name: "Hoch", color: "#222222", assignments: [{ start_date: "2026-09-10", end_date: "2026-09-12" }] },
-    ]);
-    expect(map.get("2026-09-01")?.id).toBe("s1");
-    expect(map.get("2026-09-30")?.id).toBe("s1");
-    expect(map.get("2026-09-11")?.id).toBe("s2");
-    expect(map.get("2026-10-01")).toBeUndefined();
   });
 });
 

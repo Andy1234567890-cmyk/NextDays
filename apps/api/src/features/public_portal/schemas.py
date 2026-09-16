@@ -110,36 +110,6 @@ class PortalCalendarResponse(BaseModel):
     days: list[PortalCalendarDay]
 
 
-class PortalSeasonAssignment(BaseModel):
-    """Ein Zeitraum, in dem eine Saison gilt (inklusiv, wie die DB speichert)."""
-
-    start_date: date_
-    end_date: date_
-
-
-class PortalSeason(BaseModel):
-    """Eine benannte Saison des Objekts — NUR Name, Farbe und Zeiträume.
-
-    Der Kalender des Eigentümers färbt damit die Tage (dieselbe Quelle wie
-    die Agentur-Ansicht: `property_seasons`). Was hier bewusst FEHLT: `mode`
-    und `amount`, also die Preisregel der Saison. Sie ist Vertriebswissen des
-    Betriebs, nicht Auskunft für den Eigentümer — er sieht seine Auszahlung,
-    nicht, wie der Betrieb seine Gastpreise bildet (§4.2).
-    """
-
-    id: str
-    name: str
-    # Hex #RRGGBB, von der Agentur gesetzt (CHECK in 0138). Ein Datenwert, den
-    # die Oberfläche unverändert als Farbe verwendet.
-    color: str
-    assignments: list[PortalSeasonAssignment] = Field(default_factory=list)
-
-
-class PortalSeasonList(BaseModel):
-    items: list[PortalSeason] = Field(default_factory=list)
-    total: int = 0
-
-
 class PortalEarningsItem(BaseModel):
     property_id: str
     title: str
@@ -175,28 +145,37 @@ class PortalStatementList(BaseModel):
 
 
 class ReservationMoveRequest(BaseModel):
-    """Eine Buchung des Eigentümers auf andere Tage ziehen (08.09.2026).
+    """Eine Buchung des Eigentuemers um N Tage verschieben (08.09.2026).
 
     NUR der Zeitraum, NICHT das Objekt: Drag-and-Drop im Kalender der
-    Eigentümer-App bewegt einen Chip innerhalb SEINES Objekts. Ein
-    Objektwechsel wäre eine Umbuchung mit Gastkommunikation und
+    Eigentuemer-App bewegt einen Chip innerhalb SEINES Objekts. Ein
+    Objektwechsel waere eine Umbuchung mit Gastkommunikation und
     Portal-Folgen — das bleibt bei der Verwaltung (`/reservations/{id}/move`).
 
-    `check_out` ist EXKLUSIV wie überall im Buchungsmodell: der Abreisetag ist
-    keine belegte Nacht, dort reist der nächste Gast an.
+    EINE VERSCHIEBUNG, KEINE DATEN (geaendert 15.09.2026). Vorher nahm der
+    Endpunkt `check_in` und `check_out` entgegen. Die App rechnete sie aus dem
+    Chip aus — und der Chip kennt nur die erste Nacht IM SICHTBAREN MONAT,
+    nicht den Anreisetag. Eine Buchung vom 25.08. bis 05.09., im
+    September-Blatt um einen Tag gezogen, wurde damit als
+    `check_in=01.09., check_out=07.09.` gesendet: sechs Naechte weniger und
+    ein neuer Anreisetag fuer den Gast. Der Server konnte das nicht erkennen,
+    weil beide Werte fuer sich plausibel waren.
+
+    Jetzt sagt die App, was der Nutzer GETAN hat (um N Tage gezogen), und der
+    Server wendet das auf die Daten an, die er als einziger vollstaendig hat.
+    Eine Laengenaenderung ist auf diesem Weg nicht mehr formulierbar.
     """
 
-    check_in: date_
-    check_out: date_
+    # Vorzeichenbehaftet: negativ = nach frueher. Die Grenze ist grosszuegig,
+    # aber endlich (Wurzel 8) — ohne sie waere ein Zug ueber Jahrzehnte
+    # ausdrueckbar. 0 waere ein Aufruf ohne Wirkung und damit ein Fehler des
+    # Aufrufers, kein stiller No-Op.
+    tage: int = Field(..., ge=-365, le=365)
 
     @model_validator(mode="after")
-    def _zeitraum_pruefen(self) -> "ReservationMoveRequest":
-        if self.check_out <= self.check_in:
-            raise ValueError("Abreise muss nach der Anreise liegen.")
-        # Harte Obergrenze (Wurzel 8): ein Zeitraum über Jahre hinweg würde
-        # beim Belegen der Nächte eine unbegrenzte Schleife auslösen.
-        if (self.check_out - self.check_in).days > 365:
-            raise ValueError("Zeitraum länger als ein Jahr.")
+    def _nicht_null(self) -> "ReservationMoveRequest":
+        if self.tage == 0:
+            raise ValueError("Keine Verschiebung.")
         return self
 
 

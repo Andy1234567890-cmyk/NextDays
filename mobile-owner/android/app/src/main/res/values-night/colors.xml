@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Derselbe Wert wie `palette.bg` der Dunkel-Palette (theme/tokens.ts).
+         Der JS-Splash darueber nimmt `palette.bg`; stand hier weiterhin Weiss,
+         sah der Start im Dunkelmodus aus wie ein weisser Blitz vor der App. -->
+    <color name="splash_background_color">#141210</color>
+</resources>

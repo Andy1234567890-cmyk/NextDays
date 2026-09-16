@@ -11,7 +11,8 @@ import {
   type LinkingOptions,
 } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
@@ -87,6 +88,10 @@ const linking: LinkingOptions<RootStackParamList> = {
 
 function Root() {
   const { status, me, logout } = useAuth();
+  // Hält den Splash, bis SEINE Bewegung durch ist — unabhängig davon, wie
+  // schnell der Auth-Status steht. WICHTIG: wie alle Hooks vor den frühen
+  // Abbrüchen (Rules of Hooks).
+  const [splashFertig, setSplashFertig] = useState(false);
 
   // Fail-closed (Wurzel 5): angemeldet, aber keine/unbekannte Rolle → das
   // Konto bekommt KEIN Erlebnis (nie Default ins Agentur-Dashboard). Die
@@ -120,49 +125,58 @@ function Root() {
     }
   }, [status, target, navRef]);
 
-  // Token-Check läuft noch → Splash hält den Screen (kein Flackern). Der
-  // invalidRole-Fall bleibt auf Splash, bis logout() den Status umsetzt.
-  if (status === "loading" || invalidRole) return <Splash />;
-
   // Kaltstart mit gültiger Session → direkt ins rollenbasierte Erlebnis.
   // Ohne Session → Login.
   const initial = target ? target.route : "HostLogin";
   const signedIn = status === "signedIn";
 
+  // Token-Check läuft noch → nur der Splash steht. Der invalidRole-Fall wartet
+  // ebenso, bis logout() den Status umsetzt.
+  const bereit = status !== "loading" && !invalidRole;
+
+  // Der Splash liegt als Overlay ÜBER der Navigation und wird NICHT vom
+  // Auth-Status ausgehängt, sondern von seiner eigenen Meldung (`onFertig`).
+  // Erst beides zusammen ergibt den gewollten Ablauf: das Logo fliegt ein,
+  // steht, blendet aus — und darunter liegt schon der fertige Screen.
   return (
-    <NavigationContainer ref={navRef} linking={linking} fallback={<Splash />}>
-      <Stack.Navigator initialRouteName={initial} screenOptions={{ headerShown: false }}>
-        {signedIn ? (
-          <>
-            {/* Geschützt: nur mit Tenant-Session registriert (Auth-Guard für
-                Deep-Links — ausgeloggt existieren diese Routen nicht). */}
-            <Stack.Screen name="HostTabs" component={HostTabs} />
-            {/* Eigentümer-Konten: das Portal ist in eine eigene App gezogen.
-                Bewusst OHNE Deep-Link — der Screen ist kein Ziel, das man
-                ansteuert, sondern die Antwort auf eine Anmeldung. */}
-            <Stack.Screen name="OwnerAppHinweis" component={OwnerAppHinweis} />
-            <Stack.Screen name="ReservationDetail" component={ReservationDetail} />
-            <Stack.Screen name="TaskDetail" component={TaskDetail} />
-            <Stack.Screen name="PropertyDetail" component={PropertyDetail} />
-            <Stack.Screen name="PropertyDescription" component={PropertyDescription} />
-            <Stack.Screen name="PropertyCustomFields" component={PropertyCustomFields} />
-            <Stack.Screen name="PropertyKartei" component={PropertyKartei} />
-            <Stack.Screen name="PropertyGuestGuide" component={PropertyGuestGuide} />
-            <Stack.Screen name="PropertyGuestGuideText" component={PropertyGuestGuideText} />
-          </>
-        ) : (
-          <>
-            {/* Nur ohne Session: Login/Registrierung. Nach dem Login flippt
-                status → Navigator tauscht die Gruppen automatisch. */}
-            <Stack.Screen name="HostLogin" component={HostLogin} />
-            <Stack.Screen
-              name="HostPasswortVergessen"
-              component={HostPasswortVergessen}
-            />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={{ flex: 1 }}>
+      {bereit && (
+        <NavigationContainer ref={navRef} linking={linking} fallback={<Splash />}>
+          <Stack.Navigator initialRouteName={initial} screenOptions={{ headerShown: false }}>
+            {signedIn ? (
+              <>
+                {/* Geschützt: nur mit Tenant-Session registriert (Auth-Guard für
+                    Deep-Links — ausgeloggt existieren diese Routen nicht). */}
+                <Stack.Screen name="HostTabs" component={HostTabs} />
+                {/* Eigentümer-Konten: das Portal ist in eine eigene App gezogen.
+                    Bewusst OHNE Deep-Link — der Screen ist kein Ziel, das man
+                    ansteuert, sondern die Antwort auf eine Anmeldung. */}
+                <Stack.Screen name="OwnerAppHinweis" component={OwnerAppHinweis} />
+                <Stack.Screen name="ReservationDetail" component={ReservationDetail} />
+                <Stack.Screen name="TaskDetail" component={TaskDetail} />
+                <Stack.Screen name="PropertyDetail" component={PropertyDetail} />
+                <Stack.Screen name="PropertyDescription" component={PropertyDescription} />
+                <Stack.Screen name="PropertyCustomFields" component={PropertyCustomFields} />
+                <Stack.Screen name="PropertyKartei" component={PropertyKartei} />
+                <Stack.Screen name="PropertyGuestGuide" component={PropertyGuestGuide} />
+                <Stack.Screen name="PropertyGuestGuideText" component={PropertyGuestGuideText} />
+              </>
+            ) : (
+              <>
+                {/* Nur ohne Session: Login/Registrierung. Nach dem Login flippt
+                    status → Navigator tauscht die Gruppen automatisch. */}
+                <Stack.Screen name="HostLogin" component={HostLogin} />
+                <Stack.Screen
+                  name="HostPasswortVergessen"
+                  component={HostPasswortVergessen}
+                />
+              </>
+            )}
+          </Stack.Navigator>
+        </NavigationContainer>
+      )}
+      {!splashFertig && <Splash onFertig={() => setSplashFertig(true)} />}
+    </View>
   );
 }
 

@@ -384,7 +384,7 @@ function Posten({
           {unter}
         </Txt>
       </View>
-      <Txt v="sm" style={{ fontFamily: t.fonts.semibold }} color={betrag < 0 ? t.palette.accent : t.palette.ink}>
+      <Txt v="sm" style={{ fontFamily: t.fonts.semibold }} color={betrag < 0 ? t.palette.accentText : t.palette.ink}>
         {vz}
         {formatCurrency(Math.abs(betrag), currency, 2)}
       </Txt>

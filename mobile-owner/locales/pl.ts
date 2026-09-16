@@ -215,7 +215,6 @@ export const pl: Katalog = {
   "mehr.auslastungText": "Obłożenie i źródła rezerwacji",
   "mehr.sprache": "Język",
   "mehr.spracheWaehlen": "Wybierz język",
-  "mehr.andereAppText": "Aplikacja dla zarządców — jeśli wynajmują Państwo samodzielnie",
   "mehr.abmelden": "Wyloguj",
   "mehr.wirdAbgemeldet": "Wylogowywanie…",
   "stat.titel": "Obłożenie i kanały",

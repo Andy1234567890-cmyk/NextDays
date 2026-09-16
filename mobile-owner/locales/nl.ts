@@ -215,7 +215,6 @@ export const nl: Katalog = {
   "mehr.auslastungText": "Bezetting en boekingsbronnen",
   "mehr.sprache": "Taal",
   "mehr.spracheWaehlen": "Taal kiezen",
-  "mehr.andereAppText": "De app voor beheer - als u zelf verhuurt",
   "mehr.abmelden": "Afmelden",
   "mehr.wirdAbgemeldet": "Afmelden…",
   "stat.titel": "Bezetting & kanalen",

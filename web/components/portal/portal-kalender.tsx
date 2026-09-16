@@ -14,8 +14,7 @@
 //     Bulk-Edit, keine Restriktionen — nur lesen. Ein eigener, kleiner
 //     Kalender ist hier die sichere und die ehrlichere Lösung.
 //
-// Was hier sichtbar ist: Saison-Farbe (aus property_seasons, dieselbe Quelle
-// wie components/objekte/season-calendar.tsx), Belegungsstatus, der VORNAME des
+// Was hier sichtbar ist: Belegungsstatus, der VORNAME des
 // Gastes und die Buchungsquelle als echtes Portal-Logo. Was NICHT sichtbar ist:
 // der volle Gastname und jeder Gast-Gesamtpreis (§4.2). Der einzige Betrag ist
 // die persönliche Netto-Auszahlung des Eigentümers.
@@ -43,7 +42,6 @@ import { PortalRealtime } from "@/components/portal/portal-realtime";
 import { Card, CardContent } from "@nextdays/ui/card";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { channelLabelLoose, channelLogoLoose } from "@/lib/channel-logos";
-import { type Season, listSeasons } from "@/lib/calendar";
 import { formatCurrency } from "@/lib/currency";
 import {
   type PortalCalendarDay,
@@ -55,11 +53,6 @@ import {
 
 function iso(d: Date): string {
   return d.toISOString().slice(0, 10);
-}
-function addDays(isoDate: string, n: number): string {
-  const d = new Date(`${isoDate}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return iso(d);
 }
 /** Wochentag Mo=0 … So=6. */
 function mondayIndex(d: Date): number {
@@ -94,26 +87,6 @@ function monatsAbstand(a: Monat, b: Monat): number {
 // weit weder Buchungen noch Saisons gepflegt sind.
 const MONATE_ZURUECK = 24;
 const MONATE_VORAUS = 24;
-
-/**
- * Für jeden Tag: welche Saison gilt. Letzte Zuweisung gewinnt — identisch zur
- * Agentur-Ansicht (components/objekte/season-calendar.tsx), damit Eigentümer
- * und Verwaltung dieselben Farben sehen.
- */
-function saisonProTag(seasons: Season[]): Map<string, Season> {
-  const map = new Map<string, Season>();
-  for (const s of seasons) {
-    for (const a of s.assignments) {
-      let cur = a.start_date;
-      // end_date ist inklusiv.
-      while (cur <= a.end_date) {
-        map.set(cur, s);
-        cur = addDays(cur, 1);
-      }
-    }
-  }
-  return map;
-}
 
 // --- Kanal → Farbe ----------------------------------------------------------
 //
@@ -367,7 +340,6 @@ export function PortalKalender({
   const [monatsTage, setMonatsTage] = useState<Map<string, PortalCalendarDay[]>>(
     () => new Map(),
   );
-  const [seasons, setSeasons] = useState<Season[]>([]);
   const [ladeFehler, setLadeFehler] = useState<string | null>(null);
   const [laedt, setLaedt] = useState(false);
 
@@ -394,7 +366,6 @@ export function PortalKalender({
   // Objekts dürfen unter dem neuen Namen nicht stehenbleiben.
   useEffect(() => {
     setMonatsTage(new Map());
-    setSeasons([]);
     setLadeFehler(null);
   }, [propertyId]);
 
@@ -407,20 +378,15 @@ export function PortalKalender({
     async (neuLaden = false) => {
       if (!propertyId) {
         setMonatsTage(new Map());
-        setSeasons([]);
         return;
       }
       const offen = neuLaden
         ? monate
         : monate.filter((m) => !monatsTage.has(monatsSchluessel(m)));
-      // Saisons hängen am Objekt, nicht am Monat — sie werden nur geholt,
-      // wenn sie fehlen oder ein Realtime-Ereignis sie erneuert.
-      const saisonsNoetig = neuLaden || seasons.length === 0;
-      if (offen.length === 0 && !saisonsNoetig) return;
+      if (offen.length === 0) return;
 
       setLaedt(true);
-      const [ergebnisse, sea] = await Promise.all([
-        Promise.all(
+      const ergebnisse = await Promise.all(
           offen.map(async (m) => {
             const von = `${monatsSchluessel(m)}-01`;
             // Letzter Tag des Monats: der 0. des Folgemonats.
@@ -430,9 +396,7 @@ export function PortalKalender({
               antwort: await getOwnerCalendar(propertyId, von, bis),
             };
           }),
-        ),
-        saisonsNoetig ? listSeasons(propertyId) : Promise.resolve(null),
-      ]);
+        );
       setLaedt(false);
 
       // Ein Ladefehler ist nicht „nichts gebucht": beide Aussagen sind
@@ -449,11 +413,8 @@ export function PortalKalender({
         }
         return naechster;
       });
-      // Saisons sind Schmuck, kein Kerninhalt: scheitern sie, bleibt der
-      // Kalender nutzbar und zeigt nur keine Saison-Farben.
-      if (sea) setSeasons(sea.ok ? sea.data.items : []);
     },
-    [propertyId, monate, monatsTage, seasons.length],
+    [propertyId, monate, monatsTage],
   );
 
   useEffect(() => {
@@ -478,8 +439,6 @@ export function PortalKalender({
     for (const d of alleTage) m.set(d.date, d);
     return m;
   }, [alleTage]);
-
-  const saisonMap = useMemo(() => saisonProTag(seasons), [seasons]);
 
   const heute = iso(new Date());
 
@@ -799,7 +758,6 @@ export function PortalKalender({
                           segmente={segmenteJeWoche[wi]}
                           heute={heute}
                           tagMap={tagMap}
-                          saisonMap={saisonMap}
                           locale={locale}
                         />
                       ))}
@@ -846,31 +804,6 @@ export function PortalKalender({
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-medium text-muted-foreground">
-                {t("calendar.legendSeasons")}
-              </span>
-              {seasons.length === 0 ? (
-                <span className="text-xs text-muted-foreground">
-                  {t("calendar.noSeasons")}
-                </span>
-              ) : (
-                <div className="flex flex-wrap items-center gap-3 text-xs">
-                  {seasons.map((s) => (
-                    <span key={s.id} className="flex items-center gap-1.5">
-                      {/* Saison-Farbe kommt als Hex AUS DER DB (property_seasons)
-                          — das ist ein Datenwert, keine im Code hartkodierte
-                          Arbitrary-Farbe. */}
-                      <span
-                        className="size-3 shrink-0 rounded-full"
-                        style={{ backgroundColor: s.color }}
-                      />
-                      <span>{s.name}</span>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Der Eigentümer darf nicht sperren, nur beantragen (§4.2).
@@ -1017,14 +950,12 @@ function Wochenzeile({
   segmente,
   heute,
   tagMap,
-  saisonMap,
   locale,
 }: {
   woche: (string | null)[];
   segmente: Segment[];
   heute: string;
   tagMap: Map<string, PortalCalendarDay>;
-  saisonMap: Map<string, Season>;
   locale: string;
 }) {
   const t = useTranslations("portal");
@@ -1050,7 +981,6 @@ function Wochenzeile({
               datum={datum}
               istHeute={datum === heute}
               info={tagMap.get(datum) ?? null}
-              saison={saisonMap.get(datum) ?? null}
             />
           ) : (
             <span key={`leer-${woche[0] ?? "x"}-${i}`} />
@@ -1337,12 +1267,10 @@ function Tageszelle({
   datum,
   istHeute,
   info,
-  saison,
 }: {
   datum: string;
   istHeute: boolean;
   info: PortalCalendarDay | null;
-  saison: Season | null;
 }) {
   const t = useTranslations("portal");
 
@@ -1379,7 +1307,6 @@ function Tageszelle({
   const titel = [
     datum,
     statusLabel,
-    saison ? saison.name : null,
     einheiten,
     grund ? `${t("calendar.payoutPerNight")}: ${grund}` : null,
   ]
@@ -1393,23 +1320,7 @@ function Tageszelle({
         istHeute ? "border-accent" : "border-border"
       } ${status === "blocked" ? "bg-muted-foreground/15" : "bg-card"}`}
     >
-      {/* Saison als kurze Marke an der INNEREN linken Kante, in voller
-          Deckkraft. Zwei Anforderungen stoßen hier aufeinander: die Farbe muss
-          mit dem Legendenpunkt (100 %) abgleichbar bleiben — eine 13-%-Tönung
-          war nachweislich eine ANDERE Farbe und ließ sich nicht zuordnen —,
-          darf die Zelle aber nicht dominieren. Ein voll deckender Streifen ÜBER
-          der Zellkante löste nur die erste Hälfte: er sah aus wie ein Deckel
-          auf der Zelle. Als schmale Marke INNERHALB der Zelle, neben der
-          Tageszahl, bleibt die Farbe unverfälscht vergleichbar und liest sich
-          als Eigenschaft dieses Tages statt als Bauteil des Rahmens. Der Hex
-          kommt aus der DB (property_seasons) — ein Datenwert, deshalb `style`. */}
       <div className="flex items-center gap-1.5 px-1.5 pt-1 text-xs">
-        {saison && (
-          <span
-            className="h-3.5 w-1 shrink-0 rounded-full"
-            style={{ backgroundColor: saison.color }}
-          />
-        )}
         {istHeute ? (
           // „Heute" als gefüllter Punkt: eine Akzent-Rahmenlinie ging auf
           // getönten Zellen unter.

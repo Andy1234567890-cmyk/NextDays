@@ -6,7 +6,15 @@
 // web/components/portal/portal-kalender.tsx): ein CHIP je AUFENTHALT und
 // Einheit, über seine Nächte gespannt, in der KANALFARBE, mit Portal-Logo,
 // Vorname des Gastes und der Netto-Auszahlung PRO NACHT. Die Tageszelle trägt
-// die Saisonfarbe als schmale Marke und bei mehreren Einheiten „2/5".
+// und bei mehreren Einheiten „2/5".
+//
+// KEINE SAISONS (15.09.2026). Der Kalender trug Saisonpunkte und eine
+// Legende „Saison <Name>". Die Namen des Betriebs lauten real
+// „Saison A - 30", „Saison DanaCup - 50" — sie TRAGEN die Aufschlagsstufe
+// im Klartext. Der Contract streicht `mode` und `amount` ausdrücklich als
+// Vertriebswissen (`PortalSeason`); über den Namen stand die ganze Staffel
+// trotzdem in der Legende. Eine Saison sagt dem Eigentümer ohnehin nichts
+// über SEIN Geld — das steht als Auszahlung pro Nacht am Chip.
 //
 // Vorher stand in jeder Nacht ein Kasten in drei Farben (frei/belegt/gesperrt)
 // — die App zeigte damit weniger als das Web, obwohl der Contract längst alles
@@ -58,7 +66,6 @@ import {
   aufenthalteBilden,
   bahnenVerteilen,
   grundText,
-  saisonProTag,
   segmenteBilden,
   wochenBilden,
 } from "@/lib/kalender-aufenthalte";
@@ -67,17 +74,16 @@ import { kanalAusQuelle, kanalLabel } from "@/lib/kanaele";
 import {
   getOwnerCalendar,
   getOwnerProperties,
-  getOwnerSeasons,
   moveReservation,
   type PortalCalendarDay,
   type PortalProperty,
-  type PortalSeason,
 } from "@/lib/ownerPortal";
 import { portalLogo } from "@/lib/portal-logos";
 import { useRealtime } from "@/lib/realtime";
-import { monatName, naechte as naechteZwischen, prozent, tagPlus, wochentagKurz } from "@/lib/zeitraum";
+import { monatName, prozent, tageDifferenz, tagPlus, wochentagKurz } from "@/lib/zeitraum";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
 import { kanalFarbe } from "@/theme/kanalfarben";
+import { schriftAuf } from "@/theme/tokens";
 import { useTheme } from "@/theme/ThemeProvider";
 
 /** Die Rasterspalten, Montag zuerst — die Zahlen sind die Schlüssel in `wtagKurz.*`. */
@@ -94,7 +100,10 @@ const SPALTE = 100 / 7;
 // endet am Abreisetag zur Mitte — am Wechseltag teilen sich zwei Aufenthalte
 // den Tag sichtbar, statt wie eine Doppelbuchung auszusehen.
 const HALBER_TAG = 0.5;
-const CHIP_TEXT = "#FFFFFF";
+// KEINE Konstante mehr (15.09.2026): die Chipflaeche kommt teils aus DATEN
+// (Kanalfarbe) und teils aus dem Thema (`gesperrtFarbe` = `soft`, im
+// Dunkeln hell). Festes Weiss ergab dort 2,52:1 bzw. 3,05:1 auf Airbnb.
+// `schriftAuf` waehlt je Flaeche — siehe theme/tokens.ts.
 
 /** LOKALES Kalenderdatum — kein `toISOString()` (siehe Kopf, Falle 1). */
 export function iso(d: Date): string {
@@ -184,7 +193,6 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
     return { jahr: jetzt.getFullYear(), monat: jetzt.getMonth() };
   });
   const [tage, setTage] = useState<Map<string, PortalCalendarDay> | null>(null);
-  const [saisons, setSaisons] = useState<PortalSeason[]>([]);
   const [fehler, setFehler] = useState<string | null>(null);
   const [auswahl, setAuswahl] = useState<Auswahl>(null);
 
@@ -203,8 +211,16 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
   const zellen = useMemo(() => rasterVolleWochen(monat.jahr, monat.monat), [monat]);
   const monatsPraefix = `${monat.jahr}-${String(monat.monat + 1).padStart(2, "0")}`;
 
+  // Nur die JUENGSTE Anfrage darf schreiben (Wurzel 2). Zwei Abrufe in
+  // Folge — schnelles Blaettern, ein Objektwechsel, ein Realtime-Ereignis
+  // mitten im Laden — kommen in unbestimmter Reihenfolge zurueck; ohne
+  // diesen Zaehler ueberschreibt die LANGSAMERE Antwort die neuere, und
+  // die Ansicht zeigt Daten eines Zeitraums, der nicht mehr gewaehlt ist.
+  const lauf = useRef(0);
+
   const monatLaden = useCallback(async () => {
     if (!gewaehlt) return;
+    const meins = ++lauf.current;
     setTage(null);
     // Das ganze Blatt laden, nicht nur den Monat: die Randtage der
     // Nachbarmonate tragen ihre Belegung mit.
@@ -215,6 +231,7 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
     folge.setDate(folge.getDate() + 1);
     const ende = iso(folge);
     const res = await getOwnerCalendar(gewaehlt, start, ende);
+    if (meins !== lauf.current) return;
     if (res.ok) {
       setTage(new Map(res.data.days.map((d) => [d.date, d])));
       setFehler(null);
@@ -224,35 +241,23 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
     }
   }, [gewaehlt, zellen]);
 
-  // Saisons hängen am Objekt, nicht am Monat. Sie sind Schmuck, kein
-  // Kerninhalt: scheitert der Abruf, bleibt der Kalender nutzbar und zeigt
-  // nur keine Saisonfarben (wie im Web).
-  const saisonsLaden = useCallback(async () => {
-    if (!gewaehlt) return;
-    const res = await getOwnerSeasons(gewaehlt);
-    setSaisons(res.ok ? res.data.items : []);
-  }, [gewaehlt]);
-
   useEffect(() => {
     void monatLaden();
   }, [monatLaden]);
   useEffect(() => {
     setAuswahl(null);
-    void saisonsLaden();
-  }, [saisonsLaden]);
+  }, [gewaehlt]);
 
   // Alle speisenden Tabellen abonnieren: `availability` die Sperren,
-  // `reservations` die Buchungen, die Saison-Tabellen die Farben. Fehlt ein
-  // Abo, sieht die Ansicht live aus und aktualisiert nie (CLAUDE.md „Realtime").
+  // `reservations` die Buchungen. Fehlt ein Abo, sieht die Ansicht live aus
+  // und aktualisiert nie (CLAUDE.md „Realtime"). Die beiden Saison-Tabellen
+  // sind mit der Saison-Anzeige entfallen.
   useRealtime({ table: "availability", onChange: monatLaden });
   useRealtime({ table: "reservations", onChange: monatLaden });
-  useRealtime({ table: "property_seasons", onChange: saisonsLaden });
-  useRealtime({ table: "property_season_assignments", onChange: saisonsLaden });
 
   const heute = iso(new Date());
   const wochen = useMemo(() => wochenBilden(zellen.map((z) => iso(z))), [zellen]);
   const aufenthalte = useMemo(() => (tage ? aufenthalteBilden([...tage.values()]) : []), [tage]);
-  const saisonMap = useMemo(() => saisonProTag(saisons), [saisons]);
 
   // Legende: nur die Kanäle, die in diesem Monat wirklich vorkommen — ein
   // Punkt für eine Farbe, die im Blatt gar nicht auftaucht, erklärt nichts.
@@ -281,24 +286,6 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
   const wochenRef = useRef<(string | null)[][]>([]);
   wochenRef.current = wochen;
 
-  // DIAGNOSE (Ansage 08.09.2026: „ich will sofort wissen, warum Drag and Drop
-  // nicht geht — debuggen"). Jeder Schritt der Geste schreibt hier hinein, und
-  // das Band unter dem Raster zeigt es AUF DEM BILDSCHIRM. Aus den Pixeln
-  // allein war nicht zu erkennen, ob der Pan gar nicht startet, ob die
-  // Trefferberechnung danebenliegt oder ob die Freiheitsprüfung am Ende
-  // abweist — drei verschiedene Fehler, die gleich aussehen.
-  //
-  // Nur in der Entwicklung: in der veröffentlichten App ist `__DEV__` falsch,
-  // dann wird nichts gesammelt und nichts gezeigt.
-  const [diag, setDiag] = useState<string[]>([]);
-  const merken = useCallback((zeile: string) => {
-    if (!__DEV__) return;
-    // Zusätzlich ins Log: das Band zeigt es dem Auge, das Log macht es von
-    // außen lesbar (`xcrun simctl spawn booted log stream`) — ohne das muss
-    // jemand danebenstehen und abtippen.
-    console.log(`[zieh] ${zeile}`);
-    setDiag((alt) => [zeile, ...alt].slice(0, 6));
-  }, []);
 
   // BUCHUNG VERSCHIEBEN (Drag-and-Drop, Ansage 08.09.2026).
   //
@@ -314,20 +301,11 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
   } | null>(null);
   const greiftRef = useRef<typeof greift>(null);
   const [schiebt, setSchiebt] = useState(false);
+  // Der Zustand allein reicht nicht: `aufLoslassen` liest ihn aus einem
+  // Callback heraus, das den Render nicht mitbekommt.
+  const schiebtRef = useRef(false);
   const startTagRef = useRef<string | null>(null);
 
-  const aufGreifen = useCallback(
-    (a: Aufenthalt, datum: string) => {
-      // Eigennutzung ist keine Buchung — sie hat keine Reservierung, die der
-      // Server verschieben könnte.
-      if (a.eigennutzung) return;
-      greiftRef.current = { aufenthalt: a, versatz: 0 };
-      startTagRef.current = datum;
-      setGreift(greiftRef.current);
-      merken(`GREIFT ${a.gast ?? "Buchung"} ab ${a.von}`);
-    },
-    [merken],
-  );
 
   // ZEITRAUM ZIEHEN — die Handler sitzen AN DER TAGESZELLE, nicht an einer
   // Geste über dem Raster.
@@ -350,6 +328,14 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
   const zeilenFenster = useRef<{ x: number; y: number; b: number; h: number }[]>([]);
   const zeilenRefs = useRef<(View | null)[]>([]);
 
+  const zeilenVermessen = useCallback(() => {
+    for (const [i, ref] of zeilenRefs.current.entries()) {
+      ref?.measureInWindow((x, y, b, h) => {
+        zeilenFenster.current[i] = { x, y, b, h };
+      });
+    }
+  }, []);
+
   const tagAnPunkt = useCallback((seiteX: number, seiteY: number): string | null => {
     const zeile = zeilenFenster.current.findIndex(
       (z) => z && seiteY >= z.y && seiteY < z.y + z.h && seiteX >= z.x && seiteX < z.x + z.b,
@@ -360,11 +346,24 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
     return wochenRef.current[zeile]?.[spalte] ?? null;
   }, []);
 
-  const aufBeruehrt = useCallback(
-    (datum: string) => {
-      merken(`BERÜHRT ${datum}`);
+  const aufGreifen = useCallback(
+    (a: Aufenthalt, seiteX: number, seiteY: number) => {
+      // Eigennutzung ist keine Buchung — sie hat keine Reservierung, die der
+      // Server verschieben könnte.
+      if (a.eigennutzung) return;
+      // Der GRIFFPUNKT ist der Tag unter dem Finger, nicht der Anfang des
+      // Aufenthalts. Bis zum 15.09.2026 wurde `a.von` uebergeben: wer eine
+      // Buchung 10.–17. am 15. anfasste und einen Millimeter bewegte, sah sie
+      // sofort fuenf Spalten weiter springen — und genau diese fuenf Tage
+      // gingen beim Loslassen an den Server. Nur ein Griff exakt auf den
+      // ersten Tag ergab das Richtige.
+      const tag = tagAnPunkt(seiteX, seiteY);
+      if (!tag) return;
+      greiftRef.current = { aufenthalt: a, versatz: 0 };
+      startTagRef.current = tag;
+      setGreift(greiftRef.current);
     },
-    [merken],
+    [tagAnPunkt],
   );
 
   const aufHalten = useCallback(
@@ -372,9 +371,8 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
       haltenRef.current = true;
       ziehRef.current = { von: datum, bis: datum };
       setZieh(ziehRef.current);
-      merken(`HALTEN ${datum}`);
     },
-    [merken],
+    [],
   );
 
   const aufZiehen = useCallback(
@@ -385,7 +383,7 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
       if (g) {
         const tag = tagAnPunkt(seiteX, seiteY);
         if (!tag || !startTagRef.current) return;
-        const versatz = naechteZwischen(startTagRef.current, tag);
+        const versatz = tageDifferenz(startTagRef.current, tag);
         if (versatz === g.versatz) return;
         greiftRef.current = { ...g, versatz };
         setGreift(greiftRef.current);
@@ -393,16 +391,12 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
       }
       if (!haltenRef.current || !ziehRef.current) return;
       const tag = tagAnPunkt(seiteX, seiteY);
-      if (!tag) {
-        merken(`ZIEHEN: kein Tag bei y=${Math.round(seiteY)} (${zeilenFenster.current.length} Zeilen)`);
-        return;
-      }
+      if (!tag) return;
       if (tag === ziehRef.current.bis) return;
       ziehRef.current = { von: ziehRef.current.von, bis: tag };
       setZieh(ziehRef.current);
-      merken(`ZIEHEN bis ${tag}`);
     },
-    [tagAnPunkt, merken],
+    [tagAnPunkt],
   );
 
   // Die Bewegung liefert eine Pan-Geste ÜBER dem Raster. Sie darf neben den
@@ -443,14 +437,18 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
       startTagRef.current = null;
       setGreift(null);
       if (g.versatz === 0) return;
+      // Wurzel 2: waehrend ein Zug laeuft, wird kein zweiter angenommen. Ohne
+      // diesen Riegel ueberholen sich zwei `move`-Aufrufe, `monatLaden` laeuft
+      // doppelt, und die zuletzt eintreffende Antwort bestimmt die Anzeige.
+      if (schiebtRef.current) return;
       const a = g.aufenthalt;
-      // `bis` ist die letzte belegte NACHT; der Server will den Abreisetag
-      // (exklusiv), also einen Tag später. Dieselbe Umrechnung wie überall.
-      const neuVon = tagPlus(a.von, g.versatz);
-      const neuBis = tagPlus(tagPlus(a.bis, 1), g.versatz);
-      merken(`ABSETZEN ${a.von} → ${neuVon} (${g.versatz} Tage)`);
+      // Gesendet wird die BEWEGUNG, nicht das Ergebnis: `a.von` ist die erste
+      // Nacht im sichtbaren Monat, nicht der Anreisetag. Wer daraus Daten
+      // rechnet, verkuerzt jede Buchung, die vor dem Blatt beginnt.
+      schiebtRef.current = true;
       setSchiebt(true);
-      void moveReservation(a.reservationId, neuVon, neuBis).then((res) => {
+      void moveReservation(a.reservationId, g.versatz).then((res) => {
+        schiebtRef.current = false;
         setSchiebt(false);
         if (!res.ok) {
           // Der Server nennt den Grund (409 belegt, 422 Preis fehlt). Ihn zu
@@ -471,20 +469,13 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
     const [von, bis] = z.von <= z.bis ? [z.von, z.bis] : [z.bis, z.von];
     // Der zuletzt berührte Tag IST der Abreisetag — so zählt auch das
     // Buchungsblatt (`aufenthaltNaechte(von, bis)`).
-    if (von === bis) {
-      merken(`ENDE: nur EIN Tag (${von})`);
-      return;
-    }
+    if (von === bis) return;
     // NICHT über belegte Nächte hinweg: jede Nacht von der Anreise bis VOR die
     // Abreise muss frei sein — der Abreisetag selbst darf belegt sein, dort
     // reist der nächste Gast an.
-    if (!alsAbreiseWaehlbar(tage, von, bis)) {
-      merken(`ENDE: ${von}→${bis} belegt`);
-      return;
-    }
-    merken(`ENDE: Antrag ${von} → ${bis}`);
+    if (!alsAbreiseWaehlbar(tage, von, bis)) return;
     navigation.navigate("SperrAntrag", { propertyId: gewaehlt, von, bis });
-  }, [gewaehlt, navigation, tage, merken, monatLaden, txt]);
+  }, [gewaehlt, navigation, tage, monatLaden, txt]);
 
   ziehenRef.current = aufZiehen;
   loslassenRef.current = aufLoslassen;
@@ -537,9 +528,9 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
                     paddingVertical: 8,
                     paddingHorizontal: 14,
                     borderRadius: 999,
-                    backgroundColor: aktiv ? t.palette.ink : t.palette.surface,
+                    backgroundColor: aktiv ? t.palette.accent : t.palette.surface,
                     borderWidth: 1,
-                    borderColor: aktiv ? t.palette.ink : t.palette.line,
+                    borderColor: aktiv ? t.palette.accent : t.palette.line,
                   }}
                 >
                   <Txt v="xs" color={aktiv ? t.palette.bg : t.palette.ink} numberOfLines={1} style={{ fontFamily: t.fonts.medium }}>
@@ -563,7 +554,15 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
         // 08.09.2026: „jetzt ist das Drag-and-Drop kaputt"). Reanimated
         // braucht er nicht — die App hat es nicht, und `Gesture.Native()`
         // hätte genau daran gescheitert.
-        scrollEnabled={zieh === null}
+        // Auch waehrend ein CHIP gezogen wird: die Zeilenpositionen sind
+        // im Fenster gemessen, und eine unter dem Finger wegwandernde
+        // Seite laesst `tagAnPunkt` auf die falsche Woche zeigen.
+        scrollEnabled={zieh === null && greift === null}
+        // Nach JEDEM Rollen neu vermessen. Vorher geschah das nur in
+        // `onLayout`, also einmal: wer scrollte und dann zog, traf eine
+        // Woche daneben oder gar nichts.
+        onScroll={zeilenVermessen}
+        scrollEventThrottle={16}
         contentContainerStyle={{
           padding: t.density.pad,
           paddingTop: 0,
@@ -652,7 +651,6 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
                     segmente={segmenteBilden(woche, aufenthalte)}
                     heute={heute}
                     tage={tage}
-                    saisonMap={saisonMap}
                     gesperrtFarbe={gesperrtFarbe}
                     monatsPraefix={monatsPraefix}
                     zieh={zieh}
@@ -663,14 +661,12 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
                     onLayout={(_e: LayoutChangeEvent) => {
                       zeilenRefs.current[wi]?.measureInWindow((x, y, b, h) => {
                         zeilenFenster.current[wi] = { x, y, b, h };
-                        merken(`zeile ${wi}: y=${Math.round(y)} h=${Math.round(h)} b=${Math.round(b)}`);
                       });
                     }}
                     zeileRef={(v) => {
                       zeilenRefs.current[wi] = v;
                     }}
                     aufAuswahl={setAuswahl}
-                    aufBeruehrt={aufBeruehrt}
                     aufHalten={aufHalten}
                     aufGreifen={aufGreifen}
                     greift={greift}
@@ -701,31 +697,6 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
               {txt("kal.hinweis")}
             </Txt>
 
-            {/* Diagnose-Band (nur in der Entwicklung). Zeigt die letzten
-                sechs Schritte der Zieh-Geste. Sagt beim ersten Blick, WO es
-                hakt: kommt kein „BEGIN", erreicht die Berührung den Pan gar
-                nicht; kommt „BEGIN" ohne „START", schlägt der lange Druck
-                fehl; kommt „START → kein Tag", liegt die Trefferberechnung
-                daneben; kommt „ENDE: … nicht wählbar", greift die
-                Belegungsprüfung. */}
-            {__DEV__ && diag.length > 0 ? (
-              <View
-                style={{
-                  marginTop: 10,
-                  padding: 8,
-                  borderRadius: 8,
-                  backgroundColor: t.palette.surface2,
-                  borderWidth: 1,
-                  borderColor: t.palette.line,
-                }}
-              >
-                {diag.map((z, i) => (
-                  <Txt key={`${i}-${z}`} v="xs" style={{ fontSize: 10, lineHeight: 14 }}>
-                    {z}
-                  </Txt>
-                ))}
-              </View>
-            ) : null}
 
             {/* Legende als Pillen: Kanäle des Monats, Eigennutzung nur wenn
                 vorhanden, dann die beiden festen Zustände. */}
@@ -736,10 +707,6 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
               {eigennutzungImMonat ? <Legende farbe={gesperrtFarbe} label={txt("kal.eigennutzung")} /> : null}
               <Legende farbe={gesperrtFarbe} label={txt("kal.gesperrt")} rahmen />
               <Legende farbe={t.palette.surface} label={txt("kal.frei")} rahmen />
-              {saisons.map((s) => (
-                // Die Farbe kommt als Hex AUS DER DB — ein Datenwert.
-                <Legende key={s.id} farbe={s.color} label={`Saison ${s.name}`} rund />
-              ))}
             </View>
           </Kachel>
           </>
@@ -751,7 +718,6 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
       <Detail
         auswahl={auswahl}
         tag={auswahl?.art === "tag" ? (tage?.get(auswahl.wert) ?? null) : null}
-        saison={auswahl?.art === "tag" ? (saisonMap.get(auswahl.wert) ?? null) : null}
         gesperrtFarbe={gesperrtFarbe}
         schliessen={() => setAuswahl(null)}
       />
@@ -770,7 +736,7 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
           }}
         >
           <Btn
-            variant="dark"
+            variant="primary"
             block
             iconR="fwd"
             onPress={() => navigation.navigate("SperrAntrag", { propertyId: gewaehlt ?? undefined })}
@@ -831,14 +797,12 @@ function Wochenzeile({
   segmente,
   heute,
   tage,
-  saisonMap,
   gesperrtFarbe,
   monatsPraefix,
   zieh,
   onLayout,
   zeileRef,
   aufAuswahl,
-  aufBeruehrt,
   aufHalten,
   aufGreifen,
   greift,
@@ -848,16 +812,14 @@ function Wochenzeile({
   segmente: Segment[];
   heute: string;
   tage: Map<string, PortalCalendarDay>;
-  saisonMap: Map<string, PortalSeason>;
   gesperrtFarbe: string;
   monatsPraefix: string;
   zieh: { von: string; bis: string } | null;
   onLayout: (e: LayoutChangeEvent) => void;
   zeileRef: (v: View | null) => void;
   aufAuswahl: (a: Auswahl) => void;
-  aufBeruehrt: (datum: string) => void;
   aufHalten: (datum: string) => void;
-  aufGreifen: (a: Aufenthalt, datum: string) => void;
+  aufGreifen: (a: Aufenthalt, seiteX: number, seiteY: number) => void;
   greift: { aufenthalt: Aufenthalt; versatz: number } | null;
   ziehGesteRef: React.MutableRefObject<GestureType | undefined>;
 }) {
@@ -889,11 +851,9 @@ function Wochenzeile({
                 datum <= (zieh.von <= zieh.bis ? zieh.bis : zieh.von)
               }
               info={tage.get(datum) ?? null}
-              saison={saisonMap.get(datum) ?? null}
               gesperrtFarbe={gesperrtFarbe}
               letzte={i === 6}
               auf={() => aufAuswahl({ art: "tag", wert: datum })}
-              aufBeruehrt={() => aufBeruehrt(datum)}
               aufHalten={() => aufHalten(datum)}
               ziehGesteRef={ziehGesteRef}
             />
@@ -915,7 +875,9 @@ function Wochenzeile({
             bahn={bahn}
             gesperrtFarbe={gesperrtFarbe}
             auf={() => aufAuswahl({ art: "aufenthalt", wert: segment.aufenthalt })}
-            aufGreifen={() => aufGreifen(segment.aufenthalt, segment.aufenthalt.von)}
+            aufGreifen={(seiteX, seiteY) =>
+              aufGreifen(segment.aufenthalt, seiteX, seiteY)
+            }
             // Nur der GEGRIFFENE Aufenthalt wandert. Die Prüfung geht über die
             // Reservierungs-ID, nicht über das Segment: ein Aufenthalt über
             // einen Wochenwechsel hat mehrere Segmente, und alle müssen sich
@@ -936,20 +898,17 @@ function Tageszelle({
   datum,
   istHeute,
   info,
-  saison,
   gesperrtFarbe,
   letzte,
   fremd,
   imZieh,
   auf,
-  aufBeruehrt,
   aufHalten,
   ziehGesteRef,
 }: {
   datum: string;
   istHeute: boolean;
   info: PortalCalendarDay | null;
-  saison: PortalSeason | null;
   gesperrtFarbe: string;
   letzte: boolean;
   /** Tag des Nachbarmonats — blass, aber mit seiner Belegung. */
@@ -957,8 +916,6 @@ function Tageszelle({
   /** Liegt im gerade gezogenen Zeitraum. */
   imZieh: boolean;
   auf: () => void;
-  /** Erste Berührung — belegt, dass die Zelle Touch-Ereignisse bekommt. */
-  aufBeruehrt: () => void;
   /** Die Pan-Geste des Rasters, damit sie neben dem Pressable laufen darf. */
   ziehGesteRef: React.MutableRefObject<GestureType | undefined>;
   /** Langer Druck: Zeitraum-Wahl beginnt an DIESEM Tag. */
@@ -988,7 +945,6 @@ function Tageszelle({
       // nichts passierte (gemessen am 08.09.2026 an seiner Props-Liste).
       // Die Bewegung liefert deshalb die Pan-Geste über dem Raster, die per
       // `simultaneousWithExternalGesture` neben dem Pressable laufen darf.
-      onPressIn={aufBeruehrt}
       onLongPress={aufHalten}
       delayLongPress={220}
       simultaneousWithExternalGesture={ziehGesteRef}
@@ -1015,12 +971,16 @@ function Tageszelle({
               width: 22,
               height: 22,
               borderRadius: 11,
-              backgroundColor: t.palette.ink,
+              // HEUTE trägt die Marke, nicht Schwarz. Der Kreis ist der
+              // einzige gefüllte Punkt im Raster und damit sein Anker; in
+              // Schwarz war er die dunkelste Fläche des Bildschirms und zog
+              // mehr Blick auf sich als jede Buchung darin.
+              backgroundColor: t.palette.accent,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <Txt v="xs" color={t.palette.bg} style={{ fontSize: 12, lineHeight: 14, fontFamily: t.fonts.semibold }}>
+            <Txt v="xs" color={t.palette.accentInk} style={{ fontSize: 12, lineHeight: 14, fontFamily: t.fonts.semibold }}>
               {tag}
             </Txt>
           </View>
@@ -1033,11 +993,6 @@ function Tageszelle({
             {tag}
           </Txt>
         )}
-        {/* Saison als Punkt unter der Zahl in VOLLER Deckkraft — nur so bleibt
-            die Farbe mit dem Legendenpunkt abgleichbar. */}
-        {saison ? (
-          <View style={{ position: "absolute", right: 4, top: 6, width: 5, height: 5, borderRadius: 3, backgroundColor: saison.color }} />
-        ) : null}
       </View>
     </GestenPressable>
   );
@@ -1072,7 +1027,8 @@ function AufenthaltChip({
   gesperrtFarbe: string;
   auf: () => void;
   /** Langer Druck: diese Buchung wird jetzt gezogen. */
-  aufGreifen: () => void;
+  /** Beruehrungspunkt in SEITENkoordinaten — daraus wird der Griff-Tag. */
+  aufGreifen: (seiteX: number, seiteY: number) => void;
   /** Verschiebung in Tagen, solange dieser Chip gezogen wird (sonst 0). */
   versatz: number;
   ziehGesteRef: React.MutableRefObject<GestureType | undefined>;
@@ -1118,8 +1074,8 @@ function AufenthaltChip({
         accessibilityLabel={txt("kal.eigennutzung")}
         style={[lage, { backgroundColor: gesperrtFarbe }]}
       >
-        <Icon n="home" s={12} sw={2} c={CHIP_TEXT} />
-        <Txt v="xs" color={CHIP_TEXT} numberOfLines={1} style={{ fontSize: 11, lineHeight: 14 }}>
+        <Icon n="home" s={12} sw={2} c={schriftAuf(gesperrtFarbe)} />
+        <Txt v="xs" color={schriftAuf(gesperrtFarbe)} numberOfLines={1} style={{ fontSize: 11, lineHeight: 14 }}>
           {txt("kal.eigennutzung")}
         </Txt>
       </GestenPressable>
@@ -1129,7 +1085,12 @@ function AufenthaltChip({
   return (
     <GestenPressable
       onPress={auf}
-      onLongPress={aufGreifen}
+      // `pageX/pageY` sind Seitenkoordinaten, dasselbe Bezugssystem wie
+      // `measureInWindow` der Wochenzeilen — nur darin laesst sich aus
+      // einem Fingerpunkt ein Tag bestimmen.
+      onLongPress={(e) =>
+        aufGreifen(e.nativeEvent.pageX, e.nativeEvent.pageY)
+      }
       delayLongPress={220}
       // Ohne das nähme dieses Pressable der Pan-Geste die Berührung ab, und
       // der Chip ließe sich greifen, aber nicht bewegen.
@@ -1155,13 +1116,13 @@ function AufenthaltChip({
           <Image source={logo} resizeMode="contain" style={{ width: 30, height: 10 }} accessibilityLabel={label} />
         </View>
       ) : label ? (
-        <Txt v="xs" color={CHIP_TEXT} numberOfLines={1} style={{ fontSize: 10, lineHeight: 13, opacity: 0.9 }}>
+        <Txt v="xs" color={schriftAuf(kanalFarbe(kanal))} numberOfLines={1} style={{ fontSize: 10, lineHeight: 13, opacity: 0.9 }}>
           {label}
         </Txt>
       ) : null}
       {/* Nur der VORNAME (§4.2). Er ist das einzige Element, das nachgeben darf. */}
       {a.gast && segment.echterAnfang ? (
-        <Txt v="xs" color={CHIP_TEXT} numberOfLines={1} style={{ flexShrink: 1, fontSize: 11, lineHeight: 14 }}>
+        <Txt v="xs" color={schriftAuf(kanalFarbe(kanal))} numberOfLines={1} style={{ flexShrink: 1, fontSize: 11, lineHeight: 14 }}>
           {a.gast}
         </Txt>
       ) : null}
@@ -1169,12 +1130,12 @@ function AufenthaltChip({
           über zwei Wochenzeilen wie zwei Zahlungen. */}
       {segment.echtesEnde && segment.breite >= 3 ? (
         <View style={{ marginLeft: "auto", flexDirection: "row", alignItems: "baseline", gap: 3, flexShrink: 0 }}>
-          <Txt v="xs" color={CHIP_TEXT} style={{ fontSize: 9, lineHeight: 12, opacity: 0.75 }}>
+          <Txt v="xs" color={schriftAuf(kanalFarbe(kanal))} style={{ fontSize: 9, lineHeight: 12, opacity: 0.75 }}>
             {txt("kal.nettoJeNachtKurz")}
           </Txt>
           <Txt
             v={betrag ? "bold" : "xs"}
-            color={CHIP_TEXT}
+            color={schriftAuf(kanalFarbe(kanal))}
             style={{ fontSize: 11, lineHeight: 14, fontStyle: betrag ? "normal" : "italic" }}
           >
             {betrag ?? betragKurz(txt)}
@@ -1258,13 +1219,11 @@ function Legende({
 function Detail({
   auswahl,
   tag,
-  saison,
   gesperrtFarbe,
   schliessen,
 }: {
   auswahl: Auswahl;
   tag: PortalCalendarDay | null;
-  saison: PortalSeason | null;
   gesperrtFarbe: string;
   schliessen: () => void;
 }) {
@@ -1303,7 +1262,6 @@ function Detail({
       k: txt("kal.belegung"),
       v: txt(status === "booked" ? "kal.belegt" : status === "blocked" ? "kal.gesperrt" : "kal.frei"),
     });
-    if (saison) zeilen.push({ k: txt("kal.saison", { name: saison.name }), v: saison.name });
     if (tag && tag.units_total > 1) {
       zeilen.push({
         k: txt("kal.einheiten"),

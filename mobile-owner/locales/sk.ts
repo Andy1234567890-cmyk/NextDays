@@ -215,7 +215,6 @@ export const sk: Katalog = {
   "mehr.auslastungText": "Obsadenosť a zdroje rezervácií",
   "mehr.sprache": "Jazyk",
   "mehr.spracheWaehlen": "Vybrať jazyk",
-  "mehr.andereAppText": "Aplikácia pre správu – ak prenajímate sami",
   "mehr.abmelden": "Odhlásiť sa",
   "mehr.wirdAbgemeldet": "Odhlasovanie…",
   "stat.titel": "Obsadenosť a kanály",

@@ -147,7 +147,7 @@ export default function AufenthaltBestaetigt({ navigation, route }: { navigation
         <Btn variant="ghost" block onPress={() => navigation.navigate("Tabs", { screen: "Start" })}>
           {txt("best.zurStartseite")}
         </Btn>
-        <Btn variant="dark" block onPress={() => navigation.navigate("Tabs", { screen: "Aufenthalte" })}>
+        <Btn variant="primary" block onPress={() => navigation.navigate("Tabs", { screen: "Aufenthalte" })}>
           {txt("best.zuAufenthalten")}
         </Btn>
       </View>

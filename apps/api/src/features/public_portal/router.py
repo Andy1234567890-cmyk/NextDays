@@ -36,6 +36,7 @@ from .dependencies import (
     PortalAufgabenServiceDep,
     PortalChatServiceDep,
     PublicPortalServiceDep,
+    require_portal_faehigkeit,
     require_portal_recht,
 )
 from .dienstleistungen import DienstleistungError
@@ -56,7 +57,6 @@ from .schemas import (
     PortalPhotoAlbum,
     PortalPropertyDetail,
     PortalPropertyList,
-    PortalSeasonList,
     PortalStatementList,
     PortalStatisticsResponse,
     ReservationMoveRequest,
@@ -91,8 +91,14 @@ _BLOCK = require_permission(Capability.REQUEST_BLOCK)  # noqa: N816  pylint: dis
 # Eigenes Recht, NICHT `_BLOCK`: eine fremde Gastbuchung umzulegen ist etwas
 # anderes, als sich selbst Tage zu wünschen — und `REQUEST_BLOCK` tragen auch
 # Familienmitglieder.
-_MOVE = require_permission(Capability.MOVE_OWN_RESERVATION)  # noqa: N816  pylint: disable=invalid-name
-_METER = require_permission(Capability.ADD_METER_READING)  # noqa: N816  pylint: disable=invalid-name
+#
+# `require_portal_faehigkeit` statt `require_permission` (15.09.2026): Letzteres
+# prüft für diese Fähigkeiten nur die ROLLE, und ein Familienmitglied trägt
+# `role='owner'`. Die Deckelung aus 0389 kam damit an diesen drei Schreibpfaden
+# nie an — die Begründung eine Zeile höher stimmte auf dem Papier und nicht im
+# Guard. Siehe `dependencies.require_portal_faehigkeit`.
+_MOVE = require_portal_faehigkeit(Capability.MOVE_OWN_RESERVATION)  # noqa: N816  pylint: disable=invalid-name
+_METER = require_portal_faehigkeit(Capability.ADD_METER_READING)  # noqa: N816  pylint: disable=invalid-name
 # Eigene Aufgaben (03.09.2026): dasselbe Recht wie im Tasks-Slice. Der
 # Eigentümer trägt es seit heute; den Objekt-/Zuweisungs-Scope erzwingt der
 # TasksService, nicht diese Route.
@@ -129,22 +135,17 @@ def calendar(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.get("/seasons", response_model=PortalSeasonList)
-def seasons(
-    service: PublicPortalServiceDep,
-    ctx: Annotated[AuthContext, Depends(_VIEW)],
-    property_id: Annotated[str, Query()],
-) -> PortalSeasonList:
-    """Saisons eines eigenen Objekts (Name, Farbe, Zeiträume) für den Kalender.
-
-    Dasselbe Recht wie `/calendar` (VIEW_CALENDAR): wer den Kalender sehen darf,
-    darf auch wissen, wie seine Tage gefärbt sind. Den Objekt-Scope erzwingt
-    der Service (404 bei fremdem Objekt), nicht diese Route.
-    """
-    try:
-        return service.seasons(ctx, property_id)
-    except PortalError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+# KEIN `/seasons` MEHR (15.09.2026). Der Endpunkt lieferte Name, Farbe und
+# Zeiträume einer Saison und hielt `mode`/`amount` bewusst zurück, weil die
+# Preisregel Vertriebswissen des Betriebs ist (§4.2). Die Vorsicht lief ins
+# Leere: `property_seasons.name` ist freier Text, und der Betrieb benennt seine
+# Saisons real nach ihrer Stufe — „Saison A - 30", „Saison DanaCup - 50". Der
+# Eigentümer las die ganze Staffel aus der Kalenderlegende ab.
+#
+# Entfernt statt nachgebessert: eine Saison beantwortet dem Eigentümer keine
+# Frage, die er hat. Was ihm seine Nacht bringt, steht als Auszahlung am Chip.
+# Der einzige Verbraucher war die App (`mobile-owner`); das Web-Portal holt
+# seine Saisons über den PMS-Endpunkt `/calendar/seasons`.
 
 
 @router.get("/earnings", response_model=PortalEarningsResponse)
@@ -441,7 +442,9 @@ def statistics(
 # Eigener Service (`dienstleistungen.py`), weil der Auftrag ein SCHREIBpfad in
 # einen fremden Slice (`tasks`) ist und nicht in den Portal-Lesepfad gehoert.
 
-_SERVICES = require_permission(Capability.BOOK_SERVICES)  # noqa: N816  pylint: disable=invalid-name
+# Wie `_MOVE`: ein beauftragter Dienst wird dem Eigentümer BERECHNET — eine
+# Geldbewegung, die eine Familienstufe `nutzung` nicht auslösen darf.
+_SERVICES = require_portal_faehigkeit(Capability.BOOK_SERVICES)  # noqa: N816  pylint: disable=invalid-name
 
 
 @router.get("/service-types", response_model=ServiceTypeList)

@@ -8,7 +8,7 @@
 // genannt) oder „keine Finanzfreigabe" und wird als „k. A." gezeigt, nie als 0
 // (Wurzel 4). Kein Gastpreis, kein Bruttoumsatz (§4.2) — deshalb fehlt die
 // Kennzahl „Rental Revenue" der Vorlage bewusst.
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -96,7 +96,15 @@ export default function Start({ navigation }: { navigation: Nav }) {
   const [laedt, setLaedt] = useState(true);
   const [fehler, setFehler] = useState<string | null>(null);
 
+  // Nur die JUENGSTE Anfrage darf schreiben (Wurzel 2). Zwei Abrufe in
+  // Folge — schnelles Blaettern, ein Objektwechsel, ein Realtime-Ereignis
+  // mitten im Laden — kommen in unbestimmter Reihenfolge zurueck; ohne
+  // diesen Zaehler ueberschreibt die LANGSAMERE Antwort die neuere, und
+  // die Ansicht zeigt Daten eines Zeitraums, der nicht mehr gewaehlt ist.
+  const lauf = useRef(0);
+
   const laden = useCallback(async () => {
+    const meins = ++lauf.current;
     setFehler(null);
     const { von, bis } = zeitraumGrenzen(einst.zeitraum, new Date());
     const [fin, obj] = await Promise.all([
@@ -109,9 +117,14 @@ export default function Start({ navigation }: { navigation: Nav }) {
       }),
       getOwnerProperties(),
     ]);
+    if (meins !== lauf.current) return;
     if (fin.ok) setDaten(fin.data);
     else setFehler(fin.error);
+    // Ein Fehler beim Objektabruf war bis zum 15.09.2026 STUMM: die
+    // Ueberschrift „Ihre Objekte" stand ohne Anzahl da, und niemand konnte
+    // einen Ausfall von „keine Objekte" unterscheiden (Wurzel 5).
     if (obj.ok) setObjekte(obj.data.items);
+    else setFehler((v) => v ?? obj.error);
     setLaedt(false);
   }, [einst.zeitraum, einst.propertyId, einst.ereignis, einst.vergleich]);
 
@@ -170,7 +183,11 @@ export default function Start({ navigation }: { navigation: Nav }) {
           </Pressable>
         </View>
 
-        {/* Zeitraum-Chips: schwarz = aktiv (Vorlage). Ein im Blatt gewählter
+        {/* Zeitraum-Chips: der aktive trägt die MARKE, nicht Schwarz. Die
+            Vorlage (Smoobu) setzt hier `ink`, und so stand es bis zum
+            15.09.2026 auch hier — eine schwarze Pille ist aber kein Zustand,
+            sie ist nur die dunkelste Fläche im Bild und zieht mehr
+            Aufmerksamkeit als die Zahl darunter. Ein im Blatt gewählter
             anderer Zeitraum lässt alle drei ruhen. */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {ZEITRAUM_CHIPS.map((z) => {
@@ -185,12 +202,12 @@ export default function Start({ navigation }: { navigation: Nav }) {
                   paddingVertical: 8,
                   paddingHorizontal: 14,
                   borderRadius: 999,
-                  backgroundColor: aktiv ? t.palette.ink : t.palette.surface,
+                  backgroundColor: aktiv ? t.palette.accent : t.palette.surface,
                   borderWidth: 1,
-                  borderColor: aktiv ? t.palette.ink : t.palette.line,
+                  borderColor: aktiv ? t.palette.accent : t.palette.line,
                 }}
               >
-                <Txt v="xs" color={aktiv ? t.palette.bg : t.palette.ink} style={{ fontFamily: t.fonts.medium }}>
+                <Txt v="xs" color={aktiv ? t.palette.accentInk : t.palette.ink} style={{ fontFamily: t.fonts.medium }}>
                   {txt(ZEITRAUM_SCHLUESSEL[z])}
                 </Txt>
               </Pressable>

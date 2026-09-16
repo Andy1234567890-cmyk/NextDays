@@ -61,7 +61,11 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
     const [a, o] = await Promise.all([getBlockRequests(), getOwnerProperties()]);
     if (a.ok) setAntraege(a.data.items);
     else setFehler(a.error);
+    // Stumm bis zum 15.09.2026: scheiterte der Objektabruf, trug JEDE Karte
+    // den Platzhalter „Objekt" statt eines Namens, ohne dass irgendetwas auf
+    // den Ausfall hinwies (Wurzel 5).
     if (o.ok) setObjekte(new Map(o.data.items.map((p) => [p.id, p])));
+    else setFehler((v) => v ?? o.error);
     setLaedt(false);
   }, []);
 
@@ -251,7 +255,7 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
                     />
                     <View style={{ flexDirection: "row", gap: 8 }}>
                       <Btn
-                        variant="dark"
+                        variant="primary"
                         style={{ flex: 1 }}
                         disabled={sendet}
                         onPress={() => void aufhebungSenden(a.id)}
@@ -301,7 +305,7 @@ export default function Aufenthalte({ navigation }: { navigation: Nav }) {
           backgroundColor: t.palette.bg,
         }}
       >
-        <Btn variant="dark" block iconR="fwd" onPress={() => navigation.navigate("SperrAntrag")}>
+        <Btn variant="primary" block iconR="fwd" onPress={() => navigation.navigate("SperrAntrag")}>
           Aufenthalt buchen
         </Btn>
       </View>
@@ -320,12 +324,29 @@ function StatusPille({ status }: { status: string }) {
         paddingVertical: 3,
         paddingHorizontal: 8,
         borderRadius: 999,
-        backgroundColor: bestaetigt ? t.palette.ink : abgelehnt ? t.palette.accentSoft : t.palette.surface2,
+        backgroundColor: bestaetigt
+          ? t.palette.positiv
+          : abgelehnt
+            ? t.palette.accentSoft
+            : t.palette.surface2,
       }}
     >
       <Txt
         v="xs"
-        color={bestaetigt ? t.palette.bg : abgelehnt ? t.palette.accent : t.palette.soft}
+        // `positiv` ist THEMEABHÄNGIG in der Helligkeit: hell ein dunkles Grün
+        // (#2F6B4F), dunkel ein helles (#86BBA1) — es ist als SCHRIFTfarbe
+        // gebaut. Als Pillenfläche muss die Schrift darauf deshalb
+        // mitdrehen, sonst steht Weiß auf Hellgrün (2,18:1). So sind es
+        // 6,29:1 hell und 8,58:1 dunkel.
+        color={
+          bestaetigt
+            ? t.dark
+              ? t.palette.bg
+              : t.palette.accentInk
+            : abgelehnt
+              ? t.palette.accentText
+              : t.palette.soft
+        }
         style={{ fontFamily: t.fonts.medium, fontSize: 11 }}
       >
         {antragStatusName(txt, status)}

@@ -215,7 +215,6 @@ export const sv: Katalog = {
   "mehr.auslastungText": "Beläggning och bokningskällor",
   "mehr.sprache": "Språk",
   "mehr.spracheWaehlen": "Välj språk",
-  "mehr.andereAppText": "Appen för förvaltning – om du hyr ut själv",
   "mehr.abmelden": "Logga ut",
   "mehr.wirdAbgemeldet": "Loggar ut ...",
   "stat.titel": "Beläggning & kanaler",

@@ -215,7 +215,6 @@ export const ro: Katalog = {
   "mehr.auslastungText": "Ocupare și surse de rezervare",
   "mehr.sprache": "Limba",
   "mehr.spracheWaehlen": "Alegeți limba",
-  "mehr.andereAppText": "Aplicația pentru administrare — dacă închiriați dumneavoastră înșivă",
   "mehr.abmelden": "Deconectați-vă",
   "mehr.wirdAbgemeldet": "Se deconectează...",
   "stat.titel": "Ocupare și canale",

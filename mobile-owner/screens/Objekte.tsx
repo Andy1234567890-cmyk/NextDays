@@ -58,7 +58,7 @@ export default function Objekte({ navigation }: { navigation: Nav }) {
         <Pressable onPress={() => navigation.navigate("Fotoalbum")}>
           <Kachel>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-              <Icon n="cam" s={22} c={t.palette.accent} />
+              <Icon n="cam" s={22} c={t.palette.accentText} />
               <View style={{ flex: 1 }}>
                 <Txt v="title">{txt("obj.fotoalbum")}</Txt>
                 <Txt v="xs" soft>

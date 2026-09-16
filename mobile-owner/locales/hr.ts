@@ -215,7 +215,6 @@ export const hr: Katalog = {
   "mehr.auslastungText": "Popunjenost i izvori rezervacija",
   "mehr.sprache": "Jezik",
   "mehr.spracheWaehlen": "Odaberite jezik",
-  "mehr.andereAppText": "Aplikacija za upravljanje – ako sami iznajmljujete",
   "mehr.abmelden": "Odjava",
   "mehr.wirdAbgemeldet": "Odjava u tijeku…",
   "stat.titel": "Popunjenost i kanali",

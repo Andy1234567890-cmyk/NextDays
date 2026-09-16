@@ -2,6 +2,13 @@
 // blendet sich aus (über dem nativen LaunchScreen, damit der Übergang ins
 // App-UI ohne Flackern wirkt).
 //
+// Wer den Splash rendert, MUSS `onFertig` auswerten und bis dahin weiter
+// rendern. Die Zeitachse unten beschreibt sonst nur eine Absicht: hängt der
+// Aufrufer die Komponente aus, sobald sein eigener Ladezustand steht, bricht
+// die Bewegung an beliebiger Stelle ab. Genau so war es bis zum 15.09.2026 —
+// der Splash hing allein am Auth-Status, und der ist ohne gespeicherte Sitzung
+// nach wenigen Millisekunden da: die Animation war nie zu sehen.
+//
 // SCHWESTERDATEI: die gleichnamige Datei der Schwester-Apps — identisch halten.
 // Sie stand bis zum 09.09.2026 NICHT unter CI-Aufsicht, und genau das ist
 // schiefgegangen: myNextDays und die Eigentümer-App bekamen den Einflug aus dem
@@ -35,7 +42,7 @@ const VERSATZ_MS = 200;
 const HALTEN_MS = 650;
 const AUSBLENDEN_MS = 450;
 
-export function Splash() {
+export function Splash({ onFertig }: { onFertig?: () => void } = {}) {
   const t = useTheme();
   const { width } = useWindowDimensions();
   // Ein Wert je Teil: 0 = am Startpunkt links, 1 = an seinem Platz. Auch eine
@@ -44,6 +51,14 @@ export function Splash() {
   const zweit = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(1)).current;
   const [done, setDone] = useState(false);
+
+  // Der Rückruf liegt in einem Ref, NICHT in den Effekt-Abhängigkeiten: der
+  // Aufrufer übergibt ihn als Inline-Funktion, die bei jedem Render neu ist —
+  // stünde sie in der Dependency-Liste, startete die Bewegung dauernd von vorn.
+  const fertig = useRef(onFertig);
+  useEffect(() => {
+    fertig.current = onFertig;
+  }, [onFertig]);
 
   useEffect(() => {
     const flug = (wert: Animated.Value, verzoegerung: number) =>
@@ -69,7 +84,10 @@ export function Splash() {
     lauf.start(({ finished }) => {
       // Nur bei regulärem Ende schließen: ein abgebrochener Lauf (Unmount)
       // dürfte den Zustand nicht mehr anfassen.
-      if (finished) setDone(true);
+      if (!finished) return;
+      setDone(true);
+      // Erst JETZT darf die App weiterschalten (siehe Kopf der Datei).
+      fertig.current?.();
     });
     return () => lauf.stop();
   }, [erst, zweit, opacity]);

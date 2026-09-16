@@ -4,7 +4,7 @@ Schwerpunkt: Owner-Scope (nur eigene Objekte, fail-closed) und Daten-Split
 (guest_masking → Owner sieht keine Beträge). In-Memory-Fake-DB.
 """
 import fnmatch
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -16,6 +16,14 @@ from src.features.public_portal.schemas import (
 )
 from src.features.public_portal.service import PortalError, PublicPortalService
 from src.main import create_app
+
+# Sperrantraege gelten nur fuer KUENFTIGE Naechte (Riegel seit 15.09.2026).
+# Die Daten sind deshalb relativ zu heute, nicht fest: ein Literal wie
+# `date(2026, 3, 1)` war zum Zeitpunkt des Schreibens Zukunft und ist es ein
+# halbes Jahr spaeter nicht mehr — der Test waere jaehrlich umgefallen.
+_ANREISE = date.today() + timedelta(days=30)
+_ABREISE = _ANREISE + timedelta(days=4)
+
 
 client = TestClient(create_app())
 
@@ -334,57 +342,30 @@ def test_owner_with_no_assignments_sees_nothing() -> None:
     assert res.total == 0
 
 
-# --- Saisons (Kalenderfarben, 07.09.2026) -----------------------------------
-
-def _tables_mit_saisons() -> dict[str, list[dict]]:
-    tables = _tables()
-    tables["property_seasons"] = [
-        {"id": "s-1", "property_id": "p-1", "name": "Hochsaison", "color": "#AA0000",
-         "mode": "percent", "amount": 30, "created_at": "2026-01-01"},
-        {"id": "s-9", "property_id": "p-2", "name": "Fremd", "color": "#000000",
-         "mode": "fixed", "amount": 99, "created_at": "2026-01-01"},
-    ]
-    tables["property_season_assignments"] = [
-        {"id": "a-1", "season_id": "s-1", "property_id": "p-1",
-         "start_date": "2026-07-01", "end_date": "2026-08-31"},
-        {"id": "a-2", "season_id": "s-1", "property_id": "p-1",
-         "start_date": "2026-12-20", "end_date": "2027-01-06"},
-        {"id": "a-9", "season_id": "s-9", "property_id": "p-2",
-         "start_date": "2026-01-01", "end_date": "2026-12-31"},
-    ]
-    return tables
+# --- Saisons: der Endpunkt ist WEG (15.09.2026) ------------------------------
 
 
-def test_seasons_only_own_property_with_assignments() -> None:
-    res = _svc(_tables_mit_saisons()).seasons(_ctx(), "p-1")
-    assert res.total == 1
-    saison = res.items[0]
-    assert (saison.id, saison.name, saison.color) == ("s-1", "Hochsaison", "#AA0000")
-    assert [(str(a.start_date), str(a.end_date)) for a in saison.assignments] == [
-        ("2026-07-01", "2026-08-31"),
-        ("2026-12-20", "2027-01-06"),
-    ]
+def test_saison_endpunkt_existiert_nicht_mehr() -> None:
+    """`/public-portal/seasons` ist entfernt, nicht reparariert.
 
+    Er lieferte Name, Farbe und Zeitraeume und hielt `mode`/`amount` bewusst
+    zurueck, weil die Preisregel Vertriebswissen des Betriebs ist (Paragraf
+    4.2). Die Vorsicht lief ins Leere: `property_seasons.name` ist freier
+    Text, und der Betrieb benennt seine Saisons real nach ihrer Stufe
+    ("Saison A - 30", "Saison DanaCup - 50"). Der Eigentuemer las die ganze
+    Aufschlagsstaffel aus der Kalenderlegende ab.
 
-def test_seasons_hide_pricing_rule() -> None:
-    # Die Preisregel (mode/amount) ist Vertriebswissen des Betriebs, nicht
-    # Auskunft für den Eigentümer — sie darf im Contract gar nicht vorkommen.
-    res = _svc(_tables_mit_saisons()).seasons(_ctx(), "p-1")
-    felder = set(res.items[0].model_dump())
-    assert felder == {"id", "name", "color", "assignments"}
-
-
-def test_seasons_foreign_property_404() -> None:
-    # Fremdes Objekt: 404, NICHT eine leere Liste — sonst sähe „gehört dir
-    # nicht" aus wie „hat keine Saisons".
-    with pytest.raises(PortalError) as exc:
-        _svc(_tables_mit_saisons()).seasons(_ctx(), "p-2")
-    assert exc.value.status_code == 404
-
-
-def test_seasons_route_requires_auth() -> None:
+    Der Test steht hier, damit die Route nicht versehentlich zurueckkommt:
+    404 ist das gewuenschte Ergebnis, nicht ein Versehen. Ein 401/403 waere
+    ebenfalls falsch — das hiesse, die Route gibt es noch.
+    """
     resp = client.get("/api/v1/public-portal/seasons", params={"property_id": "p-1"})
-    assert resp.status_code in (401, 403)
+    assert resp.status_code == 404
+
+
+def test_portal_service_kennt_keine_saisons_mehr() -> None:
+    """Auch die Methode ist weg — nicht nur die Route davor."""
+    assert not hasattr(_svc(_tables()), "seasons")
 
 
 # --- Maskierung (Daten-Split) ------------------------------------------------
@@ -806,12 +787,46 @@ def test_my_statements_ohne_waehrung_kein_erfundenes_eur() -> None:
 
 # --- Block-Requests ----------------------------------------------------------
 
+def test_sperrantrag_fuer_vergangene_tage_wird_abgewiesen() -> None:
+    """Weder Client noch Server prueften das bis zum 15.09.2026.
+
+    Im Kalender liessen sich am Monatsanfang zwei freie VERGANGENE Tage
+    ueberziehen; der Knopf wurde aktiv, und die Verwaltung bekam einen Antrag
+    fuer Naechte, die vorbei sind. Der Riegel in `AufenthaltBuchen` greift nur
+    beim manuellen Tippen, nicht bei der Vorbelegung aus der Ziehgeste.
+    """
+    from src.features.public_portal.schemas import BlockRequestCreate
+
+    gestern = date.today() - timedelta(days=1)
+    with pytest.raises(PortalError) as exc:
+        _svc().request_block(
+            _ctx(),
+            BlockRequestCreate(
+                property_id="p-1", start_date=gestern, end_date=_ABREISE
+            ),
+        )
+    assert exc.value.status_code == 422
+
+
+def test_sperrantrag_ab_heute_ist_erlaubt() -> None:
+    """Die Gegenprobe: HEUTE ist keine Vergangenheit."""
+    from src.features.public_portal.schemas import BlockRequestCreate
+
+    res = _svc().request_block(
+        _ctx(),
+        BlockRequestCreate(
+            property_id="p-1", start_date=date.today(), end_date=_ABREISE
+        ),
+    )
+    assert res is not None
+
+
 def test_request_block_on_own_property() -> None:
     svc = _svc()
     item = svc.request_block(
         _ctx(),
         BlockRequestCreate(
-            property_id="p-1", start_date=date(2026, 3, 1), end_date=date(2026, 3, 5)
+            property_id="p-1", start_date=_ANREISE, end_date=_ABREISE
         ),
     )
     assert item.status == "pending"
@@ -823,7 +838,7 @@ def test_request_block_foreign_property_404() -> None:
         _svc().request_block(
             _ctx(),
             BlockRequestCreate(
-                property_id="p-2", start_date=date(2026, 3, 1), end_date=date(2026, 3, 5)
+                property_id="p-2", start_date=_ANREISE, end_date=_ABREISE
             ),
         )
     assert exc.value.status_code == 404
@@ -840,7 +855,7 @@ def test_request_block_fuer_eine_einheit(  ) -> None:
         _ctx(),
         BlockRequestCreate(
             property_id="p-1", unit_id="u-1",
-            start_date=date(2026, 3, 1), end_date=date(2026, 3, 5),
+            start_date=_ANREISE, end_date=_ABREISE,
         ),
     )
     assert item.unit_id == "u-1"
@@ -853,8 +868,8 @@ def test_request_block_ohne_einheit_meint_den_ganzen_typ() -> None:
     item = _svc(tables).request_block(
         _ctx(),
         BlockRequestCreate(
-            property_id="p-1", start_date=date(2026, 3, 1),
-            end_date=date(2026, 3, 5),
+            property_id="p-1", start_date=_ANREISE,
+            end_date=_ABREISE,
         ),
     )
     assert item.unit_id is None
@@ -870,7 +885,7 @@ def test_request_block_fremde_einheit_422() -> None:
             _ctx(),
             BlockRequestCreate(
                 property_id="p-1", unit_id="u-fremd",
-                start_date=date(2026, 3, 1), end_date=date(2026, 3, 5),
+                start_date=_ANREISE, end_date=_ABREISE,
             ),
         )
     assert exc.value.status_code == 422
@@ -937,8 +952,8 @@ def test_sperrantrag_mit_bestellung_speichert_sie() -> None:
         _ctx(),
         BlockRequestCreate(
             property_id="p-1",
-            start_date=date(2026, 9, 1),
-            end_date=date(2026, 9, 7),
+            start_date=_ANREISE,
+            end_date=_ABREISE,
             bestellte_leistungen=["rule-rein"],
         ),
     )
@@ -962,8 +977,8 @@ def test_sperrantrag_ohne_bestellung_bleibt_leer() -> None:
         _ctx(),
         BlockRequestCreate(
             property_id="p-1",
-            start_date=date(2026, 9, 1),
-            end_date=date(2026, 9, 7),
+            start_date=_ANREISE,
+            end_date=_ABREISE,
         ),
     )
     assert item.bestellte_leistungen == []
@@ -982,8 +997,8 @@ def test_bestellung_einer_fremden_regel_wird_abgewiesen() -> None:
             _ctx(),
             BlockRequestCreate(
                 property_id="p-1",
-                start_date=date(2026, 9, 1),
-                end_date=date(2026, 9, 7),
+                start_date=_ANREISE,
+                end_date=_ABREISE,
                 bestellte_leistungen=["rule-fremd"],
             ),
         )
@@ -1003,8 +1018,8 @@ def test_bestellung_einer_regel_fuer_ein_anderes_objekt_wird_abgewiesen() -> Non
             _ctx(),
             BlockRequestCreate(
                 property_id="p-1",
-                start_date=date(2026, 9, 1),
-                end_date=date(2026, 9, 7),
+                start_date=_ANREISE,
+                end_date=_ABREISE,
                 bestellte_leistungen=["rule-waesche"],
             ),
         )
@@ -1019,8 +1034,8 @@ def test_bestellung_abgeschalteter_regel_wird_abgewiesen() -> None:
             _ctx(),
             BlockRequestCreate(
                 property_id="p-1",
-                start_date=date(2026, 9, 1),
-                end_date=date(2026, 9, 7),
+                start_date=_ANREISE,
+                end_date=_ABREISE,
                 bestellte_leistungen=["rule-aus"],
             ),
         )
@@ -1042,8 +1057,8 @@ def test_doppelte_bestellung_erzeugt_eine_zeile() -> None:
         _ctx(),
         BlockRequestCreate(
             property_id="p-1",
-            start_date=date(2026, 9, 1),
-            end_date=date(2026, 9, 7),
+            start_date=_ANREISE,
+            end_date=_ABREISE,
             bestellte_leistungen=["rule-rein", "rule-rein"],
         ),
     )
@@ -1066,8 +1081,8 @@ def _mit_antrag(status: str = "pending", **extra: object) -> dict[str, list[dict
             "tenant_id": "t-1",
             "property_id": "p-1",
             "requested_by": "owner-1",
-            "start_date": "2026-09-01",
-            "end_date": "2026-09-07",
+            "start_date": _ANREISE.isoformat(),
+            "end_date": _ABREISE.isoformat(),
             "status": status,
             "reason": None,
             "owner_freigabe": "nicht_noetig",
@@ -1409,8 +1424,8 @@ def test_request_block_traegt_gaeste_und_liefert_sie_zurueck() -> None:
         _ctx(),
         BlockRequestCreate(
             property_id="p-1",
-            start_date=date(2026, 3, 1),
-            end_date=date(2026, 3, 5),
+            start_date=_ANREISE,
+            end_date=_ABREISE,
             guests=2,
             reason="Spätes Check-out gewünscht",
         ),
@@ -1426,7 +1441,7 @@ def test_request_block_ohne_gaeste_bleibt_none() -> None:
     item = _svc().request_block(
         _ctx(),
         BlockRequestCreate(
-            property_id="p-1", start_date=date(2026, 3, 1), end_date=date(2026, 3, 5)
+            property_id="p-1", start_date=_ANREISE, end_date=_ABREISE
         ),
     )
     assert item.guests is None
@@ -1436,7 +1451,7 @@ def test_request_block_gaeste_ausser_bereich_422() -> None:
     with pytest.raises(ValueError, match="guests"):
         BlockRequestCreate(
             property_id="p-1",
-            start_date=date(2026, 3, 1),
-            end_date=date(2026, 3, 5),
+            start_date=_ANREISE,
+            end_date=_ABREISE,
             guests=0,
         )

@@ -14,6 +14,7 @@ weiterhin plausibel aussähe:
 """
 
 import pytest
+from fastapi import HTTPException
 
 from src.core.security import AuthContext
 from src.features.auth.permissions import (
@@ -22,8 +23,29 @@ from src.features.auth.permissions import (
     has_capability,
     owner_family_has_capability,
 )
+from src.features.public_portal.dependencies import require_portal_faehigkeit
+from src.features.public_portal.familie import STUFEN
 from src.features.public_portal.schemas import ReservationMoveRequest
 from src.features.public_portal.service import PortalError, PublicPortalService
+
+
+class _Konto:
+    """Kontodienst-Doppel: Rolle aus der DB ist `owner` — wie beim echten
+    Familienmitglied, das genau deshalb durch den Rollenpfad rutschte."""
+
+    @staticmethod
+    def role_and_permissions(_ctx: AuthContext) -> tuple[UserRole, list[str]]:
+        return UserRole.owner, []
+
+
+class _Familie:
+    """Familiendienst-Doppel. `None` = der Eigentümer selbst, keine Deckelung."""
+
+    def __init__(self, stufe: str | None) -> None:
+        self._stufe = stufe
+
+    def stufe(self, _ctx: AuthContext) -> str | None:
+        return self._stufe
 
 
 class _Result:
@@ -57,7 +79,11 @@ class _DB:
     def table(self, name: str) -> _Query:
         if name == "reservations":
             return _Query(list(self._res))
-        if name == "owner_properties":
+        # Der Dienst liest `owner_property_assignments` (`_owned_property_ids`).
+        # Bis zum 15.09.2026 stand hier nur `owner_properties` — die Tabelle
+        # war damit IMMER leer, jedes `_require_own` schlug fehl, und die
+        # 404-Tests unten waren grün, ohne den Objekt-Scope je zu berühren.
+        if name in ("owner_property_assignments", "owner_properties"):
             return _Query(list(self._zuord))
         return _Query([])
 
@@ -87,6 +113,10 @@ def _dienst(property_id: str) -> PublicPortalService:
                 "tenant_id": TENANT,
                 "property_id": property_id,
                 "status": "confirmed",
+                # Die WAHREN Grenzen. Der Dienst rechnet ab 15.09.2026 aus
+                # ihnen, nicht aus dem, was der Client schickt.
+                "check_in": "2026-09-10",
+                "check_out": "2026-09-17",
             }
         ],
         zuordnungen=[{"tenant_id": TENANT, "user_id": USER, "property_id": MEINS}],
@@ -94,8 +124,8 @@ def _dienst(property_id: str) -> PublicPortalService:
     return PublicPortalService(db)  # type: ignore[arg-type]
 
 
-def _anfrage() -> ReservationMoveRequest:
-    return ReservationMoveRequest(check_in="2026-10-01", check_out="2026-10-05")
+def _anfrage(tage: int = 3) -> ReservationMoveRequest:
+    return ReservationMoveRequest(tage=tage)
 
 
 def test_fremdes_objekt_ist_404_nicht_403() -> None:
@@ -133,25 +163,115 @@ def test_familienmitglied_traegt_das_recht_nicht() -> None:
 
     Verschieben ist etwas anderes: es trifft einen fremden Gast, nicht die
     eigene Ferienplanung.
+
+    Iteriert über `familie.STUFEN` statt über eine geschriebene Liste. Bis zum
+    15.09.2026 standen hier `("nutzung", "verwaltung", "finanzen")` — zwei
+    davon gibt es nicht, und `owner_family_has_capability` gibt für einen
+    unbekannten Wert fail-closed die leere Menge. Der Test war damit für zwei
+    Drittel seiner Durchläufe eine Tautologie.
     """
-    for zugang in ("nutzung", "verwaltung", "finanzen"):
-        assert owner_family_has_capability(zugang, Capability.REQUEST_BLOCK) or True
+    assert STUFEN, "ohne Stufen prüft diese Schleife nichts"
+    for zugang in STUFEN:
         assert not owner_family_has_capability(
             zugang, Capability.MOVE_OWN_RESERVATION
         ), f"Familienzugang {zugang!r} darf keine Buchungen verschieben"
 
 
-def test_abreise_muss_nach_anreise_liegen() -> None:
+def test_familienstufe_hat_request_block_aber_nicht_move() -> None:
+    """Der Unterschied, auf dem die ganze Begründung von `_MOVE` ruht."""
+    for zugang in STUFEN:
+        assert owner_family_has_capability(zugang, Capability.REQUEST_BLOCK)
+        assert not owner_family_has_capability(zugang, Capability.MOVE_OWN_RESERVATION)
+
+
+@pytest.mark.parametrize("stufe", list(STUFEN))
+@pytest.mark.parametrize(
+    "cap",
+    [
+        Capability.MOVE_OWN_RESERVATION,
+        Capability.BOOK_SERVICES,
+        Capability.ADD_METER_READING,
+    ],
+)
+def test_guard_weist_familienmitglied_ab(stufe: str, cap: Capability) -> None:
+    """Der GUARD, nicht die Tabelle — hier lag die Lücke (15.09.2026).
+
+    Der vorige Test prüfte `owner_family_has_capability` und war grün, während
+    die Route jedem Familienmitglied offenstand: `require_permission` wählte
+    für diese Fähigkeiten den reinen Rollenpfad, und die Rolle IST `owner`.
+    Eine Fähigkeitstabelle zu prüfen sagt nichts darüber, ob der Endpunkt sie
+    befragt.
+    """
+    guard = require_portal_faehigkeit(cap)
+    with pytest.raises(HTTPException) as fehler:
+        guard(ctx=_ctx(), konto=_Konto(), familie=_Familie(stufe))
+    assert fehler.value.status_code == 403
+
+
+@pytest.mark.parametrize(
+    "cap",
+    [
+        Capability.MOVE_OWN_RESERVATION,
+        Capability.BOOK_SERVICES,
+        Capability.ADD_METER_READING,
+    ],
+)
+def test_guard_laesst_den_eigentuemer_durch(cap: Capability) -> None:
+    """Die Gegenprobe: ohne Familienstufe (`None`) bleibt alles erlaubt."""
+    guard = require_portal_faehigkeit(cap)
+    assert guard(ctx=_ctx(), konto=_Konto(), familie=_Familie(None)) is not None
+
+
+def test_null_tage_ist_keine_verschiebung() -> None:
+    """Ein Aufruf ohne Wirkung ist ein Fehler des Aufrufers, kein stiller No-Op."""
     with pytest.raises(ValueError):
-        ReservationMoveRequest(check_in="2026-10-05", check_out="2026-10-01")
+        ReservationMoveRequest(tage=0)
 
 
-def test_gleicher_tag_ist_keine_nacht() -> None:
-    with pytest.raises(ValueError):
-        ReservationMoveRequest(check_in="2026-10-01", check_out="2026-10-01")
+def test_verschiebung_ueber_ein_jahr_wird_abgewiesen() -> None:
+    """Harte Obergrenze (Wurzel 8): sonst laeuft das Belegen der Naechte ewig."""
+    for tage in (400, -400):
+        with pytest.raises(ValueError):
+            ReservationMoveRequest(tage=tage)
 
 
-def test_zeitraum_ueber_ein_jahr_wird_abgewiesen() -> None:
-    """Harte Obergrenze (Wurzel 8): sonst läuft das Belegen der Nächte ewig."""
-    with pytest.raises(ValueError):
-        ReservationMoveRequest(check_in="2026-01-01", check_out="2027-06-01")
+def test_nach_frueher_ist_erlaubt() -> None:
+    """Negativ MUSS gehen.
+
+    Die App klemmte den Versatz bis zum 15.09.2026 mit `Math.max(0, …)`, weil
+    sie ihn aus einer Naechtezaehlung ableitete. Ein Chip liess sich damit nie
+    nach links ziehen — ohne Meldung, er sprang nur zurueck. Der Vertrag
+    haelt jetzt fest, dass die Richtung beide Vorzeichen hat.
+    """
+    assert ReservationMoveRequest(tage=-5).tage == -5
+
+
+def test_verschiebung_rechnet_aus_den_ECHTEN_daten_der_zeile() -> None:
+    """Der Kern des Fehlers vom 15.09.2026.
+
+    Die Buchung laeuft 10.09.–17.09. Der Client sagt nur „drei Tage nach
+    hinten“; heraus muessen 13.09.–20.09. kommen — gleiche LAENGE. Vorher
+    schickte der Client absolute Daten aus seinem beschnittenen Monatsblatt,
+    und eine Buchung, die vor dem Blatt begann, wurde dabei verkuerzt.
+    """
+    gesehen: dict = {}
+
+    class _Reservierungen:
+        def move(self, _ctx, _rid, req) -> None:  # noqa: D102
+            gesehen["ein"] = req.check_in
+            gesehen["aus"] = req.check_out
+
+    import src.features.public_portal.service as modul
+
+    echt = modul.ReservationsService if hasattr(modul, "ReservationsService") else None
+    dienst = _dienst(MEINS)
+    import src.features.reservations.service as res_modul
+
+    alt = res_modul.ReservationsService
+    res_modul.ReservationsService = lambda _db: _Reservierungen()  # type: ignore[assignment]
+    try:
+        dienst.move_reservation(_ctx(), BUCHUNG, _anfrage(3))
+    finally:
+        res_modul.ReservationsService = alt  # type: ignore[assignment]
+    assert echt is None or True
+    assert (str(gesehen["ein"]), str(gesehen["aus"])) == ("2026-09-13", "2026-09-20")

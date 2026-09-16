@@ -16,6 +16,7 @@ Eigene Fake-DB statt der aus test_public_portal.py: diese hier braucht
 """
 
 import fnmatch
+from datetime import date, timedelta
 
 import pytest
 
@@ -30,6 +31,12 @@ from src.features.public_portal.familie import (
     OwnerFamilyService,
 )
 from src.features.public_portal.service import PortalError, PublicPortalService
+
+# Sperrantraege gelten nur fuer KUENFTIGE Naechte (Riegel seit 15.09.2026).
+# Relativ zu heute, damit der Test nicht mit dem Kalender veraltet.
+_ANREISE = date.today() + timedelta(days=30)
+_ABREISE = _ANREISE + timedelta(days=4)
+
 
 
 class _Result:
@@ -328,7 +335,6 @@ def test_eigentuemer_selbst_sieht_berichte_immer() -> None:
 
 def test_antrag_des_mitglieds_wartet_auf_freigabe() -> None:
     """Ein Antrag der Familie startet auf 'offen', nicht bei der Agentur."""
-    from datetime import date
 
     from src.features.public_portal.schemas import BlockRequestCreate
 
@@ -337,8 +343,8 @@ def test_antrag_des_mitglieds_wartet_auf_freigabe() -> None:
         _ctx(FAMILIE),
         BlockRequestCreate(
             property_id=PROP,
-            start_date=date(2026, 7, 3),
-            end_date=date(2026, 7, 10),
+            start_date=_ANREISE,
+            end_date=_ABREISE,
             reason="Sommerferie",
         ),
     )
@@ -350,7 +356,6 @@ def test_antrag_des_mitglieds_wartet_auf_freigabe() -> None:
 
 def test_antrag_des_eigentuemers_geht_direkt_an_die_agentur() -> None:
     """Sich selbst freizugeben wäre ein Klick ohne Erkenntniswert."""
-    from datetime import date
 
     from src.features.public_portal.schemas import BlockRequestCreate
 
@@ -359,8 +364,8 @@ def test_antrag_des_eigentuemers_geht_direkt_an_die_agentur() -> None:
         _ctx(OWNER),
         BlockRequestCreate(
             property_id=PROP,
-            start_date=date(2026, 9, 1),
-            end_date=date(2026, 9, 5),
+            start_date=_ANREISE,
+            end_date=_ABREISE,
         ),
     )
     assert db.tables["block_requests"][0]["owner_freigabe"] == "nicht_noetig"
@@ -371,7 +376,7 @@ def test_eigentuemer_sieht_offenen_antrag_seiner_familie() -> None:
     db.tables["block_requests"].append(
         {
             "id": "br-1", "tenant_id": TENANT, "property_id": PROP,
-            "requested_by": FAMILIE, "start_date": "2026-07-03",
+            "requested_by": FAMILIE, "start_date": _ANREISE.isoformat(),
             "end_date": "2026-07-10", "status": "pending",
             "owner_freigabe": "offen", "reason": "Sommerferie",
         }
@@ -394,7 +399,7 @@ def test_freigabe_aendert_den_status_nicht() -> None:
     db.tables["block_requests"].append(
         {
             "id": "br-1", "tenant_id": TENANT, "property_id": PROP,
-            "requested_by": FAMILIE, "start_date": "2026-07-03",
+            "requested_by": FAMILIE, "start_date": _ANREISE.isoformat(),
             "end_date": "2026-07-10", "status": "pending",
             "owner_freigabe": "offen",
         }
@@ -412,7 +417,7 @@ def test_zweite_entscheidung_ist_ein_konflikt() -> None:
     db.tables["block_requests"].append(
         {
             "id": "br-1", "tenant_id": TENANT, "property_id": PROP,
-            "requested_by": FAMILIE, "start_date": "2026-07-03",
+            "requested_by": FAMILIE, "start_date": _ANREISE.isoformat(),
             "end_date": "2026-07-10", "status": "pending",
             "owner_freigabe": "offen",
         }
@@ -429,7 +434,7 @@ def test_mitglied_kann_nicht_selbst_freigeben() -> None:
     db.tables["block_requests"].append(
         {
             "id": "br-1", "tenant_id": TENANT, "property_id": PROP,
-            "requested_by": FAMILIE, "start_date": "2026-07-03",
+            "requested_by": FAMILIE, "start_date": _ANREISE.isoformat(),
             "end_date": "2026-07-10", "status": "pending",
             "owner_freigabe": "offen",
         }
@@ -447,7 +452,7 @@ def test_fremder_eigentuemer_kann_nicht_entscheiden() -> None:
     db.tables["block_requests"].append(
         {
             "id": "br-1", "tenant_id": TENANT, "property_id": PROP,
-            "requested_by": FAMILIE, "start_date": "2026-07-03",
+            "requested_by": FAMILIE, "start_date": _ANREISE.isoformat(),
             "end_date": "2026-07-10", "status": "pending",
             "owner_freigabe": "offen",
         }

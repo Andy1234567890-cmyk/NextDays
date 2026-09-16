@@ -313,29 +313,6 @@ export type PortalCalendarDay = {
   units_total: number;
 };
 
-// --- Saisons (Kalenderfarben) ----------------------------------------------
-
-/** Ein Zeitraum, in dem eine Saison gilt (inklusiv). */
-export type PortalSeasonAssignment = { start_date: string; end_date: string };
-
-/**
- * Saison eines Objekts — NUR Name, Farbe, Zeiträume. Die Preisregel der Saison
- * liefert der Portal-Contract bewusst nicht (§4.2, `PortalSeason`).
- */
-export type PortalSeason = {
-  id: string;
-  name: string;
-  color: string; // #RRGGBB aus der DB
-  assignments: PortalSeasonAssignment[];
-};
-
-export async function getOwnerSeasons(
-  propertyId: string,
-): Promise<Result<{ items: PortalSeason[]; total: number }>> {
-  const p = new URLSearchParams({ property_id: propertyId });
-  return call(`/public-portal/seasons?${p.toString()}`);
-}
-
 export async function getOwnerCalendar(
   propertyId: string,
   start: string,
@@ -478,14 +455,22 @@ export async function getBestellbareLeistungen(
  * Objektwechsel ist eine Umbuchung mit Gastkommunikation und bleibt bei der
  * Verwaltung.
  */
+/**
+ * Eine Buchung um `tage` Tage verschieben (negativ = nach frueher).
+ *
+ * KEINE absoluten Daten (15.09.2026). Der Kalender-Chip kennt nur die erste
+ * Nacht IM SICHTBAREN MONAT, nicht den Anreisetag — eine Buchung, die vor dem
+ * Blatt beginnt, wurde daraus als verkuerzte Buchung berechnet und genau so
+ * gespeichert. Die App sagt jetzt, was der Nutzer getan hat; die echten
+ * Grenzen kennt nur der Server.
+ */
 export async function moveReservation(
   reservationId: string,
-  von: string,
-  bis: string,
+  tage: number,
 ): Promise<Result<null>> {
   return call(`/public-portal/reservations/${reservationId}/move`, {
     method: "POST",
-    body: { check_in: von, check_out: bis },
+    body: { tage },
   });
 }
 

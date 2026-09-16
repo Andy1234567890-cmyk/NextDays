@@ -1,0 +1,18 @@
+<resources>
+
+    <!-- Nachtfassung: HELLE Systemsymbole, weil der Grund dunkel ist
+         (`palette.bg` #141210, Kopfzeile `palette.surface` #1C1A18).
+         Alles Uebrige erbt aus values/styles.xml. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="SplashTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+        <item name="android:statusBarColor">@color/splash_background_color</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+</resources>

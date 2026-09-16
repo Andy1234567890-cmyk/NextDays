@@ -215,7 +215,6 @@ export const da: Katalog = {
   "mehr.auslastungText": "Belægning og bookingkilder",
   "mehr.sprache": "Sprog",
   "mehr.spracheWaehlen": "Vælg sprog",
-  "mehr.andereAppText": "Appen til administration – hvis du selv udlejer",
   "mehr.abmelden": "Log ud",
   "mehr.wirdAbgemeldet": "Logger af ...",
   "stat.titel": "Belægning & kanaler",

@@ -20,6 +20,7 @@ from src.core.supabase import get_service_client
 from src.core.uploads import read_upload
 from src.features.owner_chat import kern as owner_chat_kern
 from src.features.owner_chat import melden as owner_chat_melden
+from src.features.owner_chat import moderation as owner_chat_moderation
 from src.features.owner_chat import serverkrypto
 from src.features.owner_chat.fehler import OwnerChatError
 from src.features.owner_chat.schemas import (
@@ -1212,6 +1213,16 @@ def chat_senden(
     try:
         faden = _eig_faden(db, ctx, thread_id)
         property_id = str(faden["property_id"])
+        # Hat der Eigentümer das Gespräch beendet, ist der Faden für BEIDE
+        # Seiten zu (0615, verschärft 15.09.2026). Vorher prüfte nur der
+        # Portal-Pfad: der Eigentümer konnte nicht mehr schreiben, bekam aber
+        # weiter Nachrichten und Push — eine Stummschaltung, kein Blockieren,
+        # und damit nicht das, was Googles UGC-Richtlinie verlangt.
+        if owner_chat_moderation.faden_gestoppt(db, thread_id=str(faden["id"])):
+            raise HTTPException(
+                status_code=409,
+                detail="Der Eigentümer hat dieses Gespräch beendet.",
+            )
         absender = _eig_absender(db, tenant_id, str(ctx.user_id))
         zeile = owner_chat_kern.nachricht_ablegen(
             db,

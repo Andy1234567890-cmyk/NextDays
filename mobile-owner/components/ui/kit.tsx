@@ -63,7 +63,7 @@ export function Txt({
   const c =
     color ??
     (accent
-      ? t.palette.accent
+      ? t.palette.accentText
       : soft
         ? t.palette.soft
         : faint
