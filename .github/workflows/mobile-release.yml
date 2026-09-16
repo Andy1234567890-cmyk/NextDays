@@ -68,6 +68,16 @@ jobs:
 
       - name: Android SDK einrichten
         uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          # Die Vorgabe der Action ist `tools platform-tools`. `tools` ist das
+          # alte SDK-Tools-Paket und steht in Googles Repository nicht mehr zur
+          # Verfuegung: `sdkmanager` meldet `Failed to find package 'tools'` und
+          # bricht mit Exit 1 ab — der Schritt stirbt, bevor irgendetwas gebaut
+          # wird. Am 16.09.2026 lagen dadurch alle vier Android-Jobs gleichzeitig
+          # still, ohne dass sich hier etwas geaendert haette. Gebraucht wird das
+          # Paket ohnehin nicht: Plattform und Build-Tools zieht das Android
+          # Gradle Plugin selbst, sobald die Lizenzen angenommen sind.
+          packages: platform-tools
 
       - name: Abhängigkeiten installieren
         run: bun install --frozen-lockfile
