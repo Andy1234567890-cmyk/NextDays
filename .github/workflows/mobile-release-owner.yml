@@ -11,9 +11,29 @@ name: Mobile Release myNextDays Eigentümer (Android)
 # Diese App ist die ZWEITE Einreichung (myNextDays läuft, myBestDays folgt) —
 # siehe docs/APP-STORE-ANGABEN.md Abschnitt 2.
 #
-# Ebenfalls ohne `on: push`: ein Beta-Build ist eine Veröffentlichung, keine
-# Prüfung. Er signiert mit dem echten Release-Schlüssel und landet bei Testern.
+# MIT `on: push` — als einziger der drei Release-Workflows, und mit Grund.
+# Hier stand bis zum 16.09.2026 das Gegenteil ("ein Beta-Build ist eine
+# Veröffentlichung, keine Prüfung"). Der Satz stimmt, sein Schluss galt aber
+# einem Workflow, der NUR baute und verteilte. Dieser hier fährt vorher
+# Typprüfung, Jest, `apksigner verify` UND den Paketnamen-Beweis; ein Build,
+# der eine dieser Stufen reisst, erreicht keinen Tester. Was `on: push` also
+# automatisiert, ist das Auslösen — nicht das Durchwinken.
+#
+# Drei Riegel bleiben bewusst stehen:
+#   * NUR `mobile-owner/**` (und diese Datei) lösen aus. Ein Commit am Backend
+#     verteilt keine App.
+#   * NUR APK, also nur Firebase App Distribution an `beta-tester-owner`. Der
+#     Play Store bleibt `workflow_dispatch` mit `artefakt: aab` — eine
+#     Store-Einreichung ist eine andere Groessenordnung als ein Beta-Build.
+#   * `concurrency` bricht den laufenden Bau ab, wenn kurz darauf erneut
+#     gepusht wird. Ohne das erzeugen drei Commits hintereinander drei
+#     45-Minuten-Läufe und drei Einladungsmails für denselben Stand.
 on:
+  push:
+    branches: [main]
+    paths:
+      - "mobile-owner/**"
+      - ".github/workflows/mobile-release-owner.yml"
   workflow_dispatch:
     inputs:
       artefakt:
@@ -30,12 +50,27 @@ on:
 permissions:
   contents: read
 
+# Ein Push macht den vorigen Lauf gegenstandslos: verteilt werden soll der
+# NEUESTE Stand, nicht jeder Zwischenstand. `workflow_dispatch` laeuft dabei in
+# einer eigenen Gruppe, damit ein Push einen von Hand ausgeloesten Store-Bau
+# nicht mittendrin abraeumt.
+concurrency:
+  group: eigentuemer-release-${{ github.event_name }}
+  cancel-in-progress: true
+
 env:
   APP: mobile-owner
+  # `inputs` ist bei einem Push leer. Ohne diesen einen Ort stuende
+  # `inputs.artefakt == 'apk'` an sechs Stellen und waere bei JEDEM Push falsch
+  # — der Lauf baute, verteilte aber nichts und meldete trotzdem Erfolg. Genau
+  # die stumme Attrappe, die den Android-Release-Build eine Woche lang
+  # stillgelegt hat (9f634db6). Push heisst APK an die Tester; das AAB gibt es
+  # nur auf Ansage.
+  ARTEFAKT: ${{ inputs.artefakt || 'apk' }}
 
 jobs:
   bauen:
-    name: myNextDays Eigentümer · ${{ inputs.artefakt }}
+    name: myNextDays Eigentümer · ${{ inputs.artefakt || 'apk' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -198,7 +233,7 @@ jobs:
         working-directory: mobile-owner/android
         run: |
           set -euo pipefail
-          aufgabe=$([ "${{ inputs.artefakt }}" = "aab" ] && echo bundleRelease || echo assembleRelease)
+          aufgabe=$([ "$ARTEFAKT" = "aab" ] && echo bundleRelease || echo assembleRelease)
           ./gradlew "$aufgabe" --no-daemon \
             -PversionCode=${{ steps.version.outputs.code }} \
             -PversionName="${{ steps.version.outputs.name }}"
@@ -211,7 +246,7 @@ jobs:
         working-directory: mobile-owner/android
         run: |
           set -euo pipefail
-          if [ "${{ inputs.artefakt }}" = "aab" ]; then
+          if [ "$ARTEFAKT" = "aab" ]; then
             datei=$(find app/build/outputs/bundle -name '*.aab' | head -1)
           else
             datei=$(find app/build/outputs/apk/release -name '*.apk' | head -1)
@@ -221,7 +256,7 @@ jobs:
 
           # apksigner liegt in build-tools; AABs prüfen wir mit jarsigner, weil
           # apksigner nur APKs kennt.
-          if [ "${{ inputs.artefakt }}" = "apk" ]; then
+          if [ "$ARTEFAKT" = "apk" ]; then
             signer=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
             "$signer" verify --print-certs "$datei" || {
               echo "::error::Artefakt ist NICHT gueltig signiert — Keystore-Secrets pruefen."; exit 1; }
@@ -236,7 +271,7 @@ jobs:
         # unterscheiden sich um ein Wort. Ein falsch gebautes Artefakt an die
         # Eigentümer-Tester zu verteilen wäre von außen nicht zu sehen, und die
         # Tester würden die PMS-App installieren.
-        if: inputs.artefakt == 'apk'
+        if: env.ARTEFAKT == 'apk'
         working-directory: mobile-owner/android
         run: |
           set -euo pipefail
@@ -253,7 +288,7 @@ jobs:
       # Nur für APK: das AAB ist für den Play Store, App Distribution verteilt
       # installierbare Artefakte.
       - name: Bei Google anmelden (schlüssellos)
-        if: inputs.artefakt == 'apk'
+        if: env.ARTEFAKT == 'apk'
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           project_id: project-460d8aaf-4b7d-4d13-b3a
@@ -268,7 +303,7 @@ jobs:
           export_environment_variables: true
 
       - name: An Beta-Tester verteilen
-        if: inputs.artefakt == 'apk'
+        if: env.ARTEFAKT == 'apk'
         env:
           NOTIZ: ${{ inputs.notiz }}
           # Die Firebase-App-ID als SECRET, nicht fest im Text: sie entsteht
@@ -313,8 +348,8 @@ jobs:
       - name: Artefakt bereitstellen
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: mobile-owner-${{ steps.version.outputs.name }}-${{ inputs.artefakt }}
-          path: mobile-owner/android/app/build/outputs/**/*.${{ inputs.artefakt }}
+          name: mobile-owner-${{ steps.version.outputs.name }}-${{ env.ARTEFAKT }}
+          path: mobile-owner/android/app/build/outputs/**/*.${{ env.ARTEFAKT }}
           if-no-files-found: error
           # Kurz halten: ein signiertes Release-Artefakt ist kein Archivgut.
           retention-days: 14

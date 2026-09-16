@@ -45,6 +45,7 @@ dort benutzt wird, wandert erfahrungsgemaess in Screenshots und Shell-History.
 
 ```
   workflow_dispatch (Mensch waehlt App + apk/aab)
+  ODER Push auf main mit mobile-owner/**  ← nur Eigentuemer-App, nur apk
         │
         ├─ typecheck + jest            ← auch hier, nicht nur in ci.yml
         ├─ Keystore aus GitHub-Secret  ← Base64, nach dem Lauf verworfen
@@ -156,11 +157,39 @@ gh run watch <run-id>
 ```
 
 Bei `apk` laedt der Lauf die Datei automatisch zu App Distribution und die
-Tester-Gruppe **dieser** App bekommt eine Mail. `aab` wird nur als Artefakt
-abgelegt; den Upload in die Play Console macht ein Mensch.
+Tester-Gruppe **dieser** App bekommt eine Mail.
 
-Der Workflow laeuft **nur auf Ansage** (`workflow_dispatch`), nicht bei jedem
-Push: ein signierter Build, der bei Testern landet, ist eine Veroeffentlichung.
+Bei `aab` geht es je nach App verschieden weiter:
+- **myNextDays**: der Lauf laedt das Bundle seit dem 16.09.2026 selbst ueber die
+  Play Developer API in die Produktionsspur — als **Entwurf**, nicht als
+  Rollout. Ob eingereicht und ausgerollt wird, entscheidet ein Mensch in der
+  Console. Voraussetzung ist die Freigabe des Dienstkontos
+  `github-mobile-release@…` unter „Nutzer und Berechtigungen".
+- **Eigentuemer / myBestDays**: nur GitHub-Artefakt, Upload von Hand.
+
+### Wer loest aus
+
+| App | Auslöser |
+|---|---|
+| myNextDays | nur auf Ansage (`workflow_dispatch`) |
+| myNextDays Eigentuemer | **automatisch bei jedem Push auf `main`, der `mobile-owner/**` beruehrt** — plus `workflow_dispatch` |
+| myBestDays | nur auf Ansage (`workflow_dispatch`) |
+
+Bis zum 16.09.2026 galt fuer alle drei „nur auf Ansage", mit der Begruendung:
+ein signierter Build, der bei Testern landet, ist eine Veroeffentlichung. Der
+Satz stimmt weiterhin — sein Schluss galt aber einem Workflow, der NUR baute
+und verteilte. Der Eigentuemer-Workflow faehrt vorher Typpruefung, Jest,
+`apksigner verify` und den Paketnamen-Beweis; ein Build, der eine dieser Stufen
+reisst, erreicht keinen Tester. Automatisiert ist damit das Ausloesen, nicht
+das Durchwinken.
+
+Drei Riegel bleiben dort bewusst stehen: nur Pfade unter `mobile-owner/**`
+loesen aus (ein Backend-Commit verteilt keine App); der Push baut
+ausschliesslich **APK** an `beta-tester-owner`, der Play Store bleibt
+`workflow_dispatch` mit `artefakt: aab`; und `concurrency` bricht den laufenden
+Bau bei einem schnellen zweiten Push ab, sonst erzeugen drei Commits
+hintereinander drei 45-Minuten-Laeufe und drei Einladungsmails fuer denselben
+Stand.
 
 ### Was VOR dem Verteilen prueft — und was nicht
 
