@@ -185,10 +185,27 @@ def _nachricht(
     token: str, titel: str, text: str, ziel_pfad: str | None
 ) -> messaging.Message:
     return messaging.Message(
-        # `fid` statt `token`: seit firebase-admin 7.x ist `Message.token`
-        # deprecated (DeprecationWarning beim Bauen der Nachricht). Es ist
-        # dasselbe Registrierungs-Token, nur das Feld heisst jetzt so.
-        fid=token,
+        # `token`, NICHT `fid`. Die beiden sind NICHT dasselbe Feld, auch wenn
+        # der Docstring von firebase-admin „token: Deprecated. Use `fid`
+        # instead" nahelegt: `_messaging_encoder.py` serialisiert sie als zwei
+        # getrennte JSON-Felder und zaehlt sie als konkurrierende Ziel-Typen
+        # ('fid', 'token', 'topic', 'condition' — genau EINES ist erlaubt).
+        # `fid` erwartet eine Firebase-INSTALLATION-ID; die Apps melden aber
+        # das Registrierungs-Token aus `getToken()` (mobile-*/lib/push.ts).
+        # Ein Registrierungs-Token unter `fid` quittiert FCM mit
+        # INVALID_ARGUMENT — und das wird unten bewusst nicht als Token-Fehler
+        # gewertet, war also still. Seit dem ersten Push-Commit (21.08.2026)
+        # ist auf diesem Weg KEINE einzige Benachrichtigung angekommen;
+        # gemeldet wurde es am 15.09.2026 vom Nutzer, nicht vom System.
+        #
+        # Die DeprecationWarning beim Bauen der Nachricht ist ECHT und bleibt:
+        # Google loest das Registrierungs-Token langfristig durch die FID ab
+        # (Admin SDK 7.5.0, Juli 2026). Der Wechsel geht aber nur GEMEINSAM —
+        # erst melden die Apps eine FID (`getId()` aus Firebase Installations
+        # statt `getToken()`), dann darf hier `fid=` stehen. Wer nur diese
+        # Zeile dreht, baut den stillen Ausfall wieder ein; die Tests in
+        # tests/test_push_nutzlast.py halten das fest.
+        token=token,
         notification=messaging.Notification(title=titel, body=text),
         # Das Sprungziel als Datenfeld: der Tap oeffnet damit direkt die
         # Buchung bzw. den Thread statt der Startseite. Werte muessen

@@ -68,6 +68,14 @@ PFLICHT=(
   # an. Fail-closed gebaut, damit nichts still im Klartext landet — aber genau
   # deshalb muss sein Fehlen HIER auffallen und nicht erst am toten Chat.
   OWNER_CHAT_SCHLUESSEL
+  # Push (0414) — dieselbe Klasse Drift, nachgetragen am 15.09.2026. Die zwei
+  # Anlässe, die den Betrieb sofort erreichen müssen (neue Nachricht, neue
+  # Buchung), werden im WORKER ausgelöst (Feed-Sync). Fehlt dort das
+  # Dienstkonto, wirft `push.py` einen PushFehler, den der Dispatcher
+  # spezifisch fängt — Mail und SMS laufen weiter, und niemand sieht, dass der
+  # Push-Kanal tot ist. Genau der Fall, für den es dieses Skript gibt.
+  FCM_SERVICE_ACCOUNT_JSON
+  FCM_PROJEKT_ID
 )
 
 # Ein Befehl, zwei Wege: lokal direkt, sonst über SSH. Das Kommando wird als

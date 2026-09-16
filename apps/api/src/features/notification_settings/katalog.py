@@ -116,7 +116,13 @@ KATALOG: tuple[Kategorie, ...] = (
     # owner_* an den Eigentuemer. Sonst bekaeme eine Reinigungskraft SMS zu
     # Buchungen fremder Objekte, und ein Eigentuemer koennte die Auftrags-
     # Mails nur zusammen mit seinen Buchungsmeldungen abschalten.
-    Kategorie("task_assigned", Tab.KONTO, "aufgaben", _MAIL_SMS),
+    # MIT PUSH (0706): eine zugewiesene Aufgabe hat einen Termin. Bis zum
+    # 15.09.2026 stand hier `_MAIL_SMS` — der Dispatcher iteriert nur ueber
+    # `kategorie.kanaele`, also konnte fuer diesen Anlass nie ein Push
+    # entstehen, auch nicht nachdem der Versand selbst repariert war. Gemeldet
+    # als „Push bei neuer Aufgabe geht nicht"; es war keine Panne im Versand,
+    # sondern eine Auslassung genau hier.
+    Kategorie("task_assigned", Tab.KONTO, "aufgaben", _MAIL_SMS_PUSH),
     # Vertretung (0415). Wieder eine eigene Kategorie wegen des EMPFAENGERS:
     # `task_assigned` geht an die EINE zustaendige Person, diese hier an alle,
     # die einspringen koennten — und die Entscheidung zurueck an den

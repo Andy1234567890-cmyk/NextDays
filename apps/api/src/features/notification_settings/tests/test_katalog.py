@@ -64,6 +64,10 @@ MIGRATIONEN = (
     # Ende-zu-Ende verschluesselt, eine Meldung kann nur sagen, DASS jemand
     # geschrieben hat.
     "0612_eigentuemer_chat_benachrichtigung.sql",
+    # Push fuer die zugewiesene Aufgabe (0706). Nachgezogen, weil die Kategorie
+    # seit 0331 nur Mail und SMS kannte — fuer „neue Aufgabe" konnte damit nie
+    # ein Push entstehen, auch nicht nachdem der Versand selbst repariert war.
+    "0706_aufgabe_push_kanal.sql",
 )
 
 

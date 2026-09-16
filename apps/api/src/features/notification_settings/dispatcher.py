@@ -420,6 +420,7 @@ class NotificationDispatcher:
             self._sende_push(
                 empfaenger, betreff, text, ziel_pfad, ergebnis,
                 kategorie_schluessel=kategorie_schluessel,
+                tenant_id=tenant_id,
             )
             return
         ziel = empfaenger.get("email" if kanal is Kanal.EMAIL else "phone")
@@ -546,6 +547,7 @@ class NotificationDispatcher:
         ergebnis: Zustellung,
         *,
         kategorie_schluessel: str = "",
+        tenant_id: str | None = None,
     ) -> None:
         """Push an die Geraete dieses Nutzers in der ZUSTAENDIGEN App.
 
@@ -604,6 +606,7 @@ class NotificationDispatcher:
             # gefangen, damit Mail und SMS weiterlaufen — aber sichtbar, nie
             # als Erfolg gebucht (Wurzel 5).
             ergebnis.fehlgeschlagen[Kanal.PUSH.value] = str(exc)[:200]
+            self._push_fehlschlag_merken(tenant_id, betreff, str(exc)[:2000])
             return
         # Gegenzustand pflegen (Wurzel 1): abgemeldete Geraete raus, sonst
         # laufen alle kuenftigen Versuche in denselben Fehler.
@@ -613,6 +616,36 @@ class NotificationDispatcher:
             ergebnis.gesendet.append(Kanal.PUSH.value)
         else:
             ergebnis.fehlgeschlagen[Kanal.PUSH.value] = "kein Geraet erreicht"
+            # Registrierte Geraete, aber keines erreicht: das ist ein echter
+            # Fehlschlag und gehoert in den Verlauf — wie bei Mail/SMS. Ohne
+            # diesen Eintrag blieb davon nur eine Log-Zeile, und genau deshalb
+            # fiel vom 21.08. bis zum 15.09.2026 niemandem auf, dass JEDER
+            # Push an einer falschen Adressierung scheiterte (push.py).
+            self._push_fehlschlag_merken(
+                tenant_id, betreff, f"{len(tokens)} Geraet(e), keines erreicht"
+            )
+
+    def _push_fehlschlag_merken(
+        self, tenant_id: str | None, betreff: str, fehler: str
+    ) -> None:
+        """Einen nicht zugestellten Push im Verlauf vermerken.
+
+        Best-effort (Wurzel 5): das Protokollieren darf den Hauptpfad nicht
+        kippen — Mail und SMS derselben Meldung sind moeglicherweise schon
+        draussen.
+        """
+        try:
+            worker_verlauf.merken(
+                self._db,
+                richtung="ausgang",
+                vorgang=f"benachrichtigung_{Kanal.PUSH.value}",
+                ergebnis="fehler",
+                tenant_id=tenant_id,
+                fehler_text=fehler[:2000],
+                zusammenfassung=f"Push nicht zugestellt: {betreff}"[:2000],
+            )
+        except Exception:  # noqa: BLE001 — Protokoll, nie der Hauptpfad
+            log.warning("push_verlauf_nicht_geschrieben")
 
     def _empfaenger(self, user_id: str) -> dict[str, str | None]:
         """E-Mail, Telefonnummer und SPRACHE des Nutzers. Scope auf die eigene id.
