@@ -218,7 +218,13 @@ jobs:
       # Nur fuer APK: das AAB ist fuer den Play Store, App Distribution
       # verteilt installierbare Artefakte.
       - name: Bei Google anmelden (schluessellos)
-        if: inputs.artefakt == 'apk'
+        # KEIN `if` mehr: beide Wege brauchen diese Anmeldung. Das APK geht
+        # ueber firebase-tools an App Distribution, das AAB ueber die Play
+        # Developer API in die Console. Bis zum 16.09.2026 lief der Schritt nur
+        # fuer `apk` — das AAB blieb deshalb als GitHub-Artefakt liegen und
+        # musste von Hand in die Console geschoben werden (76 MB durch ein
+        # Browser-Formular).
+        id: google
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           project_id: project-460d8aaf-4b7d-4d13-b3a
@@ -231,6 +237,12 @@ jobs:
           # firebase-tools ausdruecklich deprecated.
           create_credentials_file: true
           export_environment_variables: true
+          # Zusaetzlich ein kurzlebiges Zugriffstoken fuer den direkten
+          # REST-Aufruf gegen androidpublisher. curl kann mit der
+          # Anmeldedatei nichts anfangen, firebase-tools umgekehrt nichts mit
+          # dem Token (`--token` ist dort deprecated) — deshalb beides.
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
 
       - name: An Beta-Tester verteilen
         if: inputs.artefakt == 'apk'
@@ -251,6 +263,84 @@ jobs:
             --groups beta-tester \
             --release-notes "$notiz" \
             --project project-460d8aaf-4b7d-4d13-b3a
+
+      # ── Upload in die Play Console ───────────────────────────────────────
+      # Nur fuer AAB. Landet BEWUSST als Entwurf (`status: draft`), nicht als
+      # Rollout: ob und in welchem Umfang an echte Nutzer ausgeliefert wird,
+      # entscheidet ein Mensch in der Console. Ein Workflow, der still auf
+      # Produktion ausrollt, ist eine Veroeffentlichung ohne Ansage.
+      #
+      # Keine fertige Action (r0adkll/upload-google-play o. ae.): die verlangen
+      # durchweg einen Service-Account-SCHLUESSEL als JSON. Die Organisation
+      # verbietet Schluessel (iam.disableServiceAccountKeyCreation, seit dem
+      # 18.08.2026 erzwungen) — der Zugang laeuft schluessellos ueber das
+      # OIDC-Token oben. Deshalb der Weg ueber die REST-Schnittstelle.
+      #
+      # VORAUSSETZUNG, die NICHT im Repo steht: das Dienstkonto
+      # github-mobile-release@… muss in der Play Console unter „Nutzer und
+      # Berechtigungen" eingeladen sein und fuer com.mynextdays.app Releases
+      # verwalten duerfen. Fehlt das, antwortet die API mit 401/403; der
+      # Schritt bricht dann mit genau dieser Meldung ab, statt einen halb
+      # gefuellten Edit stehen zu lassen.
+      - name: In die Play Console laden (Entwurf)
+        if: inputs.artefakt == 'aab'
+        working-directory: ${{ inputs.app }}/android
+        env:
+          TOKEN: ${{ steps.google.outputs.access_token }}
+          PAKET: com.mynextdays.app
+          NOTIZ: ${{ inputs.notiz }}
+          VERSIONSNAME: ${{ steps.version.outputs.name }}
+          VERSIONSCODE: ${{ steps.version.outputs.code }}
+        run: |
+          set -euo pipefail
+          aab=$(find app/build/outputs/bundle -name '*.aab' | head -1)
+          [ -n "$aab" ] || { echo "::error::Kein AAB gefunden"; exit 1; }
+          api="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PAKET"
+
+          # Jeder Aufruf wird auf seinen HTTP-Code geprueft. Die API quittiert
+          # fehlenden Zugriff mit 401/403 und einem JSON-Text; ohne diese
+          # Pruefung liefe der naechste Aufruf mit leerer Edit-ID weiter und
+          # der Fehler stuende drei Schritte spaeter an einer Stelle, die ihn
+          # nicht erklaert (Wurzel 5).
+          ruf() {
+            verb=$1; url=$2; shift 2
+            aus=$(mktemp)
+            code=$(curl -sS -o "$aus" -w '%{http_code}' -X "$verb" \
+              -H "Authorization: Bearer $TOKEN" "$@" "$url")
+            if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
+              echo "::error::$verb $url -> HTTP $code"; cat "$aus"; exit 1
+            fi
+            cat "$aus"
+          }
+
+          edit=$(ruf POST "$api/edits" -H 'Content-Length: 0' | jq -r .id)
+          [ -n "$edit" ] && [ "$edit" != null ] || { echo "::error::Keine Edit-ID"; exit 1; }
+          echo "Edit: $edit"
+
+          hoch=$(ruf POST \
+            "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PAKET/edits/$edit/bundles?uploadType=media" \
+            -H 'Content-Type: application/octet-stream' --data-binary @"$aab")
+          vc=$(echo "$hoch" | jq -r .versionCode)
+          echo "Hochgeladen als versionCode $vc"
+          # Massgeblich ist der versionCode AUS DEM BUNDLE. Weicht er von dem
+          # ab, den dieser Lauf gesetzt hat, wurde etwas anderes gebaut als
+          # gedacht — dann abbrechen, statt einen fremden Stand als Release
+          # einzutragen (Wurzel 5).
+          [ "$vc" = "$VERSIONSCODE" ] || {
+            echo "::error::Bundle meldet versionCode $vc, erwartet war $VERSIONSCODE"; exit 1; }
+
+          notiz="${NOTIZ:-}"
+          [ -n "$notiz" ] || notiz="Build ${{ github.run_number }} · $(git log -1 --pretty=%s)"
+          # Rumpf ueber jq bauen statt per String-Interpolation: die Notiz
+          # traegt Zeilenumbrueche, Anfuehrungszeichen und Umlaute.
+          rumpf=$(jq -n --arg n "$VERSIONSCODE ($VERSIONSNAME)" --arg t "$notiz" --arg vc "$vc" \
+            '{track:"production",releases:[{name:$n,versionCodes:[$vc],status:"draft",releaseNotes:[{language:"de-DE",text:$t}]}]}')
+          ruf PUT "$api/edits/$edit/tracks/production" \
+            -H 'Content-Type: application/json' --data "$rumpf" > /dev/null
+
+          ruf POST "$api/edits/$edit:commit" -H 'Content-Length: 0' > /dev/null
+          echo "Als Entwurf in der Produktionsspur abgelegt: $VERSIONSCODE ($VERSIONSNAME)"
+          echo "Ob ausgerollt wird, entscheidet ein Mensch in der Play Console."
 
       - name: Artefakt bereitstellen
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
