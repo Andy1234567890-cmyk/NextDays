@@ -22,7 +22,9 @@ import {
   type AuszahlungsStatus,
   type LandAnforderungen,
 } from "./payments";
+import type { Account } from "./konto";
 import type { Unternehmensprofil } from "./unternehmen";
+import { ausKontoErgaenzen } from "./vermieterdaten";
 
 type Ergebnis<T> = { ok: true; data: T } | { ok: false; fehler: string };
 
@@ -204,14 +206,18 @@ export async function hinterlegeBankverbindung(
   let id = kontoId;
   if (!id) {
     try {
-      const profil = await api<Unternehmensprofil>("/buchhaltung/companies/self", {
-        cache: "no-store",
-      });
-      const konto = await api<{ email: string | null }>("/auth/account", {
-        cache: "no-store",
-      });
-      const email = profil.email || konto.email || "";
-      if (!email) {
+      const [roh, konto] = await Promise.all([
+        api<Unternehmensprofil>("/buchhaltung/companies/self", {
+          cache: "no-store",
+        }),
+        api<Account>("/auth/account", { cache: "no-store" }),
+      ]);
+      // Dieselbe Ergänzung wie im Vermieterdaten-Reiter — eine Stelle, ein
+      // Ergebnis. Bei einem privaten Vermieter stehen Anschrift, Telefon und
+      // E-Mail in den persönlichen Informationen; hier gehen sie mit, damit
+      // das Konto nicht mit halben Angaben entsteht.
+      const profil = ausKontoErgaenzen(roh, konto);
+      if (!profil.email) {
         return {
           ok: false,
           fehler:
@@ -220,9 +226,9 @@ export async function hinterlegeBankverbindung(
       }
       await api<Unternehmensprofil>("/buchhaltung/companies/self", {
         method: "PATCH",
-        // Vollständiger Stand plus Ergänzung — ein Teil-Update würde die
-        // übrigen Angaben beim Anbieter leeren (siehe unternehmen-actions).
-        body: { ...profil, email, companyCountry: land.toUpperCase() },
+        // Vollständiger Stand plus das gewählte Land — ein Teil-Update würde
+        // die übrigen Angaben beim Anbieter leeren (siehe unternehmen-actions).
+        body: { ...profil, companyCountry: land.toUpperCase() },
       });
       id = await getAuszahlungsKontoId();
     } catch (exc) {

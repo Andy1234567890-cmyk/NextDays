@@ -35,6 +35,7 @@ import {
 } from "@/lib/payments";
 import { getSpendenUebersicht } from "@/lib/spenden";
 import { getUnternehmensprofil } from "@/lib/unternehmen";
+import { ausKontoErgaenzen } from "@/lib/vermieterdaten";
 
 // Bereiche ohne eigenes Backend → Platzhalter, aber in der Nav sichtbar (wie
 // Airbnb): Titel-Key je Bereich.
@@ -85,7 +86,15 @@ export default async function KontoPage({
 
   // Vermieterdaten: eigener Bereich UND Quelle für Land/Kontoinhaber im
   // Auszahlungs-Reiter und für die Schritte der Stripe-Einrichtung.
-  const unternehmen = stripeNoetig ? await getUnternehmensprofil() : null;
+  const unternehmenRoh = stripeNoetig ? await getUnternehmensprofil() : null;
+  // Fuer einen PRIVATEN Vermieter sind Anschrift, Telefon und E-Mail der
+  // Vermieterdaten dieselben wie in den persoenlichen Informationen. Die
+  // Ergaenzung passiert HIER, einmal, damit alle drei Ansichten (Schritte,
+  // Auszahlungen, Vermieterdaten) denselben Stand zeigen — vorher sah der
+  // Gastgeber „Nicht angegeben", obwohl die Angabe eine Seite weiter stand.
+  const unternehmen = unternehmenRoh
+    ? ausKontoErgaenzen(unternehmenRoh, account)
+    : null;
   const privacy = aktiv === "datenschutz" ? await getPrivacySettings() : null;
   // Diagnose-Freigaben gehören thematisch zum Datenschutz — der Kunde
   // steuert dort, wer wann Einblick in seine Fehlerdaten hat.
