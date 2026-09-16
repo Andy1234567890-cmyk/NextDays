@@ -295,11 +295,14 @@ export function StripeEinrichtung({
               <p className="mt-0.5 text-sm text-muted-foreground">
                 {t(`${s.key}Text`)}
               </p>
-              {!s.erledigt && s.key === "seSchritt2" && !kontoId && (
-                <p className="mt-2 text-sm text-muted-foreground">{t("seKontoFehlt")}</p>
-              )}
             </div>
-            {!s.erledigt && s.href && (s.key !== "seSchritt2" || kontoId) && (
+            {/* Schritt 2 fuehrt IMMER zur Bankverbindung — auch ohne Konto.
+                Vorher stand hier ohne Konto nur der Satz „dein Konto entsteht,
+                sobald E-Mail und Land in den Vermieterdaten stehen", und der
+                Schritt war nicht anklickbar: ein Onboarding-Schritt ohne Weg
+                nach vorn. Das Konto entsteht jetzt beim Speichern der
+                Bankverbindung (16.09.2026). */}
+            {!s.erledigt && s.href && (
               <Link
                 href={s.href}
                 className="shrink-0 text-[0.9375rem] font-medium underline underline-offset-4 hover:opacity-70"

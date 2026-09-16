@@ -16,6 +16,7 @@ import { ApiError } from "@nextdays/auth/errors";
 import { api } from "./api-server";
 import type { AuszahlungsEinstellung, PayoutInterval } from "./auszahlungen";
 import {
+  getAuszahlungsKontoId,
   getAuszahlungsStatus,
   getLandAnforderungen,
   type AuszahlungsStatus,
@@ -172,4 +173,69 @@ export async function setzeAuszahlungsRhythmus(
   } catch (exc) {
     return fehlerAus(exc, "Rhythmus konnte nicht gespeichert werden.");
   }
+}
+
+/**
+ * Bankverbindung hinterlegen — auch dann, wenn es noch kein Auszahlungskonto
+ * gibt.
+ *
+ * Bis zum 16.09.2026 war das eine Sackgasse: die IBAN geht zum Zahlungsanbieter
+ * und braucht dort ein Konto, das Konto entstand aber nur beim Speichern der
+ * Vermieterdaten. Wer die Bankverbindung eintragen wollte, las stattdessen
+ * „trag erst woanders etwas ein" — und genau das darf ein Onboarding nicht.
+ *
+ * Fehlt das Konto, wird es hier angelegt, und zwar aus Angaben, die schon
+ * vorliegen oder gerade eingegeben wurden — NICHTS wird geraten (Wurzel 4):
+ *   * `land` ist das Land, das der Gastgeber im Bankformular gewählt hat. Es
+ *     bestimmt Kontoland UND Auszahlungswährung; beim Anbieter ist es später
+ *     nicht mehr änderbar, deshalb wird es gefragt und nicht aus der
+ *     Wohnanschrift abgeleitet.
+ *   * die E-Mail-Adresse ist die des eingeloggten Kontos, falls in den
+ *     Vermieterdaten noch keine steht. Dieselbe Person, dieselbe Adresse.
+ * Beides wird in die Vermieterdaten geschrieben, nicht nur an den Anbieter
+ * gesendet — sonst stünde dort weiter „fehlt", während das Konto längst läuft.
+ */
+export async function hinterlegeBankverbindung(
+  kontoId: string | null,
+  iban: string,
+  kontoinhaber: string,
+  land: string,
+): Promise<Ergebnis<AuszahlungsStatus>> {
+  let id = kontoId;
+  if (!id) {
+    try {
+      const profil = await api<Unternehmensprofil>("/buchhaltung/companies/self", {
+        cache: "no-store",
+      });
+      const konto = await api<{ email: string | null }>("/auth/account", {
+        cache: "no-store",
+      });
+      const email = profil.email || konto.email || "";
+      if (!email) {
+        return {
+          ok: false,
+          fehler:
+            "Für das Auszahlungskonto fehlt eine E-Mail-Adresse. Trage sie in deinen Vermieterdaten ein.",
+        };
+      }
+      await api<Unternehmensprofil>("/buchhaltung/companies/self", {
+        method: "PATCH",
+        // Vollständiger Stand plus Ergänzung — ein Teil-Update würde die
+        // übrigen Angaben beim Anbieter leeren (siehe unternehmen-actions).
+        body: { ...profil, email, companyCountry: land.toUpperCase() },
+      });
+      id = await getAuszahlungsKontoId();
+    } catch (exc) {
+      return fehlerAus(exc, "Auszahlungskonto konnte nicht angelegt werden.");
+    }
+    if (!id) {
+      return {
+        ok: false,
+        fehler: "Auszahlungskonto konnte nicht angelegt werden.",
+      };
+    }
+  }
+  const res = await setzeAuszahlungsKonto(id, iban, kontoinhaber, land);
+  if (res.ok) revalidatePath("/konto");
+  return res;
 }

@@ -17,9 +17,10 @@ import { toast } from "sonner";
 
 import { formatCurrency } from "@nextdays/currency";
 
+import { SuchAuswahl } from "@/components/ui/such-auswahl";
 import {
   aktiviereAuszahlungen,
-  setzeAuszahlungsKonto,
+  hinterlegeBankverbindung,
   setzeAuszahlungsRhythmus,
 } from "@/lib/auszahlung-actions";
 import type {
@@ -29,6 +30,7 @@ import type {
   Verrechnungsposten,
 } from "@/lib/auszahlungen";
 import { useFormatierung } from "@/lib/formatierung";
+import { useLaender } from "@/lib/laender";
 import type { AuszahlungsStatus } from "@/lib/payments";
 
 type Uebersetzer = ReturnType<typeof useTranslations<"konto">>;
@@ -152,87 +154,77 @@ export function AuszahlungenTab({
         {t("azEinleitung")}
       </p>
 
-      {/* Zustand des Auszahlungskontos */}
-      <div className="mt-8 rounded-2xl border border-border p-5">
-        {!kontoId ? (
-          <>
-            <p className="font-medium">{t("azKontoFehlt")}</p>
-            <p className="mt-1 text-[0.9375rem] text-muted-foreground">
-              {t("azKontoFehltText")}
-            </p>
-            <Link
-              href="/konto?bereich=unternehmen"
-              className="mt-3 inline-block text-[0.9375rem] font-medium underline underline-offset-4 hover:opacity-70"
-            >
-              {t("seZuDenDaten")}
-            </Link>
-          </>
-        ) : bereit ? (
-          <div className="flex items-start gap-3">
-            <Icon
-              icon="solar:check-circle-bold"
-              className="mt-0.5 size-5 shrink-0 text-emerald-600"
-            />
-            <div>
-              <p className="font-medium">{t("azAktiv")}</p>
-              <p className="mt-1 text-[0.9375rem] text-muted-foreground">
-                {t("azAktivText")}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <>
-            <p className="font-medium">{t("azNichtBereit")}</p>
-            {fehlend.length > 0 && (
-              <>
-                <p className="mt-1 text-[0.9375rem] text-muted-foreground">
-                  {t("azFehlendeAngaben")}
-                </p>
-                <ul className="mt-3 flex flex-wrap gap-2">
-                  {fehlend.map((f) => (
-                    <li
-                      key={f}
-                      className="rounded-full border border-border px-3 py-1 text-sm"
-                    >
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="/konto?bereich=unternehmen"
-                  className="mt-3 inline-block text-sm font-medium underline underline-offset-4 hover:opacity-70"
-                >
-                  {t("azFehlendeAngabenHinweis")}
-                </Link>
-              </>
-            )}
-            {kontoStatus && !kontoStatus.details_submitted && (
-              <button
-                type="button"
-                onClick={() => void aktivieren()}
-                disabled={laeuft}
-                className="mt-5 rounded-full bg-foreground px-8 py-3 font-medium text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-40"
-              >
-                {laeuft ? t("azAktivierenLaeuft") : t("azAktivieren")}
-              </button>
-            )}
-          </>
-        )}
-      </div>
-
+      {/* Zustand des Auszahlungskontos — nur, wenn es eines gibt. Vorher stand
+          hier ohne Konto „speichere zuerst deine Vermieterdaten" samt Link
+          dorthin: eine Sackgasse, denn die Bankverbindung ist genau das, was
+          der Gastgeber auf dieser Seite hinterlegen will. Das Konto entsteht
+          jetzt beim Speichern der Bankverbindung (BankKarte). */}
       {kontoId && (
-        <BankKarte
-          kontoId={kontoId}
-          land={land}
-          kontoinhaber={kontoinhaber}
-          hinterlegt={!!kontoStatus?.payouts_enabled}
-          fehltNoch={
-            kontoStatus?.requirements.some((r) =>
-              r.includes("external_account"),
-            ) ?? false
-          }
-        />
+        <div className="mt-8 rounded-2xl border border-border p-5">
+          {bereit ? (
+            <div className="flex items-start gap-3">
+              <Icon
+                icon="solar:check-circle-bold"
+                className="mt-0.5 size-5 shrink-0 text-emerald-600"
+              />
+              <div>
+                <p className="font-medium">{t("azAktiv")}</p>
+                <p className="mt-1 text-[0.9375rem] text-muted-foreground">
+                  {t("azAktivText")}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="font-medium">{t("azNichtBereit")}</p>
+              {fehlend.length > 0 && (
+                <>
+                  <p className="mt-1 text-[0.9375rem] text-muted-foreground">
+                    {t("azFehlendeAngaben")}
+                  </p>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {fehlend.map((f) => (
+                      <li
+                        key={f}
+                        className="rounded-full border border-border px-3 py-1 text-sm"
+                      >
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/konto?bereich=unternehmen"
+                    className="mt-3 inline-block text-sm font-medium underline underline-offset-4 hover:opacity-70"
+                  >
+                    {t("azFehlendeAngabenHinweis")}
+                  </Link>
+                </>
+              )}
+              {kontoStatus && !kontoStatus.details_submitted && (
+                <button
+                  type="button"
+                  onClick={() => void aktivieren()}
+                  disabled={laeuft}
+                  className="mt-5 rounded-full bg-foreground px-8 py-3 font-medium text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-40"
+                >
+                  {laeuft ? t("azAktivierenLaeuft") : t("azAktivieren")}
+                </button>
+              )}
+            </>
+          )}
+        </div>
       )}
+
+      <BankKarte
+        kontoId={kontoId}
+        land={land}
+        kontoinhaber={kontoinhaber}
+        hinterlegt={!!kontoStatus?.payouts_enabled}
+        fehltNoch={
+          kontoStatus?.requirements.some((r) => r.includes("external_account")) ??
+          !kontoId
+        }
+      />
 
       {uebersicht && (
         <>
@@ -268,25 +260,36 @@ function BankKarte({
   hinterlegt,
   fehltNoch,
 }: {
-  kontoId: string;
+  /** `null` = es gibt noch kein Auszahlungskonto. Das ist kein Hinderungs-
+   *  grund mehr: es entsteht beim Speichern dieser Bankverbindung. */
+  kontoId: string | null;
   land: string | null;
   kontoinhaber: string;
   hinterlegt: boolean;
   fehltNoch: boolean;
 }) {
   const t = useTranslations("konto");
+  const laender = useLaender();
   const [offen, setOffen] = useState(false);
   const [iban, setIban] = useState("");
   const [inhaber, setInhaber] = useState(kontoinhaber);
   const [laeuft, setLaeuft] = useState(false);
-
-  // Ohne Land keine Währung und damit keine Bankverbindung — nichts raten.
-  const landFehlt = !land;
+  // Das Land bestimmt Kontoland und Auszahlungswährung. Steht es in den
+  // Vermieterdaten, gilt es; sonst wird es HIER gefragt — nicht aus der
+  // Wohnanschrift abgeleitet (Wurzel 4), denn beim Zahlungsanbieter ist es
+  // später nicht mehr änderbar.
+  const [landWahl, setLandWahl] = useState(land ?? "");
+  const gewaehltesLand = land || landWahl;
 
   async function speichern() {
-    if (!land) return;
+    if (!gewaehltesLand) return;
     setLaeuft(true);
-    const res = await setzeAuszahlungsKonto(kontoId, iban, inhaber, land);
+    const res = await hinterlegeBankverbindung(
+      kontoId,
+      iban,
+      inhaber,
+      gewaehltesLand,
+    );
     setLaeuft(false);
     if (res.ok) {
       toast.success(t("azBankGespeichert"));
@@ -297,7 +300,10 @@ function BankKarte({
     }
   }
 
-  const bereit = iban.replace(/\s+/g, "").length >= 15 && inhaber.trim().length > 1;
+  const bereit =
+    iban.replace(/\s+/g, "").length >= 15 &&
+    inhaber.trim().length > 1 &&
+    !!gewaehltesLand;
 
   return (
     <section className="mt-6 rounded-2xl border border-border p-5">
@@ -312,29 +318,44 @@ function BankKarte({
                 : t("azBankPruefung")}
           </p>
         </div>
-        {!landFehlt && (
-          <button
-            type="button"
-            onClick={() => setOffen(!offen)}
-            className="shrink-0 text-[0.9375rem] font-medium underline underline-offset-4 outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-foreground/20"
-          >
-            {offen
-              ? t("azBankAbbrechen")
-              : hinterlegt
-                ? t("azBankAendern")
-                : t("azBankHinzufuegen")}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => setOffen(!offen)}
+          className="shrink-0 text-[0.9375rem] font-medium underline underline-offset-4 outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-foreground/20"
+        >
+          {offen
+            ? t("azBankAbbrechen")
+            : hinterlegt
+              ? t("azBankAendern")
+              : t("azBankHinzufuegen")}
+        </button>
       </div>
 
-      {landFehlt && (
-        <p className="mt-3 text-[0.9375rem] text-muted-foreground">
-          {t("azBankLandFehlt")}
-        </p>
-      )}
-
-      {offen && !landFehlt && (
+      {offen && (
         <div className="mt-5 space-y-4">
+          {!land && (
+            <div>
+              <label className="block text-sm text-muted-foreground">
+                {t("utFeldLand")}
+              </label>
+              <div className="mt-1.5">
+                <SuchAuswahl
+                  optionen={laender.alle().map((l) => ({
+                    wert: l.code,
+                    label: l.name,
+                    stichworte: l.code,
+                  }))}
+                  wert={landWahl}
+                  onChange={setLandWahl}
+                  suchPlatzhalter={t("landSuchen")}
+                />
+              </div>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                {t("azBankLandFehlt")}
+              </p>
+            </div>
+          )}
+
           <div>
             <label htmlFor="bank-inhaber" className="block text-sm text-muted-foreground">
               {t("azBankInhaber")}
@@ -362,7 +383,7 @@ function BankKarte({
               inputMode="text"
               value={iban}
               onChange={(e) => setIban(e.target.value.toUpperCase())}
-              placeholder={t("azBankIbanPlatzhalter", { land })}
+              placeholder={t("azBankIbanPlatzhalter", { land: gewaehltesLand })}
               autoComplete="off"
               spellCheck={false}
               className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 font-mono outline-none focus-visible:border-foreground"
