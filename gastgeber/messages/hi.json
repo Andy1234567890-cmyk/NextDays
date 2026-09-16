@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "गली और मकान संख्या",
     "wohnadressePlz": "पिन कोड",
     "wohnadresseOrt": "शहर",
-    "wohnadresseLand": "देश (ISO-2, जैसे IN)",
+    "wohnadresseLand": "देश",
     "loginTab": "लॉगिन",
     "sharedTab": "साझा पहुँच",
     "zweiFaKarteTitel": "दो-चरणीय प्रमाणीकरण सेट करें",
@@ -557,7 +557,7 @@
     "utFeldPlz": "पिन कोड",
     "utFeldOrt": "शहर",
     "utFeldRegion": "राज्य / क्षेत्र",
-    "utFeldLand": "देश (दो अक्षर, जैसे IN)",
+    "utFeldLand": "देश",
     "utZeileFirma": "आधिकारिक कंपनी का नाम",
     "utFeldFirmenname": "कंपनी का नाम",
     "utFeldRechtsform": "कानूनी स्वरूप (जैसे प्राइवेट लिमिटेड, एकल स्वामित्व)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays सुरक्षित रखता है",
     "ksWegTitel3": "Stripe को हस्तांतरण",
     "ksWegTitel4": "बैंक में भुगतान",
-    "ksWegUmdrehen": "विवरण के लिए पलटें"
+    "ksWegUmdrehen": "विवरण के लिए पलटें",
+    "landSuchen": "देश खोजें …"
   },
   "menu": {
     "titel": "मेन्यू",

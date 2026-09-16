@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Katuosoite ja numero",
     "wohnadressePlz": "Postinumero",
     "wohnadresseOrt": "Postitoimipaikka",
-    "wohnadresseLand": "Maa (ISO-2, esim. FI)",
+    "wohnadresseLand": "Maa",
     "loginTab": "Kirjautuminen",
     "sharedTab": "Jaettu käyttöoikeus",
     "zweiFaKarteTitel": "Ota kaksivaiheinen tunnistautuminen käyttöön",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Postinumero",
     "utFeldOrt": "Postitoimipaikka",
     "utFeldRegion": "Maakunta / alue",
-    "utFeldLand": "Maa (kaksikirjaiminen, esim. FI)",
+    "utFeldLand": "Maa",
     "utZeileFirma": "Virallinen yrityksen nimi",
     "utFeldFirmenname": "Yrityksen nimi",
     "utFeldRechtsform": "Yhtiömuoto (esim. Oy, toiminimi)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays säilyttää",
     "ksWegTitel3": "Siirto Stripelle",
     "ksWegTitel4": "Maksu pankkiin",
-    "ksWegUmdrehen": "Käännä lisätietoja varten"
+    "ksWegUmdrehen": "Käännä lisätietoja varten",
+    "landSuchen": "Hae maata …"
   },
   "menu": {
     "titel": "Valikko",

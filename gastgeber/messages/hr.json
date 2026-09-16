@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Ulica i kućni broj",
     "wohnadressePlz": "Poštanski broj",
     "wohnadresseOrt": "Mjesto",
-    "wohnadresseLand": "Država (ISO-2, npr. HR)",
+    "wohnadresseLand": "Država",
     "loginTab": "Prijava",
     "sharedTab": "Dijeljeni pristup",
     "zweiFaKarteTitel": "Postavi dvofaktorsku autentifikaciju",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Poštanski broj",
     "utFeldOrt": "Mjesto",
     "utFeldRegion": "Županija / regija",
-    "utFeldLand": "Država (dvoslovna oznaka, npr. HR)",
+    "utFeldLand": "Država",
     "utZeileFirma": "Službeni naziv tvrtke",
     "utFeldFirmenname": "Naziv tvrtke",
     "utFeldRechtsform": "Pravni oblik (npr. d.o.o., obrt)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays čuva",
     "ksWegTitel3": "Prijenos na Stripe",
     "ksWegTitel4": "Isplata u banku",
-    "ksWegUmdrehen": "Okreni za detalje"
+    "ksWegUmdrehen": "Okreni za detalje",
+    "landSuchen": "Traži državu …"
   },
   "menu": {
     "titel": "Izbornik",

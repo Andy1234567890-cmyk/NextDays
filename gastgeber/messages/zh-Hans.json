@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "街道及门牌号",
     "wohnadressePlz": "邮政编码",
     "wohnadresseOrt": "城市",
-    "wohnadresseLand": "国家/地区（两位代码，例如 DE）",
+    "wohnadresseLand": "国家/地区",
     "loginTab": "登录",
     "sharedTab": "共享访问权限",
     "zweiFaKarteTitel": "设置两步验证",
@@ -557,7 +557,7 @@
     "utFeldPlz": "邮政编码",
     "utFeldOrt": "城市",
     "utFeldRegion": "省/州/地区",
-    "utFeldLand": "国家/地区（两位代码，例如 DE）",
+    "utFeldLand": "国家/地区",
     "utZeileFirma": "正式企业名称",
     "utFeldFirmenname": "企业名称",
     "utFeldRechtsform": "企业类型（例如有限责任公司、个体工商户）",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays保管",
     "ksWegTitel3": "转账至Stripe",
     "ksWegTitel4": "提款至银行",
-    "ksWegUmdrehen": "翻转查看详情"
+    "ksWegUmdrehen": "翻转查看详情",
+    "landSuchen": "搜索国家/地区 …"
   },
   "menu": {
     "titel": "菜单",

@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "ถนนและเลขที่",
     "wohnadressePlz": "รหัสไปรษณีย์",
     "wohnadresseOrt": "เมือง",
-    "wohnadresseLand": "ประเทศ (รหัส 2 ตัว เช่น DE)",
+    "wohnadresseLand": "ประเทศ",
     "loginTab": "การเข้าสู่ระบบ",
     "sharedTab": "การเข้าถึงร่วม",
     "zweiFaKarteTitel": "ตั้งค่าการยืนยันตัวตนสองขั้นตอน",
@@ -557,7 +557,7 @@
     "utFeldPlz": "รหัสไปรษณีย์",
     "utFeldOrt": "เมือง",
     "utFeldRegion": "รัฐ / ภูมิภาค",
-    "utFeldLand": "ประเทศ (รหัสสองตัว เช่น DE)",
+    "utFeldLand": "ประเทศ",
     "utZeileFirma": "ชื่อกิจการอย่างเป็นทางการ",
     "utFeldFirmenname": "ชื่อกิจการ",
     "utFeldRechtsform": "รูปแบบทางกฎหมาย (เช่น บริษัทจำกัด กิจการเจ้าของคนเดียว)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays เก็บไว้",
     "ksWegTitel3": "โอนไปยัง Stripe",
     "ksWegTitel4": "จ่ายเข้าบัญชีธนาคาร",
-    "ksWegUmdrehen": "พลิกเพื่อดูรายละเอียด"
+    "ksWegUmdrehen": "พลิกเพื่อดูรายละเอียด",
+    "landSuchen": "ค้นหาประเทศ …"
   },
   "menu": {
     "titel": "เมนู",

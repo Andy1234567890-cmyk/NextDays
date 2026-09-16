@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "الشارع ورقم المبنى",
     "wohnadressePlz": "الرمز البريدي",
     "wohnadresseOrt": "المدينة",
-    "wohnadresseLand": "الدولة (رمز من حرفين، مثال: DE)",
+    "wohnadresseLand": "الدولة",
     "loginTab": "تسجيل الدخول",
     "sharedTab": "الوصول المشترك",
     "zweiFaKarteTitel": "إعداد المصادقة الثنائية",
@@ -557,7 +557,7 @@
     "utFeldPlz": "الرمز البريدي",
     "utFeldOrt": "المدينة",
     "utFeldRegion": "الولاية / المنطقة",
-    "utFeldLand": "الدولة (رمز من حرفين، مثال: DE)",
+    "utFeldLand": "الدولة",
     "utZeileFirma": "الاسم الرسمي للشركة",
     "utFeldFirmenname": "اسم الشركة",
     "utFeldRechtsform": "الشكل القانوني (مثل شركة ذات مسؤولية محدودة، مؤسسة فردية)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays تحتفظ بالمال",
     "ksWegTitel3": "تحويل إلى Stripe",
     "ksWegTitel4": "صرف إلى البنك",
-    "ksWegUmdrehen": "اقلب للتفاصيل"
+    "ksWegUmdrehen": "اقلب للتفاصيل",
+    "landSuchen": "ابحث عن دولة …"
   },
   "menu": {
     "titel": "القائمة",

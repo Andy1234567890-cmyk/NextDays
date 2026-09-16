@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Улица и номер",
     "wohnadressePlz": "Пощенски код",
     "wohnadresseOrt": "Населено място",
-    "wohnadresseLand": "Държава (ISO-2, напр. BG)",
+    "wohnadresseLand": "Държава",
     "loginTab": "Вход",
     "sharedTab": "Споделен достъп",
     "zweiFaKarteTitel": "Настрой двуфакторно удостоверяване",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Пощенски код",
     "utFeldOrt": "Населено място",
     "utFeldRegion": "Област / регион",
-    "utFeldLand": "Държава (двубуквен код, напр. BG)",
+    "utFeldLand": "Държава",
     "utZeileFirma": "Официално име на фирмата",
     "utFeldFirmenname": "Име на фирмата",
     "utFeldRechtsform": "Правна форма (напр. ЕООД, едноличен търговец)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays съхранява",
     "ksWegTitel3": "Превод към Stripe",
     "ksWegTitel4": "Изплащане към банката",
-    "ksWegUmdrehen": "Обърнете за подробности"
+    "ksWegUmdrehen": "Обърнете за подробности",
+    "landSuchen": "Търси държава …"
   },
   "menu": {
     "titel": "Меню",

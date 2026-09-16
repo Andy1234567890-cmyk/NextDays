@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Strada și numărul",
     "wohnadressePlz": "Cod poștal",
     "wohnadresseOrt": "Localitate",
-    "wohnadresseLand": "Țară (ISO-2, de ex. RO)",
+    "wohnadresseLand": "Țară",
     "loginTab": "Conectare",
     "sharedTab": "Acces partajat",
     "zweiFaKarteTitel": "Configurează autentificarea în doi pași",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Cod poștal",
     "utFeldOrt": "Localitate",
     "utFeldRegion": "Județ / regiune",
-    "utFeldLand": "Țară (două litere, de ex. RO)",
+    "utFeldLand": "Țară",
     "utZeileFirma": "Denumirea oficială a firmei",
     "utFeldFirmenname": "Denumirea firmei",
     "utFeldRechtsform": "Forma juridică (de ex. SRL, PFA)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays păstrează",
     "ksWegTitel3": "Transfer către Stripe",
     "ksWegTitel4": "Plată către bancă",
-    "ksWegUmdrehen": "Întoarceți pentru detalii"
+    "ksWegUmdrehen": "Întoarceți pentru detalii",
+    "landSuchen": "Caută țara …"
   },
   "menu": {
     "titel": "Meniu",

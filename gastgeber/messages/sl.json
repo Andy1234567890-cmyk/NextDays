@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Ulica in hišna številka",
     "wohnadressePlz": "Poštna številka",
     "wohnadresseOrt": "Kraj",
-    "wohnadresseLand": "Država (ISO-2, npr. SI)",
+    "wohnadresseLand": "Država",
     "loginTab": "Prijava",
     "sharedTab": "Deljeni dostop",
     "zweiFaKarteTitel": "Nastavi dvostopenjsko preverjanje",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Poštna številka",
     "utFeldOrt": "Kraj",
     "utFeldRegion": "Regija",
-    "utFeldLand": "Država (dvomestno, npr. SI)",
+    "utFeldLand": "Država",
     "utZeileFirma": "Uradni naziv podjetja",
     "utFeldFirmenname": "Naziv podjetja",
     "utFeldRechtsform": "Pravnoorganizacijska oblika (npr. d. o. o., samostojni podjetnik)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays zadrži",
     "ksWegTitel3": "Prenos na Stripe",
     "ksWegTitel4": "Izplačilo na banko",
-    "ksWegUmdrehen": "Obrni za podrobnosti"
+    "ksWegUmdrehen": "Obrni za podrobnosti",
+    "landSuchen": "Išči državo …"
   },
   "menu": {
     "titel": "Meni",

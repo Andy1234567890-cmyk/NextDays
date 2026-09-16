@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Rue et numéro",
     "wohnadressePlz": "Code postal",
     "wohnadresseOrt": "Ville",
-    "wohnadresseLand": "Pays (ISO-2, p. ex. FR)",
+    "wohnadresseLand": "Pays",
     "loginTab": "Connexion",
     "sharedTab": "Accès partagé",
     "zweiFaKarteTitel": "Configurer l'authentification à deux facteurs",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Code postal",
     "utFeldOrt": "Ville",
     "utFeldRegion": "Région / département",
-    "utFeldLand": "Pays (deux lettres, p. ex. FR)",
+    "utFeldLand": "Pays",
     "utZeileFirma": "Raison sociale officielle",
     "utFeldFirmenname": "Raison sociale",
     "utFeldRechtsform": "Forme juridique (p. ex. SARL, entreprise individuelle)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays détient",
     "ksWegTitel3": "Virement à Stripe",
     "ksWegTitel4": "Paiement à la banque",
-    "ksWegUmdrehen": "Retourner pour les détails"
+    "ksWegUmdrehen": "Retourner pour les détails",
+    "landSuchen": "Rechercher un pays…"
   },
   "menu": {
     "titel": "Menu",

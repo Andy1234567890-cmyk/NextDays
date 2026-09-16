@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Carrer i número",
     "wohnadressePlz": "Codi postal",
     "wohnadresseOrt": "Població",
-    "wohnadresseLand": "País (ISO-2, p. ex. ES)",
+    "wohnadresseLand": "País",
     "loginTab": "Inici de sessió",
     "sharedTab": "Accés compartit",
     "zweiFaKarteTitel": "Configura la verificació en dos passos",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Codi postal",
     "utFeldOrt": "Població",
     "utFeldRegion": "Comunitat autònoma / regió",
-    "utFeldLand": "País (dues lletres, p. ex. ES)",
+    "utFeldLand": "País",
     "utZeileFirma": "Raó social oficial",
     "utFeldFirmenname": "Nom de l'empresa",
     "utFeldRechtsform": "Forma jurídica (p. ex. SL, empresari individual)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays reté",
     "ksWegTitel3": "Transferència a Stripe",
     "ksWegTitel4": "Pagament al banc",
-    "ksWegUmdrehen": "Gira per a més detalls"
+    "ksWegUmdrehen": "Gira per a més detalls",
+    "landSuchen": "Cerca un país …"
   },
   "menu": {
     "titel": "Menú",

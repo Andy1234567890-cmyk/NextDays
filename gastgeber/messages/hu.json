@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Utca és házszám",
     "wohnadressePlz": "Irányítószám",
     "wohnadresseOrt": "Település",
-    "wohnadresseLand": "Ország (ISO-2, pl. HU)",
+    "wohnadresseLand": "Ország",
     "loginTab": "Bejelentkezés",
     "sharedTab": "Megosztott hozzáférés",
     "zweiFaKarteTitel": "Kétlépcsős azonosítás beállítása",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Irányítószám",
     "utFeldOrt": "Település",
     "utFeldRegion": "Megye / régió",
-    "utFeldLand": "Ország (kétjegyű, pl. HU)",
+    "utFeldLand": "Ország",
     "utZeileFirma": "Hivatalos cégnév",
     "utFeldFirmenname": "Cégnév",
     "utFeldRechtsform": "Cégforma (pl. Kft., egyéni vállalkozó)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays megőrzi",
     "ksWegTitel3": "Átutalás a Stripe-nak",
     "ksWegTitel4": "Kifizetés a banknak",
-    "ksWegUmdrehen": "Fordítsd meg a részletekért"
+    "ksWegUmdrehen": "Fordítsd meg a részletekért",
+    "landSuchen": "Ország keresése …"
   },
   "menu": {
     "titel": "Menü",

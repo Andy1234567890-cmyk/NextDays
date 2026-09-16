@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Улица и номер дома",
     "wohnadressePlz": "Почтовый индекс",
     "wohnadresseOrt": "Город",
-    "wohnadresseLand": "Страна (ISO-2, например DE)",
+    "wohnadresseLand": "Страна",
     "loginTab": "Вход",
     "sharedTab": "Общий доступ",
     "zweiFaKarteTitel": "Настройка двухфакторной аутентификации",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Почтовый индекс",
     "utFeldOrt": "Город",
     "utFeldRegion": "Регион / область",
-    "utFeldLand": "Страна (две буквы, например DE)",
+    "utFeldLand": "Страна",
     "utZeileFirma": "Официальное название компании",
     "utFeldFirmenname": "Название компании",
     "utFeldRechtsform": "Организационно-правовая форма (например, ООО, ИП)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays хранит",
     "ksWegTitel3": "Перевод в Stripe",
     "ksWegTitel4": "Выплата в банк",
-    "ksWegUmdrehen": "Перевернуть для деталей"
+    "ksWegUmdrehen": "Перевернуть для деталей",
+    "landSuchen": "Найти страну …"
   },
   "menu": {
     "titel": "Меню",

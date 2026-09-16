@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Gata och husnummer",
     "wohnadressePlz": "Postnummer",
     "wohnadresseOrt": "Ort",
-    "wohnadresseLand": "Land (ISO-2, t.ex. SE)",
+    "wohnadresseLand": "Land",
     "loginTab": "Inloggning",
     "sharedTab": "Delad åtkomst",
     "zweiFaKarteTitel": "Ställ in tvåfaktorsautentisering",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Postnummer",
     "utFeldOrt": "Ort",
     "utFeldRegion": "Region/län",
-    "utFeldLand": "Land (två bokstäver, t.ex. SE)",
+    "utFeldLand": "Land",
     "utZeileFirma": "Officiellt företagsnamn",
     "utFeldFirmenname": "Företagsnamn",
     "utFeldRechtsform": "Bolagsform (t.ex. AB, enskild firma)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays håller pengarna",
     "ksWegTitel3": "Överföring till Stripe",
     "ksWegTitel4": "Utbetalning till banken",
-    "ksWegUmdrehen": "Vänd för detaljer"
+    "ksWegUmdrehen": "Vänd för detaljer",
+    "landSuchen": "Sök land …"
   },
   "menu": {
     "titel": "Meny",

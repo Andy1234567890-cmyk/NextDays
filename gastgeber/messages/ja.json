@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "町名・番地",
     "wohnadressePlz": "郵便番号",
     "wohnadresseOrt": "市区町村",
-    "wohnadresseLand": "国（ISO 2文字、例：JP）",
+    "wohnadresseLand": "国",
     "loginTab": "ログイン",
     "sharedTab": "共有アクセス",
     "zweiFaKarteTitel": "2段階認証を設定する",
@@ -557,7 +557,7 @@
     "utFeldPlz": "郵便番号",
     "utFeldOrt": "市区町村",
     "utFeldRegion": "都道府県・地域",
-    "utFeldLand": "国（2文字、例：JP）",
+    "utFeldLand": "国",
     "utZeileFirma": "正式な会社名",
     "utFeldFirmenname": "会社名",
     "utFeldRechtsform": "法人形態（例：株式会社、個人事業主）",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDaysが保管",
     "ksWegTitel3": "Stripeへの送金",
     "ksWegTitel4": "銀行口座へ出金",
-    "ksWegUmdrehen": "詳細を見る"
+    "ksWegUmdrehen": "詳細を見る",
+    "landSuchen": "国を検索…"
   },
   "menu": {
     "titel": "メニュー",

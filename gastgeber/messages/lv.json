@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Iela un mājas numurs",
     "wohnadressePlz": "Pasta indekss",
     "wohnadresseOrt": "Apdzīvota vieta",
-    "wohnadresseLand": "Valsts (ISO-2, piem., LV)",
+    "wohnadresseLand": "Valsts",
     "loginTab": "Pieteikšanās",
     "sharedTab": "Koplietota piekļuve",
     "zweiFaKarteTitel": "Iestatīt divfaktoru autentifikāciju",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Pasta indekss",
     "utFeldOrt": "Apdzīvota vieta",
     "utFeldRegion": "Novads / reģions",
-    "utFeldLand": "Valsts (divi burti, piem., LV)",
+    "utFeldLand": "Valsts",
     "utZeileFirma": "Oficiālais uzņēmuma nosaukums",
     "utFeldFirmenname": "Uzņēmuma nosaukums",
     "utFeldRechtsform": "Juridiskā forma (piem., SIA, individuālais komersants)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays tur naudu",
     "ksWegTitel3": "Pārskaitījums uz Stripe",
     "ksWegTitel4": "Izmaksa uz banku",
-    "ksWegUmdrehen": "Apgriezt, lai redzētu detaļas"
+    "ksWegUmdrehen": "Apgriezt, lai redzētu detaļas",
+    "landSuchen": "Meklēt valsti …"
   },
   "menu": {
     "titel": "Izvēlne",

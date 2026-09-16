@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Sráid agus uimhir tí",
     "wohnadressePlz": "Eirchód",
     "wohnadresseOrt": "Baile",
-    "wohnadresseLand": "Tír (ISO-2, m.sh. IE)",
+    "wohnadresseLand": "Tír",
     "loginTab": "Logáil isteach",
     "sharedTab": "Rochtain roinnte",
     "zweiFaKarteTitel": "Socraigh an fíordheimhniú défhachtóireach",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Eirchód",
     "utFeldOrt": "Baile",
     "utFeldRegion": "Cúige / Réigiún",
-    "utFeldLand": "Tír (dhá litir, m.sh. IE)",
+    "utFeldLand": "Tír",
     "utZeileFirma": "Ainm oifigiúil an chomhlachta",
     "utFeldFirmenname": "Ainm an chomhlachta",
     "utFeldRechtsform": "Foirm dhlíthiúil (m.sh. teoranta, trádálaí aonair)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "Coinníonn myBestDays",
     "ksWegTitel3": "Aistriú chuig Stripe",
     "ksWegTitel4": "Íocaíocht chuig an mbanc",
-    "ksWegUmdrehen": "Cas thart le haghaidh sonraí"
+    "ksWegUmdrehen": "Cas thart le haghaidh sonraí",
+    "landSuchen": "Cuardaigh tír …"
   },
   "menu": {
     "titel": "Roghchlár",

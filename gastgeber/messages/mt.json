@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Triq u numru",
     "wohnadressePlz": "Kodiċi postali",
     "wohnadresseOrt": "Lokalità",
-    "wohnadresseLand": "Pajjiż (ISO-2, eż. MT)",
+    "wohnadresseLand": "Pajjiż",
     "loginTab": "Dħul",
     "sharedTab": "Aċċess kondiviż",
     "zweiFaKarteTitel": "Waqqaf l-awtentikazzjoni b'żewġ fatturi",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Kodiċi postali",
     "utFeldOrt": "Lokalità",
     "utFeldRegion": "Reġjun",
-    "utFeldLand": "Pajjiż (żewġ ittri, eż. MT)",
+    "utFeldLand": "Pajjiż",
     "utZeileFirma": "Isem uffiċjali tal-kumpanija",
     "utFeldFirmenname": "Isem tal-kumpanija",
     "utFeldRechtsform": "Forma legali (eż. Ltd, negozjant waħdieni)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays iżomm il-ħlas",
     "ksWegTitel3": "Trasferiment lil Stripe",
     "ksWegTitel4": "Ħlas lill-bank",
-    "ksWegUmdrehen": "Dawwar għad-dettalji"
+    "ksWegUmdrehen": "Dawwar għad-dettalji",
+    "landSuchen": "Fittex pajjiż …"
   },
   "menu": {
     "titel": "Menu",

@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Via e numero civico",
     "wohnadressePlz": "Codice postale",
     "wohnadresseOrt": "Località",
-    "wohnadresseLand": "Paese (ISO-2, ad es. IT)",
+    "wohnadresseLand": "Paese",
     "loginTab": "Accesso",
     "sharedTab": "Accesso condiviso",
     "zweiFaKarteTitel": "Configura l'autenticazione a due fattori",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Codice postale",
     "utFeldOrt": "Località",
     "utFeldRegion": "Regione / provincia",
-    "utFeldLand": "Paese (due lettere, ad es. IT)",
+    "utFeldLand": "Paese",
     "utZeileFirma": "Ragione sociale ufficiale",
     "utFeldFirmenname": "Ragione sociale",
     "utFeldRechtsform": "Forma giuridica (ad es. S.r.l., ditta individuale)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays custodisce",
     "ksWegTitel3": "Bonifico a Stripe",
     "ksWegTitel4": "Pagamento alla banca",
-    "ksWegUmdrehen": "Gira per i dettagli"
+    "ksWegUmdrehen": "Gira per i dettagli",
+    "landSuchen": "Cerca paese …"
   },
   "menu": {
     "titel": "Menu",

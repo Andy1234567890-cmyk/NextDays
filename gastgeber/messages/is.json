@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Gata og húsnúmer",
     "wohnadressePlz": "Póstnúmer",
     "wohnadresseOrt": "Staður",
-    "wohnadresseLand": "Land (ISO-2, t.d. IS)",
+    "wohnadresseLand": "Land",
     "loginTab": "Innskráning",
     "sharedTab": "Sameiginlegur aðgangur",
     "zweiFaKarteTitel": "Setja upp tveggja þátta auðkenningu",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Póstnúmer",
     "utFeldOrt": "Staður",
     "utFeldRegion": "Fylki / svæði",
-    "utFeldLand": "Land (tveir stafir, t.d. IS)",
+    "utFeldLand": "Land",
     "utZeileFirma": "Opinbert nafn fyrirtækis",
     "utFeldFirmenname": "Nafn fyrirtækis",
     "utFeldRechtsform": "Rekstrarform (t.d. ehf., einstaklingsrekstur)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays geymir",
     "ksWegTitel3": "Millifærsla til Stripe",
     "ksWegTitel4": "Útborgun á bankareikning",
-    "ksWegUmdrehen": "Snúa við til að sjá nánar"
+    "ksWegUmdrehen": "Snúa við til að sjá nánar",
+    "landSuchen": "Leita að landi …"
   },
   "menu": {
     "titel": "Valmynd",

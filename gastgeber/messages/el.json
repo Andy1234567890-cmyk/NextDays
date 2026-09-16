@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Οδός και αριθμός",
     "wohnadressePlz": "Ταχυδρομικός κώδικας",
     "wohnadresseOrt": "Πόλη",
-    "wohnadresseLand": "Χώρα (ISO-2, π.χ. GR)",
+    "wohnadresseLand": "Χώρα",
     "loginTab": "Σύνδεση",
     "sharedTab": "Κοινή πρόσβαση",
     "zweiFaKarteTitel": "Ρύθμιση ελέγχου ταυτότητας δύο παραγόντων",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Ταχυδρομικός κώδικας",
     "utFeldOrt": "Πόλη",
     "utFeldRegion": "Περιφέρεια",
-    "utFeldLand": "Χώρα (διψήφιος κωδικός, π.χ. GR)",
+    "utFeldLand": "Χώρα",
     "utZeileFirma": "Επίσημη επωνυμία επιχείρησης",
     "utFeldFirmenname": "Επωνυμία επιχείρησης",
     "utFeldRechtsform": "Νομική μορφή (π.χ. Ι.Κ.Ε., ατομική επιχείρηση)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "Η myBestDays διατηρεί",
     "ksWegTitel3": "Μεταφορά στο Stripe",
     "ksWegTitel4": "Πληρωμή στην τράπεζα",
-    "ksWegUmdrehen": "Αναστροφή για λεπτομέρειες"
+    "ksWegUmdrehen": "Αναστροφή για λεπτομέρειες",
+    "landSuchen": "Αναζήτηση χώρας …"
   },
   "menu": {
     "titel": "Μενού",

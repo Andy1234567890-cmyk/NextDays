@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Sokak ve kapı numarası",
     "wohnadressePlz": "Posta kodu",
     "wohnadresseOrt": "Şehir",
-    "wohnadresseLand": "Ülke (ISO-2, örn. DE)",
+    "wohnadresseLand": "Ülke",
     "loginTab": "Giriş",
     "sharedTab": "Paylaşılan erişim",
     "zweiFaKarteTitel": "İki adımlı doğrulamayı kur",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Posta kodu",
     "utFeldOrt": "Şehir",
     "utFeldRegion": "İl / Bölge",
-    "utFeldLand": "Ülke (iki harfli, örn. DE)",
+    "utFeldLand": "Ülke",
     "utZeileFirma": "Resmî firma adı",
     "utFeldFirmenname": "Firma adı",
     "utFeldRechtsform": "Hukuki biçim (örn. limited şirket, şahıs işletmesi)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays tutar",
     "ksWegTitel3": "Stripe'a havale",
     "ksWegTitel4": "Bankaya ödeme",
-    "ksWegUmdrehen": "Detaylar için çevir"
+    "ksWegUmdrehen": "Detaylar için çevir",
+    "landSuchen": "Ülke ara …"
   },
   "menu": {
     "titel": "Menü",

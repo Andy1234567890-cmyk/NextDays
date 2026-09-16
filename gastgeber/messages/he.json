@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "רחוב ומספר בית",
     "wohnadressePlz": "מיקוד",
     "wohnadresseOrt": "עיר",
-    "wohnadresseLand": "מדינה (קוד דו‑אותי, לדוגמה DE)",
+    "wohnadresseLand": "מדינה",
     "loginTab": "התחברות",
     "sharedTab": "גישה משותפת",
     "zweiFaKarteTitel": "הגדרת אימות דו‑שלבי",
@@ -557,7 +557,7 @@
     "utFeldPlz": "מיקוד",
     "utFeldOrt": "עיר",
     "utFeldRegion": "מחוז / אזור",
-    "utFeldLand": "מדינה (קוד דו‑אותי, לדוגמה DE)",
+    "utFeldLand": "מדינה",
     "utZeileFirma": "השם הרשמי של החברה",
     "utFeldFirmenname": "שם החברה",
     "utFeldRechtsform": "צורת ההתאגדות (לדוגמה בע״מ, עוסק מורשה)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays שומר",
     "ksWegTitel3": "העברה ל-Stripe",
     "ksWegTitel4": "תשלום לבנק",
-    "ksWegUmdrehen": "הפוך לפרטים"
+    "ksWegUmdrehen": "הפוך לפרטים",
+    "landSuchen": "חיפוש מדינה …"
   },
   "menu": {
     "titel": "תפריט",

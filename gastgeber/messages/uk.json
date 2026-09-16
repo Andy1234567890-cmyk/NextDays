@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Вулиця та номер будинку",
     "wohnadressePlz": "Поштовий індекс",
     "wohnadresseOrt": "Населений пункт",
-    "wohnadresseLand": "Країна (ISO-2, напр. DE)",
+    "wohnadresseLand": "Країна",
     "loginTab": "Вхід",
     "sharedTab": "Спільний доступ",
     "zweiFaKarteTitel": "Налаштування двофакторної автентифікації",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Поштовий індекс",
     "utFeldOrt": "Населений пункт",
     "utFeldRegion": "Область / регіон",
-    "utFeldLand": "Країна (дві літери, напр. DE)",
+    "utFeldLand": "Країна",
     "utZeileFirma": "Офіційна назва компанії",
     "utFeldFirmenname": "Назва компанії",
     "utFeldRechtsform": "Організаційно-правова форма (напр. ТОВ, ФОП)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays зберігає",
     "ksWegTitel3": "Переказ до Stripe",
     "ksWegTitel4": "Виплата в банк",
-    "ksWegUmdrehen": "Перевернути для деталей"
+    "ksWegUmdrehen": "Перевернути для деталей",
+    "landSuchen": "Пошук країни …"
   },
   "menu": {
     "titel": "Меню",

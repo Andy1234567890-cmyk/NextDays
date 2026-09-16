@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Street and number",
     "wohnadressePlz": "Postcode",
     "wohnadresseOrt": "City",
-    "wohnadresseLand": "Country (ISO-2, e.g. US)",
+    "wohnadresseLand": "Country",
     "loginTab": "Login",
     "sharedTab": "Shared access",
     "zweiFaKarteTitel": "Set up two-factor authentication",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Postcode",
     "utFeldOrt": "City",
     "utFeldRegion": "State / region",
-    "utFeldLand": "Country (two letters, e.g. US)",
+    "utFeldLand": "Country",
     "utZeileFirma": "Official company name",
     "utFeldFirmenname": "Company name",
     "utFeldRechtsform": "Legal form (e.g. Ltd, sole trader)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays holds",
     "ksWegTitel3": "Transfer to Stripe",
     "ksWegTitel4": "Payout to bank",
-    "ksWegUmdrehen": "Flip for details"
+    "ksWegUmdrehen": "Flip for details",
+    "landSuchen": "Search country …"
   },
   "menu": {
     "titel": "Menu",

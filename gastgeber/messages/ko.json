@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "도로명 및 건물번호",
     "wohnadressePlz": "우편번호",
     "wohnadresseOrt": "도시",
-    "wohnadresseLand": "국가 (ISO 2자리, 예: DE)",
+    "wohnadresseLand": "국가",
     "loginTab": "로그인",
     "sharedTab": "공유 접근 권한",
     "zweiFaKarteTitel": "2단계 인증 설정하기",
@@ -557,7 +557,7 @@
     "utFeldPlz": "우편번호",
     "utFeldOrt": "도시",
     "utFeldRegion": "주/지역",
-    "utFeldLand": "국가 (두 자리, 예: DE)",
+    "utFeldLand": "국가",
     "utZeileFirma": "정식 상호",
     "utFeldFirmenname": "상호",
     "utFeldRechtsform": "법인 형태 (예: 주식회사, 개인사업자)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays 보관",
     "ksWegTitel3": "Stripe로 송금",
     "ksWegTitel4": "은행으로 지급",
-    "ksWegUmdrehen": "자세한 내용은 뒤집기"
+    "ksWegUmdrehen": "자세한 내용은 뒤집기",
+    "landSuchen": "국가 검색 …"
   },
   "menu": {
     "titel": "메뉴",

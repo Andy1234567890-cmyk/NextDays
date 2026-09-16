@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { AdressSuche } from "@/components/objekt-editor/adress-suche";
+import { SuchAuswahl } from "@/components/ui/such-auswahl";
+import { useLaender } from "@/lib/laender";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 
@@ -328,6 +330,7 @@ function AdressFeld({
   onCancel: () => void;
 }) {
   const t = useTranslations("konto");
+  const laender = useLaender();
   const [f, setF] = useState<Adresse>({
     strasse: strasse ?? "",
     plz: plz ?? "",
@@ -377,13 +380,24 @@ function AdressFeld({
         </Feldchen>
       </div>
       <Feldchen label={t("wohnadresseLand")}>
-        <Input
-          value={f.land}
-          onChange={(e) =>
-            setF({ ...f, land: e.target.value.toUpperCase().slice(0, 2) })
-          }
-          disabled={busy}
-          maxLength={2}
+        {/* AUSWAHL statt Freitext (16.09.2026). Hier stand ein Textfeld mit dem
+            Hinweis „Land (ISO-2, z. B. DE)" und einem harten
+            `.toUpperCase().slice(0, 2)` auf jeder Eingabe. Zwei Fehler in
+            einem: ein Kunde muss nicht wissen, was ISO-3166 ist — und wer
+            „Dänemark" tippte, bekam wortlos „DÄ" gespeichert. Ein
+            abgeschnittener Wert, der aussieht wie ein Ländercode, ist
+            schlimmer als eine Fehlermeldung (Wurzel 4).
+            Die Namen kommen aus `Intl.DisplayNames` in der Sprache des
+            Nutzers, gespeichert wird weiter der ISO-Code. */}
+        <SuchAuswahl
+          optionen={laender.alle().map((l) => ({
+            wert: l.code,
+            label: l.name,
+            stichworte: l.code,
+          }))}
+          wert={f.land}
+          onChange={(v) => setF({ ...f, land: v })}
+          suchPlatzhalter={t("landSuchen")}
         />
       </Feldchen>
       {fehler && <p className="text-sm text-destructive">{fehler}</p>}

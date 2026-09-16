@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Gate og husnummer",
     "wohnadressePlz": "Postnummer",
     "wohnadresseOrt": "Sted",
-    "wohnadresseLand": "Land (ISO-2, f.eks. NO)",
+    "wohnadresseLand": "Land",
     "loginTab": "Innlogging",
     "sharedTab": "Delt tilgang",
     "zweiFaKarteTitel": "Sett opp tofaktorautentisering",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Postnummer",
     "utFeldOrt": "Sted",
     "utFeldRegion": "Fylke / region",
-    "utFeldLand": "Land (to bokstaver, f.eks. NO)",
+    "utFeldLand": "Land",
     "utZeileFirma": "Offisielt firmanavn",
     "utFeldFirmenname": "Firmanavn",
     "utFeldRechtsform": "Selskapsform (f.eks. AS, enkeltpersonforetak)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays oppbevarer",
     "ksWegTitel3": "Overføring til Stripe",
     "ksWegTitel4": "Utbetaling til banken",
-    "ksWegUmdrehen": "Snu for detaljer"
+    "ksWegUmdrehen": "Snu for detaljer",
+    "landSuchen": "Søk etter land …"
   },
   "menu": {
     "titel": "Meny",

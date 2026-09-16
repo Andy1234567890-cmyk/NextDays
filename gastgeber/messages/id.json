@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Jalan dan nomor rumah",
     "wohnadressePlz": "Kode pos",
     "wohnadresseOrt": "Kota",
-    "wohnadresseLand": "Negara (kode 2 huruf, mis. DE)",
+    "wohnadresseLand": "Negara",
     "loginTab": "Login",
     "sharedTab": "Akses bersama",
     "zweiFaKarteTitel": "Siapkan autentikasi dua faktor",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Kode pos",
     "utFeldOrt": "Kota",
     "utFeldRegion": "Provinsi / wilayah",
-    "utFeldLand": "Negara (dua huruf, mis. DE)",
+    "utFeldLand": "Negara",
     "utZeileFirma": "Nama resmi perusahaan",
     "utFeldFirmenname": "Nama perusahaan",
     "utFeldRechtsform": "Bentuk badan hukum (mis. perseroan terbatas, usaha perorangan)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays menahan",
     "ksWegTitel3": "Transfer ke Stripe",
     "ksWegTitel4": "Pembayaran ke bank",
-    "ksWegUmdrehen": "Balik untuk detail"
+    "ksWegUmdrehen": "Balik untuk detail",
+    "landSuchen": "Cari negara …"
   },
   "menu": {
     "titel": "Menu",

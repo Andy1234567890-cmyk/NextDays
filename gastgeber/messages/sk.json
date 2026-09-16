@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Ulica a číslo domu",
     "wohnadressePlz": "PSČ",
     "wohnadresseOrt": "Obec",
-    "wohnadresseLand": "Krajina (ISO-2, napr. SK)",
+    "wohnadresseLand": "Krajina",
     "loginTab": "Prihlásenie",
     "sharedTab": "Zdieľaný prístup",
     "zweiFaKarteTitel": "Nastaviť dvojfaktorové overenie",
@@ -557,7 +557,7 @@
     "utFeldPlz": "PSČ",
     "utFeldOrt": "Obec",
     "utFeldRegion": "Kraj / región",
-    "utFeldLand": "Krajina (dvojmiestne, napr. SK)",
+    "utFeldLand": "Krajina",
     "utZeileFirma": "Oficiálny názov firmy",
     "utFeldFirmenname": "Názov firmy",
     "utFeldRechtsform": "Právna forma (napr. s.r.o., živnosť)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays podrží",
     "ksWegTitel3": "Prevod na Stripe",
     "ksWegTitel4": "Výplata do banky",
-    "ksWegUmdrehen": "Otočte pre podrobnosti"
+    "ksWegUmdrehen": "Otočte pre podrobnosti",
+    "landSuchen": "Hľadať krajinu …"
   },
   "menu": {
     "titel": "Menu",

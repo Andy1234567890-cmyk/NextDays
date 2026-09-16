@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Straße und Hausnummer",
     "wohnadressePlz": "Postleitzahl",
     "wohnadresseOrt": "Ort",
-    "wohnadresseLand": "Land (ISO-2, z. B. DE)",
+    "wohnadresseLand": "Land",
     "loginTab": "Anmeldung",
     "sharedTab": "Geteilter Zugriff",
     "zweiFaKarteTitel": "Zwei-Faktor-Authentisierung einrichten",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Postleitzahl",
     "utFeldOrt": "Ort",
     "utFeldRegion": "Bundesland / Region",
-    "utFeldLand": "Land (zweistellig, z. B. DE)",
+    "utFeldLand": "Land",
     "utZeileFirma": "Offizieller Firmenname",
     "utFeldFirmenname": "Firmenname",
     "utFeldRechtsform": "Rechtsform (z. B. GmbH, Einzelunternehmen)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays verwahrt",
     "ksWegTitel3": "Überweisung an Stripe",
     "ksWegTitel4": "Auszahlung auf die Bank",
-    "ksWegUmdrehen": "Umdrehen für Details"
+    "ksWegUmdrehen": "Umdrehen für Details",
+    "landSuchen": "Land suchen …"
   },
   "menu": {
     "titel": "Menü",

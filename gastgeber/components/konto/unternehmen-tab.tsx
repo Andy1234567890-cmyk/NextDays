@@ -28,6 +28,8 @@ import {
 } from "@/lib/auszahlung-actions";
 import type { Account } from "@/lib/konto";
 import { AdressSuche } from "@/components/objekt-editor/adress-suche";
+import { SuchAuswahl } from "@/components/ui/such-auswahl";
+import { useLaender } from "@/lib/laender";
 import type { AuszahlungsStatus, LandAnforderungen } from "@/lib/payments";
 import {
   speichereUnternehmensdaten,
@@ -48,6 +50,9 @@ type Zeile = {
     /** Dieses Feld IST die Adresssuche: ein Treffer fuellt die ganze
      *  Adresse. Kein zweites Eingabefeld daneben (16.09.2026). */
     adresssuche?: true;
+    /** Laenderauswahl statt Freitext — gespeichert wird der ISO-Code, angezeigt
+     *  der ausgeschriebene Name in der Sprache des Nutzers (16.09.2026). */
+    laender?: true;
   }[];
   /** Wie der gespeicherte Wert angezeigt wird. */
   anzeige: (p: Unternehmensprofil) => string;
@@ -62,7 +67,7 @@ const ADRESSE_FELDER: Zeile["felder"] = [
   { key: "companyPostalCode", label: "utFeldPlz" },
   { key: "companyCity", label: "utFeldOrt" },
   { key: "companyState", label: "utFeldRegion" },
-  { key: "companyCountry", label: "utFeldLand", hinweis: "utLandHinweis" },
+  { key: "companyCountry", label: "utFeldLand", laender: true },
 ];
 
 const adresseAnzeige = (p: Unternehmensprofil) =>
@@ -395,6 +400,7 @@ function ZeilenEintrag({
   aufSchliessen: () => void;
 }) {
   const t = useTranslations("konto");
+  const laender = useLaender();
   const router = useRouter();
   const wert = zeile.anzeige(profil);
   const [entwurf, setEntwurf] = useState<Record<string, string>>({});
@@ -463,7 +469,26 @@ function ZeilenEintrag({
               >
                 {t(f.label)}
               </label>
-              {f.adresssuche ? (
+              {f.laender ? (
+                /* AUSWAHL statt Freitext: hier stand ein Textfeld mit dem
+                   Hinweis „Zweistelliger Laendercode, z. B. DK oder DE".
+                   Ein Kunde muss nicht wissen, was ISO-3166 ist, und wer
+                   „Daenemark" tippte, bekam die ersten zwei Zeichen
+                   gespeichert. Die Namen kommen aus `Intl.DisplayNames`,
+                   der Wert bleibt der ISO-Code. */
+                <div className="mt-1.5">
+                  <SuchAuswahl
+                    optionen={laender.alle().map((l) => ({
+                      wert: l.code,
+                      label: l.name,
+                      stichworte: l.code,
+                    }))}
+                    wert={entwurf[f.key] ?? ""}
+                    onChange={(v) => setEntwurf({ ...entwurf, [f.key]: v })}
+                    suchPlatzhalter={t("landSuchen")}
+                  />
+                </div>
+              ) : f.adresssuche ? (
                 /* Die Suche sitzt AUF dem Strassenfeld, nicht daneben: ein
                    getrenntes Suchfeld haette den Nutzer zweimal dasselbe
                    tippen lassen und danach zwei Wahrheiten hinterlassen —

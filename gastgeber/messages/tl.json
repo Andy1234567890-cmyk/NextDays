@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Kalye at numero ng bahay",
     "wohnadressePlz": "ZIP code",
     "wohnadresseOrt": "Bayan",
-    "wohnadresseLand": "Bansa (ISO-2, hal. PH)",
+    "wohnadresseLand": "Bansa",
     "loginTab": "Pag-log in",
     "sharedTab": "Ibinahaging access",
     "zweiFaKarteTitel": "Itakda ang two-factor authentication",
@@ -557,7 +557,7 @@
     "utFeldPlz": "ZIP code",
     "utFeldOrt": "Bayan",
     "utFeldRegion": "Probinsya / rehiyon",
-    "utFeldLand": "Bansa (dalawang titik, hal. PH)",
+    "utFeldLand": "Bansa",
     "utZeileFirma": "Opisyal na pangalan ng kompanya",
     "utFeldFirmenname": "Pangalan ng kompanya",
     "utFeldRechtsform": "Legal na anyo (hal. korporasyon, solong pagmamay-ari)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "Hawak ng myBestDays",
     "ksWegTitel3": "Paglipat sa Stripe",
     "ksWegTitel4": "Pagbabayad sa bangko",
-    "ksWegUmdrehen": "Baliktarin para sa mga detalye"
+    "ksWegUmdrehen": "Baliktarin para sa mga detalye",
+    "landSuchen": "Maghanap ng bansa …"
   },
   "menu": {
     "titel": "Menu",

@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Ulice a číslo popisné",
     "wohnadressePlz": "PSČ",
     "wohnadresseOrt": "Obec",
-    "wohnadresseLand": "Země (ISO-2, např. CZ)",
+    "wohnadresseLand": "Země",
     "loginTab": "Přihlášení",
     "sharedTab": "Sdílený přístup",
     "zweiFaKarteTitel": "Nastavit dvoufaktorové ověření",
@@ -557,7 +557,7 @@
     "utFeldPlz": "PSČ",
     "utFeldOrt": "Obec",
     "utFeldRegion": "Kraj / region",
-    "utFeldLand": "Země (dvoumístně, např. CZ)",
+    "utFeldLand": "Země",
     "utZeileFirma": "Oficiální název firmy",
     "utFeldFirmenname": "Název firmy",
     "utFeldRechtsform": "Právní forma (např. s.r.o., OSVČ)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays drží",
     "ksWegTitel3": "Převod na Stripe",
     "ksWegTitel4": "Výplata do banky",
-    "ksWegUmdrehen": "Otočit pro detaily"
+    "ksWegUmdrehen": "Otočit pro detaily",
+    "landSuchen": "Hledat zemi …"
   },
   "menu": {
     "titel": "Menu",

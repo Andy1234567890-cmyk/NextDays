@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Jalan dan nombor rumah",
     "wohnadressePlz": "Poskod",
     "wohnadresseOrt": "Bandar",
-    "wohnadresseLand": "Negara (kod 2 huruf, cth. DE)",
+    "wohnadresseLand": "Negara",
     "loginTab": "Log masuk",
     "sharedTab": "Akses dikongsi",
     "zweiFaKarteTitel": "Sediakan pengesahan dua faktor",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Poskod",
     "utFeldOrt": "Bandar",
     "utFeldRegion": "Negeri / wilayah",
-    "utFeldLand": "Negara (dua huruf, cth. DE)",
+    "utFeldLand": "Negara",
     "utZeileFirma": "Nama rasmi syarikat",
     "utFeldFirmenname": "Nama syarikat",
     "utFeldRechtsform": "Bentuk perundangan (cth. syarikat sendirian berhad, perniagaan tunggal)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays memegang",
     "ksWegTitel3": "Pindahan ke Stripe",
     "ksWegTitel4": "Pembayaran ke bank",
-    "ksWegUmdrehen": "Balik untuk butiran"
+    "ksWegUmdrehen": "Balik untuk butiran",
+    "landSuchen": "Cari negara …"
   },
   "menu": {
     "titel": "Menu",

@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Đường và số nhà",
     "wohnadressePlz": "Mã bưu chính",
     "wohnadresseOrt": "Thành phố",
-    "wohnadresseLand": "Quốc gia (mã 2 chữ, ví dụ DE)",
+    "wohnadresseLand": "Quốc gia",
     "loginTab": "Đăng nhập",
     "sharedTab": "Quyền truy cập chia sẻ",
     "zweiFaKarteTitel": "Thiết lập xác thực hai bước",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Mã bưu chính",
     "utFeldOrt": "Thành phố",
     "utFeldRegion": "Bang / vùng",
-    "utFeldLand": "Quốc gia (hai chữ, ví dụ DE)",
+    "utFeldLand": "Quốc gia",
     "utZeileFirma": "Tên doanh nghiệp chính thức",
     "utFeldFirmenname": "Tên doanh nghiệp",
     "utFeldRechtsform": "Loại hình pháp lý (ví dụ công ty trách nhiệm hữu hạn, hộ kinh doanh)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays giữ tiền",
     "ksWegTitel3": "Chuyển khoản đến Stripe",
     "ksWegTitel4": "Thanh toán vào ngân hàng",
-    "ksWegUmdrehen": "Xoay để xem chi tiết"
+    "ksWegUmdrehen": "Xoay để xem chi tiết",
+    "landSuchen": "Tìm quốc gia …"
   },
   "menu": {
     "titel": "Menu",

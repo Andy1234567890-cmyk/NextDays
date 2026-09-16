@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Gatvė ir namo numeris",
     "wohnadressePlz": "Pašto kodas",
     "wohnadresseOrt": "Miestas",
-    "wohnadresseLand": "Šalis (ISO-2, pvz., LT)",
+    "wohnadresseLand": "Šalis",
     "loginTab": "Prisijungimas",
     "sharedTab": "Bendrinama prieiga",
     "zweiFaKarteTitel": "Nustatyti dviejų veiksnių tapatybės nustatymą",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Pašto kodas",
     "utFeldOrt": "Miestas",
     "utFeldRegion": "Apskritis / regionas",
-    "utFeldLand": "Šalis (dviženklis kodas, pvz., LT)",
+    "utFeldLand": "Šalis",
     "utZeileFirma": "Oficialus įmonės pavadinimas",
     "utFeldFirmenname": "Įmonės pavadinimas",
     "utFeldRechtsform": "Teisinė forma (pvz., UAB, individuali veikla)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays saugo",
     "ksWegTitel3": "Pervedimas į Stripe",
     "ksWegTitel4": "Išmokėjimas į banką",
-    "ksWegUmdrehen": "Apversti, kad pamatytumėte detales"
+    "ksWegUmdrehen": "Apversti, kad pamatytumėte detales",
+    "landSuchen": "Ieškoti šalies …"
   },
   "menu": {
     "titel": "Meniu",

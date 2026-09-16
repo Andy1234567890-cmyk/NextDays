@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Tänav ja maja number",
     "wohnadressePlz": "Sihtnumber",
     "wohnadresseOrt": "Asula",
-    "wohnadresseLand": "Riik (ISO-2, nt EE)",
+    "wohnadresseLand": "Riik",
     "loginTab": "Sisselogimine",
     "sharedTab": "Jagatud ligipääs",
     "zweiFaKarteTitel": "Seadista kaheastmeline autentimine",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Sihtnumber",
     "utFeldOrt": "Asula",
     "utFeldRegion": "Maakond / piirkond",
-    "utFeldLand": "Riik (kahetäheline, nt EE)",
+    "utFeldLand": "Riik",
     "utZeileFirma": "Ametlik ärinimi",
     "utFeldFirmenname": "Ärinimi",
     "utFeldRechtsform": "Õiguslik vorm (nt osaühing, füüsilisest isikust ettevõtja)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays hoiustab",
     "ksWegTitel3": "Ülekanne Stripe'ile",
     "ksWegTitel4": "Väljamakse pangale",
-    "ksWegUmdrehen": "Pööra detailide nägemiseks"
+    "ksWegUmdrehen": "Pööra detailide nägemiseks",
+    "landSuchen": "Otsi riiki …"
   },
   "menu": {
     "titel": "Menüü",

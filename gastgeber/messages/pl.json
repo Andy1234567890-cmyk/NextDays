@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Ulica i numer domu",
     "wohnadressePlz": "Kod pocztowy",
     "wohnadresseOrt": "Miejscowość",
-    "wohnadresseLand": "Kraj (ISO-2, np. PL)",
+    "wohnadresseLand": "Kraj",
     "loginTab": "Logowanie",
     "sharedTab": "Dostęp współdzielony",
     "zweiFaKarteTitel": "Skonfiguruj uwierzytelnianie dwuskładnikowe",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Kod pocztowy",
     "utFeldOrt": "Miejscowość",
     "utFeldRegion": "Województwo / region",
-    "utFeldLand": "Kraj (dwuliterowo, np. PL)",
+    "utFeldLand": "Kraj",
     "utZeileFirma": "Oficjalna nazwa firmy",
     "utFeldFirmenname": "Nazwa firmy",
     "utFeldRechtsform": "Forma prawna (np. sp. z o.o., jednoosobowa działalność gospodarcza)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays przechowuje",
     "ksWegTitel3": "Przelew do Stripe",
     "ksWegTitel4": "Wypłata do banku",
-    "ksWegUmdrehen": "Odwróć, aby zobaczyć szczegóły"
+    "ksWegUmdrehen": "Odwróć, aby zobaczyć szczegóły",
+    "landSuchen": "Szukaj kraju …"
   },
   "menu": {
     "titel": "Menu",

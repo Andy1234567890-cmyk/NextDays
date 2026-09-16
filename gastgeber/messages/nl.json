@@ -313,7 +313,7 @@
     "wohnadresseStrasse": "Straat en huisnummer",
     "wohnadressePlz": "Postcode",
     "wohnadresseOrt": "Plaats",
-    "wohnadresseLand": "Land (ISO-2, bijv. NL)",
+    "wohnadresseLand": "Land",
     "loginTab": "Aanmelding",
     "sharedTab": "Gedeelde toegang",
     "zweiFaKarteTitel": "Tweestapsverificatie instellen",
@@ -557,7 +557,7 @@
     "utFeldPlz": "Postcode",
     "utFeldOrt": "Plaats",
     "utFeldRegion": "Provincie / regio",
-    "utFeldLand": "Land (twee letters, bijv. NL)",
+    "utFeldLand": "Land",
     "utZeileFirma": "Officiële bedrijfsnaam",
     "utFeldFirmenname": "Bedrijfsnaam",
     "utFeldRechtsform": "Rechtsvorm (bijv. BV, eenmanszaak)",
@@ -774,7 +774,8 @@
     "ksWegTitel2": "myBestDays bewaart",
     "ksWegTitel3": "Overboeking naar Stripe",
     "ksWegTitel4": "Uitbetaling naar de bank",
-    "ksWegUmdrehen": "Omdraaien voor details"
+    "ksWegUmdrehen": "Omdraaien voor details",
+    "landSuchen": "Land zoeken …"
   },
   "menu": {
     "titel": "Menu",
