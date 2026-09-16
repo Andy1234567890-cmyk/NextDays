@@ -820,7 +820,13 @@ export function MultiKalender({
                           )}
                           {ebenen.preis && d?.price != null && (
                             <span
-                              className={`absolute inset-x-0 top-1.5 text-center text-xs tabular-nums ${
+                              /* `px-1` + `whitespace-nowrap`: der Betrag wird
+                                 NICHT umbrochen und nicht gekürzt (Spaltenbreite
+                                 siehe SPALTE_REM), behält aber beidseitig Luft.
+                                 Ohne den Abstand stießen zwei Tagesbeträge
+                                 direkt aneinander und lasen sich als eine
+                                 Zahl. */
+                              className={`absolute inset-x-0 top-1.5 whitespace-nowrap px-1 text-center text-xs tabular-nums ${
                                 vergangen ? "text-muted-foreground" : "text-foreground"
                               }`}
                             >

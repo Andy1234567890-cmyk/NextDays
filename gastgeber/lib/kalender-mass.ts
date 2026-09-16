@@ -1,10 +1,31 @@
 // Maße und Muster des Multi-Kalenders — EINE Quelle für Raster, Balken und
 // Panel. Die Werte sind am Vorbild (Airbnb-Multikalender) ausgemessen, nicht
-// geschätzt: Spalte 80 px, Zeile 48 px, Seitenleiste 280 px, Balken 24 px hoch.
+// geschätzt: Zeile 48 px, Seitenleiste 280 px, Balken 24 px hoch.
 // In rem geführt (Projektregel), damit die Größe der Textgröße folgt.
 
-/** Breite einer Tagesspalte. */
-export const SPALTE_REM = 5;
+/**
+ * Breite einer Tagesspalte — 104 px.
+ *
+ * Bis zum 16.09.2026 standen hier 5rem (80 px), übernommen aus Airbnbs
+ * Multikalender. Der Wert stimmt für Airbnb und für uns nicht: dort steht
+ * „$250" in der Zelle, bei uns der VOLLE Betrag samt Währung. Im Browser
+ * gemessen (12 px, System-Schrift):
+ *
+ *     1.450,00 DKK      80,4 px   ← passte NICHT in 80 px
+ *     12.450,00 DKK     84,2 px
+ *     199.000,00 HUF    91,9 px   ← realistischer schlimmster Fall
+ *
+ * Der Betrag lief also über die Zelle hinaus und stieß ohne Lücke an den des
+ * Nachbartages — im Raster las man „1.450,00 DKK1.450,00 DKK…" als eine
+ * Zeichenkette. Gemeldet hat es der Nutzer, nicht ein Test.
+ *
+ * 104 px = der breiteste Betrag plus 6 px Luft auf jeder Seite. GEKÜRZT wird
+ * nicht: eine Ellipse mitten in einer Geldsumme ist schlimmer als eine breite
+ * Spalte, weil „1.45…" nach einem Preis aussieht, der er nicht ist (Wurzel 4 —
+ * kein plausibler Ersatzwert). Wer den Wert ändert, prüft ihn gegen diese
+ * Messreihe, nicht gegen das Vorbild.
+ */
+export const SPALTE_REM = 6.5;
 /** Höhe einer Objektzeile. */
 export const ZEILE_REM = 3;
 /** Breite der Inserate-Spalte links. */
