@@ -28,11 +28,17 @@ function Inner({
   onPick,
   placeholder,
   cityOnly,
+  klasse,
 }: {
   value: string;
   onChange: (v: string) => void;
   onPick: (addr: PlacesAddress) => void;
   placeholder?: string;
+  // Damit das Suchfeld sich dem Formular anpasst, in dem es steht: die
+  // Kontoeinstellungen fuehren hoehere, staerker gerundete Felder als die
+  // geteilte `Input`. Ohne das saehe genau ein Feld der Adresse anders aus
+  // als seine Nachbarn (16.09.2026).
+  klasse?: string;
   // Nur Städte statt voller Adressen (Airbnb „Wo ich wohne / Suche nach deiner
   // Stadt"). Ergebnis trägt city/state/country, keine Straße/Hausnummer.
   cityOnly?: boolean;
@@ -82,6 +88,7 @@ function Inner({
 
   return (
     <Input
+      className={klasse}
       ref={inputRef}
       value={value}
       placeholder={placeholder}
@@ -96,16 +103,19 @@ export function AdressSuche({
   onPick,
   placeholder,
   cityOnly,
+  klasse,
 }: {
   value: string;
   onChange: (v: string) => void;
   onPick: (addr: PlacesAddress) => void;
   placeholder?: string;
   cityOnly?: boolean;
+  klasse?: string;
 }) {
   if (!API_KEY) {
     return (
       <Input
+        className={klasse}
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
@@ -120,6 +130,7 @@ export function AdressSuche({
         onPick={onPick}
         placeholder={placeholder}
         cityOnly={cityOnly}
+        klasse={klasse}
       />
     </APIProvider>
   );

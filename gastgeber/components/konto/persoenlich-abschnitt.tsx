@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { AdressSuche } from "@/components/objekt-editor/adress-suche";
 import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 
@@ -337,11 +338,26 @@ function AdressFeld({
   return (
     <div className="max-w-lg space-y-3">
       <Feldchen label={t("wohnadresseStrasse")}>
-        <Input
+        {/* Die Adresssuche sitzt AUF dem Strassenfeld, nicht als eigenes Feld
+            daneben: sonst tippt man dieselbe Adresse zweimal und hinterlaesst
+            zwei Wahrheiten. Ein Treffer fuellt Strasse, PLZ, Ort und Land in
+            EINEM Zustandswechsel; wer nichts auswaehlt, tippt weiter wie
+            bisher (16.09.2026). */}
+        <AdressSuche
           value={f.strasse}
-          onChange={(e) => setF({ ...f, strasse: e.target.value })}
-          disabled={busy}
-          autoFocus
+          onChange={(v) => setF({ ...f, strasse: v })}
+          onPick={(a) =>
+            setF({
+              // Strasse und Hausnummer kommen getrennt von Google, dieses
+              // Formular fuehrt EIN Feld — also zusammensetzen statt eines
+              // davon zu verlieren.
+              strasse: [a.street, a.houseNumber].filter(Boolean).join(" "),
+              plz: a.postalCode,
+              ort: a.city,
+              // ISO-2, genau was das Landfeld erwartet (maxLength 2).
+              land: a.country,
+            })
+          }
         />
       </Feldchen>
       <div className="grid grid-cols-2 gap-3">

@@ -27,6 +27,7 @@ import {
   setzeKennnummer,
 } from "@/lib/auszahlung-actions";
 import type { Account } from "@/lib/konto";
+import { AdressSuche } from "@/components/objekt-editor/adress-suche";
 import type { AuszahlungsStatus, LandAnforderungen } from "@/lib/payments";
 import {
   speichereUnternehmensdaten,
@@ -39,7 +40,15 @@ type Kontotyp = "individual" | "company";
 /** Eine bearbeitbare Zeile. `titel`/`label`/`hinweis` sind Textschlüssel. */
 type Zeile = {
   titel: string;
-  felder: { key: UnternehmensFeld; label: string; typ?: string; hinweis?: string }[];
+  felder: {
+    key: UnternehmensFeld;
+    label: string;
+    typ?: string;
+    hinweis?: string;
+    /** Dieses Feld IST die Adresssuche: ein Treffer fuellt die ganze
+     *  Adresse. Kein zweites Eingabefeld daneben (16.09.2026). */
+    adresssuche?: true;
+  }[];
   /** Wie der gespeicherte Wert angezeigt wird. */
   anzeige: (p: Unternehmensprofil) => string;
   hinweis?: string;
@@ -48,7 +57,7 @@ type Zeile = {
 };
 
 const ADRESSE_FELDER: Zeile["felder"] = [
-  { key: "companyStreet", label: "utFeldStrasse" },
+  { key: "companyStreet", label: "utFeldStrasse", adresssuche: true },
   { key: "companyHouseNumber", label: "utFeldHausnummer" },
   { key: "companyPostalCode", label: "utFeldPlz" },
   { key: "companyCity", label: "utFeldOrt" },
@@ -454,15 +463,47 @@ function ZeilenEintrag({
               >
                 {t(f.label)}
               </label>
-              <input
-                id={`feld-${f.key}`}
-                type={f.typ ?? "text"}
-                value={entwurf[f.key] ?? ""}
-                onChange={(e) =>
-                  setEntwurf({ ...entwurf, [f.key]: e.target.value })
-                }
-                className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 outline-none focus-visible:border-foreground"
-              />
+              {f.adresssuche ? (
+                /* Die Suche sitzt AUF dem Strassenfeld, nicht daneben: ein
+                   getrenntes Suchfeld haette den Nutzer zweimal dasselbe
+                   tippen lassen und danach zwei Wahrheiten hinterlassen —
+                   die gesuchte und die eingetippte. Ein Treffer fuellt alle
+                   sechs Felder in EINEM Zustandswechsel; wer nichts auswaehlt,
+                   tippt weiter wie bisher. */
+                <div className="mt-1.5">
+                  <AdressSuche
+                    /* Exakt die Klassen der Nachbarfelder — ein Feld, das
+                       anders aussieht als die fuenf darunter, liest sich wie
+                       ein Fehler. */
+                    klasse="h-auto w-full rounded-xl border-border bg-background px-4 py-3 text-base"
+                    value={entwurf[f.key] ?? ""}
+                    onChange={(v) => setEntwurf({ ...entwurf, [f.key]: v })}
+                    onPick={(a) =>
+                      setEntwurf({
+                        ...entwurf,
+                        companyStreet: a.street,
+                        companyHouseNumber: a.houseNumber,
+                        companyPostalCode: a.postalCode,
+                        companyCity: a.city,
+                        companyState: a.state,
+                        // ISO-2 (short_name) — genau das, was das Feld
+                        // verlangt ("Zweistelliger Laendercode").
+                        companyCountry: a.country,
+                      })
+                    }
+                  />
+                </div>
+              ) : (
+                <input
+                  id={`feld-${f.key}`}
+                  type={f.typ ?? "text"}
+                  value={entwurf[f.key] ?? ""}
+                  onChange={(e) =>
+                    setEntwurf({ ...entwurf, [f.key]: e.target.value })
+                  }
+                  className="mt-1.5 w-full rounded-xl border border-border bg-background px-4 py-3 outline-none focus-visible:border-foreground"
+                />
+              )}
               {f.hinweis && (
                 <p className="mt-1.5 text-sm text-muted-foreground">{t(f.hinweis)}</p>
               )}
