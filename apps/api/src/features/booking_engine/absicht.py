@@ -554,7 +554,13 @@ class AbsichtMixin:
             raise BookingEngineError(str(exc), status_code=422) from exc
 
         try:
-            zahlung = PaymentsService(self._db()).create_intent_for_absicht(
+            # `tenant_id` mitgeben: der Marktplatz kann in der Stripe-Sandbox
+            # laufen, das PMS nicht (16.09.2026). Der Service waehlt daran den
+            # Client — ohne die Angabe zahlte ein Sandbox-Mandant gegen die
+            # Live-Welt und scheiterte an einem Konto, das es dort nicht gibt.
+            zahlung = PaymentsService(
+                self._db(), tenant_id=tenant_id
+            ).create_intent_for_absicht(
                 absicht_id=absicht_id,
                 tenant_id=tenant_id,
                 betrag=total_amount,

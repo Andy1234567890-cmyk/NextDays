@@ -98,6 +98,55 @@ def get_stripe() -> StripeClient:
     )
 
 
+class StripeMarktplatzNichtKonfiguriertError(RuntimeError):
+    """Ein Sandbox-Mandant wollte zahlen, aber es gibt keinen Marktplatz-Key.
+
+    AUSDRUECKLICH KEIN RUECKFALL auf `stripe_secret_key`: der waere live. Ein
+    als Sandbox markierter Mandant, der still auf den Live-Schluessel faellt,
+    belastet echte Karten in einem Testlauf — der eine Fehler, den dieses ganze
+    Konstrukt verhindern soll (Wurzel 5, fail-closed)."""
+
+
+@lru_cache(maxsize=1)
+def get_stripe_marktplatz() -> StripeClient:
+    """Der Stripe-Client des MARKTPLATZES (myBestDays).
+
+    Zweiter Weg neben `get_stripe()`, nicht dessen Umschaltung: solange der
+    Marktplatz in der Sandbox laeuft, traegt er einen `sk_test_`-Key, waehrend
+    das PMS mit dem Live-Key echtes Geld bewegt. Beides im selben Prozess, ohne
+    dass einer den anderen sieht — deshalb ein eigener Cache und nicht
+    `get_stripe()` mit Parameter.
+
+    Geht der Marktplatz spaeter live, traegt `STRIPE_MARKTPLATZ_SECRET_KEY`
+    denselben Wert wie `STRIPE_SECRET_KEY`. Diese Funktion bleibt dann
+    unveraendert bestehen — die Trennung ist Struktur, nicht Sandbox-Behelf.
+
+    Dieselbe Sperre wie bei `get_stripe()`: unter pytest ist ein NICHT-Test-Key
+    verboten. Sie gilt hier genauso, weil der Marktplatz-Key eines Tages ein
+    Live-Key IST.
+    """
+    secret = get_settings().stripe_marktplatz_secret_key.get_secret_value()
+    if not secret:
+        raise StripeMarktplatzNichtKonfiguriertError(
+            "Der Marktplatz-Weg ist nicht konfiguriert "
+            "(STRIPE_MARKTPLATZ_SECRET_KEY fehlt), dieser Mandant steht aber "
+            "auf Sandbox. Entweder den Schluessel setzen oder das Kennzeichen "
+            "`tenant_billing_profile.stripe_sandbox` zuruecknehmen — der "
+            "Live-Schluessel wird hier NICHT ersatzweise verwendet."
+        )
+    if _in_pytest() and not secret.startswith(("sk_test_", "rk_test_")):
+        raise StripeLiveKeyInTestError(
+            "Test wollte die echte Stripe-API ueber den MARKTPLATZ-Weg mit "
+            f"einem NICHT-Test-Key ('{secret[:8]}…') erreichen."
+        )
+    return StripeClient(secret, max_network_retries=2)
+
+
+def marktplatz_konfiguriert() -> bool:
+    """Liegt ein Marktplatz-Key in dieser Umgebung? Ohne Netz, ohne Client."""
+    return bool(get_settings().stripe_marktplatz_secret_key.get_secret_value())
+
+
 def stripe_konfiguriert() -> bool:
     """Liegt ein Stripe-Secret-Key in dieser Umgebung? Ohne Netz, ohne Client.
 

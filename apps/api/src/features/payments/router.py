@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, s
 from src.core.config import get_settings
 from src.core.countries import is_iso2_country
 from src.core.logging import get_logger
-from src.core.security import AuthContext, get_current_user
+from src.core.security import AuthContext, CurrentUser, get_current_user
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import (
     require_granular_permission,
@@ -61,8 +61,23 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 log = get_logger("nextdays.payments")
 
 
-def get_payments_service() -> PaymentsService:
-    return PaymentsService(service_client=get_service_client())
+def get_payments_service(ctx: CurrentUser) -> PaymentsService:
+    """Der Service MIT Mandant — der Mandant entscheidet die Stripe-Welt.
+
+    `tenant_id` wandert hier herein, damit `_stripe` den richtigen Client
+    waehlt: der Marktplatz myBestDays kann in der Sandbox laufen, waehrend das
+    PMS echtes Geld bewegt (16.09.2026). Ohne die Angabe spraeche ein
+    Sandbox-Mandant gegen die Live-Welt.
+
+    `CurrentUser` und nicht `require_permission(...)`: diese Abhaengigkeit soll
+    nur den Kontext holen, nicht eine zweite, womoeglich abweichende
+    Berechtigungspruefung ueber jede Route legen. Die Routen bringen ihre
+    eigene mit (`_billing` und Geschwister) — alle 23 Nutzungen sind
+    angemeldet, keine davon ist oeffentlich.
+    """
+    return PaymentsService(
+        service_client=get_service_client(), tenant_id=ctx.tenant_id
+    )
 
 
 PaymentsServiceDep = Annotated[PaymentsService, Depends(get_payments_service)]
@@ -74,8 +89,18 @@ _billing = Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_B
 _user = Annotated[AuthContext, Depends(get_current_user)]
 
 
-def get_identity_service() -> IdentityService:
-    return IdentityService(service_client=get_service_client())
+def get_identity_service(ctx: CurrentUser) -> IdentityService:
+    """Wie `get_payments_service`: MIT Mandant, damit die Stripe-Welt stimmt.
+
+    `IdentityService` erbt von `PaymentsService` und nutzt denselben Client.
+    Ohne `tenant_id` liefe die Ausweispruefung eines Sandbox-Mandanten gegen
+    die LIVE-Welt — genau das ist am 16.09.2026 passiert (der eingeschraenkte
+    Live-Schluessel traegt kein `identity_product_write`, also kam ein
+    Rechte-Fehler statt der Verifizierungsseite).
+    """
+    return IdentityService(
+        service_client=get_service_client(), tenant_id=ctx.tenant_id
+    )
 
 
 IdentityServiceDep = Annotated[IdentityService, Depends(get_identity_service)]
@@ -583,11 +608,20 @@ async def stripe_webhook(
     # eine zweite Route hätte bedeutet, dass jeder neue Event-Typ an zwei Stellen
     # eingetragen werden muss — genau die Art Doppelpflege, an der
     # `checkout.session.completed` schon einmal verloren gegangen ist.
+    # Seit 16.09.2026 kommen die zwei Endpunkte der MARKTPLATZ-Welt dazu
+    # (myBestDays, ggf. Stripe-Sandbox). Bewusst dieselbe Route und dieselbe
+    # Liste: der Handler ist derselbe, und eine eigene Route haette bedeutet,
+    # jeden neuen Event-Typ an zwei Stellen einzutragen — genau die
+    # Doppelpflege, an der `checkout.session.completed` schon einmal verloren
+    # gegangen ist (siehe oben). Welche Welt ein Event meint, sagt es selbst:
+    # `event.livemode`.
     secrets = [
         s
         for s in (
             einstellungen.stripe_webhook_secret.get_secret_value(),
             einstellungen.stripe_connect_webhook_secret.get_secret_value(),
+            einstellungen.stripe_marktplatz_webhook_secret.get_secret_value(),
+            einstellungen.stripe_marktplatz_connect_webhook_secret.get_secret_value(),
         )
         if s
     ]

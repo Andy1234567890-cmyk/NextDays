@@ -43,6 +43,7 @@ from src.features.donations.service import DonationsService
 from src.features.payouts.faelligkeit import transfer_group as _transfer_group
 
 from . import stripe_client as sc
+from . import welt
 from .paypal_client import PayPalClient, PayPalError, PayPalNotConfiguredError
 from .schemas import (
     BookingPaymentResult,
@@ -60,7 +61,12 @@ from .schemas import (
     SliceHealth,
     StripeAccountDiagnostics,
 )
-from .stripe_client import StripeNotConfiguredError, get_stripe
+from .stripe_client import (
+    StripeMarktplatzNichtKonfiguriertError,
+    StripeNotConfiguredError,
+    get_stripe,
+    get_stripe_marktplatz,
+)
 
 log = get_logger("nextdays.payments")
 
@@ -265,6 +271,7 @@ class PaymentsService:
         self,
         service_client: Client | None = None,
         stripe: StripeClient | None = None,  # injizierbar für Tests
+        tenant_id: str | None = None,
     ) -> None:
         self._db = service_client
         # Lazy: der StripeClient wird erst beim ersten echten Stripe-Zugriff
@@ -274,6 +281,20 @@ class PaymentsService:
         # verständlichen Fehler (503). Ein injizierter Client (Tests) wird direkt
         # übernommen.
         self._injected_stripe = stripe
+        # WELCHE STRIPE-WELT (16.09.2026). Der Marktplatz myBestDays kann in der
+        # Sandbox laufen, während das PMS echtes Geld bewegt — zwei Wege, ein
+        # Code. Entschieden wird das GENAU HIER, an einer Stelle, und nicht an
+        # den 29 Aufrufstellen von ``_stripe``: der Mandant kommt beim BAU des
+        # Service herein, der Client bleibt eine Eigenschaft der Instanz.
+        #
+        # Ohne `tenant_id` bleibt alles wie bisher (Live-Client). Das ist kein
+        # stiller Rückfall, sondern der Normalfall: `stripe_sandbox` ist
+        # default false, und ein Sandbox-Konto existiert in der Live-Welt gar
+        # nicht — ein Aufruf mit dem falschen Client scheitert LAUT an Stripes
+        # „No such account", in beide Richtungen. Es gibt keinen Weg, auf dem
+        # ein Sandbox-Mandant eine echte Karte belastet.
+        self._tenant_id = tenant_id
+        self._sandbox_zelle: bool | None = None
 
     @property
     def _stripe(self) -> StripeClient:
@@ -288,10 +309,26 @@ class PaymentsService:
         PaymentsConfigError."""
         if self._injected_stripe is not None:
             return self._injected_stripe
+        if self._ist_sandbox():
+            try:
+                return get_stripe_marktplatz()
+            except StripeMarktplatzNichtKonfiguriertError as exc:
+                raise PaymentsConfigError(str(exc), status_code=503) from exc
         try:
             return get_stripe()
         except StripeNotConfiguredError as exc:
             raise PaymentsConfigError(str(exc), status_code=503) from exc
+
+    def _ist_sandbox(self) -> bool:
+        """Steht dieser Mandant in der Marktplatz-Sandbox? Einmal je Instanz.
+
+        Die Entscheidung selbst steht in `welt.py` — sie gilt auch fuer
+        `payouts` und `stripe_saldo`, und zwei Kopien davon waeren zwei
+        Gelegenheiten, sie verschieden zu beantworten.
+        """
+        if self._sandbox_zelle is None:
+            self._sandbox_zelle = welt.ist_sandbox(self._db, self._tenant_id)
+        return self._sandbox_zelle
 
     def health(self) -> SliceHealth:
         return SliceHealth(slice=self.slice_name)

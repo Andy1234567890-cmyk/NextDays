@@ -259,6 +259,38 @@ class Settings(BaseSettings):
     # wird beim Start gemeldet (`pflichtumgebung`).
     stripe_connect_webhook_secret: SecretStr = SecretStr("")
     stripe_publishable_key: str = ""          # NEXT_PUBLIC_ im Frontend
+
+    # --- myBestDays: eigener Stripe-Weg (16.09.2026) -----------------------
+    # ZWEI WEGE, EIN CODE. Der Marktplatz (myBestDays) und das PMS (myNextDays)
+    # sind zwei Marken mit zwei Geschaeftsmodellen (Provision je Buchung gegen
+    # Abo). Damit der Marktplatz in der Stripe-SANDBOX laufen kann, waehrend das
+    # PMS echtes Geld bewegt, bekommt er einen EIGENEN Schluessel — nicht einen
+    # umgeschalteten.
+    #
+    # Test- und Live-Modus sind bei Stripe zwei getrennte Welten: ein `acct_`
+    # aus der einen existiert in der anderen NICHT. Genau das macht die Trennung
+    # sicher: greift ein Aufruf zum falschen Client, findet Stripe das Konto
+    # nicht und der Aufruf scheitert LAUT — in BEIDE Richtungen. Es gibt keinen
+    # Pfad, auf dem ein Sandbox-Mandant versehentlich eine echte Karte belastet.
+    #
+    # SPAETER: Sobald der Marktplatz live geht, traegt diese Variable denselben
+    # Wert wie `stripe_secret_key`. Die Trennung bleibt dann als Struktur
+    # bestehen (Entscheidung vom 16.09.2026) — sie kostet nichts und erlaubt,
+    # den Marktplatz spaeter auf ein eigenes Stripe-Konto zu legen.
+    #
+    # LEER = kein Marktplatz-Weg. Dann ist `tenant_billing_profile.
+    # stripe_sandbox = true` ein FEHLER, kein Rueckfall auf den Live-Schluessel
+    # (Wurzel 5, fail-closed). Der Normalbetrieb ist davon unberuehrt: wer nicht
+    # als Sandbox markiert ist, nutzt weiterhin ausschliesslich
+    # `stripe_secret_key`.
+    stripe_marktplatz_secret_key: SecretStr = SecretStr("")
+    # Signaturschluessel der Webhook-Endpunkte der Marktplatz-Welt. In der
+    # Sandbox stellt Stripe eigene Endpunkte mit eigenen Secrets aus; sie zeigen
+    # auf DIESELBE Route wie die Live-Endpunkte (siehe payments/router.py —
+    # bewusst eine Route, damit ein neuer Event-Typ nicht an zwei Stellen
+    # gepflegt werden muss). Geprueft wird gegen jedes konfigurierte Secret.
+    stripe_marktplatz_webhook_secret: SecretStr = SecretStr("")
+    stripe_marktplatz_connect_webhook_secret: SecretStr = SecretStr("")
     # VERALTET — ohne Wirkung. Die Provision kommt ausschließlich aus
     # tenants.platform_fee_bps und gilt nur für Portal-Buchungen (Preisliste §2).
     # Bleibt vorerst stehen, damit gesetzte Env-Werte keinen Startfehler

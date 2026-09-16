@@ -1734,7 +1734,9 @@ class WritesMixin(ReservationsBase):
                 days_before = (
                     _as_date(current["check_in"]) - datetime.now(UTC).date()
                 ).days
-                PaymentsService(service_client=self._db()).refund_for_cancellation(
+                PaymentsService(
+                    service_client=self._db(), tenant_id=tenant_id
+                ).refund_for_cancellation(
                     ctx,
                     reservation_id=reservation_id,
                     days_before_arrival=days_before,

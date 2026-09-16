@@ -34,11 +34,13 @@ from calendar import monthrange
 from datetime import UTC, date, datetime
 from typing import Any
 
+from stripe import StripeClient
 from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.payments import stripe_client as sc
+from src.features.payments import welt
 
 from . import sicherheitseinlage
 from .schemas import (
@@ -111,6 +113,19 @@ class StripeSaldoService:
 
     # --- Scope -------------------------------------------------------------
 
+    def _client(self, tenant_id: str) -> StripeClient | None:
+        """Der Stripe-Client DIESES Mandanten (Live oder Marktplatz-Sandbox).
+
+        Die Entscheidung steht in `payments/welt.py`, nicht hier — sie gilt
+        ebenso fuer `payments` und `payouts`. Ohne sie spraechen die Aufrufe
+        unten immer gegen die Live-Welt, und ein Sandbox-Konto existiert dort
+        nicht (16.09.2026).
+
+        `None` = der gewohnte Live-Weg; die Helfer in `stripe_client` bauen
+        sich ihren Client dann selbst und erst beim echten Aufruf.
+        """
+        return welt.client_fuer(self._db, tenant_id)
+
     def _tenant(self, ctx: AuthContext) -> str:
         if not ctx.tenant_id:
             raise StripeSaldoFehler("Kein Betrieb im Token.", status_code=403)
@@ -143,13 +158,15 @@ class StripeSaldoService:
         Ohne verbundenes Konto ist das kein Fehler, sondern ein Zustand: Die
         Oberfläche zeigt dann den Einrichtungs-Hinweis statt einer Fehlermeldung.
         """
-        acct = self._konto(self._tenant(ctx))
+        tenant_id = self._tenant(ctx)
+        acct = self._konto(tenant_id)
         if not acct:
             return StripeGuthaben(konto_verbunden=False)
+        client = self._client(tenant_id)
         try:
-            saldo = sc.retrieve_balance(acct=acct)
-            plan = sc.retrieve_payout_schedule(acct=acct)
-            letzte = sc.list_payouts(acct=acct, limit=10)
+            saldo = sc.retrieve_balance(acct=acct, client=client)
+            plan = sc.retrieve_payout_schedule(acct=acct, client=client)
+            letzte = sc.list_payouts(acct=acct, limit=10, client=client)
         except Exception as exc:
             # Kein leerer Saldo als Ersatzantwort (Wurzel 4/5): „0 €" wäre eine
             # Falschaussage über das Geld des Betriebs.
@@ -285,7 +302,9 @@ class StripeSaldoService:
                 # abgewählt hat.
                 return wunsch or stripe_stand
             try:
-                sc.update_payout_schedule(acct=acct, interval="manual")
+                sc.update_payout_schedule(
+                    acct=acct, interval="manual", client=self._client(tenant_id)
+                )
                 log.info(
                     "einlage_stripe_rhythmus_auf_manual",
                     tenant_id=tenant_id,
@@ -328,8 +347,9 @@ class StripeSaldoService:
         """
         acct = self._konto_pflicht(ctx)
         try:
-            plan = sc.retrieve_payout_schedule(acct=acct)
-            saldo = sc.retrieve_balance(acct=acct)
+            client = self._client(self._tenant(ctx))
+            plan = sc.retrieve_payout_schedule(acct=acct, client=client)
+            saldo = sc.retrieve_balance(acct=acct, client=client)
         except Exception as exc:
             log.warning("stripe_auszahlung_vorpruefung_fehlgeschlagen", error=str(exc))
             raise StripeSaldoFehler(
@@ -398,6 +418,7 @@ class StripeSaldoService:
         tag = datetime.now(UTC).date().isoformat()
         try:
             payout = sc.create_payout(
+                client=self._client(tenant_id),
                 acct=acct,
                 amount_cents=betrag,
                 currency=waehrung,
@@ -520,7 +541,9 @@ class StripeSaldoService:
             return ProtokollAntwort(konto_verbunden=False, offen=offen)
         grenze = max(1, min(int(limit), MAX_PROTOKOLL))
         try:
-            zeilen = sc.list_balance_transactions(acct=acct, limit=grenze)
+            zeilen = sc.list_balance_transactions(
+                acct=acct, limit=grenze, client=self._client(tenant_id)
+            )
         except Exception as exc:
             log.warning("stripe_protokoll_abruf_fehlgeschlagen", error=str(exc))
             raise StripeSaldoFehler(

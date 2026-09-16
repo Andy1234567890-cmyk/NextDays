@@ -1342,7 +1342,7 @@ class BuchhaltungService:
             # Stripe synchronisieren — sonst bleiben offene Requirements (z. B.
             # Handelsregister, business_profile.url) für immer offen, obwohl der
             # Nutzer die Daten längst nachgetragen hat.
-            payments = PaymentsService(service_client=self._db)
+            payments = PaymentsService(service_client=self._db, tenant_id=tenant_id)
             acct_id = existing[0]["stripe_account_id"]
             self._sync_existing_connect_account(tenant_id, acct_id, profile, payments)
             return
@@ -1362,7 +1362,7 @@ class BuchhaltungService:
             profile.get("legal_form"), profile.get("account_type")
         )
         try:
-            payments = PaymentsService(service_client=self._db)
+            payments = PaymentsService(service_client=self._db, tenant_id=tenant_id)
             account = payments.create_connect_account(
                 tenant_id,
                 ConnectAccountCreate(
@@ -1638,7 +1638,7 @@ class BuchhaltungService:
         if not acct_id:
             return
         try:
-            PaymentsService(service_client=self._db).sync_branding_logo(
+            PaymentsService(service_client=self._db, tenant_id=tenant_id).sync_branding_logo(
                 tenant_id, acct_id
             )
         except PaymentsError as exc:

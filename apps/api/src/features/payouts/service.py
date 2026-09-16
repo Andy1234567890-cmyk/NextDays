@@ -17,6 +17,7 @@ from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.payments import stripe_client as sc
+from src.features.payments import welt
 
 from .faelligkeit import (
     KARENZ_TAGE,
@@ -494,12 +495,16 @@ class PayoutsService:
         # rechnet bei der Auszahlung auf sein Bankkonto erneut um.
         charge_id = zeile.get("source_charge_id")
         betrag, waehrung = self._in_saldo_waehrung(
+            tenant_id=tenant_id,
             charge_id=charge_id,
             betrag_cents=auszahlbar,
             netto_cents=int(zeile["net_amount_cents"]),
             currency=currency,
         )
         transfer = sc.create_transfer(
+            # Der Client dieses Mandanten: ein Sandbox-Konto existiert in der
+            # Live-Welt nicht, und umgekehrt (16.09.2026).
+            client=welt.client_fuer(self._db, tenant_id),
             amount_cents=betrag,
             currency=waehrung,
             destination_acct=konto,
@@ -548,6 +553,7 @@ class PayoutsService:
     def _in_saldo_waehrung(
         self,
         *,
+        tenant_id: str,
         charge_id: str | None,
         betrag_cents: int,
         netto_cents: int,
@@ -570,7 +576,9 @@ class PayoutsService:
             return betrag_cents, currency
 
         try:
-            charge = sc.retrieve_charge(charge_id)
+            charge = sc.retrieve_charge(
+                charge_id, client=welt.client_fuer(self._db, tenant_id)
+            )
         except sc.StripeNotConfiguredError:
             # Fehlt der Key, hilft kein „Transfer läuft trotzdem": der Transfer
             # gleich darunter scheitert am selben Mangel. Durchreichen, damit
