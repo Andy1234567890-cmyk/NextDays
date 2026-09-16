@@ -624,7 +624,30 @@ class PaymentsService:
         ``tos_acceptance.service_agreement='full'``: die Plattform (myNextDays)
         übernimmt die Stripe-Services-Vereinbarung gegenüber dem Connected Account
         — Voraussetzung für vollständiges White-Label bei Custom Accounts.
+
+        ZWEI ANLAGE-WEGE (16.09.2026). Stripe nimmt für NEUE Connect-Integrationen
+        kein ``POST /v1/accounts`` mehr an — die Antwort ist ein 400 mit „Stripe no
+        longer recommends Accounts v1 for new Connect integrations". Der Marktplatz
+        myBestDays ist genau so eine neue Integration und stand damit still: ohne
+        verbundenes Konto kein Bankdatenfeld, keine Freischaltung, kein Objekt live.
+        Deshalb legt die MARKTPLATZ-Welt über ``POST /v2/core/accounts`` an; der
+        gewohnte v1-Weg des PMS bleibt unangetastet.
+
+        Warum das den Rest des Codes NICHT anfasst: ein v2 angelegtes Konto trägt
+        dieselbe ``acct_``-Kennung und ist über die v1-API vollständig les- und
+        schreibbar — gemessen am 16.09.2026 (``retrieve``: ``business_type``,
+        ``capabilities`` ``card_payments``/``transfers``, ``requirements``;
+        ``update``: ``individual``/``company``, ``business_profile``,
+        ``tos_acceptance``). Die rund vierzig übrigen Stripe-Aufrufe bleiben also
+        wie sie sind; geändert ist allein der Anlage-Aufruf.
+
+        Warum am WELT-Schalter und nicht an Stripes Fehlermeldung: die Ablehnung
+        kommt ohne maschinenlesbaren ``code`` — nur als englischer Satz. Darauf zu
+        verzweigen hiesse, den Anlage-Weg von einem Text abhängig zu machen, den
+        Stripe jederzeit umformulieren kann (Wurzel 4).
         """
+        if self._ist_sandbox():
+            return self._create_connect_account_v2(tenant_id, req)
         with _stripe_errors():
             account = self._stripe.v1.accounts.create(
                 params={
@@ -641,6 +664,63 @@ class PaymentsService:
                         "transfers": {"requested": True},
                     },
                     "tos_acceptance": {"service_agreement": "full"},
+                    "metadata": {"tenant_id": tenant_id},
+                }
+            )
+        return ConnectAccountResponse(stripe_account_id=account.id)
+
+    def _create_connect_account_v2(
+        self, tenant_id: str, req: ConnectAccountCreate
+    ) -> ConnectAccountResponse:
+        """Derselbe Account über Accounts v2 — siehe ``create_connect_account``.
+
+        Die Angaben sind eins zu eins die des v1-Aufrufs, nur anders benannt:
+        ``dashboard='none'`` ist das Custom-Konto (kein Stripe-Dashboard für den
+        Gastgeber), ``defaults.responsibilities`` mit zweimal ``application`` ist
+        die Entsprechung zu ``tos_acceptance.service_agreement='full'`` — die
+        Plattform trägt Gebühren und Ausfälle. ``stripe_balance.stripe_transfers``
+        heisst in der v1-Sicht ``transfers``.
+
+        KEINE ``defaults.currency``: Stripe verlangt sie nicht, und ein Wert hier
+        wäre geraten (Wurzel 4 — 27 EU-Länder, die Währung steht in den Daten).
+        """
+        with _stripe_errors():
+            account = self._stripe.v2.core.accounts.create(
+                params={
+                    "contact_email": req.email,
+                    "dashboard": "none",
+                    "identity": {
+                        "country": req.country,
+                        # Einzelperson oder Firma — bestimmt die KYC-Pflichtfelder.
+                        "entity_type": req.business_type,
+                    },
+                    "include": [
+                        "configuration.merchant",
+                        "configuration.recipient",
+                        "identity",
+                        "requirements",
+                    ],
+                    "defaults": {
+                        "responsibilities": {
+                            "fees_collector": "application",
+                            "losses_collector": "application",
+                        }
+                    },
+                    "configuration": {
+                        "merchant": {
+                            # Branchencode 7011 = Lodging/Unterkünfte; sonst
+                            # offenes Requirement → blockiert charges.
+                            "mcc": "7011",
+                            "capabilities": {"card_payments": {"requested": True}},
+                        },
+                        "recipient": {
+                            "capabilities": {
+                                "stripe_balance": {
+                                    "stripe_transfers": {"requested": True}
+                                }
+                            }
+                        },
+                    },
                     "metadata": {"tenant_id": tenant_id},
                 }
             )

@@ -199,3 +199,110 @@ def test_sandbox_wird_nur_einmal_gelesen(monkeypatch) -> None:
     _ = dienst._stripe  # noqa: SLF001
     _ = dienst._stripe  # noqa: SLF001
     assert treffer == ["tenant_billing_profile"]
+
+
+# --- Anlage des verbundenen Kontos: v1 (PMS) vs. v2 (Marktplatz) -------------
+# Stripe nimmt fuer NEUE Connect-Integrationen kein `POST /v1/accounts` mehr an
+# (400, 16.09.2026) — der Marktplatz stand deshalb still. Die Marktplatz-Welt
+# legt jetzt ueber `POST /v2/core/accounts` an. Geprueft wird beides, weil ein
+# Vertauschen in BEIDE Richtungen weh taete: der Marktplatz kaeme nicht mehr
+# ans Konto, und das PMS bekaeme einen neuen Anlageweg, den niemand bestellt
+# hat („wehe bei pms geht danach nichts mehr").
+
+
+class _Konto:
+    def __init__(self, kennung: str) -> None:
+        self.id = kennung
+
+
+class _Aufzeichnend:
+    """Faelscht genau die zwei Anlage-Aufrufe und haelt fest, welcher kam."""
+
+    def __init__(self) -> None:
+        self.aufrufe: list[tuple[str, dict]] = []
+        selbst = self
+
+        class _V1Accounts:
+            def create(self, params: dict) -> _Konto:
+                selbst.aufrufe.append(("v1", params))
+                return _Konto("acct_v1")
+
+        class _V2Accounts:
+            def create(self, params: dict) -> _Konto:
+                selbst.aufrufe.append(("v2", params))
+                return _Konto("acct_v2")
+
+        self.v1 = type("_V1", (), {"accounts": _V1Accounts()})()
+        self.v2 = type(
+            "_V2", (), {"core": type("_Core", (), {"accounts": _V2Accounts()})()}
+        )()
+
+
+def _anlegen(sandbox: bool, business_type: str = "individual"):
+    from src.features.payments.schemas import ConnectAccountCreate
+
+    stripe = _Aufzeichnend()
+    dienst = PaymentsService(
+        service_client=_db(sandbox),  # type: ignore[arg-type]
+        stripe=stripe,  # type: ignore[arg-type]
+        tenant_id=TENANT,
+    )
+    antwort = dienst.create_connect_account(
+        TENANT,
+        ConnectAccountCreate(
+            email="gastgeber@beispiel.de", country="DE", business_type=business_type
+        ),
+    )
+    return stripe, antwort
+
+
+def test_pms_legt_weiter_ueber_v1_an() -> None:
+    """Der Live-Weg bleibt Zeichen fuer Zeichen der alte."""
+    stripe, antwort = _anlegen(sandbox=False)
+    assert [weg for weg, _ in stripe.aufrufe] == ["v1"]
+    params = stripe.aufrufe[0][1]
+    assert params["type"] == "custom"
+    assert params["capabilities"] == {
+        "card_payments": {"requested": True},
+        "transfers": {"requested": True},
+    }
+    assert params["tos_acceptance"] == {"service_agreement": "full"}
+    assert antwort.stripe_account_id == "acct_v1"
+
+
+def test_marktplatz_legt_ueber_v2_an() -> None:
+    stripe, antwort = _anlegen(sandbox=True)
+    assert [weg for weg, _ in stripe.aufrufe] == ["v2"]
+    assert antwort.stripe_account_id == "acct_v2"
+
+
+def test_v2_traegt_dieselben_angaben_wie_v1() -> None:
+    """Gleiche Absicht, andere Namen — sonst entstuende ein Konto mit anderen
+    Eigenschaften als im PMS, und das faellt erst bei der Freischaltung auf."""
+    stripe, _ = _anlegen(sandbox=True)
+    p = stripe.aufrufe[0][1]
+    assert p["contact_email"] == "gastgeber@beispiel.de"
+    assert p["identity"] == {"country": "DE", "entity_type": "individual"}
+    # Custom-Konto: der Gastgeber bekommt kein Stripe-Dashboard.
+    assert p["dashboard"] == "none"
+    # Entsprechung zu tos_acceptance.service_agreement='full'.
+    assert p["defaults"]["responsibilities"] == {
+        "fees_collector": "application",
+        "losses_collector": "application",
+    }
+    assert p["configuration"]["merchant"]["mcc"] == "7011"
+    assert p["configuration"]["merchant"]["capabilities"]["card_payments"] == {
+        "requested": True
+    }
+    assert p["configuration"]["recipient"]["capabilities"]["stripe_balance"] == {
+        "stripe_transfers": {"requested": True}
+    }
+    assert p["metadata"] == {"tenant_id": TENANT}
+    # Kein geratener Waehrungs-Standard (Wurzel 4).
+    assert "currency" not in p["defaults"]
+
+
+def test_v2_uebernimmt_den_gewerblichen_typ() -> None:
+    """Privat UND gewerblich muessen gehen — der Typ bestimmt die KYC-Felder."""
+    stripe, _ = _anlegen(sandbox=True, business_type="company")
+    assert stripe.aufrufe[0][1]["identity"]["entity_type"] == "company"
