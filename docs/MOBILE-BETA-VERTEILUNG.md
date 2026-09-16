@@ -1,7 +1,40 @@
 # Android-Beta an Testteilnehmer verteilen
 
-Wie ein signiertes APK der App **myNextDays** (`mobile-nextdays`,
-`com.mynextdays.app`) zu Beta-Testern kommt — und was davon einmalig ist.
+Wie ein signiertes APK zu Beta-Testern kommt — und was davon einmalig ist.
+
+Es gibt **DREI Apps und drei getrennte Wege** (ADR-0019/0022). Bis zum
+16.09.2026 beschrieb dieses Dokument nur `mobile-nextdays`; die
+Eigentuemer-App ging da schon in die Beta, ohne hier vorzukommen.
+
+| | myNextDays | myNextDays Eigentuemer | myBestDays |
+|---|---|---|---|
+| Projekt | `mobile-nextdays` | `mobile-owner` | `mobile-bestdays` |
+| Paket | `com.mynextdays.app` | `com.mynextdays.owner` | `com.mybestdays.app` |
+| Workflow | Mobile Release (Android) | Mobile Release myNextDays Eigentuemer (Android) | Mobile Release myBestDays (Android) |
+| Tester-Gruppe | `beta-tester` | `beta-tester-owner` | `beta-tester-bestdays` |
+| Firebase-App-ID | `1:683362094842:android:98b6212be46056d2bc0343` | Secret `MYNEXTDAYSOWNER_FIREBASE_APP_ID` | `1:683362094842:android:17381b5cdbd3ed7cbc0343` |
+| Keystore-Secrets | `MYNEXTDAYS_RELEASE_*` | `MYNEXTDAYSOWNER_RELEASE_*` | `MYBESTDAYS_RELEASE_*` |
+| google-services | Secret `MYNEXTDAYS_GOOGLE_SERVICES_JSON_BASE64` | Secret `MYNEXTDAYSOWNER_GOOGLE_SERVICES_JSON_BASE64` | — (kein Firebase-SDK) |
+
+**Je App eine eigene Datei, kein gemeinsamer Workflow mit `inputs.app`.** Es
+haette genau eine Verwechslung gebraucht, um die Eigentuemer-App mit dem
+PMS-Schluessel zu signieren oder sie an das Verwaltungsteam zu verteilen —
+beides nicht rueckholbar, weil Android die App-Identitaet an den
+Signaturschluessel bindet. Die Eigentuemer-App traegt aus demselben Grund
+einen eigenen Schritt, der den **Paketnamen des fertigen APK** beweist:
+`com.mynextdays.owner` und `com.mynextdays.app` unterscheiden sich um ein
+Wort, und von aussen sieht man dem verteilten Artefakt nichts an.
+
+Die App-ID der Eigentuemer-App steht als Secret und NICHT im Text: sie
+entsteht erst beim Anlegen der App in der Konsole, und eine geratene ID waere
+schlimmer als keine — `appdistribution:distribute` verteilte dann an eine
+FREMDE App. `scripts/mobile/release-kette-pruefen.sh` haelt fuer alle drei
+zusammen, dass Workflow, eigene Gruppe, Keystore-Secret und Signatur-Beweis
+existieren.
+
+Der Rest dieses Dokuments beschreibt den Weg am Beispiel `mobile-nextdays`;
+fuer die anderen beiden gelten dieselben Schritte mit den Werten aus der
+Tabelle.
 
 Gebaut wird **ausschliesslich in GitHub Actions**, nicht auf einem Arbeitsrechner.
 Grund ist derselbe wie beim Web-Build (`CLAUDE.md`): eine lokale Android-
@@ -105,19 +138,46 @@ keytool -list -v -keystore ~/.keystores/mobile-nextdays-release.keystore | grep 
 
 ## Ein Beta-Build ausloesen
 
-Actions → **Mobile Release (Android)** → *Run workflow*:
+Actions → den Workflow der App aus der Tabelle oben → *Run workflow*:
 
 | Eingabe | Wert |
 |---|---|
-| app | `mobile-nextdays` |
+| app | nur bei „Mobile Release (Android)": `mobile-nextdays` (die anderen zwei haben je eine eigene Datei und damit kein Auswahlfeld) |
 | artefakt | `apk` (Tester) bzw. `aab` (Play Store) |
 | notiz | was die Tester wissen sollen — leer = Commit-Titel |
 
+Von der Kommandozeile, am Beispiel der Eigentuemer-App:
+
+```bash
+gh workflow run "Mobile Release myNextDays Eigentümer (Android)" \
+  -f artefakt=apk -f notiz="Was die Tester sehen sollen"
+gh run list --workflow=mobile-release-owner.yml --limit 1
+gh run watch <run-id>
+```
+
 Bei `apk` laedt der Lauf die Datei automatisch zu App Distribution und die
-Gruppe `beta-tester` bekommt eine Mail. `aab` wird nur als Artefakt abgelegt.
+Tester-Gruppe **dieser** App bekommt eine Mail. `aab` wird nur als Artefakt
+abgelegt; den Upload in die Play Console macht ein Mensch.
 
 Der Workflow laeuft **nur auf Ansage** (`workflow_dispatch`), nicht bei jedem
 Push: ein signierter Build, der bei Testern landet, ist eine Veroeffentlichung.
+
+### Was VOR dem Verteilen prueft — und was nicht
+
+In `ci.yml` baut der Job `mobile-android-release` fuer `mobile-nextdays` und
+`mobile-owner` bei jeder Aenderung an der App ein **unsigniertes** Release —
+genau die Fehlerklasse, die Debug-Build, `tsc` und Jest nicht sehen (ProGuard
+entfernt Code, den ein natives Modul per Reflection sucht; eine neue
+Abhaengigkeit kollidiert erst beim Zusammenbauen; Hermes scheitert an etwas,
+das Metro toleriert).
+
+Dieser Job hat vom 09.09. bis zum 16.09.2026 **nichts gebaut**: sein erster
+Schritt trug eine Bedingung auf seine eigene Ausgabe, wurde deshalb immer
+uebersprungen, und weil jeder folgende Schritt daran haengt, lief der Job leer
+durch — und meldete Erfolg. Belegt an Lauf 34995333441, wo alle zwoelf
+Schritte `skipped` sind. Seitdem prueft
+`scripts/diagnose/workflow-schrittbedingungen-pruefen.py` genau diese Klasse
+mit, damit ein stillgelegtes Gate nicht wieder als gruener Haken erscheint.
 
 ## Tester hinzufuegen
 
@@ -127,6 +187,12 @@ firebase appdistribution:testers:add tester@example.com \
 firebase appdistribution:group:members:add beta-tester tester@example.com \
   --project project-460d8aaf-4b7d-4d13-b3a
 ```
+
+**Die Gruppe ist Teil der Marken-/Rollengrenze, keine Kosmetik.** Ein
+Eigentuemer ist kein Mitarbeiter des Betriebs und kein Marktplatz-Gast; wer
+ihn in `beta-tester` aufnimmt, schickt ihm die PMS-App. Die drei Gruppen
+heissen `beta-tester`, `beta-tester-owner` und `beta-tester-bestdays` und
+werden nicht vermischt — auch nicht „nur zum Testen".
 
 Der Tester bekommt eine Einladung, installiert einmal die App-Tester-App und
 danach jede neue Version per Benachrichtigung. Auf dem Geraet muss die

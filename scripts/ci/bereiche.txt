@@ -116,9 +116,15 @@ marketing-konsistenz|marketing/lib/ packages/tarif/ packages/currency/ scripts/m
 #     data". tsc und ESLint sehen es NICHT.
 #   * dashboard-kacheln-pruefen.mjs    — Backend-Literal, web-Katalog und
 #     Kachel-Inhalt muessen deckungsgleich sein.
-# Breite Pfade mit Absicht: alle drei pruefen quer ueber das Repo, ein enger
+#   * workflow-schrittbedingungen-pruefen.py — seit 16.09.2026. Ein Schritt,
+#     der seine EIGENE Ausgabe abfragt, wird immer uebersprungen und der Job
+#     meldet trotzdem Erfolg; `mobile-android-release` hat so eine Woche lang
+#     nichts gebaut. Deshalb steht `.github/` jetzt in dieser Zeile — sonst
+#     liefe die Pruefung ausgerechnet dann nicht, wenn jemand einen Workflow
+#     aendert.
+# Breite Pfade mit Absicht: alle vier pruefen quer ueber das Repo, ein enger
 # Filter waere derselbe blinde Fleck in klein.
-statische-fallen|apps/api/ web/ plattform/ gastgeber/ admin/ partner/ builder/ marketing/ scripts/diagnose/
+statische-fallen|apps/api/ web/ plattform/ gastgeber/ admin/ partner/ builder/ marketing/ scripts/diagnose/ .github/workflows/
 
 # `db-spalten-pruefen.py` vergleicht JEDE select-, Filter- und Schreibspalte
 # des Backends mit dem LIVE-Schema. Ein falscher Spaltenname ist fuer Python

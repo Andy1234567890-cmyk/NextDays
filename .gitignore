@@ -63,3 +63,8 @@ docs/Duck7/
 # Die Quelle sind die Sprachdateien und Hilfe-Artikel im Repo, das Ziel ist
 # die Tabelle `produktwissen` — dazwischen liegt nichts Aufbewahrenswertes.
 produktwissen.json
+
+# Arbeitsordner fuer Zwischenstaende einer Sitzung (Rueckweg-Skripte,
+# Messreihen, Notizen). Nichts davon ist Quellcode; eingecheckt wuerde es
+# nur die naechste Sitzung verwirren.
+scratchpad/

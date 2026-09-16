@@ -554,6 +554,15 @@ jobs:
         if: steps.pruefen.outputs.laufen == 'true'
         run: node scripts/diagnose/dashboard-kacheln-pruefen.mjs
 
+      # Ein Schritt, dessen `if` seine EIGENE Ausgabe abfragt, wird immer
+      # uebersprungen — und der Job meldet trotzdem Erfolg. Kein anderes Gate
+      # sieht das: die Datei ist gueltiges YAML, der Lauf ist gruen, nur
+      # geprueft wird nichts mehr. Genau so stand `mobile-android-release`
+      # vom 09.09. bis zum 16.09.2026 da.
+      - name: Workflow-Bedingungen koennen wahr werden
+        if: steps.pruefen.outputs.laufen == 'true'
+        run: python3 scripts/diagnose/workflow-schrittbedingungen-pruefen.py
+
   # Typprüfung je Frontend — schnelles, präzises Signal VOR den langsamen
   # Image-Builds. Der Produktions-Build läuft für die deployten Apps im
   # images-Job (dort exakt wie Coolify baut), nicht doppelt hier.
@@ -999,7 +1008,17 @@ jobs:
         working-directory: ${{ matrix.app }}
     steps:
       - name: Betroffen?
-        if: steps.pruefen.outputs.laufen == 'true'
+        # KEIN `if:` an DIESEM Schritt — er ist die Bedingung, nicht ihr
+        # Gegenstand. Bis zum 16.09.2026 stand hier
+        # `if: steps.pruefen.outputs.laufen == 'true'`, also die eigene
+        # Ausgabe dieses Schrittes. Die ist beim Auswerten leer, der Schritt
+        # wurde IMMER uebersprungen, `laufen` damit nie gesetzt — und weil
+        # jeder folgende Schritt daran haengt, lief der ganze Job leer durch
+        # und meldete trotzdem `success`. Der Android-Release-Build hat
+        # seit seiner Einfuehrung (09.09.2026) fuer BEIDE Apps kein einziges
+        # Mal gebaut; belegt an Lauf 34995333441, wo alle zwoelf Schritte
+        # `skipped` sind. Genau die stumme Attrappe, gegen die dieser Job
+        # gebaut wurde, nur eine Ebene hoeher.
         id: pruefen
         # Vor dem Checkout gibt es das working-directory dieses Jobs noch
         # nicht. Ohne diese Zeile stirbt der Schritt mit "No such file or
