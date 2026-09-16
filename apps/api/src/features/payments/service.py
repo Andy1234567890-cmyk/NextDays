@@ -18,6 +18,7 @@ an Stripe (``int(round(amount * 100))``). PayPal (Multiparty) läuft parallel ü
 from __future__ import annotations
 
 import io
+from collections.abc import Mapping
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from functools import lru_cache
@@ -124,6 +125,27 @@ def _stripe_errors():  # noqa: ANN202
         code = 400 if isinstance(http_status, int) and 400 <= http_status < 500 else 502
         param = getattr(exc, "param", None)
         raise PaymentsError(msg, status_code=code, param=param or None) from exc
+
+
+def _stripe_feld(objekt: object, name: str) -> str:
+    """Ein Feld aus einem Stripe-Objekt lesen — als Text, nie als Absturz.
+
+    `StripeObject` ist seit stripe-python 12 KEINE dict-Unterklasse mehr: es hat
+    kein `.get`, und sein `__getattr__` macht aus dem fehlenden Namen einen
+    `AttributeError`. `e.get("requirement")` auf einem Requirement-Fehler warf
+    deshalb `AttributeError: get` — ein roher 500 mitten im Onboarding, und zwar
+    genau dann, wenn Stripe etwas zu BEANSTANDEN hat. Solange alles glatt lief,
+    war die Liste leer und die Stelle unauffaellig (16.09.2026, live gefunden
+    beim Anlegen eines Gastgeber-Kontos).
+
+    Beide Formen werden bedient, weil in den Tests rohe `dict` stehen und aus
+    dem SDK Objekte kommen. Fehlt das Feld, ist das Ergebnis leer — hier ist
+    das kein erfundener Ersatzwert, sondern die ehrliche Aussage „Stripe hat
+    dazu nichts gesagt"; der Aufrufer zeigt den Rest der Meldung trotzdem.
+    """
+    if isinstance(objekt, Mapping):
+        return str(objekt.get(name) or "")
+    return str(getattr(objekt, name, "") or "")
 
 
 def _to_cents(amount: float) -> int:
@@ -445,7 +467,8 @@ class PaymentsService:
                     eventually_due=list(req.eventually_due or []),
                     pending_verification=list(req.pending_verification or []),
                     errors=[
-                        f"{e.get('requirement')}: {e.get('reason')}"
+                        f"{_stripe_feld(e, 'requirement')}: "
+                        f"{_stripe_feld(e, 'reason')}"
                         for e in (req.errors or [])
                     ],
                 )
@@ -751,9 +774,9 @@ class PaymentsService:
             pending_verification=list(reqs.pending_verification or []),
             errors=[
                 ConnectRequirementError(
-                    requirement=str(e.get("requirement") or ""),
-                    code=str(e.get("code") or ""),
-                    reason=str(e.get("reason") or ""),
+                    requirement=_stripe_feld(e, "requirement"),
+                    code=_stripe_feld(e, "code"),
+                    reason=_stripe_feld(e, "reason"),
                 )
                 for e in (reqs.errors or [])
             ],
