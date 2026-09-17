@@ -382,6 +382,39 @@ class AirbnbUebernahmeMixin:
             )
         return str(grp[0]["channex_group_id"])
 
+    @staticmethod
+    def _offene_registrierung(
+        db: Client, tenant_id: str, property_id: str
+    ) -> str | None:
+        """Die Channex-UUID der OFFENEN Zuordnung des Objekts, sonst None.
+
+        Der Filter `deleted_at is null` ist hier die ganze Methode (Wurzel 3:
+        Load und Scope nicht trennen, sonst vergisst man den Scope). Ohne ihn
+        entscheidet bei mehreren Zeilen der Planner, welche `limit(1)` liefert:
+        gemessen am 17.09.2026 an „FeWo *Stjerneskud*" kam reproduzierbar die
+        GESCHLOSSENE Zeile zurueck, deren Channex-Property bei Channex mit 404
+        antwortet. Der Autorisierungslink waere damit gegen eine nicht mehr
+        existierende Property gebaut worden — und weil der Idempotenz-Zweig
+        genau diese UUID als „schon registriert" liest, haette der Fehler sich
+        auch nie von selbst korrigiert.
+
+        Nicht dasselbe wie der Backstop aus 0427: der verbietet geschlossen +
+        `sync_enabled`. Hier fehlte der Filter auf `deleted_at`, der Fund beisst
+        also auch bei sauber abgeschalteten Alt-Zeilen weiter.
+        """
+        zeilen = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data or []
+        if not zeilen or not zeilen[0].get("channex_property_id"):
+            return None
+        return str(zeilen[0]["channex_property_id"])
+
     def _registrierung_nachholen_und_lesen(
         self, db: Client, tenant_id: str, property_id: str
     ) -> str:
@@ -395,16 +428,8 @@ class AirbnbUebernahmeMixin:
         vorhandene UUID gelesen und NICHT neu angelegt — sonst entstuende bei
         jedem abgebrochenen Anlauf eine weitere Channex-Property.
         """
-        vorhanden = (
-            db.table("channex_property_map")
-            .select("channex_property_id")
-            .eq("tenant_id", tenant_id)
-            .eq("property_id", property_id)
-            .limit(1)
-            .execute()
-        ).data
-        if vorhanden and vorhanden[0].get("channex_property_id"):
-            channex_property_id = str(vorhanden[0]["channex_property_id"])
+        channex_property_id = self._offene_registrierung(db, tenant_id, property_id)
+        if channex_property_id:
             log.info(
                 "airbnb_registrierung_vorhanden",
                 tenant_id=tenant_id, property_id=property_id,
@@ -414,15 +439,8 @@ class AirbnbUebernahmeMixin:
 
         self._registrierung_nachholen(db, tenant_id, property_id)
 
-        neu_gelesen = (
-            db.table("channex_property_map")
-            .select("channex_property_id")
-            .eq("tenant_id", tenant_id)
-            .eq("property_id", property_id)
-            .limit(1)
-            .execute()
-        ).data
-        if not neu_gelesen or not neu_gelesen[0].get("channex_property_id"):
+        channex_property_id = self._offene_registrierung(db, tenant_id, property_id)
+        if not channex_property_id:
             # Fail-closed (Wurzel 5): ohne Channex-Property gibt es keinen Link.
             # Lieber hier mit Grund abbrechen als Channex mit leerem
             # `properties` anfragen und ein nacktes 422 durchreichen.
@@ -435,7 +453,6 @@ class AirbnbUebernahmeMixin:
                 "Bitte versuche es erneut.",
                 status_code=502,
             )
-        channex_property_id = str(neu_gelesen[0]["channex_property_id"])
         log.info(
             "airbnb_registrierung_angelegt",
             tenant_id=tenant_id, property_id=property_id,
