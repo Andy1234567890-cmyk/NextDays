@@ -1948,18 +1948,47 @@ class PaymentsService:
         gehört mit in die Antwort, weil er entscheidet, mit welchem Stripe-Client
         belastet wird (`payments/welt.py`). Vorher gab die Methode nur IDs
         zurück; der Worker baute daraus EINEN Service ohne Mandant und damit
-        für jeden Sandbox-Betrieb den falschen Client (17.09.2026)."""
+        für jeden Sandbox-Betrieb den falschen Client (17.09.2026).
+
+        `payments` trägt selbst KEINE `tenant_id` — der Mandant hängt über
+        `reservation_id` an `reservations`. Er wird deshalb in einem zweiten,
+        gebündelten Zugriff geholt (nicht je Zeile einzeln). Eine Zeile ohne
+        auflösbaren Mandanten wird ausgelassen und gemeldet, statt still auf
+        die Live-Welt zu fallen (Wurzel 5)."""
         db = self._db_or_fail()
         cutoff = (now or datetime.now(UTC)).isoformat()
         rows = (
             db.table("payments")
-            .select("id, tenant_id")
+            .select("id, reservation_id")
             .eq("type", "balance")
             .eq("scheduled_status", "scheduled")
             .lte("due_at", cutoff)
             .execute()
         ).data or []
-        return [(str(r["id"]), str(r["tenant_id"])) for r in rows]
+        res_ids = sorted({
+            str(r["reservation_id"]) for r in rows if r.get("reservation_id")
+        })
+        mandant: dict[str, str] = {}
+        # In Blöcken: eine `in_`-Liste landet in der URL, und ein Lauf mit
+        # tausenden fälligen Zeilen würde sie sprengen (Wurzel 8).
+        for i in range(0, len(res_ids), 200):
+            treffer = (
+                db.table("reservations")
+                .select("id, tenant_id")
+                .in_("id", res_ids[i : i + 200])
+                .execute()
+            ).data or []
+            mandant.update({str(t["id"]): str(t["tenant_id"]) for t in treffer})
+        faellig: list[tuple[str, str]] = []
+        for r in rows:
+            tenant_id = mandant.get(str(r.get("reservation_id")))
+            if not tenant_id:
+                log.warning(
+                    "faellige_restzahlung_ohne_betrieb", payment_id=str(r["id"])
+                )
+                continue
+            faellig.append((str(r["id"]), tenant_id))
+        return faellig
 
     # --- Kaution (Stufe B) ---------------------------------------------------
 

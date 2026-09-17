@@ -336,27 +336,59 @@ class _Tabelle:
     def lte(self, *_a: object) -> "_Tabelle":
         return self
 
+    def in_(self, *_a: object) -> "_Tabelle":
+        return self
+
     def execute(self) -> _Zeile:
         return _Zeile(self._daten)
 
 
 class _ZahlungsDB:
-    def __init__(self, zeilen: list[dict]) -> None:
-        self._zeilen = zeilen
+    """`payments` traegt keine `tenant_id` — der Betrieb haengt ueber die
+    Reservierung. Die Fake-DB bildet genau diese zwei Tabellen ab."""
+
+    def __init__(self, zahlungen: list[dict], reservierungen: list[dict]) -> None:
+        self._zahlungen = zahlungen
+        self._reservierungen = reservierungen
         self.gelesen: list[str] = []
 
     def table(self, name: str) -> _Tabelle:
         self.gelesen.append(name)
-        return _Tabelle(self._zeilen)
+        return _Tabelle(
+            self._zahlungen if name == "payments" else self._reservierungen
+        )
 
 
 def test_faellige_restzahlungen_tragen_ihren_betrieb() -> None:
     """Ohne den Mandanten kann der Lauf die Welt nicht waehlen."""
     db = _ZahlungsDB(
-        [{"id": "pay-1", "tenant_id": TENANT}, {"id": "pay-2", "tenant_id": "t-2"}]
+        [
+            {"id": "pay-1", "reservation_id": "res-1"},
+            {"id": "pay-2", "reservation_id": "res-2"},
+        ],
+        [
+            {"id": "res-1", "tenant_id": TENANT},
+            {"id": "res-2", "tenant_id": "t-2"},
+        ],
     )
     dienst = PaymentsService(service_client=db)  # type: ignore[arg-type]
     assert dienst.due_balance_payments() == [("pay-1", TENANT), ("pay-2", "t-2")]
+    # Der Betrieb wird GEBUENDELT geholt, nicht je Zeile einzeln.
+    assert db.gelesen.count("reservations") == 1
+
+
+def test_zahlung_ohne_auflosbaren_betrieb_wird_ausgelassen() -> None:
+    """Kein stiller Rueckfall auf die Live-Welt (Wurzel 5): lieber eine Zeile
+    nicht belasten als sie im falschen Stripe-Konto zu belasten."""
+    db = _ZahlungsDB(
+        [
+            {"id": "pay-1", "reservation_id": "res-1"},
+            {"id": "pay-verwaist", "reservation_id": None},
+        ],
+        [{"id": "res-1", "tenant_id": TENANT}],
+    )
+    dienst = PaymentsService(service_client=db)  # type: ignore[arg-type]
+    assert dienst.due_balance_payments() == [("pay-1", TENANT)]
 
 
 def test_auszahlungslauf_fragt_die_welt_JE_betrieb(monkeypatch) -> None:
