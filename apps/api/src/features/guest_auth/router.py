@@ -9,12 +9,20 @@ GETRENNT von der Tenant-Auth (/api/v1/auth). ``register``/``login``/``refresh``/
 from fastapi import APIRouter, HTTPException, status
 
 from src.core.security import CurrentGuest
+from src.features.payments.service import PaymentsError
 
-from .dependencies import GuestAuthServiceDep, GuestCodeServiceDep
+from .dependencies import (
+    GuestAuthServiceDep,
+    GuestCodeServiceDep,
+    GuestIdentityServiceDep,
+)
 from .schemas import (
     GuestCodeAnfrageRequest,
     GuestCodeAntwort,
     GuestCodePruefenRequest,
+    GuestIdentityResponse,
+    GuestIdentityStartRequest,
+    GuestIdentityStatusResponse,
     GuestKontoLoeschenRequest,
     GuestKontoLoeschenResponse,
     GuestLoginRequest,
@@ -197,3 +205,54 @@ def profil_anlegen(
         return service.profil_anlegen(ctx, req)
     except GuestAuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Ausweisprüfung des Gastes (Stripe Identity, 0718) ----------------------
+#
+# WOZU. Ein Gastgeber kann seine Sofortbuchung auf Gäste mit geprüfter
+# Identität beschränken (Airbnbs `guests_with_verified_identity`). Ohne diesen
+# Weg wäre das eine Voraussetzung, die kein Gast erfüllen könnte — er bekäme
+# nur noch Anfragen statt Sofortbuchungen und erführe nie, warum.
+#
+# Es werden KEINE Ausweisdaten gespeichert, nur der Status (DSGVO/DE) — genau
+# wie bei den Gastgebern. Das Ergebnis kommt ASYNCHRON per Webhook; aus der
+# Rückleitung darf nichts abgeleitet werden.
+
+
+@router.post("/identity/verification-session", response_model=GuestIdentityResponse)
+def identitaet_starten(
+    req: GuestIdentityStartRequest,
+    ctx: CurrentGuest,
+    service: GuestAuthServiceDep,
+    identity: GuestIdentityServiceDep,
+) -> GuestIdentityResponse:
+    """Ausweisprüfung starten und die Hosted-URL von Stripe zurückgeben."""
+    try:
+        profil = service.get_profile(ctx)
+        url = identity.create_guest_verification_session(
+            # Die Kennung kommt aus dem Token, NIE aus dem Aufruf (Wurzel 3).
+            portal_guest_id=ctx.guest_id,
+            email=str(profil.email),
+            return_url=req.return_url,
+        )
+    except GuestAuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return GuestIdentityResponse(url=url)
+
+
+@router.post("/identity/sync", response_model=GuestIdentityStatusResponse)
+def identitaet_abgleichen(
+    ctx: CurrentGuest, identity: GuestIdentityServiceDep
+) -> GuestIdentityStatusResponse:
+    """Den Stand LIVE bei Stripe holen.
+
+    Der Normalweg bleibt der Webhook. Dieser hier ist der Weg zurück, wenn er
+    ausbleibt — ohne ihn stünde „Wird geprüft …" für immer da (17.09.2026).
+    """
+    try:
+        stand = identity.sync_guest_verification_status(portal_guest_id=ctx.guest_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return GuestIdentityStatusResponse(identity_status=stand)

@@ -30,6 +30,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from src.core.config import get_settings
+
 from .stripe_client import get_stripe_marktplatz
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -81,3 +83,22 @@ def client_fuer(db: Client | None, tenant_id: str | None) -> StripeClient | None
     if ist_sandbox(db, tenant_id):
         return get_stripe_marktplatz()
     return None
+
+
+def marktplatz_client() -> StripeClient | None:
+    """Der Client der MARKTPLATZ-Welt — fuer alles, was keinem Mandanten gehoert.
+
+    Ein Marktplatz-GAST (`portal_guests`) hat keinen Betrieb: er ist Kunde von
+    myBestDays, nicht von einem einzelnen Gastgeber. `ist_sandbox` kann fuer ihn
+    also nichts entscheiden, denn es fragt das Abrechnungsprofil eines Mandanten.
+
+    Massgeblich ist stattdessen die Welt des Marktplatzes selbst: laeuft er in
+    der Sandbox, muss auch die Ausweispruefung seiner Gaeste dort liegen — sonst
+    steht die Sitzung eines Gastes in der Live-Welt, waehrend die Gastgeber
+    daneben in der Testwelt pruefen, und niemand findet sie wieder.
+
+    `None` heisst wie ueberall in diesem Modul „nimm den gewohnten Client".
+    """
+    if not get_settings().stripe_marktplatz_secret_key.get_secret_value():
+        return None
+    return get_stripe_marktplatz()

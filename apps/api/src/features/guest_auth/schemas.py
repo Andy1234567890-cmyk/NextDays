@@ -98,6 +98,30 @@ class GuestProfileResponse(BaseModel):
     preferred_locale: str | None = None
     preferred_currency: str | None = None
     marketing_opt_in: bool = False
+    # Ausweisprüfung (Stripe Identity, 0718). „verified" ist der EINZIGE Wert,
+    # der als geprüft gilt — „processing" heißt in Prüfung, nicht geprüft.
+    identity_status: str = "unverified"
+    identity_verified_at: str | None = None
+
+
+class GuestIdentityStartRequest(BaseModel):
+    """Ausweisprüfung starten. Die `return_url` muss zu einem erlaubten
+    Frontend-Origin gehören (kein offener Redirect) — geprüft im Backend."""
+
+    return_url: str = Field(min_length=1, max_length=2000)
+
+
+class GuestIdentityResponse(BaseModel):
+    """Die Hosted-URL von Stripe. Wird NICHT gespeichert und nicht geloggt —
+    sie läuft nach 24 Stunden ab und ist bis dahin ein Zugang."""
+
+    url: str
+
+
+class GuestIdentityStatusResponse(BaseModel):
+    """Der abgeglichene Stand der Prüfung."""
+
+    identity_status: str
 
 
 class GuestProfileUpdateRequest(BaseModel):

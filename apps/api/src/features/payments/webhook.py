@@ -592,7 +592,7 @@ _IDENTITY_STATUS = {
 
 
 def _identity_ereignis_veraltet(
-    db: Client, user_id: str, tenant_id: str, ereignis_iso: str
+    db: Client, tabelle: str, filter_: Mapping[str, str], ereignis_iso: str
 ) -> bool:
     """Ist dieses Ereignis älter als das, das den aktuellen Stand gesetzt hat?
 
@@ -602,14 +602,10 @@ def _identity_ereignis_veraltet(
     Sitzung von 12:47 ein und überschrieb sie. Die Kontoseite zeigte „Wird
     geprüft …", während bei Stripe beide Sitzungen längst verifiziert waren.
     """
-    zeile = (
-        db.table("users")
-        .select("identity_event_at")
-        .eq("id", user_id)
-        .eq("tenant_id", tenant_id)
-        .limit(1)
-        .execute()
-    ).data
+    abfrage = db.table(tabelle).select("identity_event_at")
+    for spalte, wert in filter_.items():
+        abfrage = abfrage.eq(spalte, wert)
+    zeile = (abfrage.limit(1).execute()).data
     bisher = zeile[0].get("identity_event_at") if zeile else None
     if not bisher:
         # Noch kein Zeitstempel (Erstereignis oder Altbestand) → annehmen. Kein
@@ -649,22 +645,28 @@ def _handle_identity_event(
     if status_val is None:
         return
     meta = _field(session, "metadata", {}) or {}
-    user_id = _meta_get(meta, "user_id")
-    tenant_id = _meta_get(meta, "tenant_id")
     session_id = _field(session, "id")
-    if not user_id or not tenant_id:
+
+    # WER wurde geprüft? Zwei Welten teilen sich diesen Ereignistyp: Gastgeber
+    # (`users`, metadata user_id+tenant_id) und Marktplatz-Gäste
+    # (`portal_guests`, metadata portal_guest_id). Die Metadaten setzen wir
+    # selbst beim Anlegen der Sitzung — dem Client wird nichts geglaubt
+    # (Wurzel 3). Passt nichts, wird NICHT geraten.
+    ziel = _identity_ziel(meta)
+    if ziel is None:
         log.warning("identity_event_without_metadata", session_id=session_id)
         return
+    tabelle, filter_ = ziel
 
     ereignis_iso = (
         datetime.fromtimestamp(event_created, UTC).isoformat()
         if event_created is not None
         else now_iso
     )
-    if _identity_ereignis_veraltet(db, user_id, tenant_id, ereignis_iso):
+    if _identity_ereignis_veraltet(db, tabelle, filter_, ereignis_iso):
         log.info(
             "identity_event_veraltet_verworfen",
-            user_id=user_id,
+            tabelle=tabelle,
             status=status_val,
             session_id=session_id,
         )
@@ -680,18 +682,35 @@ def _handle_identity_event(
     if session_id:
         update["identity_session_id"] = session_id
 
-    # Scope-Guard: nur die Zeile dieses Nutzers UND dieses Tenants (Wurzel 3).
-    result = (
-        db.table("users")
-        .update(update)
-        .eq("id", user_id)
-        .eq("tenant_id", tenant_id)
-        .execute()
-    )
+    # Scope-Guard: nur die eine Zeile, auf die die Metadaten zeigen (Wurzel 3).
+    abfrage = db.table(tabelle).update(update)
+    for spalte, wert in filter_.items():
+        abfrage = abfrage.eq(spalte, wert)
+    result = abfrage.execute()
     if result.data:
-        log.info("identity_status_set", user_id=user_id, status=status_val)
+        log.info("identity_status_set", tabelle=tabelle, status=status_val)
     else:
-        log.warning("identity_user_not_found", user_id=user_id, tenant_id=tenant_id)
+        log.warning("identity_zeile_nicht_gefunden", tabelle=tabelle)
+
+
+def _identity_ziel(
+    meta: Mapping[str, Any],
+) -> tuple[str, dict[str, str]] | None:
+    """Tabelle + Filter aus den Metadaten der Sitzung, oder None.
+
+    Der Gastgeber braucht BEIDES, user_id und tenant_id: die Zeile muss zum
+    Betrieb aus der Sitzung gehören, sonst schriebe ein Ereignis auf einen
+    fremden Mandanten. Der Gast hat keinen Betrieb — bei ihm ist die Kennung
+    allein der Scope, und genau ihr Fehlen unterscheidet die beiden Fälle.
+    """
+    portal_guest_id = _meta_get(meta, "portal_guest_id")
+    if portal_guest_id:
+        return "portal_guests", {"id": portal_guest_id}
+    user_id = _meta_get(meta, "user_id")
+    tenant_id = _meta_get(meta, "tenant_id")
+    if user_id and tenant_id:
+        return "users", {"id": user_id, "tenant_id": tenant_id}
+    return None
 
 
 def _buchungsabsicht_einloesen(

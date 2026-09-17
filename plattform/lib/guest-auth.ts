@@ -19,6 +19,10 @@ export type GuestMe = {
   preferred_locale: string | null;
   preferred_currency: string | null;
   marketing_opt_in: boolean;
+  /** Ausweisprüfung (Stripe Identity). „verified" ist der EINZIGE Wert, der als
+   *  geprüft gilt — „processing" heißt in Prüfung, nicht geprüft. */
+  identity_status: "unverified" | "processing" | "requires_input" | "verified";
+  identity_verified_at: string | null;
 };
 
 export async function guestLogin(
@@ -87,4 +91,35 @@ export async function guestUpdateMe(input: {
   marketing_opt_in?: boolean;
 }): Promise<Result<GuestMe>> {
   return guestCall<GuestMe>("guest-auth/me", { method: "PATCH", body: input });
+}
+
+
+// --- Ausweisprüfung des Gastes ---------------------------------------------
+//
+// Ein Gastgeber kann seine Sofortbuchung auf Gäste mit geprüfter Identität
+// beschränken (Airbnb `guests_with_verified_identity`). Wer die Prüfung nicht
+// hat, wird nicht abgewiesen — aus seiner Buchung wird eine Anfrage. Die
+// Prüfung nimmt ihm also Wartezeit ab, sie ist keine Pflicht.
+
+/** Prüfung starten. Gibt die Hosted-URL von Stripe zurück (24 h gültig,
+ *  wird nirgends gespeichert). */
+export async function guestIdentityStarten(
+  returnUrl: string,
+): Promise<Result<{ url: string }>> {
+  return guestCall<{ url: string }>("guest-auth/identity/verification-session", {
+    method: "POST",
+    body: { return_url: returnUrl },
+  });
+}
+
+/** Den Stand live beim Anbieter nachfragen.
+ *
+ *  Der Normalweg ist der Webhook. Dieser hier ist der Weg zurück, wenn er
+ *  ausbleibt — sonst stünde „Wird geprüft …" für immer da. */
+export async function guestIdentityAbgleichen(): Promise<
+  Result<{ identity_status: string }>
+> {
+  return guestCall<{ identity_status: string }>("guest-auth/identity/sync", {
+    method: "POST",
+  });
 }

@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { IdentitaetKarte } from "@/components/identitaet-karte";
 import { KontoShell } from "@/components/konto-shell";
 import { ProfilForm } from "@/components/profil-form";
 import { StatusBadge } from "@/components/status-badge";
@@ -248,6 +249,12 @@ export default async function KontoPage() {
               </Link>
             ))}
           </div>
+        </section>
+
+        {/* Identität — steht VOR dem Profil, weil sie darüber entscheidet, ob
+            eine Buchung sofort gilt oder zur Anfrage wird (0718). */}
+        <section className="max-w-4xl">
+          <IdentitaetKarte me={me} />
         </section>
 
         {/* Profil */}

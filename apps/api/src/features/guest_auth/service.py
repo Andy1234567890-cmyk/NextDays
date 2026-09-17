@@ -53,7 +53,13 @@ log = get_logger("nextdays.guest_auth")
 
 # Profilfelder, die der Gast über die API lesen/schreiben darf. E-Mail ist NICHT
 # dabei (eigener Re-Auth-Flow, Wurzel 7); id/created_at sind server-verwaltet.
-_PROFILE_COLUMNS = "id, email, name, phone, preferred_locale, preferred_currency, marketing_opt_in"
+# `identity_*` gehören dazu, seit der Gastgeber seine Sofortbuchung auf Gäste
+# mit geprüfter Identität beschränken kann (0718): der Gast muss sehen, wo er
+# steht, sonst bucht er ins Leere und erfährt den Grund nie.
+_PROFILE_COLUMNS = (
+    "id, email, name, phone, preferred_locale, preferred_currency, "
+    "marketing_opt_in, identity_status, identity_verified_at"
+)
 
 
 class GuestAuthError(Exception):
@@ -502,4 +508,9 @@ class GuestAuthService:
             preferred_locale=row.get("preferred_locale"),
             preferred_currency=row.get("preferred_currency"),
             marketing_opt_in=bool(row.get("marketing_opt_in")),
+            # Nie hartkodiert „verifiziert": der echte Stand, sonst gar keiner
+            # (Wurzel 4/5). Fehlt die Spalte im Ergebnis, gilt „unverified" —
+            # die zurückhaltende Annahme, nie die bequeme.
+            identity_status=str(row.get("identity_status") or "unverified"),
+            identity_verified_at=row.get("identity_verified_at"),
         )
