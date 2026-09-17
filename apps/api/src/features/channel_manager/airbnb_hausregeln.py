@@ -79,9 +79,20 @@ class AirbnbHausregelnMixin:
             gesetzt.append("airbnbStorno")
 
         sofort = ali.sofortbuchung_uebernehmen(roh)
+        spalten: dict[str, str] = {}
         if sofort and not policies.get("airbnbSofortbuchung"):
             policies["airbnbSofortbuchung"] = sofort
             gesetzt.append("airbnbSofortbuchung")
+            # In die ECHTEN Spalten, nicht nur in den Beleg (0718). Vorher
+            # landete Airbnbs Kategorie ausschliesslich hier im JSON, und das
+            # Objekt selbst stand danach auf „alle duerfen sofort buchen" —
+            # ein Inserat mit `well_reviewed_guests` verlor seine
+            # Einschraenkung beim Import still. Genau das stand als Befund im
+            # Import-Modul: „fuer WEN, kann unser Modell nicht ausdruecken".
+            spalten["booking_mode"] = str(sofort["modus"])
+            zielgruppe = str(sofort["airbnbKategorie"])
+            if zielgruppe in ali.SOFORTBUCHUNG_ZIELGRUPPEN:
+                spalten["instant_booking_audience"] = zielgruppe
 
         if not gesetzt:
             return []
@@ -93,9 +104,9 @@ class AirbnbHausregelnMixin:
             # Herkunft und Vergleichsgrundlage für einen späteren Abruf.
             "airbnbHausregeln": roh,
         }
-        db.table("properties").update({"type_attributes": neue_attrs}).eq(
-            "tenant_id", tenant_id
-        ).eq("id", property_id).execute()
+        db.table("properties").update(
+            {"type_attributes": neue_attrs, **spalten}
+        ).eq("tenant_id", tenant_id).eq("id", property_id).execute()
         log.info(
             "airbnb_hausregeln_uebernommen",
             property_id=property_id, felder=gesetzt,

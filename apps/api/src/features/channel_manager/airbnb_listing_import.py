@@ -102,9 +102,16 @@ SOFORTBUCHUNG_KATEGORIEN: Final[frozenset[str]] = frozenset(
     }
 )
 
-# Unser Modell kennt nur instant/request. „off" heißt: jede Buchung ist eine
-# Anfrage. Alle anderen Werte erlauben Sofortbuchung — für WEN, kann unser Modell
-# nicht ausdrücken; der Airbnb-Wert bleibt deshalb daneben erhalten.
+# Die vier Werte, die unsere Spalte `properties.instant_booking_audience`
+# kennt (0718) — Airbnbs Kategorien ohne „off", das bei uns
+# `booking_mode='request'` ist. Bis zum 17.09.2026 stand hier der Befund
+# „für WEN, kann unser Modell nicht ausdrücken": ein importiertes Inserat mit
+# `well_reviewed_guests` wurde zu „alle dürfen sofort buchen", die
+# Einschränkung des Gastgebers ging still verloren. Seit 0718 gibt es die
+# Spalte, und `airbnb_hausregeln` schreibt sie mit.
+SOFORTBUCHUNG_ZIELGRUPPEN: Final[frozenset[str]] = SOFORTBUCHUNG_KATEGORIEN - {"off"}
+
+# Unser Modus-Feld kennt nur instant/request; die Zielgruppe steht daneben.
 _SOFORT_AUF_UNSER_MODELL: Final[dict[str, str]] = {
     "off": "request",
     "everyone": "instant",
