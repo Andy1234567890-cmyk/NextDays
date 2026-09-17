@@ -31,6 +31,7 @@ from src.core.sales_channels import (
     availability_block_hits_channel,
     stop_sell_blocks_channel,
 )
+from src.features.booking_access.service import BookingAccessService
 from src.features.booking_conditions.plan import (
     erste_zahlung,
     kaution,
@@ -122,7 +123,10 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
         res = (
             self._db()
             .table("properties")
-            .select("tenant_id, status, max_guests, booking_mode")
+            .select(
+                "tenant_id, status, max_guests, booking_mode, "
+                "instant_booking_audience"
+            )
             .eq("id", property_id)
             .limit(1)
             .execute()
@@ -454,7 +458,21 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
         # request = Anfrage (status=requested, belegt lokal den Slot atomar, aber
         # KEIN OTA-0-Push — die Nacht bleibt für OTAs verkäuflich, bis der Host
         # zusagt). DB-NOT-NULL-Default 'instant' garantiert den Wert (kein Fallback).
-        is_request = prop.get("booking_mode") == "request"
+        #
+        # BUCHUNGSBERECHTIGUNG (0718). Sofortbuchung heißt nicht „für jeden":
+        # der Betrieb kann sie auf Gäste mit geprüfter Identität und/oder guter
+        # Vorgeschichte beschränken (Airbnbs
+        # `instant_booking_allowed_category`). Wer die Voraussetzung nicht
+        # erfüllt, wird NICHT abgewiesen — daraus wird eine Anfrage. Genau so
+        # beschreibt Airbnb es: „guests who do not meet the requirements will
+        # not be able to book instantly, but they can still send a booking
+        # request." Aussperren wäre der teurere Fehler und für den Gast nicht
+        # nachvollziehbar.
+        is_request = not BookingAccessService(self._db()).sofortbuchung_erlaubt(
+            booking_mode=prop.get("booking_mode"),
+            zielgruppe=prop.get("instant_booking_audience"),
+            email=req.contact.email,
+        )
         reservation_status = "requested" if is_request else "confirmed"
         # 24-h-Frist ab jetzt (Airbnb-Standard). Nur bei Anfrage; instant → NULL.
         request_expires_at = (

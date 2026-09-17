@@ -40,6 +40,7 @@ from .features.announcements.router import router as announcements_router
 from .features.api_clients.router import router as api_clients_router
 from .features.auswertung.router import router as auswertung_router
 from .features.auth.router import router as auth_router
+from .features.booking_access.router import router as booking_access_router
 from .features.booking_conditions.router import router as booking_conditions_router
 from .features.booking_engine.router import router as booking_engine_router
 from .features.booking_offers.router import oeffentlich as booking_offers_public_router
@@ -204,6 +205,9 @@ _SLICE_ROUTERS = [
     booking_offers_router,
     booking_offers_public_router,
     booking_conditions_router,
+    # Buchungsberechtigungen (Airbnb „Voraussetzungen für Gäste", 0718):
+    # Sofortbuchung oder Anfrage, und für wen die Sofortbuchung gilt.
+    booking_access_router,
     site_config_manage_router,
     site_config_public_router,
     site_config_ki_router,

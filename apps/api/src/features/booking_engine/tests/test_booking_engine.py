@@ -415,7 +415,15 @@ def test_bezahlte_absicht_bei_konflikt_ohne_buchung(monkeypatch) -> None:  # noq
     monkeypatch.setattr(
         svc,
         "_public_property",
-        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 6,
+            # NOT NULL in der DB (0718). Fehlt der Wert, stuft die
+            # Buchungsstrecke fail-closed auf Anfrage herunter — das
+            # ist gewollt und darf hier nicht mitgetestet werden.
+            "instant_booking_audience": "everyone",
+        },
     )
     monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: None)
     # Preis kommt serverseitig aus dem Resolver — Quote mocken.
@@ -531,7 +539,15 @@ def test_public_booking_includes_addons_in_quote(monkeypatch) -> None:  # noqa: 
     svc = BookingEngineService(service_client=db)
     monkeypatch.setattr(
         svc, "_public_property",
-        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 6,
+            # NOT NULL in der DB (0718). Fehlt der Wert, stuft die
+            # Buchungsstrecke fail-closed auf Anfrage herunter — das
+            # ist gewollt und darf hier nicht mitgetestet werden.
+            "instant_booking_audience": "everyone",
+        },
     )
     monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: "g-1")
     monkeypatch.setattr(svc, "_push_channex", lambda *_a, **_k: None)
@@ -618,7 +634,15 @@ def test_public_booking_rejects_overcapacity(monkeypatch) -> None:
     monkeypatch.setattr(
         svc,
         "_public_property",
-        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 4},
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 4,
+            # NOT NULL in der DB (0718). Fehlt der Wert, stuft die
+            # Buchungsstrecke fail-closed auf Anfrage herunter — das
+            # ist gewollt und darf hier nicht mitgetestet werden.
+            "instant_booking_audience": "everyone",
+        },
     )
     req = PublicBookingRequest(
         property_id="p-1",
@@ -657,7 +681,15 @@ def test_public_booking_rejects_past_check_in(monkeypatch) -> None:
     monkeypatch.setattr(
         svc,
         "_public_property",
-        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 4},
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 4,
+            # NOT NULL in der DB (0718). Fehlt der Wert, stuft die
+            # Buchungsstrecke fail-closed auf Anfrage herunter — das
+            # ist gewollt und darf hier nicht mitgetestet werden.
+            "instant_booking_audience": "everyone",
+        },
     )
     req = PublicBookingRequest(
         property_id="p-1",
@@ -761,7 +793,15 @@ def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
     svc = BookingEngineService(service_client=db)
     monkeypatch.setattr(
         svc, "_public_property",
-        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 6,
+            # NOT NULL in der DB (0718). Fehlt der Wert, stuft die
+            # Buchungsstrecke fail-closed auf Anfrage herunter — das
+            # ist gewollt und darf hier nicht mitgetestet werden.
+            "instant_booking_audience": "everyone",
+        },
     )
     monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: "g-1")
     monkeypatch.setattr(svc, "_push_channex", lambda *_a, **_k: None)
@@ -996,7 +1036,15 @@ def test_public_booking_lehnt_teilweise_unbepreiste_naechte_ab(monkeypatch) -> N
     svc = BookingEngineService(service_client=db)
     monkeypatch.setattr(
         svc, "_public_property",
-        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 6,
+            # NOT NULL in der DB (0718). Fehlt der Wert, stuft die
+            # Buchungsstrecke fail-closed auf Anfrage herunter — das
+            # ist gewollt und darf hier nicht mitgetestet werden.
+            "instant_booking_audience": "everyone",
+        },
     )
     monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: "g-1")
     monkeypatch.setattr(svc, "_push_channex", lambda *_a, **_k: None)
@@ -1044,7 +1092,15 @@ def test_public_booking_lehnt_zu_langen_aufenthalt_ab(monkeypatch) -> None:  # n
     svc = BookingEngineService(service_client=db)
     monkeypatch.setattr(
         svc, "_public_property",
-        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 6,
+            # NOT NULL in der DB (0718). Fehlt der Wert, stuft die
+            # Buchungsstrecke fail-closed auf Anfrage herunter — das
+            # ist gewollt und darf hier nicht mitgetestet werden.
+            "instant_booking_audience": "everyone",
+        },
     )
 
     with pytest.raises(BookingEngineError) as exc:

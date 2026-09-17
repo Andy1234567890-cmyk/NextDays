@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 import { AuszahlungenTab } from "@/components/konto/auszahlungen-tab";
 import { BenachrichtigungenAbschnitt } from "@/components/konto/benachrichtigungen-abschnitt";
+import { BuchungsrechteAbschnitt } from "@/components/konto/buchungsrechte-abschnitt";
 import { Dac7Meldung } from "@/components/konto/dac7-meldung";
 import { SteuernAbschnitt } from "@/components/konto/steuern-abschnitt";
 import { DatenschutzAbschnitt } from "@/components/konto/datenschutz-abschnitt";
@@ -23,6 +24,7 @@ import { ZahlungenAbschnitt } from "@/components/konto/zahlungen-abschnitt";
 import { ZahlungenTabs } from "@/components/konto/zahlungen-tabs";
 import { getAuszahlungsUebersicht, getStripeGuthaben } from "@/lib/auszahlungen";
 import { getNotificationOverview } from "@/lib/benachrichtigungen";
+import { getBuchungsberechtigung } from "@/lib/buchungsrechte";
 import { getMeldelaeufe } from "@/lib/dac7";
 import { getObjektangaben, getTaxpayerOverview } from "@/lib/steuern";
 import { getPrivacySettings } from "@/lib/datenschutz";
@@ -40,7 +42,6 @@ import { ausKontoErgaenzen } from "@/lib/vermieterdaten";
 // Bereiche ohne eigenes Backend → Platzhalter, aber in der Nav sichtbar (wie
 // Airbnb): Titel-Key je Bereich.
 const VORBEREITUNG: Record<string, string> = {
-  buchungsrechte: "navBuchungsrechte",
   profitools: "navProfiTools",
 };
 
@@ -102,6 +103,11 @@ export default async function KontoPage({
     aktiv === "datenschutz" ? await getDebugSessions().catch(() => []) : [];
   const benachrichtigungen =
     aktiv === "benachrichtigungen" ? await getNotificationOverview() : null;
+  // Buchungsberechtigungen (Airbnb „Voraussetzungen für Gäste"): nur laden,
+  // wenn der Bereich offen ist — sonst ein Backend-Aufruf je Seitenaufruf
+  // ohne Nutzen.
+  const buchungsrechte =
+    aktiv === "buchungsrechte" ? await getBuchungsberechtigung() : null;
   // Beide Steuer-Abfragen parallel: die Objektangaben sind ein eigener
   // Endpunkt, aber derselbe Tab — nacheinander wäre der Tab doppelt langsam.
   // Drei Abfragen desselben Tabs parallel — nacheinander waere er dreifach
@@ -192,6 +198,9 @@ export default async function KontoPage({
                   und war damit fuer den Gastgeber nicht erreichbar. */}
               <Dac7Meldung laeufe={meldelaeufe} />
             </>
+          )}
+          {aktiv === "buchungsrechte" && (
+            <BuchungsrechteAbschnitt stand={buchungsrechte} />
           )}
           {aktiv === "unternehmen" && (
             <UnternehmenTab

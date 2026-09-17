@@ -52,7 +52,15 @@ def _service(monkeypatch: pytest.MonkeyPatch, db: MagicMock) -> BookingEngineSer
     monkeypatch.setattr(
         svc,
         "_public_property",
-        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 6,
+            # NOT NULL in der DB (0718). Fehlt der Wert, stuft die
+            # Buchungsstrecke fail-closed auf Anfrage herunter — das
+            # ist gewollt und darf hier nicht mitgetestet werden.
+            "instant_booking_audience": "everyone",
+        },
     )
     monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: "g-1")
     monkeypatch.setattr(svc, "_push_channex", lambda *_a, **_k: None)
@@ -308,3 +316,59 @@ def test_claim_meldet_verlorenes_rennen() -> None:
     kette = db.table.return_value.update.return_value.eq.return_value.eq.return_value
     kette.execute.return_value.data = []
     assert absicht.als_eingeloest(db, "abs-1", "res-1") is False
+
+
+# --- Buchungsberechtigung: herabstufen, nicht abweisen (0718) ---------------
+
+
+def _mit_zielgruppe(
+    monkeypatch: pytest.MonkeyPatch, svc: BookingEngineService, zielgruppe: str
+) -> None:
+    monkeypatch.setattr(
+        svc,
+        "_public_property",
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 6,
+            "instant_booking_audience": zielgruppe,
+        },
+    )
+
+
+def test_wer_die_voraussetzung_nicht_erfuellt_bekommt_eine_anfrage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """DER KERN DER BUCHUNGSBERECHTIGUNG (Airbnb, Artikel 484/1170).
+
+    Der Betrieb verlangt eine gute Vorgeschichte, der Gast hat keine. Airbnb
+    weist ihn deshalb NICHT ab — „guests who do not meet the requirements will
+    not be able to book instantly, but they can still send a booking request".
+
+    Der Test prüft beides in einem: kein Fehler (der Gast kommt durch) UND
+    keine Zahlung (es ist eine Anfrage geworden, und für eine Anfrage nimmt
+    niemand Geld, die noch abgelehnt werden kann).
+    """
+    db = _db()
+    svc = _service(monkeypatch, db)
+    _mit_zielgruppe(monkeypatch, svc, "well_reviewed_guests")
+    _stripe_ok(monkeypatch)
+
+    antwort = svc.create_public_booking(_anfrage())
+
+    assert antwort.zahlung_erforderlich is False
+    # Die Anfrage wird angelegt — der Gast steht nicht vor einer Tür.
+    assert db.rpc.called
+
+
+def test_unbekannte_zielgruppe_stuft_ebenfalls_herab(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fail-closed (Wurzel 5): ein Wert, den wir nicht kennen — etwa aus einem
+    Airbnb-Import —, darf nicht als „alle dürfen sofort" durchgehen."""
+    db = _db()
+    svc = _service(monkeypatch, db)
+    _mit_zielgruppe(monkeypatch, svc, "nur_vip_gaeste")
+    _stripe_ok(monkeypatch)
+
+    assert svc.create_public_booking(_anfrage()).zahlung_erforderlich is False
