@@ -342,8 +342,6 @@ APPS: tuple[str, ...] = (
     "marketing",
     "partner",
     "admin",
-    "plattform",
-    "gastgeber",
     "builder",
 )
 
@@ -435,7 +433,7 @@ def main() -> None:
         default="eu",
         help=(
             "eu = die 23 EU-Amtssprachen (Standard); app = alle Sprachdateien "
-            "der Ziel-App (gastgeber/plattform tragen 45)"
+            "der Ziel-App"
         ),
     )
     p.add_argument(

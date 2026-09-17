@@ -8,7 +8,7 @@ name: Mobile Release myNextDays Eigentümer (Android)
 # Tester zu verteilen — beides wäre nicht rückholbar, weil Android die
 # App-Identität an den Signaturschlüssel bindet.
 #
-# Diese App ist die ZWEITE Einreichung (myNextDays läuft, myBestDays folgt) —
+# Diese App ist die ZWEITE Einreichung (myNextDays läuft) —
 # siehe docs/APP-STORE-ANGABEN.md Abschnitt 2.
 #
 # MIT `on: push` — als einziger der drei Release-Workflows, und mit Grund.
@@ -136,7 +136,7 @@ jobs:
 
       - name: google-services.json anlegen
         # Diese App hat das Firebase-SDK (@react-native-firebase/app +
-        # messaging), anders als mobile-bestdays. Sie braucht die Datei also im
+        # messaging), anders als die myBestDays-App. Sie braucht die Datei also im
         # BUILD, nicht nur bei der Verteilung.
         #
         # android/app/build.gradle wendet das Google-Services-Plugin BEDINGT an

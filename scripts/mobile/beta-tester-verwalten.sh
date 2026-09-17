@@ -14,7 +14,6 @@
 #
 #   App              Gruppe                 Workflow
 #   mobile-nextdays  beta-tester            mobile-release.yml
-#   mobile-bestdays  beta-tester-bestdays   mobile-release-bestdays.yml
 #   mobile-owner     beta-tester-owner      mobile-release-owner.yml
 #
 # Aufruf:
@@ -22,7 +21,7 @@
 #   bash scripts/mobile/beta-tester-verwalten.sh <app> hinzu anna@firma.de bo@firma.de
 #   bash scripts/mobile/beta-tester-verwalten.sh <app> entfernen anna@firma.de
 #
-# <app> ist mobile-nextdays | mobile-bestdays | mobile-owner.
+# <app> ist mobile-nextdays | mobile-owner.
 #
 # Voraussetzung: firebase-tools angemeldet (`firebase login`) mit einem Konto,
 # das im Projekt Rechte hat.
@@ -37,10 +36,9 @@ PROJEKT="${FIREBASE_PROJEKT-project-460d8aaf-4b7d-4d13-b3a}"
 app="${1-}"
 case "$app" in
   mobile-nextdays) GRUPPE="beta-tester" ;;
-  mobile-bestdays) GRUPPE="beta-tester-bestdays" ;;
   mobile-owner)    GRUPPE="beta-tester-owner" ;;
   *)
-    echo "Erstes Argument muss die App sein: mobile-nextdays | mobile-bestdays | mobile-owner" >&2
+    echo "Erstes Argument muss die App sein: mobile-nextdays | mobile-owner" >&2
     echo "Beispiel: bash $0 mobile-owner liste" >&2
     exit 2
     ;;

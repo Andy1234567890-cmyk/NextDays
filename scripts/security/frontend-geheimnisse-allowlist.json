@@ -17,11 +17,8 @@
     "  variablen   – Variablenname, gilt überall (Klasse A)",
     "  fundstellen – 'pfad:zeile' oder 'pfad' für eine EINZELNE Stelle"
   ],
-
   "variablen": {},
-
   "fundstellen": {
-    "mobile-nextdays/android/app/debug.keystore": "Der öffentliche React-Native-Standard-Debug-Keystore, byte-identisch in jedem RN-Projekt: Alias 'androiddebugkey', Passwort 'android', Zertifikat-SHA-256 FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C. Er signiert ausschliesslich Debug-Builds; die Release-Signatur liest Pfad und Passwörter NUR aus Umgebung/CI-Secret (android/app/build.gradle, signingConfigs.release) und ist ohne diese Werte fail-closed. Ein Angreifer gewinnt damit nichts, was er nicht schon aus dem Android-SDK hätte. Geprüft am 31.08.2026.",
-    "mobile-bestdays/android/app/debug.keystore": "Wie mobile-nextdays: derselbe öffentliche RN-Standard-Debug-Keystore, nur Debug-Builds, Release-Signatur ausschliesslich aus CI-Secrets. Geprüft am 31.08.2026."
+    "mobile-nextdays/android/app/debug.keystore": "Der öffentliche React-Native-Standard-Debug-Keystore, byte-identisch in jedem RN-Projekt: Alias 'androiddebugkey', Passwort 'android', Zertifikat-SHA-256 FA:C6:17:45:DC:09:03:78:6F:B9:ED:E6:2A:96:2B:39:9F:73:48:F0:BB:6F:89:9B:83:32:66:75:91:03:3B:9C. Er signiert ausschliesslich Debug-Builds; die Release-Signatur liest Pfad und Passwörter NUR aus Umgebung/CI-Secret (android/app/build.gradle, signingConfigs.release) und ist ohne diese Werte fail-closed. Ein Angreifer gewinnt damit nichts, was er nicht schon aus dem Android-SDK hätte. Geprüft am 31.08.2026."
   }
 }

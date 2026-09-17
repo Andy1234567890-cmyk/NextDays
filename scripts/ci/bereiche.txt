@@ -37,8 +37,6 @@ packages|packages/
 # `tsc --noEmit` kompiliert also Paket-QUELLCODE mit. Wer ein Paket ändert,
 # muss die Typprüfung jeder App bekommen, die es konsumiert.
 web|web/ packages/
-plattform|plattform/ packages/
-gastgeber|gastgeber/ packages/
 admin|admin/ packages/
 partner|partner/ packages/
 builder|builder/ packages/
@@ -74,10 +72,9 @@ storybook|storybook/ packages/eslint-config/
 #                                  builder/lib/site.ts,
 #                                  builder/components/blocks/block-renderer.tsx,
 #                                  web/messages
-kanal-enums|supabase/migrations/ apps/api/src/features/subscriptions/ apps/api/src/features/schloesser/ apps/api/src/core/mail_texte.py apps/api/src/features/notification_settings/ web/app/ scripts/diagnose/ apps/api/src/features/reservations/ apps/api/src/features/calendar/ apps/api/src/features/inbox/ apps/api/src/features/api_clients/ apps/api/src/features/site_config/ apps/public-api/src/core/ web/i18n/ web/lib/ web/messages/ web/components/ marketing/ plattform/ gastgeber/ admin/ partner/ mobile-nextdays/lib/ builder/lib/ builder/components/blocks/ scripts/i18n/
+kanal-enums|supabase/migrations/ apps/api/src/features/subscriptions/ apps/api/src/features/schloesser/ apps/api/src/core/mail_texte.py apps/api/src/features/notification_settings/ web/app/ scripts/diagnose/ apps/api/src/features/reservations/ apps/api/src/features/calendar/ apps/api/src/features/inbox/ apps/api/src/features/api_clients/ apps/api/src/features/site_config/ apps/public-api/src/core/ web/i18n/ web/lib/ web/messages/ web/components/ marketing/ admin/ partner/ mobile-nextdays/lib/ builder/lib/ builder/components/blocks/ scripts/i18n/
 
 # --- Mobile ----------------------------------------------------------------
-mobile-bestdays|mobile-bestdays/
 mobile-nextdays|mobile-nextdays/
 mobile-owner|mobile-owner/
 # Der teure Job (JDK + Android-SDK + Gradle, ~10 Min je App). JE APP ein
@@ -99,7 +96,7 @@ mobile-owner|mobile-owner/
 # Diffed die 10 Schwesterdateien BEIDER Apps und ruft
 # `ausstattung-labels-sync.mjs --pruefen`, das `lib/ausstattung.ts` aus
 # web/messages/de.json erzeugt — web/messages MUSS hier stehen.
-mobile-konsistenz|mobile-bestdays/ mobile-nextdays/ mobile-owner/ web/messages/ scripts/mobile/
+mobile-konsistenz|mobile-nextdays/ mobile-owner/ web/messages/ scripts/mobile/
 
 # `kopien-pruefen.sh` hält genau zwei Paare byte-identisch:
 #   packages/tarif/src/index.ts    ↔ marketing/lib/tarif.ts
@@ -124,7 +121,7 @@ marketing-konsistenz|marketing/lib/ packages/tarif/ packages/currency/ scripts/m
 #     aendert.
 # Breite Pfade mit Absicht: alle vier pruefen quer ueber das Repo, ein enger
 # Filter waere derselbe blinde Fleck in klein.
-statische-fallen|apps/api/ web/ plattform/ gastgeber/ admin/ partner/ builder/ marketing/ scripts/diagnose/ .github/workflows/
+statische-fallen|apps/api/ web/ admin/ partner/ builder/ marketing/ scripts/diagnose/ .github/workflows/
 
 # `db-spalten-pruefen.py` vergleicht JEDE select-, Filter- und Schreibspalte
 # des Backends mit dem LIVE-Schema. Ein falscher Spaltenname ist fuer Python

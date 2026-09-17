@@ -48,7 +48,7 @@ from pathlib import Path
 # `mobile-nextdays` waren: geprueft wurde die Farbe der Ecken, nicht die Frage,
 # ob zwei Apps dasselbe Bild tragen. Die stellt `pruefe_doppelt` seit demselben
 # Tag.
-APPS = ("mobile-nextdays", "mobile-bestdays", "mobile-owner")
+APPS = ("mobile-nextdays", "mobile-owner")
 DICHTEN = ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")
 
 # Ab dieser Helligkeitsdifferenz gilt ein Eckpixel als FREMDE Farbe (0..255 je

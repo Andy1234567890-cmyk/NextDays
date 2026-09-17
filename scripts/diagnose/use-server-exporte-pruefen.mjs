@@ -21,7 +21,7 @@ import { join, relative } from "node:path";
 
 const WURZELN = process.argv.slice(2).length
   ? process.argv.slice(2)
-  : ["web", "marketing", "admin", "builder", "plattform", "gastgeber", "storybook"];
+  : ["web", "marketing", "admin", "builder", "storybook"];
 
 const UEBERSPRINGEN = new Set(["node_modules", ".next", "dist", "build", ".turbo", ".git"]);
 

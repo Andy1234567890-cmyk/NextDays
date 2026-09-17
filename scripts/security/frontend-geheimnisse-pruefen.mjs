@@ -80,11 +80,8 @@ const FRONTENDS = [
   "marketing",
   "admin",
   "builder",
-  "plattform",
-  "gastgeber",
   "storybook",
   "mobile-nextdays",
-  "mobile-bestdays",
 ];
 
 // Fremdcode und Bauartefakte: dort steht viel, das wie ein Schlüssel aussieht,

@@ -574,7 +574,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [web, marketing, plattform, gastgeber, admin, partner, builder, storybook]
+        app: [web, marketing, admin, partner, builder, storybook]
     steps:
       # Kein Job-`if:` — SO gewollt: dieser Job steht in `deploy.needs`, und ein
       # per Job-`if` uebersprungener needs-Job gilt GitHub als NICHT erfolgreich;
@@ -876,7 +876,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [mobile-bestdays, mobile-nextdays, mobile-owner]
+        app: [mobile-nextdays, mobile-owner]
     defaults:
       run:
         working-directory: ${{ matrix.app }}
@@ -965,10 +965,9 @@ jobs:
   # nicht ob er verteilbar ist. Kein Release-Schlüssel in einem Prüf-Job, der bei
   # jedem Pull Request läuft (auch aus einem Fork).
   #
-  # NUR myNextDays (Stand 19.08.2026): mobile-bestdays hat weder Keystore noch
-  # Firebase-App, und sein Android-Projekt ist nicht auf einen Release-Build
-  # eingerichtet. Ein Lauf hier würde einen Fehler melden, der keiner ist.
-  # Bekommt die Schwester-App ihren Release-Weg, gehört sie hier ergänzt.
+  # Die myBestDays-App ist am 17.09.2026 aus dem Repo gezogen worden (der
+  # Marktplatz liegt nur noch lokal). Bis dahin stand hier, dass sie weder
+  # Keystore noch Firebase-App hatte und deshalb nicht mitlief.
   mobile-android-release:
     name: Mobile (Android-Release-Build ${{ matrix.app }})
     needs: [betroffen]
@@ -985,9 +984,6 @@ jobs:
     # Job faellt so ein Bruch erst beim VERTEILEN auf, also dann, wenn man
     # ausliefern will.
     #
-    # `mobile-bestdays` fehlt hier bewusst: die App hat noch keinen
-    # Release-Workflow-Lauf hinter sich und keinen eigenen Bereich; sie kommt
-    # dazu, sobald sie ausgeliefert wird (Reihenfolge nach ADR-0022).
     # KEIN Job-`if` mit `matrix`: GitHub wertet Job-Bedingungen aus, BEVOR die
     # Matrix existiert — `matrix.kuerzel` ist dort schlicht unbekannt und der
     # ganze Workflow gilt als ungueltig ("Unrecognized named-value: 'matrix'",
@@ -1198,7 +1194,7 @@ jobs:
           set -e
           # NOCH NICHT auf der Liste: lib/rechtliches.ts (Impressum, CVR-Nummer,
           # Adressen der Rechtsdokumente). Die Datei existiert bisher nur in
-          # mobile-nextdays; sobald myBestDays sie ebenfalls bekommt, gehört sie
+          # mobile-nextdays; sobald eine weitere App sie bekommt, gehört sie
           # hierher — hinter beiden Apps steht EIN Anbieter, und eine driftende
           # Anbieterkennzeichnung ist ein Rechtsmangel, kein Schönheitsfehler.
           # components/Splash.tsx ist am 09.09.2026 ZURUECK auf die Liste
@@ -1219,9 +1215,11 @@ jobs:
           # Apps, zeigt genau sie dem Kunden interne Pfade. Das ist kein
           # UI-Geschmack (ADR-0016), sondern ein Zustand.
           #
-          # DREI Apps seit ADR-0022 (mobile-owner). Verglichen wird jede App
-          # gegen mobile-bestdays als Referenz — paarweise waere die dritte
-          # unbemerkt gedriftet, solange die ersten zwei sich decken.
+          # ZWEI Apps, seit myBestDays am 17.09.2026 aus dem Repo gezogen
+          # wurde (der Marktplatz liegt nur noch lokal). Referenz ist jetzt
+          # mobile-nextdays. Kommt eine dritte App zurueck, wird wieder JEDE
+          # gegen die Referenz geprueft — paarweise waere die dritte unbemerkt
+          # gedriftet, solange die ersten zwei sich decken.
           #
           # `lib/datei.ts` steht in der ZWEITEN Liste: mobile-owner fuehrt sie
           # bewusst NICHT (die App laedt nichts hoch, also traegt sie auch den
@@ -1235,14 +1233,14 @@ jobs:
                    components/Fehlergrenze.tsx components/Splash.tsx \
                    theme/tokens.ts theme/ThemeProvider.tsx \
                    navigation/tab-style.tsx; do
-            for app in mobile-nextdays mobile-owner; do
-              diff -u "mobile-bestdays/$f" "$app/$f"
+            for app in mobile-owner; do
+              diff -u "mobile-nextdays/$f" "$app/$f"
             done
           done
-          # Nur in den beiden Apps mit Upload-Pfad.
-          for f in lib/datei.ts; do
-            diff -u "mobile-bestdays/$f" "mobile-nextdays/$f"
-          done
+          # `lib/datei.ts` gibt es nur in mobile-nextdays (mobile-owner laedt
+          # nichts hoch). Mit nur noch zwei Apps bleibt hier nichts zu
+          # vergleichen — die Gegenprobe unten haelt die Ausnahme trotzdem
+          # wach, damit sie nicht zur stillen Luecke wird.
           # Gegenprobe, dass die Ausnahme eine Ausnahme BLEIBT und nicht zur
           # stillen Luecke wird: liegt die Datei doch in mobile-owner, muss sie
           # auch verglichen werden — dann gehoert sie in die erste Liste.
@@ -1251,7 +1249,7 @@ jobs:
             exit 1
           fi
 
-          # PAARWEISE, ohne mobile-bestdays: Der Eigentuemer-Chat (0611) hat
+          # Der Eigentuemer-Chat (0611) hat
           # zwei Schwesterdateien, die es im Marktplatz NICHT gibt und geben
           # soll — dort schreibt kein Eigentuemer mit seiner Verwaltung. Die
           # Referenzliste oben kann sie deshalb nicht pruefen.
@@ -1302,27 +1300,27 @@ jobs:
           # verschiedene native Module bei gleichem JS — ein Fehler, der sich
           # dann nur in EINER App reproduziert.
           #
-          # DREI Apps seit ADR-0022. `mobile-owner` fuehrt bewusst KEINEN
-          # Dateiwaehler (kein Upload-Pfad) — ein Paket, das eine App nicht
-          # hat, wird dort uebersprungen ("null"), statt den Job zu faellen.
-          # Was sie HAT, muss aber dieselbe Fassung sein: zwei Fassungen heissen
-          # zwei verschiedene native Module bei gleichem JS, und ein Bug
-          # reproduziert sich dann nur in EINER App.
+          # ZWEI Apps, seit myBestDays am 17.09.2026 aus dem Repo gezogen
+          # wurde. Referenz ist jetzt mobile-nextdays. `mobile-owner` fuehrt
+          # bewusst KEINEN Dateiwaehler (kein Upload-Pfad) — ein Paket, das
+          # eine App nicht hat, wird dort uebersprungen ("null"), statt den Job
+          # zu faellen. Was sie HAT, muss aber dieselbe Fassung sein: zwei
+          # Fassungen heissen zwei verschiedene native Module bei gleichem JS,
+          # und ein Bug reproduziert sich dann nur in EINER App.
           for p in react react-native @supabase/supabase-js \
                    @react-navigation/native react-native-keychain \
                    @react-native-documents/picker; do
-            a=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-bestdays/package.json)
-            for app in mobile-nextdays mobile-owner; do
+            a=$(jq -r --arg p "$p" '.dependencies[$p]' mobile-nextdays/package.json)
+            for app in mobile-owner; do
               b=$(jq -r --arg p "$p" '.dependencies[$p]' "$app/package.json")
               [ "$b" = "null" ] && continue
-              [ "$a" = "$b" ] || { echo "$p: $a (bestdays) != $b ($app)"; exit 1; }
+              [ "$a" = "$b" ] || { echo "$p: $a (nextdays) != $b ($app)"; exit 1; }
             done
           done
 
-          # PAARWEISE, ohne mobile-bestdays: Die Krypto-Pakete des
-          # Eigentuemer-Chats (0611) gibt es im Marktplatz nicht — dort
-          # schreibt kein Eigentuemer mit seiner Verwaltung. Die Schleife oben
-          # koennte sie deshalb nur ueberspringen.
+          # Die Krypto-Pakete des Eigentuemer-Chats (0611) fuehrt nur die
+          # Eigentuemer-App; die Schleife oben koennte sie in mobile-nextdays
+          # nur ueberspringen.
           #
           # Gleichstand ist hier besonders wichtig: `chat-krypto.ts` ist eine
           # byte-identische Schwesterdatei, laeuft aber gegen NATIVE Module.
@@ -1421,15 +1419,12 @@ jobs:
       dac7-staging: ${{ steps.bereiche.outputs.dac7-staging }}
       packages: ${{ steps.bereiche.outputs.packages }}
       web: ${{ steps.bereiche.outputs.web }}
-      plattform: ${{ steps.bereiche.outputs.plattform }}
-      gastgeber: ${{ steps.bereiche.outputs.gastgeber }}
       admin: ${{ steps.bereiche.outputs.admin }}
       partner: ${{ steps.bereiche.outputs.partner }}
       builder: ${{ steps.bereiche.outputs.builder }}
       marketing: ${{ steps.bereiche.outputs.marketing }}
       storybook: ${{ steps.bereiche.outputs.storybook }}
       kanal-enums: ${{ steps.bereiche.outputs.kanal-enums }}
-      mobile-bestdays: ${{ steps.bereiche.outputs.mobile-bestdays }}
       mobile-nextdays: ${{ steps.bereiche.outputs.mobile-nextdays }}
       mobile-owner: ${{ steps.bereiche.outputs.mobile-owner }}
       mobile-android-nextdays: ${{ steps.bereiche.outputs.mobile-android-nextdays }}
@@ -1552,14 +1547,6 @@ jobs:
             kind: dockerfile
             context: marketing
             dockerfile: marketing/Dockerfile
-          - app: nextdays-plattform
-            kind: dockerfile
-            context: .
-            dockerfile: plattform/Dockerfile
-          - app: nextdays-gastgeber
-            kind: dockerfile
-            context: .
-            dockerfile: gastgeber/Dockerfile
           - app: nextdays-admin
             kind: dockerfile
             context: .

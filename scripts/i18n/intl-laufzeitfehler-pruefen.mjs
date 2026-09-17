@@ -28,7 +28,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const WURZEL = path.resolve(import.meta.dirname, "../..");
-const APPS = ["web", "plattform", "gastgeber", "builder", "admin", "marketing", "partner"];
+const APPS = ["web", "builder", "admin", "marketing", "partner"];
 
 /** Platzhalternamen eines ICU-Textes — ohne Plural-/Select-Zweignamen. */
 function platzhalter(text) {

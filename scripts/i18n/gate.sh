@@ -4,10 +4,10 @@
 # Läuft alle Prüfungen, die vor dem Ausliefern grün sein müssen, und bricht
 # beim ersten Fehler ab. Gedacht für den Aufruf vor Commit/Deploy und in CI.
 #
-# Aufruf: scripts/i18n/gate.sh gastgeber
+# Aufruf: scripts/i18n/gate.sh web
 set -euo pipefail
 
-APP="${1:-gastgeber}"
+APP="${1:-web}"
 WURZEL="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$WURZEL"
 

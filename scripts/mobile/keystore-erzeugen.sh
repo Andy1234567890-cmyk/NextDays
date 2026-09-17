@@ -25,9 +25,9 @@ app="${1:-}"
 # falschem Namen anlegen — der wäre später von einem echten nicht zu
 # unterscheiden.
 case "$app" in
-  mobile-nextdays|mobile-bestdays|mobile-owner) ;;
+  mobile-nextdays|mobile-owner) ;;
   *)
-    echo "Aufruf: $0 <mobile-nextdays|mobile-bestdays|mobile-owner>" >&2
+    echo "Aufruf: $0 <mobile-nextdays|mobile-owner>" >&2
     exit 2
     ;;
 esac
@@ -46,7 +46,6 @@ app_id="$(sed -n 's/.*applicationId "\([^"]*\)".*/\1/p' "$gradle" | head -1)"
 # Keystore und konnte fuer die veroeffentlichte App kein Update mehr signieren.
 case "$app" in
   mobile-nextdays) praefix="MYNEXTDAYS" ;;
-  mobile-bestdays) praefix="MYBESTDAYS" ;;
   mobile-owner)    praefix="MYNEXTDAYSOWNER" ;;
 esac
 

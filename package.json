@@ -5,8 +5,6 @@
   "description": "NextDays Monorepo — 1 FastAPI-Backend (apps/api) + mehrere eigenständige Frontends (Top-Level) + geteilte packages/ (ADR-0015/0016). Package-Manager: bun (Workspaces).",
   "workspaces": [
     "web",
-    "plattform",
-    "gastgeber",
     "admin",
     "partner",
     "marketing",

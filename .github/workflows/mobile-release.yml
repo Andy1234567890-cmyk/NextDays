@@ -9,12 +9,12 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        # NUR myNextDays: fuer mobile-bestdays gibt es (Stand 19.08.2026) weder
+        # NUR myNextDays: fuer die myBestDays-App gab es (Stand 19.08.2026) weder
         # eigene Keystore-Secrets noch eine Firebase-App. Waere sie hier
         # waehlbar, wuerde ein Lauf sie mit dem myNextDays-Schluessel signieren
         # und an myNextDays-Tester verteilen — beides falsch. Wenn die
         # Schwester-App verteilt werden soll, bekommt sie ihren eigenen
-        # Keystore (scripts/mobile/keystore-erzeugen.sh mobile-bestdays), eine
+        # Keystore (scripts/mobile/keystore-erzeugen.sh <app>), eine
         # eigene Firebase-App und eigene Secrets; dann hier ergaenzen.
         description: "Welche App"
         required: true

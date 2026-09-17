@@ -12,8 +12,6 @@
 # gegeneinander — eine Abweichung ist ein Fehler, keine Warnung.
 jt5gdgragv2jzivpx4oiqfir|nextdays-kong
 y13cm245vlmvq3yv38gdbtat|nextdays-marketing
-rh4f581hqashrnmiwnxb6pcu|nextdays-plattform
-uo0irbk8eno9c9qonngzqwy2|nextdays-gastgeber
 oznosa2xmefzmfeqidezodm6|nextdays-admin
 u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook
 cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase

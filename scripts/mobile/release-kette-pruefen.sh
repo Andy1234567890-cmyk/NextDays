@@ -20,7 +20,6 @@ cd "$wurzel"
 # app|workflow|tester-gruppe|secret-praefix
 APPS=(
   "mobile-nextdays|.github/workflows/mobile-release.yml|beta-tester|MYNEXTDAYS"
-  "mobile-bestdays|.github/workflows/mobile-release-bestdays.yml|beta-tester-bestdays|MYBESTDAYS"
   "mobile-owner|.github/workflows/mobile-release-owner.yml|beta-tester-owner|MYNEXTDAYSOWNER"
 )
 

@@ -58,7 +58,7 @@ import { join } from "node:path";
 // Altbestand, den dieses Gate in einem Zug rot färben würde, ohne dass jemand
 // ihn in derselben Änderung aufräumen kann. Sobald er abgetragen ist, gehört
 // "web" in diese Liste.
-const APPS = ["gastgeber", "partner", "marketing", "packages"];
+const APPS = ["partner", "marketing", "packages"];
 
 // VERWAISTE DATEIEN — geprüft wird, was ausgeliefert wird.
 //
@@ -74,9 +74,6 @@ const APPS = ["gastgeber", "partner", "marketing", "packages"];
 // entfernt oder wiederbelebt, verschwindet dieser Eintrag mit ihm; wird es
 // wiederbelebt, muss es zuerst durch dieses Gate.
 const VERWAIST = new Set([
-  "gastgeber/components/konto/dac7-meldung.tsx",
-  "gastgeber/lib/dac7.ts",
-  "gastgeber/lib/dac7-actions.ts",
 ]);
 
 // Verzeichnisse, die nie Quellcode dieser Art enthalten.

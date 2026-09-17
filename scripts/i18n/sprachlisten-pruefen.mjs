@@ -14,11 +14,11 @@
 // die Stelle NICHTS — kein Fehler, keine Meldung, nur eine Lücke bei genau
 // dieser einen Sprache, während die anderen 23 stimmen.
 //   5. web/i18n/locales.ts            — LOCALE_FLAGS (Iconify) + LOCALE_FLAG_EMOJI
-//   6. plattform/i18n/locales.ts      — dieselben zwei Listen für den Marktplatz
-//   7. builder/lib/texte.ts           — SPRACH_FLAGGEN + SPRACH_FLAGGEN_ICON
+//   6. builder/lib/texte.ts           — SPRACH_FLAGGEN + SPRACH_FLAGGEN_ICON
 //
-// NICHT hier geprüft: gastgeber/i18n/locales.ts (44 Sprachen statt 24, eigene
-// Menge) und marketing/components/flagge.tsx (gezeichnete SVG statt Liste).
+// NICHT hier geprüft: marketing/components/flagge.tsx (gezeichnete SVG statt
+// Liste). Die beiden Marktplatz-Listen (plattform, gastgeber) standen hier bis
+// zum 17.09.2026; seither liegt myBestDays nur noch lokal.
 //
 // Ein gemeinsames Paket wäre der schönere Weg, aber der Renderer und die API
 // teilen keine Laufzeit — die Python-Seite müsste die Liste ohnehin doppeln.
@@ -91,18 +91,6 @@ const flaggen = {
   "web LOCALE_FLAG_EMOJI": codes(
     "Dashboard-Flaggen (Emoji)",
     "web/i18n/locales.ts",
-    /export const LOCALE_FLAG_EMOJI[\s\S]*?\{([\s\S]*?)\n\};/,
-    "objekt",
-  ),
-  "plattform LOCALE_FLAGS": codes(
-    "Marktplatz-Flaggen",
-    "plattform/i18n/locales.ts",
-    /export const LOCALE_FLAGS[\s\S]*?\{([\s\S]*?)\n\};/,
-    "objekt",
-  ),
-  "plattform LOCALE_FLAG_EMOJI": codes(
-    "Marktplatz-Flaggen (Emoji)",
-    "plattform/i18n/locales.ts",
     /export const LOCALE_FLAG_EMOJI[\s\S]*?\{([\s\S]*?)\n\};/,
     "objekt",
   ),

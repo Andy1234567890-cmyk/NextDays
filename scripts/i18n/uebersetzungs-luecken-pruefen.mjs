@@ -125,7 +125,7 @@ const MINDEST_VERGLEICHE = 12;
  *  Ein Schlüssel, der nur dort verbraucht wird, hat in `web` KEINE Aufrufstelle
  *  und wäre sonst ein Fehlalarm. Deshalb stehen die Spiegel-Ziele mit in der
  *  Suche, und die gespiegelten Namensräume zusätzlich als gesperrter Präfix. */
-const SUCHORTE = ["web", "scripts/i18n", "scripts/mobile", "plattform/lib"];
+const SUCHORTE = ["web", "scripts/i18n", "scripts/mobile"];
 
 /** Namensräume, die per Sync-Skript gespiegelt werden und deren Schlüssel
  *  deshalb nie direkt in einer Aufrufstelle stehen. Bewusst hier und nicht in

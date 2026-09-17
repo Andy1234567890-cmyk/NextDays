@@ -33,7 +33,7 @@ import path from "node:path";
 const HIER = path.dirname(fileURLToPath(import.meta.url));
 const WURZEL = path.resolve(HIER, "..", "..");
 const KATALOGE = ["amenities", "eigeneAusstattung"];
-const APPS = ["mobile-nextdays", "mobile-bestdays", "mobile-owner"];
+const APPS = ["mobile-nextdays", "mobile-owner"];
 const ZIEL = path.join("lib", "ausstattung.ts");
 
 const pruefen = process.argv.includes("--pruefen");

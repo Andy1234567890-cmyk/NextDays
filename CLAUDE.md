@@ -74,6 +74,19 @@ eine weitere zu erfinden. Verfügbarkeit an die Portale ist deshalb eine ZAHL
 (freie Einheiten), nicht 0/1.
 
 ## Zwei Marken (UNVERHANDELBAR) — myNextDays ≠ myBestDays
+
+> **Stand 17.09.2026 — myBestDays liegt NUR NOCH LOKAL.** Die drei Anwendungen
+> `plattform`, `gastgeber` und `mobile-bestdays` sind aus diesem Repo gezogen
+> worden und stehen unter `~/mybestdays-lokal/`; die Coolify-Anwendungen
+> `nextdays-plattform` und `nextdays-gastgeber` samt ihren Domains
+> (mybestdays.dk, www.mybestdays.dk, gastgeber.mybestdays.dk) sind gelöscht,
+> die Umgebungsvariablen gesichert unter `~/mybestdays-sicherung/`.
+> Was HIER bleibt, ist die Marktplatz-Seite des PMS: der Vertriebskanal
+> „Plattform" (`channel='portal'`, `ota_name='myBestDays'`), die Gast-Endpunkte
+> in `apps/api` und die Kanal-Karte im Kanalmanager. Die Marken-Regel unten
+> gilt unverändert für Texte und Labels — nur die Apps sind nicht mehr Teil
+> dieses Repos. Wer sie sucht: sie sind nicht gelöscht, sie sind umgezogen.
+
 - **myNextDays** = das PMS, der Channel-Manager und die Marketing-Seite
   (`web`, `apps/api`, `marketing`, `admin`, `builder`, `storybook`,
   `mobile-nextdays`, `partner` = Partner-Dashboard des Affiliate-Programms,
