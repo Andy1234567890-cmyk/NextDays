@@ -1425,13 +1425,43 @@ class ContentSyncMixin:
         self, db: Client, tenant_id: str, property_id: str,
         status: str, error: str | None,
     ) -> None:
+        """Sync-Stempel setzen — NUR auf die OFFENE Zuordnung des Objekts.
+
+        `deleted_at is null` ist hier kein Schoenheitsfilter, sondern Pflicht:
+
+        (1) Fachlich: `last_sync_status`/`last_sync_error` einer GESCHLOSSENEN
+            Registrierung sind der Beleg, wie sie endete — dieselbe Begruendung,
+            mit der `oauth_channels._mapping_schliessen` beide Felder bewusst
+            stehen laesst. Ein Objekt kann mehrere geschlossene Zeilen tragen
+            (Hotel/Reconnect); ohne Filter traf das Update sie alle mit.
+
+        (2) Technisch: seit 0427 verbietet
+            `channex_property_map_geschlossen_nicht_aktiv` die Kombination
+            geschlossen + `sync_enabled`. Der Constraint ist NOT VALID, greift
+            also nicht beim Anlegen, aber bei JEDEM Update einer solchen Zeile.
+            Genau das ist live passiert (gemessen 17.09.2026, Betrieb AirSmil,
+            FeWo *Stjerneskud*): zwei Alt-Zeilen tragen die Kombination noch,
+            das Update traf sie mit, und das Statement kippte mit 23514 — samt
+            der gesunden Zeile. Weil dieser Stempel HINTER der ganzen
+            Channex-Kette steht, lief jeder Versuch vorher komplett durch: 45
+            Jobs, 447 Versuche seit 24.08.2026, jeder mit vollem Content-Push
+            gegen das Budget und anschliessendem Tod. Unsichtbar blieb es, weil
+            der Reconcile den ok-Stempel der AKTIVEN Zeile separat auffrischt
+            (`property_mapping._sync_stamp_stale`) — der Kanalmanager stand
+            grue, waehrend die Jobs auf `dead` liefen (Wurzel 5).
+
+        Der Filter behebt die Ursache im Schreibpfad. Die zwei Alt-Zeilen selbst
+        raeumt der Betreiber (das SQL steht im Kopf von 0427).
+        """
         db.table("channex_property_map").update(
             {
                 "last_sync_at": datetime.now(UTC).isoformat(),
                 "last_sync_status": status,
                 "last_sync_error": error,
             }
-        ).eq("property_id", property_id).eq("tenant_id", tenant_id).execute()
+        ).eq("property_id", property_id).eq("tenant_id", tenant_id).is_(
+            "deleted_at", "null"
+        ).execute()
 
     @staticmethod
     def _euro_to_cents(amount: object) -> int | None:
