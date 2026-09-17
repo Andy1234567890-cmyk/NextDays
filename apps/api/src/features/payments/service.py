@@ -1939,20 +1939,27 @@ class PaymentsService:
         self._set_reservation_payment_status(db, bal["reservation_id"], "paid")
         return {"payment_id": payment_id, "status": "done"}
 
-    def due_balance_payment_ids(self, *, now: datetime | None = None) -> list[str]:
-        """IDs aller fälligen, noch offenen Restzahlungen (für den Worker). Global
-        über alle Tenants — der Worker ruft je ID charge_due_balance auf."""
+    def due_balance_payments(
+        self, *, now: datetime | None = None
+    ) -> list[tuple[str, str]]:
+        """Fällige, noch offene Restzahlungen als (payment_id, tenant_id).
+
+        Global über alle Tenants — der Worker belastet je Zeile. Der MANDANT
+        gehört mit in die Antwort, weil er entscheidet, mit welchem Stripe-Client
+        belastet wird (`payments/welt.py`). Vorher gab die Methode nur IDs
+        zurück; der Worker baute daraus EINEN Service ohne Mandant und damit
+        für jeden Sandbox-Betrieb den falschen Client (17.09.2026)."""
         db = self._db_or_fail()
         cutoff = (now or datetime.now(UTC)).isoformat()
         rows = (
             db.table("payments")
-            .select("id")
+            .select("id, tenant_id")
             .eq("type", "balance")
             .eq("scheduled_status", "scheduled")
             .lte("due_at", cutoff)
             .execute()
         ).data or []
-        return [r["id"] for r in rows]
+        return [(str(r["id"]), str(r["tenant_id"])) for r in rows]
 
     # --- Kaution (Stufe B) ---------------------------------------------------
 

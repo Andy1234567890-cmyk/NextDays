@@ -808,6 +808,15 @@ def run_verbund_auszahlungen(db: Client, *, heute: date | None = None) -> dict[s
     Idempotency-Key aus Konto, Währung, Betrag und Kalendertag, sodass ein
     Wiederholungslauf am selben Tag keine zweite Auszahlung erzeugt (Wurzel 2).
 
+    JE BETRIEB AUCH DIE STRIPE-WELT (17.09.2026). Dieser Lauf geht über ALLE
+    Betriebe; ein fester Client wäre für jeden Sandbox-Mandanten der falsche.
+    Live im Worker aufgeschlagen, eine Stunde nach dem ersten Marktplatz-Konto:
+    ``The account acct_… was a test account created with a testmode key, and
+    therefore can only be used with testmode keys.`` — der Aufruf scheiterte
+    laut, wie in `payments/welt.py` beschrieben, aber er scheiterte eben, und
+    dieser Betrieb wäre nie ausgezahlt worden. Der Client wird deshalb IN der
+    Schleife geholt, nicht davor.
+
     Rückgabe: Zählwerk für das Log des Aufrufers.
     """
     tag = heute or datetime.now(UTC).date()
@@ -850,8 +859,11 @@ def run_verbund_auszahlungen(db: Client, *, heute: date | None = None) -> dict[s
         ):
             bilanz["uebersprungen"] += 1
             continue
+        # Der Client dieses Betriebs — `None` heisst „der gewohnte Live-Weg"
+        # und wird von den Helfern lazy aufgeloest.
+        client = welt.client_fuer(db, tenant_id)
         try:
-            saldo = sc.retrieve_balance(acct=acct)
+            saldo = sc.retrieve_balance(acct=acct, client=client)
         except Exception as exc:  # noqa: BLE001 — je Betrieb isoliert
             log.warning(
                 "verbund_auszahlung_saldo_fehlgeschlagen",
@@ -878,6 +890,7 @@ def run_verbund_auszahlungen(db: Client, *, heute: date | None = None) -> dict[s
                         f"payout:{acct}:{currency}:{betrag}:{tag.isoformat()}"
                     ),
                     metadata={"tenant_id": tenant_id, "quelle": "rhythmus"},
+                    client=client,
                 )
                 bilanz["ausgezahlt"] += 1
                 log.info(

@@ -306,3 +306,127 @@ def test_v2_uebernimmt_den_gewerblichen_typ() -> None:
     """Privat UND gewerblich muessen gehen — der Typ bestimmt die KYC-Felder."""
     stripe, _ = _anlegen(sandbox=True, business_type="company")
     assert stripe.aufrufe[0][1]["identity"]["entity_type"] == "company"
+
+
+# --- Hintergrundlaeufe: die Welt gilt je BETRIEB, nicht je Lauf --------------
+# Live im Worker aufgeschlagen (17.09.2026), eine Stunde nach dem ersten
+# Marktplatz-Konto:
+#   „The account acct_1UGJ4D… was a test account created with a testmode key,
+#    and therefore can only be used with testmode keys."
+# Der Aufruf scheiterte LAUT, wie dieses Modul es verspricht — aber er
+# scheiterte, und der Betrieb waere nie ausgezahlt worden. Ursache: Laeufe, die
+# ueber ALLE Betriebe gehen, bauten EINEN Client vor der Schleife.
+
+
+class _Zeile:
+    def __init__(self, daten: list[dict]) -> None:
+        self.data = daten
+
+
+class _Tabelle:
+    def __init__(self, daten: list[dict]) -> None:
+        self._daten = daten
+
+    def select(self, *_s: str) -> "_Tabelle":
+        return self
+
+    def eq(self, *_a: object) -> "_Tabelle":
+        return self
+
+    def lte(self, *_a: object) -> "_Tabelle":
+        return self
+
+    def execute(self) -> _Zeile:
+        return _Zeile(self._daten)
+
+
+class _ZahlungsDB:
+    def __init__(self, zeilen: list[dict]) -> None:
+        self._zeilen = zeilen
+        self.gelesen: list[str] = []
+
+    def table(self, name: str) -> _Tabelle:
+        self.gelesen.append(name)
+        return _Tabelle(self._zeilen)
+
+
+def test_faellige_restzahlungen_tragen_ihren_betrieb() -> None:
+    """Ohne den Mandanten kann der Lauf die Welt nicht waehlen."""
+    db = _ZahlungsDB(
+        [{"id": "pay-1", "tenant_id": TENANT}, {"id": "pay-2", "tenant_id": "t-2"}]
+    )
+    dienst = PaymentsService(service_client=db)  # type: ignore[arg-type]
+    assert dienst.due_balance_payments() == [("pay-1", TENANT), ("pay-2", "t-2")]
+
+
+def test_auszahlungslauf_fragt_die_welt_JE_betrieb(monkeypatch) -> None:
+    """Der Lauf geht ueber alle Betriebe — er muss die Entscheidung so oft
+    treffen, wie es Betriebe gibt, nicht einmal fuer alle."""
+    from src.features.payouts import stripe_saldo
+
+    gefragt: list[str | None] = []
+    monkeypatch.setattr(
+        stripe_saldo.welt,
+        "client_fuer",
+        lambda _db, tenant_id: gefragt.append(tenant_id) or None,
+    )
+    monkeypatch.setattr(
+        stripe_saldo.sc,
+        "retrieve_balance",
+        lambda **_k: {"available": []},
+    )
+    # Was danach ausgezahlt wuerde, ist hier nicht die Frage — nur, mit welchem
+    # Client gelesen wird.
+    monkeypatch.setattr(
+        stripe_saldo.sicherheitseinlage, "auszahlbar", lambda *_a, **_k: {}
+    )
+
+    betriebe = [
+        {"tenant_id": TENANT, "stripe_account_id": "acct_a",
+         "stripe_payouts_enabled": True},
+        {"tenant_id": "t-2", "stripe_account_id": "acct_b",
+         "stripe_payouts_enabled": True},
+    ]
+    einstellungen = [{"verbund_interval": "daily"}]
+
+    class _T:
+        def __init__(self, daten: list[dict]) -> None:
+            self._d = daten
+
+        def select(self, *_s: str) -> "_T":
+            return self
+
+        def eq(self, *_a: object) -> "_T":
+            return self
+
+        def limit(self, *_a: object) -> "_T":
+            return self
+
+        @property
+        def not_(self) -> "_T":
+            return self
+
+        def is_(self, *_a: object) -> "_T":
+            return self
+
+        def in_(self, *_a: object) -> "_T":
+            return self
+
+        def gte(self, *_a: object) -> "_T":
+            return self
+
+        def lte(self, *_a: object) -> "_T":
+            return self
+
+        def order(self, *_a: object, **_k: object) -> "_T":
+            return self
+
+        def execute(self) -> _Zeile:
+            return _Zeile(self._d)
+
+    class _DBLauf:
+        def table(self, name: str) -> _T:
+            return _T(betriebe if name == "tenant_billing_profile" else einstellungen)
+
+    stripe_saldo.run_verbund_auszahlungen(_DBLauf())  # type: ignore[arg-type]
+    assert gefragt == [TENANT, "t-2"]

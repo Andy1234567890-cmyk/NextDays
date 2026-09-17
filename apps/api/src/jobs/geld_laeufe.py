@@ -62,10 +62,15 @@ def charge_due_balances(db: Client) -> None:
         PaymentsService,
     )
 
-    svc = PaymentsService(service_client=db)
-    ids = svc.due_balance_payment_ids()
+    # EIN Service nur zum Auflisten — er spricht dabei nicht mit Stripe.
+    faellig = PaymentsService(service_client=db).due_balance_payments()
     charged = 0
-    for pid in ids:
+    for pid, tenant_id in faellig:
+        # Je Zeile ein Service MIT Mandant: er entscheidet, welche Stripe-Welt
+        # gilt (`payments/welt.py`). Ohne den Mandanten belastete der Lauf jede
+        # Zeile mit dem Live-Client — für einen Sandbox-Betrieb der falsche, und
+        # seine Restzahlung wäre nie eingezogen worden (17.09.2026).
+        svc = PaymentsService(service_client=db, tenant_id=tenant_id)
         try:
             svc.charge_due_balance(payment_id=pid)
             charged += 1
@@ -75,14 +80,14 @@ def charge_due_balances(db: Client) -> None:
             # nach dem Setzen der Variablen eingezogen.
             _mangel(
                 "balance_tick_nicht_konfiguriert", exc,
-                faellig=len(ids), eingezogen=charged,
+                faellig=len(faellig), eingezogen=charged,
             )
             return
         except PaymentsError as exc:
             # needs_action/failed hat charge_due_balance bereits persistiert.
             log.warning("balance_charge_failed", payment_id=pid, error=exc.message)
-    if ids:
-        log.info("balance_tick", due=len(ids), charged=charged)
+    if faellig:
+        log.info("balance_tick", due=len(faellig), charged=charged)
 
 
 def run_payouts(db: Client) -> None:
