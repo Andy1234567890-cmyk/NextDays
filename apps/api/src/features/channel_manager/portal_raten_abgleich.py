@@ -528,9 +528,14 @@ class PortalRatenAbgleichMixin:
         )
         namen = self._plannamen_je_channex_id(db, tenant_id, property_id)
         belegt: set[str] = set()
-        # Raten, deren eigener Plan nur als Attrappe zugeordnet ist. Sie sind
+        # Raten, deren eigener Plan NUR als Attrappe zugeordnet ist. Sie sind
         # weder versorgt (kein Traeger) noch anzulegen (der Plan existiert) —
         # aber sie sind ARBEIT: erst der Content-Sync heilt die Zuordnung.
+        # Das „nur" wird erst beim Zurueckgeben durchgesetzt (s. `return`):
+        # innerhalb der Schleife stuende es unter Reihenfolge-Vorbehalt, weil
+        # der vollwertige Eintrag derselben Rate auch NACH der Attrappe kommen
+        # kann — bei „FeWo *Stjerneskud*" tut er das nicht, bei
+        # „Feriehus Graevlinge" schon.
         attrappen: set[str] = set()
         # Je (Plan, Zimmer) die EINE primaere Rate, die ein namensfremder Plan
         # behalten darf — siehe Docstring, Punkt 2.
@@ -572,7 +577,28 @@ class PortalRatenAbgleichMixin:
             if schluessel not in behalten:
                 behalten.add(schluessel)
                 belegt.add(code)
-        return belegt, attrappen, kanal_eintraege
+        # NUR-Attrappen: eine Rate, die daneben einen vollwertigen Traeger hat,
+        # ist versorgt und KEINE Arbeit (Wurzel 2 — der zweite Lauf muss nichts
+        # mehr tun).
+        #
+        # Ohne diesen Abzug stand derselbe Ratencode in BEIDEN Mengen, und das
+        # war eine Endlosschleife zwischen zwei Definitionen von „versorgt":
+        # hier zaehlt jeder EINTRAG (`_eintrag_traegt_restriktionen`), in
+        # `objekt_kanal.freigegebene_plaene_zuordnen` zaehlt der PLAN
+        # (`_eintrag_ist_vollwertig` ueber alle Eintraege). Der Zaehler meldete
+        # also Arbeit, die der Heiler als erledigt uebersprang — und weil
+        # `zu_heilen` einen Content-Sync einreiht, lief das taeglich neu.
+        #
+        # Live gemessen am 17.09.2026 ueber alle 20 Objekte des Beta-Betriebs
+        # (die echte Funktion gegen die echten Kanaele aufgerufen, nicht
+        # nachgebaut): genau FUENF Objekte standen auf `zu_heilen = 1`, und
+        # genau diese fuenf trugen 31 Content-Syncs in sieben Tagen, waehrend
+        # die uebrigen fuenfzehn bei null lagen. Mit dem Abzug stehen alle
+        # zwanzig auf 0.
+        #
+        # Fuer `portal_raten_auswahl._rate_eintrag` aendert sich nichts: der
+        # liest `belegt ODER attrappen`, und die Vereinigung bleibt gleich.
+        return belegt, attrappen - belegt, kanal_eintraege
 
     def _verwaiste_kanal_eintraege_entfernen(
         self, *, tenant_id: str, property_id: str, portal: str,
