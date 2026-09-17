@@ -109,6 +109,7 @@ def handle_stripe_event(
             event_type,
             obj,
             now_iso,
+            event_created=_ereigniszeit(event),
             account=str(account) if account else None,
             event_id=event_id,
         )
@@ -130,6 +131,7 @@ def _dispatch_stripe_event(
     *,
     account: str | None = None,
     event_id: str | None = None,
+    event_created: int | None = None,
 ) -> dict[str, str] | None:
     match event_type:
         case "checkout.session.completed":
@@ -283,7 +285,9 @@ def _dispatch_stripe_event(
                 "identity.verification_session.processing" | \
                 "identity.verification_session.requires_input" | \
                 "identity.verification_session.canceled":
-            _handle_identity_event(db, event_type, obj, now_iso)
+            _handle_identity_event(
+                db, event_type, obj, now_iso, event_created=event_created
+            )
         case "customer.subscription.created" | "customer.subscription.updated" | \
                 "customer.subscription.deleted":
             _handle_subscription_event(db, obj)
@@ -568,6 +572,17 @@ def _meta_get(meta: Any, key: str) -> str | None:  # noqa: ANN401
 # Stripe-Identity-Event → users.identity_status. Event-Typ bestimmt den Status
 # 1:1 (kein Fake-Default, Wurzel 5). Reihenfolge der Events ist nicht garantiert
 # → wir setzen schlicht den zum Event gehörenden Status.
+def _ereigniszeit(event: Mapping[str, Any]) -> int | None:
+    """Der Zeitpunkt des STRIPE-Ereignisses (`created`), nicht unsere Uhr.
+
+    Wurzel 5b: `now_iso` beschreibt, wann WIR das Ereignis verarbeitet haben.
+    Bei einer Wiederholung liegt das beliebig weit hinter dem echten Zeitpunkt —
+    am 17.09.2026 eine Stunde.
+    """
+    roh = _field(event, "created")
+    return int(roh) if isinstance(roh, int | float) else None
+
+
 _IDENTITY_STATUS = {
     "identity.verification_session.verified": "verified",
     "identity.verification_session.processing": "processing",
@@ -576,8 +591,48 @@ _IDENTITY_STATUS = {
 }
 
 
+def _identity_ereignis_veraltet(
+    db: Client, user_id: str, tenant_id: str, ereignis_iso: str
+) -> bool:
+    """Ist dieses Ereignis älter als das, das den aktuellen Stand gesetzt hat?
+
+    Stripe garantiert KEINE Zustellreihenfolge und wiederholt beliebig. Live am
+    17.09.2026: nach der Reparatur der Webhook-Geheimnisse stellte Stripe den
+    Rückstand nach — `processing` der Sitzung von 12:33 traf NACH `verified` der
+    Sitzung von 12:47 ein und überschrieb sie. Die Kontoseite zeigte „Wird
+    geprüft …", während bei Stripe beide Sitzungen längst verifiziert waren.
+    """
+    zeile = (
+        db.table("users")
+        .select("identity_event_at")
+        .eq("id", user_id)
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data
+    bisher = zeile[0].get("identity_event_at") if zeile else None
+    if not bisher:
+        # Noch kein Zeitstempel (Erstereignis oder Altbestand) → annehmen. Kein
+        # geratener Ersatzwert, der echte Ereignisse aussperren würde (Wurzel 4).
+        return False
+    try:
+        return datetime.fromisoformat(str(bisher)) > datetime.fromisoformat(
+            ereignis_iso
+        )
+    except ValueError:
+        # Unlesbarer Zeitstempel darf den Hauptpfad nicht kippen (Wurzel 5) —
+        # dann gilt das neue Ereignis, wie vor dieser Prüfung.
+        log.warning("identity_ereigniszeit_unlesbar", wert=str(bisher)[:40])
+        return False
+
+
 def _handle_identity_event(
-    db: Client, event_type: str, session: Mapping[str, Any], now_iso: str
+    db: Client,
+    event_type: str,
+    session: Mapping[str, Any],
+    now_iso: str,
+    *,
+    event_created: int | None = None,
 ) -> None:
     """Ausweis-Verifizierungs-Status auf den Gastgeber schreiben.
 
@@ -585,6 +640,10 @@ def _handle_identity_event(
     Client wird NICHT vertraut (Wurzel 3). Scope: der Nutzer muss zum Tenant aus
     der Session-Metadata gehören, sonst wird nichts geschrieben. Es werden KEINE
     Ausweisdaten gespeichert, nur der Status + Zeitpunkt (DSGVO/DE).
+
+    Der Zeitpunkt ist der des STRIPE-EREIGNISSES, nicht unsere Uhr (Wurzel 5b),
+    und er entscheidet zugleich, ob das Ereignis überhaupt gilt: ein später
+    eintreffendes, aber älteres wird verworfen (Wurzel 2).
     """
     status_val = _IDENTITY_STATUS.get(event_type)
     if status_val is None:
@@ -597,9 +656,27 @@ def _handle_identity_event(
         log.warning("identity_event_without_metadata", session_id=session_id)
         return
 
-    update: dict[str, Any] = {"identity_status": status_val}
+    ereignis_iso = (
+        datetime.fromtimestamp(event_created, UTC).isoformat()
+        if event_created is not None
+        else now_iso
+    )
+    if _identity_ereignis_veraltet(db, user_id, tenant_id, ereignis_iso):
+        log.info(
+            "identity_event_veraltet_verworfen",
+            user_id=user_id,
+            status=status_val,
+            session_id=session_id,
+        )
+        return
+
+    update: dict[str, Any] = {
+        "identity_status": status_val,
+        "identity_event_at": ereignis_iso,
+    }
     if status_val == "verified":
-        update["identity_verified_at"] = now_iso
+        # Der Zeitpunkt der PRÜFUNG, nicht der unserer Verarbeitung (Wurzel 5b).
+        update["identity_verified_at"] = ereignis_iso
     if session_id:
         update["identity_session_id"] = session_id
 
