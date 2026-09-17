@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import time
+from datetime import UTC, datetime
 from urllib.parse import urlparse
 
 from src.core.config import get_settings
@@ -40,6 +41,17 @@ def _validate_return_url(return_url: str) -> str:
     if origin not in allowed:
         raise PaymentsError("return_url-Origin nicht erlaubt.", status_code=422)
     return return_url
+
+
+# Stripe-Sitzungsstatus → unser Feld. Dieselbe Abbildung wie im Webhook
+# (`webhook._IDENTITY_STATUS`), nur von der anderen Seite: dort kommt der
+# Ereignistyp, hier der Zustand der Sitzung.
+_STRIPE_STATUS = {
+    "verified": "verified",
+    "processing": "processing",
+    "requires_input": "requires_input",
+    "canceled": "unverified",
+}
 
 
 class IdentityService(PaymentsService):
@@ -104,3 +116,64 @@ class IdentityService(PaymentsService):
         )
         # NUR die url zurück (nicht speichern/loggen — 24 h gültig).
         return session.url
+
+    def sync_verification_status(self, *, user_id: str, tenant_id: str) -> str:
+        """Den Stand der laufenden Prüfung LIVE bei Stripe holen und spiegeln.
+
+        Der Status kam bisher ausschliesslich per Webhook. Das ist der Normalweg
+        und bleibt es — aber es war der EINZIGE: blieb ein Ereignis aus oder kam
+        es unbrauchbar an, stand die Kontoseite für immer auf „Wird geprüft …",
+        ohne dass der Gastgeber irgendetwas tun konnte. Genau das ist am
+        17.09.2026 passiert (fehlende Webhook-Geheimnisse, danach ein
+        nachgereichtes älteres Ereignis, das den Stand überschrieb) — und ein
+        erneutes Zustellen half nicht, weil dieselbe Ereignis-Kennung
+        zurecht nur einmal verarbeitet wird (Wurzel 2).
+
+        Hier wird deshalb die QUELLE gefragt, nicht ein Ereignis wiederholt.
+        Geschrieben wird nur, wenn Stripe etwas anderes sagt als unser Spiegel;
+        `identity_event_at` bleibt unangetastet, damit ein späteres echtes
+        Ereignis weiterhin gewinnt.
+        """
+        zeile = (
+            self._db.table("users")
+            .select("identity_session_id, identity_status")
+            .eq("id", user_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not zeile:
+            raise PaymentsError("Konto nicht gefunden.", status_code=404)
+        session_id = zeile[0].get("identity_session_id")
+        if not session_id:
+            # Noch nie eine Prüfung gestartet — nichts abzugleichen, und ein
+            # erfundener Status wäre eine Falschaussage (Wurzel 4).
+            return str(zeile[0].get("identity_status") or "unverified")
+
+        with _stripe_errors():
+            session = self._stripe.v1.identity.verification_sessions.retrieve(
+                str(session_id)
+            )
+        stand = _STRIPE_STATUS.get(str(session.status), "unverified")
+        if stand == zeile[0].get("identity_status"):
+            return stand
+
+        update: dict = {"identity_status": stand}
+        if stand == "verified":
+            # Zeitpunkt der PRÜFUNG aus der Quelle, nicht unsere Uhr (Wurzel 5b).
+            # Stripe führt ihn nicht an der Session; der letzte Report trägt ihn.
+            bericht = getattr(session, "last_verification_report", None)
+            if bericht:
+                update["identity_verified_at"] = datetime.fromtimestamp(
+                    int(session.created), UTC
+                ).isoformat()
+        self._db.table("users").update(update).eq("id", user_id).eq(
+            "tenant_id", tenant_id
+        ).execute()
+        log.info(
+            "identity_status_abgeglichen",
+            user_id=user_id,
+            status=stand,
+            session_id=str(session_id),
+        )
+        return stand

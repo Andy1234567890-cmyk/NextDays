@@ -245,6 +245,27 @@ def get_connect_account_status(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/identity/sync")
+def sync_identity_status(service: IdentityServiceDep, ctx: _user) -> dict[str, str]:
+    """Den Stand der Ausweispruefung LIVE bei Stripe holen und spiegeln.
+
+    Der Weg fuer den Fall, dass kein Ereignis (mehr) kommt: das Ergebnis kam
+    bisher AUSSCHLIESSLICH per Webhook, und blieb es aus, stand die Kontoseite
+    fuer immer auf „Wird geprueft …". Ein erneutes Zustellen half nicht, weil
+    dieselbe Ereignis-Kennung zurecht nur einmal verarbeitet wird (Wurzel 2) —
+    hier wird deshalb die Quelle gefragt statt ein Ereignis wiederholt."""
+    if not ctx.tenant_id:
+        raise HTTPException(status_code=403, detail="Kein Tenant.")
+    try:
+        return {
+            "status": service.sync_verification_status(
+                user_id=ctx.user_id, tenant_id=ctx.tenant_id
+            )
+        }
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post(
     "/identity/verification-session", response_model=IdentityVerificationResponse
 )

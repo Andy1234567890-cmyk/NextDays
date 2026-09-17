@@ -7,10 +7,14 @@
 // der Status auf „processing", bis der Webhook „verified" setzt.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { Account } from "@/lib/konto";
-import { startIdentityVerification } from "@/lib/konto-actions";
+import {
+  startIdentityVerification,
+  syncIdentityStatus,
+} from "@/lib/konto-actions";
 
 type Status = Account["identity_status"];
 
@@ -39,16 +43,34 @@ const STYLE: Record<Status, { icon: string; cls: string; key: string }> = {
 
 export function IdentitaetZeile({ status }: { status: Status }) {
   const t = useTranslations("konto");
+  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
 
-  // Kein Realtime mehr: `users` ist seit Migration 0337 für `authenticated`
-  // gesperrt (Wurzel 6: Rolle/Rechte/Kontaktdaten — revoke + raus aus der
-  // Publikation supabase_realtime). Das Abo verband sauber und bekam nie ein
-  // Event. Eine Ersatzquelle gibt es nicht: `identity_status` setzt allein der
-  // Stripe-Webhook auf der users-Zeile, keine offene Tabelle spiegelt das.
-  // Ehrlich: der Wechsel von „In Prüfung" auf „Verifiziert" erscheint erst beim
-  // nächsten Laden der Konto-Seite, nicht mehr von selbst.
+  // Kein Realtime: `users` ist seit Migration 0337 für `authenticated` gesperrt
+  // (Wurzel 6: Rolle/Rechte/Kontaktdaten — revoke + raus aus der Publikation
+  // supabase_realtime). Das Abo verband sauber und bekam nie ein Event. Der
+  // Wechsel von „In Prüfung" auf „Verifiziert" erscheint deshalb beim nächsten
+  // Laden der Seite — oder auf Knopfdruck (siehe `abgleichen`).
+
+  /**
+   * Stand beim Zahlungsanbieter nachfragen.
+   *
+   * Der Status kam bis zum 17.09.2026 AUSSCHLIESSLICH per Webhook. Blieb der
+   * aus, stand hier für immer „Wird geprüft …" und es gab keinen Weg weiter —
+   * dieselbe Sackgasse wie bei der Bankverbindung, nur stiller.
+   */
+  async function abgleichen() {
+    setBusy(true);
+    setFehler(null);
+    const res = await syncIdentityStatus();
+    setBusy(false);
+    if (!res.ok) {
+      setFehler(res.error);
+      return;
+    }
+    router.refresh();
+  }
 
   const s = STYLE[status];
   // Verifizieren anbieten, solange nicht verifiziert und nicht in Prüfung.
@@ -89,7 +111,7 @@ export function IdentitaetZeile({ status }: { status: Status }) {
     <div className="border-b border-border py-6">
       <div className="flex items-start justify-between gap-4">
         <p className="font-medium">{t("identitaet")}</p>
-        {kannStarten && (
+        {kannStarten ? (
           <button
             type="button"
             onClick={starten}
@@ -98,6 +120,17 @@ export function IdentitaetZeile({ status }: { status: Status }) {
           >
             {busy ? "…" : t("identitaetStarten")}
           </button>
+        ) : (
+          status === "processing" && (
+            <button
+              type="button"
+              onClick={() => void abgleichen()}
+              disabled={busy}
+              className="shrink-0 text-sm font-medium underline underline-offset-2 hover:opacity-70 disabled:opacity-60"
+            >
+              {busy ? "…" : t("seErneutLaden")}
+            </button>
+          )
         )}
       </div>
       <p

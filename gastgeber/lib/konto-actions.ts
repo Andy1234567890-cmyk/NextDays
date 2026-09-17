@@ -220,6 +220,32 @@ export async function startIdentityVerification(
   }
 }
 
+/**
+ * Den Stand der Ausweisprüfung live beim Zahlungsanbieter nachfragen.
+ *
+ * Das Ergebnis kommt sonst ausschliesslich per Webhook. Bleibt der aus oder
+ * kommt er unbrauchbar an, stünde die Zeile für immer auf „Wird geprüft …" —
+ * ohne dass der Gastgeber etwas tun könnte. Am 17.09.2026 genau so passiert.
+ * Ein erneutes Zustellen half nicht: dieselbe Ereignis-Kennung wird zurecht nur
+ * einmal verarbeitet. Deshalb wird hier die QUELLE gefragt.
+ */
+export async function syncIdentityStatus(): Promise<
+  { ok: true; status: string } | { ok: false; error: string }
+> {
+  try {
+    const data = await api<{ status: string }>("/payments/identity/sync", {
+      method: "POST",
+    });
+    revalidatePath("/konto");
+    return { ok: true, status: data.status };
+  } catch (exc) {
+    return {
+      ok: false,
+      error: exc instanceof ApiError ? exc.message : "Abgleich fehlgeschlagen.",
+    };
+  }
+}
+
 // --- Geräteverlauf / Login-Geräte ------------------------------------------
 
 /** Ein Gerät im Geräteverlauf (aus /login-devices — echte IP + Gerät + Ort).
