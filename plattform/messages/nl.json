@@ -100,7 +100,10 @@
     "gesamt": "Totaal ({waehrung})",
     "kautionHinweis": "Daarnaast wordt een borg van {betrag} gevraagd.",
     "fertigTitel": "Boeking bevestigd",
-    "fertigText": "We hebben de bevestiging naar {email} gestuurd."
+    "fertigText": "We hebben de bevestiging naar {email} gestuurd.",
+    "vorabTitel": "Vraag van de host",
+    "vorabPlatzhalter": "Jouw antwoord",
+    "fehlerVorabAntwort": "Beantwoord de vraag van de host, alsjeblieft."
   },
   "zahlung": {
     "vorbereiten": "Betaling wordt voorbereid …",

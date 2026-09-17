@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Geldt voor je {anzahl} objecten.",
     "brAbweichend": "{anzahl} daarvan zijn afzonderlijk anders ingesteld en worden bij het opslaan aangepast.",
     "brNichtAbrufbar": "Je boekingsrechten zijn momenteel niet beschikbaar. Laad de pagina later opnieuw.",
-    "brFehlgeschlagen": "Actie mislukt."
+    "brFehlgeschlagen": "Actie mislukt.",
+    "brFrageTitel": "Bericht voor de boeking",
+    "brFrageText": "Stel een vraag die gasten moeten beantwoorden voordat ze direct boeken. Als je het veld leeg laat, wordt er niets gevraagd.",
+    "brFragePlatzhalter": "Bijvoorbeeld: Wie reist er mee en wat brengt je naar ons?",
+    "brFrageSpeichern": "Vraag opslaan"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Als een gast annuleert binnen 5 dagen voor aankomst of na het begin van het verblijf, wordt 1 extra nacht in rekening gebracht; 50% van de resterende nachten wordt terugbetaald.",
     "richtlinie_eingeschraenkt_info": "Gasten die 7 tot 14 dagen voor aankomst annuleren, krijgen 50% terug. Daarna is de boeking niet meer restitueerbaar.",
     "richtlinie_lang_moderat_info": "Als een gast annuleert binnen 30 dagen voor aankomst, is er geen restitutie meer. Als de gast annuleert tijdens het verblijf, worden de eerste 30 nachten ingehouden.",
-    "richtlinie_lang_streng_info": "Als een gast annuleert binnen 28 dagen voor aankomst, is er geen restitutie meer. Als de gast annuleert tijdens het verblijf, worden de eerste 30 nachten ingehouden."
+    "richtlinie_lang_streng_info": "Als een gast annuleert binnen 28 dagen voor aankomst, is er geen restitutie meer. Als de gast annuleert tijdens het verblijf, worden de eerste 30 nachten ingehouden.",
+    "vorabTitel": "Antwoord van de gast voor de boeking"
   }
 }

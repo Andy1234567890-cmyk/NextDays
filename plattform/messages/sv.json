@@ -100,7 +100,10 @@
     "gesamt": "Totalt ({waehrung})",
     "kautionHinweis": "Dessutom krävs en deposition på {betrag}.",
     "fertigTitel": "Bokning bekräftad",
-    "fertigText": "Vi har skickat bekräftelsen till {email}."
+    "fertigText": "Vi har skickat bekräftelsen till {email}.",
+    "vorabTitel": "Värdens fråga",
+    "vorabPlatzhalter": "Ditt svar",
+    "fehlerVorabAntwort": "Vänligen svara på värdens fråga."
   },
   "zahlung": {
     "vorbereiten": "Betalningen förbereds …",

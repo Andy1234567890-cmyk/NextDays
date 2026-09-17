@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Gilt für deine {anzahl} Objekte.",
     "brAbweichend": "{anzahl} davon sind einzeln anders eingestellt und werden beim Speichern angeglichen.",
     "brNichtAbrufbar": "Deine Buchungsberechtigungen sind gerade nicht abrufbar. Bitte lade die Seite später erneut.",
-    "brFehlgeschlagen": "Aktion fehlgeschlagen."
+    "brFehlgeschlagen": "Aktion fehlgeschlagen.",
+    "brFrageTitel": "Nachricht vor der Buchung",
+    "brFrageText": "Stelle eine Frage, die Gäste vor der Sofortbuchung beantworten müssen. Lässt du das Feld leer, wird nichts gefragt.",
+    "brFragePlatzhalter": "Zum Beispiel: Wer reist mit, und was führt dich zu uns?",
+    "brFrageSpeichern": "Frage speichern"
   },
   "menu": {
     "titel": "Menü",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Storniert ein Gast innerhalb von 5 Tagen vor der Anreise oder nach Beginn des Aufenthalts, wird ihm 1 zusätzliche Nacht berechnet; 50 % der verbleibenden Nächte werden erstattet.",
     "richtlinie_eingeschraenkt_info": "Gäste, die 7 bis 14 Tage vor der Anreise stornieren, bekommen 50 % zurück. Danach ist die Buchung nicht mehr erstattungsfähig.",
     "richtlinie_lang_moderat_info": "Storniert ein Gast innerhalb von 30 Tagen vor der Anreise, gibt es keine Erstattung mehr. Storniert er während des Aufenthalts, bleiben die ersten 30 Nächte einbehalten.",
-    "richtlinie_lang_streng_info": "Storniert ein Gast innerhalb von 28 Tagen vor der Anreise, gibt es keine Erstattung mehr. Storniert er während des Aufenthalts, bleiben die ersten 30 Nächte einbehalten."
+    "richtlinie_lang_streng_info": "Storniert ein Gast innerhalb von 28 Tagen vor der Anreise, gibt es keine Erstattung mehr. Storniert er während des Aufenthalts, bleiben die ersten 30 Nächte einbehalten.",
+    "vorabTitel": "Antwort des Gastes vor der Buchung"
   }
 }

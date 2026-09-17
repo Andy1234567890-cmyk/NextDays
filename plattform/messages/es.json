@@ -100,7 +100,10 @@
     "gesamt": "Total ({waehrung})",
     "kautionHinweis": "Además se requiere una fianza de {betrag}.",
     "fertigTitel": "Reserva confirmada",
-    "fertigText": "Hemos enviado la confirmación a {email}."
+    "fertigText": "Hemos enviado la confirmación a {email}.",
+    "vorabTitel": "Pregunta del anfitrión",
+    "vorabPlatzhalter": "Tu respuesta",
+    "fehlerVorabAntwort": "Por favor, responde a la pregunta del anfitrión"
   },
   "zahlung": {
     "vorbereiten": "Preparando el pago …",

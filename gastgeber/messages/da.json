@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Gælder for dine {anzahl} ejendomme.",
     "brAbweichend": "{anzahl} af dem er individuelt indstillet anderledes og vil blive justeret ved lagring.",
     "brNichtAbrufbar": "Dine bookingtilladelser er i øjeblikket ikke tilgængelige. Venligst genindlæs siden senere.",
-    "brFehlgeschlagen": "Handling mislykkedes."
+    "brFehlgeschlagen": "Handling mislykkedes.",
+    "brFrageTitel": "Besked før booking",
+    "brFrageText": "Stil et spørgsmål, som gæsterne skal besvare før øjeblikkelig booking. Hvis du lader feltet stå tomt, bliver der ikke stillet spørgsmål.",
+    "brFragePlatzhalter": "For eksempel: Hvem rejser med, og hvad bringer dig til os?",
+    "brFrageSpeichern": "Gem spørgsmål"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Hvis en gæst annullerer inden for 5 dage før ankomst eller efter opholdets start, opkræves 1 ekstra nat; 50 % af de resterende nætter refunderes.",
     "richtlinie_eingeschraenkt_info": "Gæster, der annullerer 7 til 14 dage før ankomst, får 50 % refunderet. Derefter kan bookingen ikke refunderes.",
     "richtlinie_lang_moderat_info": "Hvis en gæst annullerer inden for 30 dage før ankomst, er der ingen refusion. Hvis gæsten annullerer under opholdet, beholdes de første 30 nætter.",
-    "richtlinie_lang_streng_info": "Hvis en gæst annullerer inden for 28 dage før ankomst, er der ingen refusion. Hvis gæsten annullerer under opholdet, beholdes de første 30 nætter."
+    "richtlinie_lang_streng_info": "Hvis en gæst annullerer inden for 28 dage før ankomst, er der ingen refusion. Hvis gæsten annullerer under opholdet, beholdes de første 30 nætter.",
+    "vorabTitel": "Gæstens svar før booking"
   }
 }

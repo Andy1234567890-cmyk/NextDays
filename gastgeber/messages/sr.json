@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Važi za tvojih {anzahl} objekata.",
     "brAbweichend": "{anzahl} od njih su pojedinačno drugačije podešeni i biće usklađeni prilikom čuvanja.",
     "brNichtAbrufbar": "Tvoja ovlašćenja za rezervaciju trenutno nisu dostupna. Molimo te da ponovo učitaš stranicu kasnije.",
-    "brFehlgeschlagen": "Radnja neuspešna."
+    "brFehlgeschlagen": "Radnja neuspešna.",
+    "brFrageTitel": "Poruka pre rezervacije",
+    "brFrageText": "Postavi pitanje na koje gosti moraju da odgovore pre instant rezervacije. Ako ostaviš polje prazno, ništa neće biti pitano.",
+    "brFragePlatzhalter": "Na primer: Ko putuje sa tobom i šta te dovodi kod nas?",
+    "brFrageSpeichern": "Sačuvaj pitanje"
   },
   "menu": {
     "titel": "Meni",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Ako gost otkaže u roku od 5 dana pre dolaska ili nakon početka boravka, biće mu naplaćeno 1 dodatno noćenje; 50% preostalih noćenja biće vraćeno.",
     "richtlinie_eingeschraenkt_info": "Gosti koji otkažu 7 do 14 dana pre dolaska dobijaju 50% nazad. Nakon toga, rezervacija se ne može refundirati.",
     "richtlinie_lang_moderat_info": "Ako gost otkaže u roku od 30 dana pre dolaska, nema više povraćaja novca. Ako otkaže tokom boravka, prvih 30 noćenja se zadržava.",
-    "richtlinie_lang_streng_info": "Ako gost otkaže u roku od 28 dana pre dolaska, nema više povraćaja novca. Ako otkaže tokom boravka, prvih 30 noćenja se zadržava."
+    "richtlinie_lang_streng_info": "Ako gost otkaže u roku od 28 dana pre dolaska, nema više povraćaja novca. Ako otkaže tokom boravka, prvih 30 noćenja se zadržava.",
+    "vorabTitel": "Odgovor gosta pre rezervacije"
   }
 }

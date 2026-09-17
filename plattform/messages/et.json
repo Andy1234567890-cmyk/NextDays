@@ -100,7 +100,10 @@
     "gesamt": "Kokku ({waehrung})",
     "kautionHinweis": "Lisaks nõutakse tagatisraha {betrag}.",
     "fertigTitel": "Broneering kinnitatud",
-    "fertigText": "Saatsime kinnituse aadressile {email}."
+    "fertigText": "Saatsime kinnituse aadressile {email}.",
+    "vorabTitel": "Võõrustaja küsimus",
+    "vorabPlatzhalter": "Sinu vastus",
+    "fehlerVorabAntwort": "Palun vasta võõrustaja küsimusele"
   },
   "zahlung": {
     "vorbereiten": "Valmistame makset ette …",

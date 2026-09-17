@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Áp dụng cho {anzahl} chỗ ở của bạn.",
     "brAbweichend": "{anzahl} trong số đó được cài đặt khác nhau riêng lẻ và sẽ được điều chỉnh khi lưu.",
     "brNichtAbrufbar": "Quyền đặt phòng của bạn hiện không khả dụng. Vui lòng tải lại trang sau.",
-    "brFehlgeschlagen": "Thao tác không thành công."
+    "brFehlgeschlagen": "Thao tác không thành công.",
+    "brFrageTitel": "Tin nhắn trước khi đặt phòng",
+    "brFrageText": "Đặt câu hỏi mà khách phải trả lời trước khi đặt phòng ngay lập tức. Nếu bạn để trống trường này, sẽ không có câu hỏi nào được đặt ra.",
+    "brFragePlatzhalter": "Ví dụ: Ai sẽ đi cùng bạn và điều gì đưa bạn đến với chúng tôi?",
+    "brFrageSpeichern": "Lưu câu hỏi"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Nếu khách hủy trong vòng 5 ngày trước khi đến hoặc sau khi bắt đầu lưu trú, họ sẽ bị tính phí thêm 1 đêm; 50% số đêm còn lại sẽ được hoàn trả.",
     "richtlinie_eingeschraenkt_info": "Khách hủy từ 7 đến 14 ngày trước khi đến sẽ được hoàn trả 50%. Sau đó, đặt phòng sẽ không được hoàn lại.",
     "richtlinie_lang_moderat_info": "Nếu khách hủy trong vòng 30 ngày trước khi đến, sẽ không có hoàn tiền. Nếu họ hủy trong thời gian lưu trú, 30 đêm đầu tiên sẽ được giữ lại.",
-    "richtlinie_lang_streng_info": "Nếu khách hủy trong vòng 28 ngày trước khi đến, sẽ không có hoàn tiền. Nếu họ hủy trong thời gian lưu trú, 30 đêm đầu tiên sẽ được giữ lại."
+    "richtlinie_lang_streng_info": "Nếu khách hủy trong vòng 28 ngày trước khi đến, sẽ không có hoàn tiền. Nếu họ hủy trong thời gian lưu trú, 30 đêm đầu tiên sẽ được giữ lại.",
+    "vorabTitel": "Phản hồi của khách trước khi đặt phòng"
   }
 }

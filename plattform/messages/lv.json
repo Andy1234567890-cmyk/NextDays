@@ -100,7 +100,10 @@
     "gesamt": "Kopā ({waehrung})",
     "kautionHinweis": "Papildus tiek prasīta drošības nauda {betrag}.",
     "fertigTitel": "Rezervācija apstiprināta",
-    "fertigText": "Apstiprinājumu nosūtījām uz {email}."
+    "fertigText": "Apstiprinājumu nosūtījām uz {email}.",
+    "vorabTitel": "Jautājums no saimnieka",
+    "vorabPlatzhalter": "Jūsu atbilde",
+    "fehlerVorabAntwort": "Lūdzu, atbildiet uz saimnieka jautājumu"
   },
   "zahlung": {
     "vorbereiten": "Sagatavo maksājumu …",

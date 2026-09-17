@@ -100,7 +100,10 @@
     "gesamt": "Totale ({waehrung})",
     "kautionHinweis": "È richiesta anche una cauzione di {betrag}.",
     "fertigTitel": "Prenotazione confermata",
-    "fertigText": "Abbiamo inviato la conferma a {email}."
+    "fertigText": "Abbiamo inviato la conferma a {email}.",
+    "vorabTitel": "Domanda dell'host",
+    "vorabPlatzhalter": "La tua risposta",
+    "fehlerVorabAntwort": "Rispondi alla domanda dell'host"
   },
   "zahlung": {
     "vorbereiten": "Preparazione del pagamento …",

@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "適用於您的 {anzahl} 個房源。",
     "brAbweichend": "其中 {anzahl} 個已單獨設定，並將在儲存時進行調整。",
     "brNichtAbrufbar": "您的預訂權限目前無法使用。請稍後重新載入頁面。",
-    "brFehlgeschlagen": "操作失敗。"
+    "brFehlgeschlagen": "操作失敗。",
+    "brFrageTitel": "預訂前訊息",
+    "brFrageText": "提出一個問題，客人必須在即時預訂前回答。如果留空，則不會詢問任何問題。",
+    "brFragePlatzhalter": "例如：誰會和您一起旅行，以及您為什麼選擇我們？",
+    "brFrageSpeichern": "儲存問題"
   },
   "menu": {
     "titel": "選單",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "如果客人在入住前 5 天內或入住後取消預訂，將收取額外 1 晚的費用；剩餘晚數的 50% 將退還。",
     "richtlinie_eingeschraenkt_info": "入住前 7 至 14 天取消預訂的客人可獲得 50% 退款。此後，預訂將不予退款。",
     "richtlinie_lang_moderat_info": "如果客人在入住前 30 天內取消預訂，將不予退款。如果在住宿期間取消預訂，將保留前 30 晚的費用。",
-    "richtlinie_lang_streng_info": "如果客人在入住前 28 天內取消預訂，將不予退款。如果在住宿期間取消預訂，將保留前 30 晚的費用。"
+    "richtlinie_lang_streng_info": "如果客人在入住前 28 天內取消預訂，將不予退款。如果在住宿期間取消預訂，將保留前 30 晚的費用。",
+    "vorabTitel": "客人預訂前的回覆"
   }
 }

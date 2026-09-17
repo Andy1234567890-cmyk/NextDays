@@ -100,7 +100,10 @@
     "gesamt": "I alt ({waehrung})",
     "kautionHinweis": "Derudover kræves et depositum på {betrag}.",
     "fertigTitel": "Booking bekræftet",
-    "fertigText": "Vi har sendt bekræftelsen til {email}."
+    "fertigText": "Vi har sendt bekræftelsen til {email}.",
+    "vorabTitel": "Værtens spørgsmål",
+    "vorabPlatzhalter": "Dit svar",
+    "fehlerVorabAntwort": "Besvar venligst værtens spørgsmål"
   },
   "zahlung": {
     "vorbereiten": "Betalingen forberedes …",

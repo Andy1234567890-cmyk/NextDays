@@ -100,7 +100,10 @@
     "gesamt": "Yhteensä ({waehrung})",
     "kautionHinweis": "Lisäksi vaaditaan {betrag} vakuus.",
     "fertigTitel": "Varaus vahvistettu",
-    "fertigText": "Lähetimme vahvistuksen osoitteeseen {email}."
+    "fertigText": "Lähetimme vahvistuksen osoitteeseen {email}.",
+    "vorabTitel": "Isännän kysymys",
+    "vorabPlatzhalter": "Vastauksesi",
+    "fehlerVorabAntwort": "Vastaa isännän kysymykseen"
   },
   "zahlung": {
     "vorbereiten": "Valmistellaan maksua …",

@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Érvényes a(z) {anzahl} ingatlanodra.",
     "brAbweichend": "Ebből {anzahl} egyedileg eltérően van beállítva, és mentéskor igazításra kerül.",
     "brNichtAbrufbar": "A foglalási jogosultságaid jelenleg nem érhetők el. Kérjük, töltsd be az oldalt később újra.",
-    "brFehlgeschlagen": "A művelet sikertelen."
+    "brFehlgeschlagen": "A művelet sikertelen.",
+    "brFrageTitel": "Üzenet foglalás előtt",
+    "brFrageText": "Tegyél fel egy kérdést, amire a vendégeknek válaszolniuk kell az azonnali foglalás előtt. Ha üresen hagyod a mezőt, nem lesz kérdés.",
+    "brFragePlatzhalter": "Például: Kik utaznak veled, és miért minket választottál?",
+    "brFrageSpeichern": "Kérdés mentése"
   },
   "menu": {
     "titel": "Menü",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Ha a vendég az érkezés előtt 5 napon belül vagy a tartózkodás megkezdése után mondja le, 1 további éjszakát számítunk fel; a fennmaradó éjszakák 50%-át visszatérítjük.",
     "richtlinie_eingeschraenkt_info": "Azok a vendégek, akik az érkezés előtt 7-14 nappal mondják le, 50%-ot kapnak vissza. Ezt követően a foglalás nem visszatéríthető.",
     "richtlinie_lang_moderat_info": "Ha a vendég az érkezés előtt 30 napon belül mondja le, nincs több visszatérítés. Ha a tartózkodás alatt mondja le, az első 30 éjszaka díja megtartásra kerül.",
-    "richtlinie_lang_streng_info": "Ha a vendég az érkezés előtt 28 napon belül mondja le, nincs több visszatérítés. Ha a tartózkodás alatt mondja le, az első 30 éjszaka díja megtartásra kerül."
+    "richtlinie_lang_streng_info": "Ha a vendég az érkezés előtt 28 napon belül mondja le, nincs több visszatérítés. Ha a tartózkodás alatt mondja le, az első 30 éjszaka díja megtartásra kerül.",
+    "vorabTitel": "Vendég válasza foglalás előtt"
   }
 }

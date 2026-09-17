@@ -31,6 +31,7 @@ type ApiListingDetail = ApiListing & {
   lng: number | null;
   price: number | null;
   nights: number | null;
+  pre_booking_question: string | null;
 };
 
 type ApiListResponse = { items: ApiListing[]; total: number };
@@ -103,6 +104,7 @@ function mapDetail(a: ApiListingDetail): Listing {
     ...mapList(a),
     beschreibung: a.description,
     preisProNacht: a.price ?? a.price_from,
+    vorabFrage: a.pre_booking_question ?? null,
   };
 }
 

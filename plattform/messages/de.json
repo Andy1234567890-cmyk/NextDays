@@ -100,7 +100,10 @@
     "gesamt": "Gesamt ({waehrung})",
     "kautionHinweis": "Zusätzlich wird eine Kaution von {betrag} verlangt.",
     "fertigTitel": "Buchung bestätigt",
-    "fertigText": "Wir haben die Bestätigung an {email} geschickt."
+    "fertigText": "Wir haben die Bestätigung an {email} geschickt.",
+    "vorabTitel": "Frage des Gastgebers",
+    "vorabPlatzhalter": "Deine Antwort",
+    "fehlerVorabAntwort": "Bitte beantworte die Frage des Gastgebers."
   },
   "zahlung": {
     "vorbereiten": "Zahlung wird vorbereitet …",

@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Terpakai untuk {anzahl} hartanah anda.",
     "brAbweichend": "{anzahl} daripadanya ditetapkan secara berbeza secara individu dan akan diselaraskan apabila disimpan.",
     "brNichtAbrufbar": "Kebenaran tempahan anda tidak tersedia pada masa ini. Sila muat semula halaman kemudian.",
-    "brFehlgeschlagen": "Tindakan gagal."
+    "brFehlgeschlagen": "Tindakan gagal.",
+    "brFrageTitel": "Mesej pra-tempahan",
+    "brFrageText": "Tanya soalan yang tetamu mesti jawab sebelum menempah serta-merta. Jika anda membiarkan medan kosong, tiada soalan akan ditanya.",
+    "brFragePlatzhalter": "Contoh: Siapa yang melancong bersama anda dan mengapa anda datang kepada kami?",
+    "brFrageSpeichern": "Simpan soalan"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Jika tetamu membatalkan dalam tempoh 5 hari sebelum ketibaan atau selepas penginapan bermula, 1 malam tambahan akan dicaj; 50% daripada baki malam akan dibayar balik.",
     "richtlinie_eingeschraenkt_info": "Tetamu yang membatalkan 7 hingga 14 hari sebelum ketibaan akan mendapat 50% bayaran balik. Selepas itu, tempahan tidak lagi boleh dibayar balik.",
     "richtlinie_lang_moderat_info": "Jika tetamu membatalkan dalam tempoh 30 hari sebelum ketibaan, tiada lagi bayaran balik. Jika mereka membatalkan semasa penginapan, 30 malam pertama akan ditahan.",
-    "richtlinie_lang_streng_info": "Jika tetamu membatalkan dalam tempoh 28 hari sebelum ketibaan, tiada lagi bayaran balik. Jika mereka membatalkan semasa penginapan, 30 malam pertama akan ditahan."
+    "richtlinie_lang_streng_info": "Jika tetamu membatalkan dalam tempoh 28 hari sebelum ketibaan, tiada lagi bayaran balik. Jika mereka membatalkan semasa penginapan, 30 malam pertama akan ditahan.",
+    "vorabTitel": "Balasan tetamu sebelum tempahan"
   }
 }

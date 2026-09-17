@@ -41,7 +41,7 @@ from src.features.booking_conditions.plan import (
 )
 from src.features.guest_blocks.service import GuestBlockService
 
-from .absicht import AbsichtMixin
+from .absicht import AbsichtMixin, VorabNachricht
 from .common import _as_opt_int, _assert_span, _pets_allowed
 from .errors import BookingEngineError
 from .schaufenster import SchaufensterMixin
@@ -125,7 +125,7 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
             .table("properties")
             .select(
                 "tenant_id, status, max_guests, booking_mode, "
-                "instant_booking_audience"
+                "instant_booking_audience, pre_booking_question"
             )
             .eq("id", property_id)
             .limit(1)
@@ -140,7 +140,14 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
         res = (
             self._db()
             .table("properties")
-            .select("tenant_id, status, max_guests, amenities, type_attributes")
+            .select(
+                "tenant_id, status, max_guests, amenities, type_attributes, "
+                # Die Frage des Gastgebers gehört in den Quote: die
+                # Buchungsstrecke muss sie STELLEN können, bevor sie eine
+                # Antwort verlangt. Eine Pflicht ohne sichtbare Frage wäre eine
+                # Sackgasse.
+                "pre_booking_question, booking_mode"
+            )
             .eq("id", property_id)
             .limit(1)
             .execute()
@@ -234,6 +241,13 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
             payment_plan=plan,
             cancellation=storno,
             deposit=deposit,
+            # Nur bei Sofortbuchung: bei einer Anfrage schreibt der Gast dem
+            # Gastgeber ohnehin, und die Strecke verlangt dort keine Antwort.
+            pre_booking_question=(
+                (prop.get("pre_booking_question") or "").strip() or None
+                if prop.get("booking_mode") != "request"
+                else None
+            ),
         )
 
     def _konditionen_fuer_gast(
@@ -325,6 +339,43 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
                 "Die Gästezahl übersteigt die Kapazität des Objekts.",
                 status_code=422,
             )
+
+        # BUCHUNGSBERECHTIGUNG (0718). Sofortbuchung heißt nicht „für jeden":
+        # der Betrieb kann sie auf Gäste mit geprüfter Identität und/oder guter
+        # Vorgeschichte beschränken (Airbnbs
+        # `instant_booking_allowed_category`). Wer die Voraussetzung nicht
+        # erfüllt, wird NICHT abgewiesen — daraus wird eine Anfrage. Genau so
+        # beschreibt Airbnb es: „guests who do not meet the requirements will
+        # not be able to book instantly, but they can still send a booking
+        # request." Aussperren wäre der teurere Fehler und für den Gast nicht
+        # nachvollziehbar.
+        is_request = not BookingAccessService(self._db()).sofortbuchung_erlaubt(
+            booking_mode=prop.get("booking_mode"),
+            zielgruppe=prop.get("instant_booking_audience"),
+            email=req.contact.email,
+        )
+
+        # „Nachricht vor der Buchung" (Airbnb, 0719): stellt das Objekt eine
+        # Frage, gibt es ohne Antwort keine SOFORTbuchung. Geprüft wird hier,
+        # VOR jedem Schreibzugriff — und serverseitig, nicht nur im Formular
+        # (Wurzel 3): das Widget liegt beim Gast.
+        #
+        # Nur für die Sofortbuchung. Bei einer Anfrage entscheidet der
+        # Gastgeber ohnehin selbst und schreibt mit dem Gast; eine
+        # Pflichtantwort wäre dort eine zweite Hürde ohne Zweck — und genau so
+        # hält es Airbnb auch (die Bedingung gilt nur bei eingeschalteter
+        # Sofortbuchung).
+        vorab_frage = (prop.get("pre_booking_question") or "").strip() or None
+        vorab_antwort = (req.vorab_antwort or "").strip() or None
+        if vorab_frage and not is_request and not vorab_antwort:
+            raise BookingEngineError(
+                "Bitte beantworte zuerst die Frage des Gastgebers.",
+                status_code=422,
+            )
+        # Ohne Frage wird auch keine Antwort verwahrt: sonst stünde an der
+        # Buchung ein Text, den niemand erbeten hat (Wurzel 4).
+        if not vorab_frage:
+            vorab_antwort = None
 
         # Tiere nur, wo sie erlaubt sind — serverseitig, nicht nur im Widget
         # (Wurzel 3). `_public_property` liest die dafür nötigen Spalten nicht,
@@ -457,22 +508,8 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
         # Airbnb-Modell: instant = Sofortbuchung (status=confirmed, sperrt OTAs),
         # request = Anfrage (status=requested, belegt lokal den Slot atomar, aber
         # KEIN OTA-0-Push — die Nacht bleibt für OTAs verkäuflich, bis der Host
-        # zusagt). DB-NOT-NULL-Default 'instant' garantiert den Wert (kein Fallback).
-        #
-        # BUCHUNGSBERECHTIGUNG (0718). Sofortbuchung heißt nicht „für jeden":
-        # der Betrieb kann sie auf Gäste mit geprüfter Identität und/oder guter
-        # Vorgeschichte beschränken (Airbnbs
-        # `instant_booking_allowed_category`). Wer die Voraussetzung nicht
-        # erfüllt, wird NICHT abgewiesen — daraus wird eine Anfrage. Genau so
-        # beschreibt Airbnb es: „guests who do not meet the requirements will
-        # not be able to book instantly, but they can still send a booking
-        # request." Aussperren wäre der teurere Fehler und für den Gast nicht
-        # nachvollziehbar.
-        is_request = not BookingAccessService(self._db()).sofortbuchung_erlaubt(
-            booking_mode=prop.get("booking_mode"),
-            zielgruppe=prop.get("instant_booking_audience"),
-            email=req.contact.email,
-        )
+        # zusagt). `is_request` steht weiter oben bei den übrigen Prüfungen: die
+        # Pflichtantwort auf die Vorab-Frage hängt daran.
         reservation_status = "requested" if is_request else "confirmed"
         # 24-h-Frist ab jetzt (Airbnb-Standard). Nur bei Anfrage; instant → NULL.
         request_expires_at = (
@@ -507,6 +544,7 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
                 quote_items=quote_items,
                 bookable_addons=bookable_addons,
                 guest_id=guest_id,
+                vorab=VorabNachricht(frage=vorab_frage, antwort=vorab_antwort),
             )
 
         # Reservierung + Kalender-Belegung + ari_outbox ATOMAR (RPC 0104):
@@ -560,6 +598,11 @@ class BookingEngineService(SchaufensterMixin, AbsichtMixin):
                             "total_amount": total_amount,
                             "quote_items": quote_items,
                             "currency": currency or None,
+                            # Frage UND Antwort (0719). Die Frage wandert mit,
+                            # damit eine spätere Änderung am Objekt nicht eine
+                            # Antwort ohne ihre Frage zurücklässt.
+                            "pre_booking_question": vorab_frage,
+                            "pre_booking_answer": vorab_antwort,
                         },
                         "p_source": "direct",
                         # Anfrage: keine ari_outbox-Zeile → kein OTA-0-Push vor accept.

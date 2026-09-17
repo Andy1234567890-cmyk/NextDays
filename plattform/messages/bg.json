@@ -100,7 +100,10 @@
     "gesamt": "Общо ({waehrung})",
     "kautionHinweis": "Допълнително се изисква депозит от {betrag}.",
     "fertigTitel": "Резервацията е потвърдена",
-    "fertigText": "Изпратихме потвърждението на {email}."
+    "fertigText": "Изпратихме потвърждението на {email}.",
+    "vorabTitel": "Въпрос от домакина",
+    "vorabPlatzhalter": "Вашият отговор",
+    "fehlerVorabAntwort": "Моля, отговорете на въпроса на домакина"
   },
   "zahlung": {
     "vorbereiten": "Подготвяне на плащането …",

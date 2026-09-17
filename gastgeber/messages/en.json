@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Applies to your {anzahl} properties.",
     "brAbweichend": "{anzahl} of them are set differently individually and will be adjusted upon saving.",
     "brNichtAbrufbar": "Your booking permissions are currently unavailable. Please reload the page later.",
-    "brFehlgeschlagen": "Action failed."
+    "brFehlgeschlagen": "Action failed.",
+    "brFrageTitel": "Pre-booking message",
+    "brFrageText": "Ask a question that guests must answer before instant booking. If you leave the field blank, no question will be asked.",
+    "brFragePlatzhalter": "For example: Who is traveling with you, and what brings you to us?",
+    "brFrageSpeichern": "Save question"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "If a guest cancels within 5 days of arrival or after check-in, they are charged 1 additional night; 50% of the remaining nights are refunded.",
     "richtlinie_eingeschraenkt_info": "Guests who cancel 7 to 14 days before arrival receive 50% back. After that, the booking is non-refundable.",
     "richtlinie_lang_moderat_info": "If a guest cancels within 30 days of arrival, there is no refund. If they cancel during their stay, the first 30 nights are retained.",
-    "richtlinie_lang_streng_info": "If a guest cancels within 28 days of arrival, there is no refund. If they cancel during their stay, the first 30 nights are retained."
+    "richtlinie_lang_streng_info": "If a guest cancels within 28 days of arrival, there is no refund. If they cancel during their stay, the first 30 nights are retained.",
+    "vorabTitel": "Guest's pre-booking response"
   }
 }

@@ -87,6 +87,10 @@ class PublicListingDetail(PublicListing):
     # Ob diese Objektseite für Suchmaschinen indexierbar ist (Airbnb „Objekte in
     # Suchmaschinen aufnehmen"). false → Frontend rendert robots-noindex-Meta.
     search_engine_indexing: bool = False
+    # „Nachricht vor der Buchung" (Airbnb, 0719). None = keine Frage. Auch hier
+    # und nicht nur im Quote: das Buchungs-Widget der Betriebs-Website bucht
+    # ohne Quote.
+    pre_booking_question: str | None = None
 
 
 class PublicListingListResponse(BaseModel):
@@ -184,6 +188,12 @@ class PublicBookingRequest(BaseModel):
     # Aktionen des Objekts — der Rabatt selbst wird serverseitig gerechnet, ein
     # Client-Betrag wird nie übernommen. Länge wie im Branchenstandard (15).
     promo_code: str | None = Field(default=None, max_length=15)
+    # Antwort auf die „Nachricht vor der Buchung" des Gastgebers (Airbnb, 0719).
+    # Pflicht nur, wenn das Objekt eine Frage stellt UND sofort gebucht wird —
+    # geprüft serverseitig, nicht hier: ob eine Frage existiert, weiß erst der
+    # Service. Die Länge ist hier gedeckelt (Wurzel 8): der Endpunkt ist
+    # öffentlich und ohne Anmeldung erreichbar.
+    vorab_antwort: str | None = Field(default=None, max_length=2000)
 
     @model_validator(mode="after")
     def _check_dates(self) -> "PublicBookingRequest":
@@ -321,6 +331,10 @@ class PublicQuoteResponse(BaseModel):
     # Wählbare Gebühren des Objekts (`fees[].optional`). Leer = keine; dann
     # zeigt die Strecke den Abschnitt nicht.
     optional_fees: list[PublicOptionalFee] = []
+    # „Nachricht vor der Buchung" des Gastgebers (Airbnb, 0719). None = keine
+    # Frage. Steht sie hier, verlangt die Buchung eine Antwort — die Strecke
+    # muss sie also anzeigen.
+    pre_booking_question: str | None = None
 
 
 class PublicBookingResponse(BaseModel):

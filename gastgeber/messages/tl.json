@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Nalalapat sa iyong {anzahl} property.",
     "brAbweichend": "{anzahl} sa mga ito ay may iba't ibang setting at iaakma kapag na-save.",
     "brNichtAbrufbar": "Hindi available ang iyong mga pahintulot sa booking sa ngayon. Paki-reload ang page sa ibang pagkakataon.",
-    "brFehlgeschlagen": "Nabigo ang pagkilos."
+    "brFehlgeschlagen": "Nabigo ang pagkilos.",
+    "brFrageTitel": "Mensahe bago mag-book",
+    "brFrageText": "Magtanong ng isang katanungan na kailangang sagutin ng mga bisita bago ang instant booking. Kung iiwan mong blangko ang field, walang itatanong.",
+    "brFragePlatzhalter": "Halimbawa: Sino ang kasama mong maglakbay, at ano ang dahilan ng iyong pagbisita?",
+    "brFrageSpeichern": "I-save ang tanong"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Kung magkansela ang bisita sa loob ng 5 araw bago ang pagdating o pagkatapos magsimula ang pananatili, sisingilin siya para sa 1 karagdagang gabi; 50% ng natitirang gabi ay ibabalik.",
     "richtlinie_eingeschraenkt_info": "Ang mga bisitang magkansela 7 hanggang 14 na araw bago ang pagdating ay makakakuha ng 50% pabalik. Pagkatapos nito, hindi na mare-refund ang booking.",
     "richtlinie_lang_moderat_info": "Kung magkansela ang bisita sa loob ng 30 araw bago ang pagdating, wala nang refund. Kung magkansela siya habang nananatili, mananatili ang unang 30 gabi.",
-    "richtlinie_lang_streng_info": "Kung magkansela ang bisita sa loob ng 28 araw bago ang pagdating, wala nang refund. Kung magkansela siya habang nananatili, mananatili ang unang 30 gabi."
+    "richtlinie_lang_streng_info": "Kung magkansela ang bisita sa loob ng 28 araw bago ang pagdating, wala nang refund. Kung magkansela siya habang nananatili, mananatili ang unang 30 gabi.",
+    "vorabTitel": "Sagot ng bisita bago mag-book"
   }
 }

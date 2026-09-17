@@ -28,6 +28,11 @@ export type Listing = {
   bewertung?: number;
   anzahlBewertungen?: number;
   istFavorit?: boolean;
+  /** „Nachricht vor der Buchung" des Gastgebers (Airbnb-Mechanik, 0719).
+   *  null/fehlend = keine Frage. Steht sie, verlangt der Server eine Antwort —
+   *  das Widget MUSS sie dann zeigen, sonst endet die Buchung in einem 422,
+   *  dessen Grund der Gast nie gesehen hat. */
+  vorabFrage?: string | null;
 };
 
 // Themen-Reihe für die Startseite (horizontale Kategorie).

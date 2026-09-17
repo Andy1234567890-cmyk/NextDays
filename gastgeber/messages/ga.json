@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Baineann sé le do {anzahl} réadmhaoin.",
     "brAbweichend": "Tá {anzahl} acu socraithe go difriúil ina n-aonar agus déanfar iad a choigeartú nuair a shábhálfar iad.",
     "brNichtAbrufbar": "Níl do cheadanna áirithinte ar fáil faoi láthair. Athlódáil an leathanach níos déanaí le do thoil.",
-    "brFehlgeschlagen": "Theip ar an ngníomh."
+    "brFehlgeschlagen": "Theip ar an ngníomh.",
+    "brFrageTitel": "Teachtaireacht Réamh-Áirithinte",
+    "brFrageText": "Cuir ceist a chaithfidh aíonna a fhreagairt sula ndéanann siad áirithint láithreach. Mura líonann tú an réimse seo, ní chuirfear aon cheist.",
+    "brFragePlatzhalter": "Mar shampla: Cé atá ag taisteal leat agus cén fáth a bhfuil tú ag teacht chugainn?",
+    "brFrageSpeichern": "Sábháil Ceist"
   },
   "menu": {
     "titel": "Roghchlár",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Má chealaíonn aoi laistigh de 5 lá roimh an teacht nó tar éis thús an fhanachta, gearrfar táille 1 oíche bhreise air; aisíocfar 50% de na hoícheanta atá fágtha.",
     "richtlinie_eingeschraenkt_info": "Faigheann aíonna a chealaíonn 7 go 14 lá roimh an teacht 50% ar ais. Ina dhiaidh sin, níl an áirithint inaisíoctha a thuilleadh.",
     "richtlinie_lang_moderat_info": "Má chealaíonn aoi laistigh de 30 lá roimh an teacht, níl aon aisíocaíocht ann a thuilleadh. Má chealaíonn sé le linn an fhanachta, coimeádtar an chéad 30 oíche.",
-    "richtlinie_lang_streng_info": "Má chealaíonn aoi laistigh de 28 lá roimh an teacht, níl aon aisíocaíocht ann a thuilleadh. Má chealaíonn sé le linn an fhanachta, coimeádtar an chéad 30 oíche."
+    "richtlinie_lang_streng_info": "Má chealaíonn aoi laistigh de 28 lá roimh an teacht, níl aon aisíocaíocht ann a thuilleadh. Má chealaíonn sé le linn an fhanachta, coimeádtar an chéad 30 oíche.",
+    "vorabTitel": "Freagra an Aoi roimh an Áirithint"
   }
 }

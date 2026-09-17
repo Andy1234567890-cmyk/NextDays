@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Dotyczy Twoich {anzahl} obiektów.",
     "brAbweichend": "{anzahl} z nich ma indywidualnie inne ustawienia i zostaną dostosowane podczas zapisywania.",
     "brNichtAbrufbar": "Twoje uprawnienia do rezerwacji są obecnie niedostępne. Proszę załadować stronę ponownie później.",
-    "brFehlgeschlagen": "Akcja nie powiodła się."
+    "brFehlgeschlagen": "Akcja nie powiodła się.",
+    "brFrageTitel": "Wiadomość przed rezerwacją",
+    "brFrageText": "Zadaj pytanie, na które goście muszą odpowiedzieć przed natychmiastową rezerwacją. Jeśli pozostawisz pole puste, nic nie zostanie zapytane.",
+    "brFragePlatzhalter": "Na przykład: Kto podróżuje z Tobą i co Cię do nas sprowadza?",
+    "brFrageSpeichern": "Zapisz pytanie"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Jeśli gość anuluje rezerwację w ciągu 5 dni przed przyjazdem lub po rozpoczęciu pobytu, zostanie obciążony kosztem 1 dodatkowej nocy; 50% pozostałych nocy zostanie zwrócone.",
     "richtlinie_eingeschraenkt_info": "Goście, którzy anulują rezerwację od 7 do 14 dni przed przyjazdem, otrzymają zwrot 50%. Po tym terminie rezerwacja nie podlega zwrotowi.",
     "richtlinie_lang_moderat_info": "Jeśli gość anuluje rezerwację w ciągu 30 dni przed przyjazdem, nie ma już zwrotu kosztów. Jeśli anuluje rezerwację w trakcie pobytu, pierwsze 30 nocy zostanie zatrzymane.",
-    "richtlinie_lang_streng_info": "Jeśli gość anuluje rezerwację w ciągu 28 dni przed przyjazdem, nie ma już zwrotu kosztów. Jeśli anuluje rezerwację w trakcie pobytu, pierwsze 30 nocy zostanie zatrzymane."
+    "richtlinie_lang_streng_info": "Jeśli gość anuluje rezerwację w ciągu 28 dni przed przyjazdem, nie ma już zwrotu kosztów. Jeśli anuluje rezerwację w trakcie pobytu, pierwsze 30 nocy zostanie zatrzymane.",
+    "vorabTitel": "Odpowiedź gościa przed rezerwacją"
   }
 }

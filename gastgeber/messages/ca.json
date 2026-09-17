@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "S'aplica a les teves {anzahl} propietats.",
     "brAbweichend": "{anzahl} d'elles estan configurades de manera diferent individualment i s'ajustaran en desar.",
     "brNichtAbrufbar": "Els teus permisos de reserva no estan disponibles actualment. Si us plau, torna a carregar la pàgina més tard.",
-    "brFehlgeschlagen": "L'acció ha fallat."
+    "brFehlgeschlagen": "L'acció ha fallat.",
+    "brFrageTitel": "Missatge previ a la reserva",
+    "brFrageText": "Fes una pregunta que els hostes hagin de respondre abans de la reserva instantània. Si deixes el camp buit, no es farà cap pregunta.",
+    "brFragePlatzhalter": "Per exemple: Qui viatja amb tu i què et porta a nosaltres?",
+    "brFrageSpeichern": "Desa la pregunta"
   },
   "menu": {
     "titel": "Menú",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Si un hoste cancel·la en el termini de 5 dies abans de l'arribada o un cop iniciada l'estada, se li cobrarà 1 nit addicional; es reemborsarà el 50 % de les nits restants.",
     "richtlinie_eingeschraenkt_info": "Els hostes que cancel·lin entre 7 i 14 dies abans de l'arribada rebran el 50 % de l'import. Després d'aquest termini, la reserva no és reemborsable.",
     "richtlinie_lang_moderat_info": "Si un hoste cancel·la en el termini de 30 dies abans de l'arribada, no hi haurà reemborsament. Si cancel·la durant l'estada, es retinguen les primeres 30 nits.",
-    "richtlinie_lang_streng_info": "Si un hoste cancel·la en el termini de 28 dies abans de l'arribada, no hi haurà reemborsament. Si cancel·la durant l'estada, es retinguen les primeres 30 nits."
+    "richtlinie_lang_streng_info": "Si un hoste cancel·la en el termini de 28 dies abans de l'arribada, no hi haurà reemborsament. Si cancel·la durant l'estada, es retinguen les primeres 30 nits.",
+    "vorabTitel": "Resposta del client abans de la reserva"
   }
 }

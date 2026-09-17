@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Platí pre tvojich {anzahl} objektov.",
     "brAbweichend": "{anzahl} z nich je individuálne nastavených inak a pri ukladaní sa prispôsobia.",
     "brNichtAbrufbar": "Tvoje oprávnenia na rezerváciu momentálne nie sú dostupné. Načítaj stránku znova neskôr.",
-    "brFehlgeschlagen": "Akcia zlyhala."
+    "brFehlgeschlagen": "Akcia zlyhala.",
+    "brFrageTitel": "Správa pred rezerváciou",
+    "brFrageText": "Položte otázku, na ktorú musia hostia odpovedať pred okamžitou rezerváciou. Ak pole necháte prázdne, nič sa nebude pýtať.",
+    "brFragePlatzhalter": "Napríklad: Kto cestuje s vami a čo vás k nám privádza?",
+    "brFrageSpeichern": "Uložiť otázku"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Ak hosť zruší rezerváciu do 5 dní pred príchodom alebo po začiatku pobytu, bude mu účtovaná 1 dodatočná noc; 50 % zostávajúcich nocí bude vrátených.",
     "richtlinie_eingeschraenkt_info": "Hostia, ktorí zrušia rezerváciu 7 až 14 dní pred príchodom, dostanú späť 50 %. Potom je rezervácia nevratná.",
     "richtlinie_lang_moderat_info": "Ak hosť zruší rezerváciu do 30 dní pred príchodom, peniaze sa nevracajú. Ak zruší rezerváciu počas pobytu, prvých 30 nocí sa ponechá.",
-    "richtlinie_lang_streng_info": "Ak hosť zruší rezerváciu do 28 dní pred príchodom, peniaze sa nevracajú. Ak zruší rezerváciu počas pobytu, prvých 30 nocí sa ponechá."
+    "richtlinie_lang_streng_info": "Ak hosť zruší rezerváciu do 28 dní pred príchodom, peniaze sa nevracajú. Ak zruší rezerváciu počas pobytu, prvých 30 nocí sa ponechá.",
+    "vorabTitel": "Odpoveď hosťa pred rezerváciou"
   }
 }

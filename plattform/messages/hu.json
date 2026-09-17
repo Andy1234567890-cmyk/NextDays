@@ -100,7 +100,10 @@
     "gesamt": "Összesen ({waehrung})",
     "kautionHinweis": "Ezen kívül {betrag} kaució szükséges.",
     "fertigTitel": "Foglalás megerősítve",
-    "fertigText": "A visszaigazolást elküldtük a következő címre: {email}."
+    "fertigText": "A visszaigazolást elküldtük a következő címre: {email}.",
+    "vorabTitel": "A szállásadó kérdése",
+    "vorabPlatzhalter": "A válaszod",
+    "fehlerVorabAntwort": "Kérjük, válaszold meg a szállásadó kérdését"
   },
   "zahlung": {
     "vorbereiten": "Fizetés előkészítése …",

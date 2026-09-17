@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Kehtib sinu {anzahl} objekti kohta.",
     "brAbweichend": "{anzahl} neist on eraldi erinevalt seadistatud ja ühtlustatakse salvestamisel.",
     "brNichtAbrufbar": "Sinu broneerimisõigused pole praegu saadaval. Palun lae leht hiljem uuesti.",
-    "brFehlgeschlagen": "Toiming ebaõnnestus."
+    "brFehlgeschlagen": "Toiming ebaõnnestus.",
+    "brFrageTitel": "Sõnum enne broneerimist",
+    "brFrageText": "Esita küsimus, millele külalised peavad enne kohest broneerimist vastama. Kui jätad välja tühjaks, siis midagi ei küsita.",
+    "brFragePlatzhalter": "Näiteks: Kes reisivad sinuga ja mis toob teid meie juurde?",
+    "brFrageSpeichern": "Salvesta küsimus"
   },
   "menu": {
     "titel": "Menüü",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Kui külaline tühistab broneeringu 5 päeva jooksul enne saabumist või pärast viibimise algust, võetakse temalt tasu 1 lisanduva öö eest; 50% ülejäänud öödest tagastatakse.",
     "richtlinie_eingeschraenkt_info": "Külalistele, kes tühistavad broneeringu 7 kuni 14 päeva enne saabumist, tagastatakse 50%. Pärast seda ei ole broneering enam tagastatav.",
     "richtlinie_lang_moderat_info": "Kui külaline tühistab broneeringu 30 päeva jooksul enne saabumist, ei ole tagasimakset enam. Kui ta tühistab broneeringu viibimise ajal, jäävad esimesed 30 ööd kinni.",
-    "richtlinie_lang_streng_info": "Kui külaline tühistab broneeringu 28 päeva jooksul enne saabumist, ei ole tagasimakset enam. Kui ta tühistab broneeringu viibimise ajal, jäävad esimesed 30 ööd kinni."
+    "richtlinie_lang_streng_info": "Kui külaline tühistab broneeringu 28 päeva jooksul enne saabumist, ei ole tagasimakset enam. Kui ta tühistab broneeringu viibimise ajal, jäävad esimesed 30 ööd kinni.",
+    "vorabTitel": "Külalise vastus enne broneerimist"
   }
 }

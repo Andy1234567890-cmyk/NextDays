@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Taikoma jūsų {anzahl} objektams.",
     "brAbweichend": "{anzahl} iš jų yra nustatyti individualiai ir bus suderinti išsaugant.",
     "brNichtAbrufbar": "Jūsų užsakymo leidimai šiuo metu nepasiekiami. Prašome įkelti puslapį vėliau.",
-    "brFehlgeschlagen": "Veiksmas nepavyko."
+    "brFehlgeschlagen": "Veiksmas nepavyko.",
+    "brFrageTitel": "Žinutė prieš užsakymą",
+    "brFrageText": "Užduokite klausimą, į kurį svečiai turės atsakyti prieš atlikdami tiesioginį užsakymą. Jei paliksite tuščią, klausimų nebus.",
+    "brFragePlatzhalter": "Pavyzdžiui: Kas keliauja su jumis ir kas jus atvedė pas mus?",
+    "brFrageSpeichern": "Išsaugoti klausimą"
   },
   "menu": {
     "titel": "Meniu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Jei svečias atšaukia likus 5 dienoms iki atvykimo arba po viešnagės pradžios, jam apmokestinama 1 papildoma naktis; 50 % likusių naktų sumos grąžinama.",
     "richtlinie_eingeschraenkt_info": "Svečiams, atšaukusiems likus 7–14 dienų iki atvykimo, grąžinama 50 % sumos. Po to užsakymas negrąžinamas.",
     "richtlinie_lang_moderat_info": "Jei svečias atšaukia likus 30 dienų iki atvykimo, pinigai negrąžinami. Jei atšaukia viešnagės metu, pirmosios 30 naktų lieka apmokestintos.",
-    "richtlinie_lang_streng_info": "Jei svečias atšaukia likus 28 dienoms iki atvykimo, pinigai negrąžinami. Jei atšaukia viešnagės metu, pirmosios 30 naktų lieka apmokestintos."
+    "richtlinie_lang_streng_info": "Jei svečias atšaukia likus 28 dienoms iki atvykimo, pinigai negrąžinami. Jei atšaukia viešnagės metu, pirmosios 30 naktų lieka apmokestintos.",
+    "vorabTitel": "Svečio atsakymas prieš užsakymą"
   }
 }

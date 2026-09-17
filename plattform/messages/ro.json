@@ -100,7 +100,10 @@
     "gesamt": "Total ({waehrung})",
     "kautionHinweis": "Se solicită suplimentar o garanție de {betrag}.",
     "fertigTitel": "Rezervare confirmată",
-    "fertigText": "Am trimis confirmarea la {email}."
+    "fertigText": "Am trimis confirmarea la {email}.",
+    "vorabTitel": "Întrebarea gazdei",
+    "vorabPlatzhalter": "Răspunsul tău",
+    "fehlerVorabAntwort": "Te rugăm să răspunzi la întrebarea gazdei"
   },
   "zahlung": {
     "vorbereiten": "Se pregătește plata …",

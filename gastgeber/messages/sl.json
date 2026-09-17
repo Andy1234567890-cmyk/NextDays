@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Velja za tvoje {anzahl} objekte.",
     "brAbweichend": "{anzahl} od njih je posamično drugače nastavljenih in bodo usklajeni ob shranjevanju.",
     "brNichtAbrufbar": "Tvoja dovoljenja za rezervacijo trenutno niso na voljo. Prosimo, poskusi znova pozneje.",
-    "brFehlgeschlagen": "Dejanje ni uspelo."
+    "brFehlgeschlagen": "Dejanje ni uspelo.",
+    "brFrageTitel": "Sporočilo pred rezervacijo",
+    "brFrageText": "Zastavite vprašanje, na katerega morajo gostje odgovoriti pred takojšnjo rezervacijo. Če pustite polje prazno, vprašanje ne bo zastavljeno.",
+    "brFragePlatzhalter": "Na primer: Kdo potuje z vami in kaj vas pripelje k nam?",
+    "brFrageSpeichern": "Shrani vprašanje"
   },
   "menu": {
     "titel": "Meni",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Če gost odpove rezervacijo v 5 dneh pred prihodom ali po začetku bivanja, se mu zaračuna 1 dodatna nočitev; 50 % preostalih nočitev se povrne.",
     "richtlinie_eingeschraenkt_info": "Gostje, ki odpovejo rezervacijo 7 do 14 dni pred prihodom, dobijo povrnjenih 50 %. Po tem rezervacija ni več povratna.",
     "richtlinie_lang_moderat_info": "Če gost odpove rezervacijo v 30 dneh pred prihodom, ni več vračila. Če odpove med bivanjem, se zadrži prvih 30 nočitev.",
-    "richtlinie_lang_streng_info": "Če gost odpove rezervacijo v 28 dneh pred prihodom, ni več vračila. Če odpove med bivanjem, se zadrži prvih 30 nočitev."
+    "richtlinie_lang_streng_info": "Če gost odpove rezervacijo v 28 dneh pred prihodom, ni več vračila. Če odpove med bivanjem, se zadrži prvih 30 nočitev.",
+    "vorabTitel": "Odgovor gosta pred rezervacijo"
   }
 }

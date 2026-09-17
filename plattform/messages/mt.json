@@ -100,7 +100,10 @@
     "gesamt": "Total ({waehrung})",
     "kautionHinweis": "Tinħtieġ ukoll depożitu ta' {betrag}.",
     "fertigTitel": "Prenotazzjoni kkonfermata",
-    "fertigText": "Bgħatna l-konferma fuq {email}."
+    "fertigText": "Bgħatna l-konferma fuq {email}.",
+    "vorabTitel": "Mistoqsija mill-host",
+    "vorabPlatzhalter": "It-tweġiba tiegħek",
+    "fehlerVorabAntwort": "Jekk jogħġbok wieġeb il-mistoqsija tal-host"
   },
   "zahlung": {
     "vorbereiten": "Il-ħlas qed jiġi ppreparat …",

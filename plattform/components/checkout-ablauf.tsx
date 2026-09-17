@@ -48,6 +48,66 @@ export type CheckoutDaten = {
   fees?: string[];
 };
 
+/** Was am Kontakt-Schritt noch fehlt - `null`, wenn nichts fehlt.
+ *
+ *  Als reine Funktion und nicht als Kette im Ablauf: dieselbe Regel entscheidet
+ *  den Weiter-Knopf UND die Pruefung vor dem Absenden. Zweimal ausgeschrieben
+ *  waere eine von beiden irgendwann falsch - und der Gast saehe einen aktiven
+ *  Knopf, der ihn in einen Serverfehler laufen laesst. */
+function fehlenderSchritt(
+  vorname: string,
+  nachname: string,
+  email: string,
+  frage: string | null,
+  antwort: string,
+): "fehlerKontakt" | "fehlerVorabAntwort" | null {
+  if (!vorname.trim() || !nachname.trim() || !email.trim()) {
+    return "fehlerKontakt";
+  }
+  // Ohne Frage gibt es nichts zu beantworten.
+  if (frage && !antwort.trim()) return "fehlerVorabAntwort";
+  return null;
+}
+
+/** Die „Nachricht vor der Buchung" des Gastgebers samt Antwortfeld.
+ *
+ *  Eigene Komponente und kein Block im Ablauf: der Checkout trägt bereits drei
+ *  Schritte, eine Ratenlogik und den Zahlungszustand. Jede weitere Verzweigung
+ *  darin macht ihn schwerer lesbar, ohne dass sie mit den anderen etwas zu tun
+ *  hätte. Ohne Frage rendert sie nichts. */
+function VorabFrage({
+  frage,
+  wert,
+  onChange,
+}: {
+  frage: string | null;
+  wert: string;
+  onChange: (wert: string) => void;
+}) {
+  const t = useTranslations("checkout");
+  if (!frage) return null;
+
+  return (
+    <div className="mt-5 rounded-2xl border border-border p-4">
+      <label htmlFor="vorab-antwort" className="block text-sm font-medium">
+        {t("vorabTitel")}
+      </label>
+      {/* Im Wortlaut des Gastgebers — nicht zusammengefasst, nicht ersetzt. */}
+      <p className="mt-1 whitespace-pre-line text-[0.9375rem]">{frage}</p>
+      <textarea
+        id="vorab-antwort"
+        value={wert}
+        onChange={(e) => onChange(e.target.value)}
+        rows={3}
+        maxLength={2000}
+        required
+        className="mt-3 w-full rounded-xl border border-border bg-background px-3 py-2 text-[0.9375rem] outline-none focus:border-foreground"
+        placeholder={t("vorabPlatzhalter")}
+      />
+    </div>
+  );
+}
+
 export function CheckoutAblauf({
   daten,
   angebot,
@@ -65,11 +125,22 @@ export function CheckoutAblauf({
   const [nachname, setNachname] = useState("");
   const [email, setEmail] = useState("");
   const [telefon, setTelefon] = useState("");
+  // Antwort auf die „Nachricht vor der Buchung" des Gastgebers (Airbnb).
+  // Steht im Angebot keine Frage, gibt es dieses Feld nicht.
+  const [vorabAntwort, setVorabAntwort] = useState("");
   const [zustand, setZustand] = useState<Zustand>({ kind: "eingabe" });
 
+  // Einmal abgeleitet statt an zwei Stellen ausgeschrieben: die Prüfung vor
+  // dem Absenden und der Weiter-Knopf müssen dieselbe Regel verwenden, sonst
+  // ist einer von beiden irgendwann falsch.
   const plan = angebot.payment_plan;
   const rate = plan != null && plan.due_later > 0;
   const waehrung = angebot.currency;
+  // Stellt der Gastgeber eine Frage, ist ihre Beantwortung Voraussetzung für
+  // die Sofortbuchung. Der Server lehnt sonst mit 422 ab — die Frage MUSS hier
+  // also stehen, sonst liefe der Gast in einen Fehler ohne erkennbaren Grund.
+  const frage = angebot.pre_booking_question;
+  const fehlt = fehlenderSchritt(vorname, nachname, email, frage, vorabAntwort);
 
   // Schritt 1 entfällt, wenn es nichts zu entscheiden gibt: ohne Ratenzahlung ist
   // der ganze Betrag jetzt fällig. Dann startet der Ablauf direkt bei den
@@ -78,8 +149,10 @@ export function CheckoutAblauf({
   const aktiv = Math.max(schritt, ersterSchritt);
 
   async function buchenUndBezahlen() {
-    if (!vorname.trim() || !nachname.trim() || !email.trim()) {
-      setZustand({ kind: "fehler", msg: t("fehlerKontakt") });
+    // Der Server prüft dasselbe (Wurzel 3) — hier nur, damit der Gast es
+    // erfährt, bevor er auf „bezahlen" drückt, statt danach.
+    if (fehlt) {
+      setZustand({ kind: "fehler", msg: t(fehlt) });
       return;
     }
     setZustand({ kind: "bucht" });
@@ -101,6 +174,9 @@ export function CheckoutAblauf({
       promo_code: daten.promoCode,
       locale,
       fees: daten.fees,
+      // Ohne Frage verwirft der Server die Antwort ohnehin — hier braucht es
+      // dafür keine zweite Verzweigung.
+      vorab_antwort: vorabAntwort.trim() || undefined,
     });
     if (!res.ok) {
       setZustand({ kind: "fehler", msg: res.error });
@@ -217,11 +293,18 @@ export function CheckoutAblauf({
         <p className="mt-3 text-xs text-muted-foreground">
           {t("kontaktHinweis")}
         </p>
+
+        <VorabFrage
+          frage={frage}
+          wert={vorabAntwort}
+          onChange={setVorabAntwort}
+        />
+
         <div className="mt-4 flex justify-end">
           <button
             type="button"
             onClick={() => setSchritt(3)}
-            disabled={!vorname.trim() || !nachname.trim() || !email.trim()}
+            disabled={fehlt !== null}
             className="rounded-full bg-primary px-7 py-3 font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {t("weiter")}

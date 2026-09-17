@@ -42,7 +42,12 @@ log = get_logger("nextdays.booking_engine")
 _PUBLIC_PROPERTY_COLUMNS = (
     "id, title, description, platform_description, property_type, city, country, "
     "lat, lng, max_guests, amenities, photos, type_attributes, status, "
-    "search_engine_indexing"
+    "search_engine_indexing, "
+    # Die Frage des Gastgebers (0719). Sie steht auch am Inserat und
+    # nicht nur im Quote, weil das Buchungs-Widget der Betriebs-Website
+    # keinen Quote holt — ohne sie liefe eine Website-Buchung in die
+    # 422 des Servers, ohne dass der Gast die Frage je gesehen hätte.
+    "pre_booking_question"
 )
 
 # Max. angezeigte Marktplatz-Treffer je Suche. Deckelt die datierte Preisauflösung
@@ -469,6 +474,9 @@ class SchaufensterMixin:
             # Steuert das robots-noindex-Meta auf der öffentlichen Inserat-Seite
             # (Airbnb-Mechanik). Default false = nicht indexierbar.
             search_engine_indexing=bool(r.get("search_engine_indexing")),
+            pre_booking_question=(
+                (r.get("pre_booking_question") or "").strip() or None
+            ),
         )
 
     def sitemap_entries(self) -> list[dict]:

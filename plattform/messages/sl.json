@@ -100,7 +100,10 @@
     "gesamt": "Skupaj ({waehrung})",
     "kautionHinweis": "Dodatno se zahteva varščina {betrag}.",
     "fertigTitel": "Rezervacija potrjena",
-    "fertigText": "Potrdilo smo poslali na {email}."
+    "fertigText": "Potrdilo smo poslali na {email}.",
+    "vorabTitel": "Vprašanje gostitelja",
+    "vorabPlatzhalter": "Vaš odgovor",
+    "fehlerVorabAntwort": "Prosimo, odgovorite na vprašanje gostitelja"
   },
   "zahlung": {
     "vorbereiten": "Pripravljamo plačilo …",

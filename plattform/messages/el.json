@@ -100,7 +100,10 @@
     "gesamt": "Σύνολο ({waehrung})",
     "kautionHinweis": "Απαιτείται επιπλέον εγγύηση {betrag}.",
     "fertigTitel": "Η κράτηση επιβεβαιώθηκε",
-    "fertigText": "Στείλαμε την επιβεβαίωση στο {email}."
+    "fertigText": "Στείλαμε την επιβεβαίωση στο {email}.",
+    "vorabTitel": "Ερώτηση οικοδεσπότη",
+    "vorabPlatzhalter": "Η απάντησή σου",
+    "fehlerVorabAntwort": "Παρακαλώ απάντησε στην ερώτηση του οικοδεσπότη"
   },
   "zahlung": {
     "vorbereiten": "Προετοιμασία πληρωμής …",

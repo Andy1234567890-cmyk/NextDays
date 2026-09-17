@@ -475,6 +475,11 @@ export interface BuchungDetail {
   checkin_time: string | null;
   checkout_time: string | null;
   is_owner_stay: boolean;
+  /** „Nachricht vor der Buchung" (Airbnb): die Frage, WIE SIE BEI DER BUCHUNG
+   *  LAUTETE, und die Antwort des Gastes. Beide null, wenn nichts gefragt
+   *  wurde — oder wenn die Rolle keinen vollen Gast-Einblick hat. */
+  pre_booking_question: string | null;
+  pre_booking_answer: string | null;
   booked_at: string | null;
   created_at: string | null;
 }

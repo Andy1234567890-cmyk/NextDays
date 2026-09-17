@@ -100,7 +100,10 @@
     "gesamt": "Celkem ({waehrung})",
     "kautionHinweis": "Navíc je vyžadována kauce {betrag}.",
     "fertigTitel": "Rezervace potvrzena",
-    "fertigText": "Potvrzení jsme poslali na {email}."
+    "fertigText": "Potvrzení jsme poslali na {email}.",
+    "vorabTitel": "Dotaz hostitele",
+    "vorabPlatzhalter": "Tvá odpověď",
+    "fehlerVorabAntwort": "Odpověz prosím na dotaz hostitele."
   },
   "zahlung": {
     "vorbereiten": "Připravujeme platbu …",

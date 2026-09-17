@@ -96,6 +96,10 @@ export type Angebot = {
    *  diesen Aufenthalt. Nicht selbst hochrechnen: bei Prozent- oder Gast-Basis
    *  käme der Browser auf eine andere Zahl als der Server. */
   optional_fees: WaehlbareGebuehr[];
+  /** „Nachricht vor der Buchung" des Gastgebers (Airbnb). null = keine Frage.
+   *  Steht sie hier, verlangt der Server eine Antwort — die Strecke MUSS sie
+   *  also zeigen, sonst läuft der Gast in eine 422 ohne erkennbaren Grund. */
+  pre_booking_question: string | null;
 };
 
 /** Eine zuwählbare Gebühr des Objekts (`optional` im Gebühren-Editor). */
@@ -151,6 +155,9 @@ export async function bucheGast(input: {
   /** DIESELBE Auswahl wie im Angebot — sonst berechnet die Buchung etwas
    *  anderes, als die Strecke angezeigt hat. */
   fees?: string[];
+  /** Antwort auf die Frage des Gastgebers. Pflicht, sobald das Angebot eine
+   *  `pre_booking_question` trägt — geprüft wird das serverseitig. */
+  vorab_antwort?: string;
 }): Promise<
   Result<{
     /**

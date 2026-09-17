@@ -32,6 +32,7 @@ Seiteneffekt, partieller UNIQUE-Index auf `reservation_id` als DB-Backstop.
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Any
 
@@ -77,6 +78,26 @@ ABLAUF_STUNDEN = 24
 
 class AbsichtFehler(RuntimeError):
     """Die Absicht kann nicht eingelöst werden."""
+
+
+@dataclass(frozen=True)
+class VorabNachricht:
+    """Die „Nachricht vor der Buchung" und die Antwort des Gastes (0719).
+
+    Beides in EINEM Wert und nicht als zwei Argumente: sie gehören zusammen —
+    eine Antwort ohne ihre Frage ist nicht interpretierbar, und genau deshalb
+    wird die Frage überhaupt mitgeschrieben. Getrennt gereicht ließe sich die
+    eine Hälfte irgendwo vergessen.
+    """
+
+    frage: str | None = None
+    antwort: str | None = None
+
+
+# Ein unveraenderliches Modul-Singleton als Vorgabewert: die Datenklasse ist
+# frozen, es gibt also nichts, was ein Aufruf am gemeinsamen Objekt aendern
+# koennte (B008).
+OHNE_VORAB = VorabNachricht()
 
 
 def anlegen(
@@ -297,6 +318,8 @@ class AbsichtMixin:
                             "total_amount": float(zeile["total_amount"]),
                             "quote_items": daten.get("quote_items") or [],
                             "currency": zeile.get("currency"),
+                            "pre_booking_question": daten.get("vorab_frage"),
+                            "pre_booking_answer": daten.get("vorab_antwort"),
                         },
                         "p_source": "direct",
                         "p_with_outbox": True,
@@ -504,6 +527,7 @@ class AbsichtMixin:
         quote_items: list[dict],
         bookable_addons: list[tuple[str, int]],
         guest_id: str | None,
+        vorab: VorabNachricht = OHNE_VORAB,
     ) -> PublicBookingResponse:
         """Zahlung starten, statt die Buchung anzulegen (0409).
 
@@ -544,6 +568,12 @@ class AbsichtMixin:
                     "quote_items": quote_items,
                     "guest_id": guest_id,
                     "promo_code": req.promo_code,
+                    # „Nachricht vor der Buchung" (0719). Muss mit in die
+                    # Absicht: beim Einlösen läuft kein Request mehr, in dem
+                    # die Antwort des Gastes stünde — sie wäre sonst zwischen
+                    # Zahlung und Buchung verloren.
+                    "vorab_frage": vorab.frage,
+                    "vorab_antwort": vorab.antwort,
                 },
                 check_in=req.check_in,
                 check_out=req.check_out,

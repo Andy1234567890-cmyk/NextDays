@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Gjelder for dine {anzahl} eiendommer.",
     "brAbweichend": "{anzahl} av disse er individuelt innstilt annerledes og vil bli justert ved lagring.",
     "brNichtAbrufbar": "Dine bestillingstillatelser er for øyeblikket ikke tilgjengelige. Vennligst last inn siden på nytt senere.",
-    "brFehlgeschlagen": "Handlingen mislyktes."
+    "brFehlgeschlagen": "Handlingen mislyktes.",
+    "brFrageTitel": "Melding før bestilling",
+    "brFrageText": "Still et spørsmål som gjester må svare på før de bestiller direkte. Hvis du lar feltet stå tomt, blir det ikke stilt spørsmål.",
+    "brFragePlatzhalter": "For eksempel: Hvem reiser med deg, og hvorfor velger du oss?",
+    "brFrageSpeichern": "Lagre spørsmål"
   },
   "menu": {
     "titel": "Meny",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Hvis en gjest avbestiller innen 5 dager før ankomst eller etter at oppholdet har startet, belastes 1 ekstra natt. 50 % av de resterende nettene refunderes.",
     "richtlinie_eingeschraenkt_info": "Gjester som avbestiller 7 til 14 dager før ankomst, får 50 % tilbake. Etter dette er bestillingen ikke lenger refunderbar.",
     "richtlinie_lang_moderat_info": "Hvis en gjest avbestiller innen 30 dager før ankomst, gis det ingen refusjon. Hvis gjesten avbestiller under oppholdet, beholdes de første 30 nettene.",
-    "richtlinie_lang_streng_info": "Hvis en gjest avbestiller innen 28 dager før ankomst, gis det ingen refusjon. Hvis gjesten avbestiller under oppholdet, beholdes de første 30 nettene."
+    "richtlinie_lang_streng_info": "Hvis en gjest avbestiller innen 28 dager før ankomst, gis det ingen refusjon. Hvis gjesten avbestiller under oppholdet, beholdes de første 30 nettene.",
+    "vorabTitel": "Gjestens svar før bestilling"
   }
 }

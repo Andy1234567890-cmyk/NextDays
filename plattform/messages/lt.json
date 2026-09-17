@@ -100,7 +100,10 @@
     "gesamt": "Iš viso ({waehrung})",
     "kautionHinweis": "Papildomai reikalingas {betrag} užstatas.",
     "fertigTitel": "Rezervacija patvirtinta",
-    "fertigText": "Patvirtinimą išsiuntėme adresu {email}."
+    "fertigText": "Patvirtinimą išsiuntėme adresu {email}.",
+    "vorabTitel": "Šeimininko klausimas",
+    "vorabPlatzhalter": "Jūsų atsakymas",
+    "fehlerVorabAntwort": "Atsakykite į šeimininko klausimą"
   },
   "zahlung": {
     "vorbereiten": "Ruošiamas mokėjimas …",

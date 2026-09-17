@@ -151,6 +151,9 @@ export async function bucheGast(input: {
   /** DIESELBE Auswahl wie im Angebot — sonst berechnet die Buchung etwas
    *  anderes, als die Strecke angezeigt hat. */
   fees?: string[];
+  /** Antwort auf die „Nachricht vor der Buchung" des Gastgebers. Pflicht,
+   *  sobald das Inserat eine `vorabFrage` traegt — geprueft serverseitig. */
+  vorab_antwort?: string;
 }): Promise<
   Result<{
     /**

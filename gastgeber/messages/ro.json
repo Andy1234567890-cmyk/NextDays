@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Se aplică pentru cele {anzahl} proprietăți ale tale.",
     "brAbweichend": "{anzahl} dintre ele sunt setate individual diferit și vor fi ajustate la salvare.",
     "brNichtAbrufbar": "Permisiunile tale de rezervare nu sunt disponibile momentan. Te rugăm să reîncarci pagina mai târziu.",
-    "brFehlgeschlagen": "Acțiune eșuată."
+    "brFehlgeschlagen": "Acțiune eșuată.",
+    "brFrageTitel": "Mesaj înainte de rezervare",
+    "brFrageText": "Pune o întrebare la care oaspeții trebuie să răspundă înainte de a rezerva instant. Dacă lași câmpul necompletat, nu se va pune nicio întrebare.",
+    "brFragePlatzhalter": "De exemplu: Cine călătorește cu tine și ce te aduce la noi?",
+    "brFrageSpeichern": "Salvează întrebarea"
   },
   "menu": {
     "titel": "Meniu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Dacă un oaspete anulează cu 5 zile înainte de sosire sau după începerea șederii, i se va percepe costul pentru 1 noapte suplimentară; 50% din nopțile rămase vor fi rambursate.",
     "richtlinie_eingeschraenkt_info": "Oaspeții care anulează cu 7 până la 14 zile înainte de sosire primesc înapoi 50%. După aceea, rezervarea nu mai este rambursabilă.",
     "richtlinie_lang_moderat_info": "Dacă un oaspete anulează cu 30 de zile înainte de sosire, nu se mai face nicio rambursare. Dacă anulează în timpul șederii, primele 30 de nopți sunt reținute.",
-    "richtlinie_lang_streng_info": "Dacă un oaspete anulează cu 28 de zile înainte de sosire, nu se mai face nicio rambursare. Dacă anulează în timpul șederii, primele 30 de nopți sunt reținute."
+    "richtlinie_lang_streng_info": "Dacă un oaspete anulează cu 28 de zile înainte de sosire, nu se mai face nicio rambursare. Dacă anulează în timpul șederii, primele 30 de nopți sunt reținute.",
+    "vorabTitel": "Răspunsul oaspetelui înainte de rezervare"
   }
 }

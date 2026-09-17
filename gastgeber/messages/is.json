@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Gildir fyrir {anzahl} eignir þínar.",
     "brAbweichend": "{anzahl} þeirra eru stilltar öðruvísi og verða samræmdar við vistun.",
     "brNichtAbrufbar": "Ekki er hægt að sækja bókunarheimildir þínar. Vinsamlegast hlaðið síðuna aftur síðar.",
-    "brFehlgeschlagen": "Aðgerð mistókst."
+    "brFehlgeschlagen": "Aðgerð mistókst.",
+    "brFrageTitel": "Skilaboð fyrir bókun",
+    "brFrageText": "Spyrðu spurningar sem gestir verða að svara áður en þeir bóka samstundis. Ef þú skilur reitinn eftir auðan verður engu spurt.",
+    "brFragePlatzhalter": "Til dæmis: Hverjir ferðast með þér og hvaðan komið þið?",
+    "brFrageSpeichern": "Vista spurningu"
   },
   "menu": {
     "titel": "Valmynd",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Ef gestur afbókar innan 5 daga fyrir komu eða eftir að dvölin hefst er hann rukkaður um 1 aukalega nótt; 50% af eftirstandandi nóttum eru endurgreiddar.",
     "richtlinie_eingeschraenkt_info": "Gestir sem afbóka 7 til 14 dögum fyrir komu fá 50% endurgreitt. Eftir það er bókunin ekki lengur endurgreiðanleg.",
     "richtlinie_lang_moderat_info": "Ef gestur afbókar innan 30 daga fyrir komu er engin endurgreiðsla. Ef hann afbókar meðan á dvölinni stendur eru fyrstu 30 næturnar geymdar.",
-    "richtlinie_lang_streng_info": "Ef gestur afbókar innan 28 daga fyrir komu er engin endurgreiðsla. Ef hann afbókar meðan á dvölinni stendur eru fyrstu 30 næturnar geymdar."
+    "richtlinie_lang_streng_info": "Ef gestur afbókar innan 28 daga fyrir komu er engin endurgreiðsla. Ef hann afbókar meðan á dvölinni stendur eru fyrstu 30 næturnar geymdar.",
+    "vorabTitel": "Svar gests fyrir bókun"
   }
 }

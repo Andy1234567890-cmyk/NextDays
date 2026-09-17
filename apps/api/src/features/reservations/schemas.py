@@ -247,6 +247,12 @@ class ReservationResponse(BaseModel):
     # anwesende Person (siehe `_base.anzeigename`); hier steht der Grund, den
     # der Balken hinter dem Namen zeigt.
     stay_note: str | None = None
+    # „Nachricht vor der Buchung" (0719): die Frage des Gastgebers, WIE SIE BEI
+    # DER BUCHUNG LAUTETE, und die Antwort des Gastes. Beide nur für Rollen mit
+    # vollem Gast-Einblick — es ist Freitext des Gastes und kann alles
+    # enthalten, was er für nötig hielt (Wurzel 9).
+    pre_booking_question: str | None = None
+    pre_booking_answer: str | None = None
     # Wann der Gast WIRKLICH gebucht hat (0291, Wurzel 5b). None = die Quelle
     # hat es nicht geliefert; die UI zeigt dann `created_at` und benennt es als
     # „Eingang bei uns" — niemals unsere Uhr als fremden Buchungszeitpunkt.

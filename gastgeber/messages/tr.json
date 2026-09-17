@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "{anzahl} tesisin için geçerlidir.",
     "brAbweichend": "Bunlardan {anzahl} tanesi ayrı ayrı farklı ayarlanmıştır ve kaydedilirken uyarlanacaktır.",
     "brNichtAbrufbar": "Rezervasyon izinlerin şu anda alınamıyor. Lütfen sayfayı daha sonra tekrar yükle.",
-    "brFehlgeschlagen": "İşlem başarısız oldu."
+    "brFehlgeschlagen": "İşlem başarısız oldu.",
+    "brFrageTitel": "Rezervasyon öncesi mesaj",
+    "brFrageText": "Misafirlerin anında rezervasyon yapmadan önce yanıtlaması gereken bir soru sor. Alanı boş bırakırsan, hiçbir şey sorulmaz.",
+    "brFragePlatzhalter": "Örneğin: Kimler seyahat ediyor ve sizi bize getiren nedir?",
+    "brFrageSpeichern": "Soruyu kaydet"
   },
   "menu": {
     "titel": "Menü",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Bir misafir girişten 5 gün önce veya konaklama başladıktan sonra iptal ederse, 1 ek gece ücreti tahsil edilir; kalan gecelerin %50'si iade edilir.",
     "richtlinie_eingeschraenkt_info": "Girişten 7 ila 14 gün önce iptal eden misafirler %50 geri ödeme alır. Bundan sonra rezervasyon iade edilemez.",
     "richtlinie_lang_moderat_info": "Bir misafir girişten 30 gün önce iptal ederse, artık geri ödeme yapılmaz. Konaklama sırasında iptal ederse, ilk 30 gece tutulur.",
-    "richtlinie_lang_streng_info": "Bir misafir girişten 28 gün önce iptal ederse, artık geri ödeme yapılmaz. Konaklama sırasında iptal ederse, ilk 30 gece tutulur."
+    "richtlinie_lang_streng_info": "Bir misafir girişten 28 gün önce iptal ederse, artık geri ödeme yapılmaz. Konaklama sırasında iptal ederse, ilk 30 gece tutulur.",
+    "vorabTitel": "Misafirin rezervasyon öncesi yanıtı"
   }
 }

@@ -100,7 +100,10 @@
     "gesamt": "Celkom ({waehrung})",
     "kautionHinweis": "Navyše sa vyžaduje kaucia {betrag}.",
     "fertigTitel": "Rezervácia potvrdená",
-    "fertigText": "Potvrdenie sme poslali na {email}."
+    "fertigText": "Potvrdenie sme poslali na {email}.",
+    "vorabTitel": "Otázka hostiteľa",
+    "vorabPlatzhalter": "Vaša odpoveď",
+    "fehlerVorabAntwort": "Prosím, odpovedzte na otázku hostiteľa."
   },
   "zahlung": {
     "vorbereiten": "Pripravujeme platbu …",

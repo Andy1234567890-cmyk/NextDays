@@ -100,7 +100,10 @@
     "gesamt": "Iomlán ({waehrung})",
     "kautionHinweis": "Tá éarlais {betrag} ag teastáil freisin.",
     "fertigTitel": "Áirithint deimhnithe",
-    "fertigText": "Sheolamar an deimhniú chuig {email}."
+    "fertigText": "Sheolamar an deimhniú chuig {email}.",
+    "vorabTitel": "Ceist ón óstach",
+    "vorabPlatzhalter": "Do fhreagra",
+    "fehlerVorabAntwort": "Freagair ceist an óstaigh, le do thoil"
   },
   "zahlung": {
     "vorbereiten": "Íocaíocht á ullmhú …",

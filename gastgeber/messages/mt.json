@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Japplika għall-{anzahl} proprjetajiet tiegħek.",
     "brAbweichend": "{anzahl} minnhom huma ssettjati b'mod differenti individwalment u se jiġu aġġustati meta jiġu ssejvjati.",
     "brNichtAbrufbar": "Il-permessi tal-prenotazzjoni tiegħek bħalissa mhumiex disponibbli. Jekk jogħġbok erġa' kkarga l-paġna aktar tard.",
-    "brFehlgeschlagen": "Azzjoni falliet."
+    "brFehlgeschlagen": "Azzjoni falliet.",
+    "brFrageTitel": "Messaġġ qabel il-booking",
+    "brFrageText": "Staqsi mistoqsija li l-klijenti jridu jwieġbu qabel ma jibbukkjaw istantanjament. Jekk tħalli l-kaxxa vojta, ma tiġi staqsiet l-ebda mistoqsija.",
+    "brFragePlatzhalter": "Pereżempju: Min qed jivvjaġġa miegħek, u x'ġabek għandna?",
+    "brFrageSpeichern": "Ħlief il-mistoqsija"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Jekk klijent jikkanċella fi żmien 5 ijiem qabel il-wasla jew wara li tkun bdiet iż-żjara, tiġi ċċarġjata lejl addizzjonali; 50% tal-iljieli li jifdal jiġu rimborżati.",
     "richtlinie_eingeschraenkt_info": "Klijenti li jikkanċellaw bejn 7 u 14-il jum qabel il-wasla jirċievu 50% lura. Wara dan, il-prenotazzjoni ma tibqax rimborżabbli.",
     "richtlinie_lang_moderat_info": "Jekk klijent jikkanċella fi żmien 30 jum qabel il-wasla, ma jkunx hemm aktar rifużjoni. Jekk jikkanċella waqt iż-żjara, l-ewwel 30 lejl jinżammu.",
-    "richtlinie_lang_streng_info": "Jekk klijent jikkanċella fi żmien 28 jum qabel il-wasla, ma jkunx hemm aktar rifużjoni. Jekk jikkanċella waqt iż-żjara, l-ewwel 30 lejl jinżammu."
+    "richtlinie_lang_streng_info": "Jekk klijent jikkanċella fi żmien 28 jum qabel il-wasla, ma jkunx hemm aktar rifużjoni. Jekk jikkanċella waqt iż-żjara, l-ewwel 30 lejl jinżammu.",
+    "vorabTitel": "Tweġiba tal-klijent qabel il-booking"
   }
 }

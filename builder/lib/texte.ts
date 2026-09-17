@@ -462,6 +462,10 @@ export type RendererTexte = {
   angebotStornoStaffel: string;
   /** Überschrift Hausregeln. */
   angebotHausregeln: string;
+  /** Ueberschrift ueber der „Nachricht vor der Buchung" des Gastgebers (Airbnb, 0719). */
+  vorabFrage: string;
+  /** Platzhalter im Antwortfeld zur Frage des Gastgebers. */
+  vorabAntwort: string;
 };
 
 /** Anzeigename einer Sprache in ihrer EIGENEN Sprache. Ein Wähler, der
@@ -780,6 +784,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Безплатно анулиране до настаняване.",
     angebotStornoStaffel: "До {tage} дни преди настаняване: {prozent}% възстановяване",
     angebotHausregeln: "Правила на къщата",
+    vorabFrage: "Въпрос от домакина",
+    vorabAntwort: "Вашият отговор",
   },
   cs: {
     cookieText: "Tento web používá cookies, aby fungoval správně.",
@@ -1002,6 +1008,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Bezplatné zrušení do příjezdu.",
     angebotStornoStaffel: "Do {tage} dnů před příjezdem: {prozent} % vrácení peněz",
     angebotHausregeln: "Domovní řád",
+    vorabFrage: "Dotaz hostitele",
+    vorabAntwort: "Tvá odpověď",
   },
   da: {
     cookieText: "Dette website bruger cookies for at fungere korrekt.",
@@ -1224,6 +1232,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Gratis afbestilling indtil ankomst.",
     angebotStornoStaffel: "Op til {tage} dage før ankomst: {prozent} % refusion",
     angebotHausregeln: "Husregler",
+    vorabFrage: "Spørgsmål fra vært",
+    vorabAntwort: "Dit svar",
   },
   de: {
     cookieText: "Diese Website verwendet Cookies, damit sie richtig funktioniert.",
@@ -1446,6 +1456,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Kostenlos stornierbar bis zur Anreise.",
     angebotStornoStaffel: "Bis {tage} Tage vor Anreise: {prozent} % Rückerstattung",
     angebotHausregeln: "Hausregeln",
+    vorabFrage: "Frage des Gastgebers",
+    vorabAntwort: "Deine Antwort",
   },
   el: {
     cookieText: "Αυτός ο ιστότοπος χρησιμοποιεί cookies για να λειτουργεί σωστά.",
@@ -1668,6 +1680,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Δωρεάν ακύρωση έως την άφιξη.",
     angebotStornoStaffel: "Έως {tage} ημέρες πριν την άφιξη: {prozent} % επιστροφή χρημάτων",
     angebotHausregeln: "Κανόνες σπιτιού",
+    vorabFrage: "Ερώτηση οικοδεσπότη",
+    vorabAntwort: "Η απάντησή σου",
   },
   en: {
     cookieText: "This website uses cookies so that it works properly.",
@@ -1890,6 +1904,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Free cancellation until arrival.",
     angebotStornoStaffel: "Up to {tage} days before arrival: {prozent}% refund",
     angebotHausregeln: "House rules",
+    vorabFrage: "Host question",
+    vorabAntwort: "Your answer",
   },
   es: {
     cookieText: "Este sitio web utiliza cookies para funcionar correctamente.",
@@ -2112,6 +2128,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Cancelación gratuita hasta la llegada.",
     angebotStornoStaffel: "Hasta {tage} días antes de la llegada: {prozent} % de reembolso",
     angebotHausregeln: "Normas de la casa",
+    vorabFrage: "Pregunta del anfitrión",
+    vorabAntwort: "Tu respuesta",
   },
   et: {
     cookieText: "See veebisait kasutab küpsiseid, et korralikult töötada.",
@@ -2334,6 +2352,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Tasuta tühistatav kuni saabumiseni.",
     angebotStornoStaffel: "Kuni {tage} päeva enne saabumist: {prozent} % tagasimakse",
     angebotHausregeln: "Majareeglid",
+    vorabFrage: "Võõrustaja küsimus",
+    vorabAntwort: "Sinu vastus",
   },
   fi: {
     cookieText: "Tämä sivusto käyttää evästeitä toimiakseen oikein.",
@@ -2556,6 +2576,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Ilmainen peruutus saapumiseen asti.",
     angebotStornoStaffel: "Enintään {tage} päivää ennen saapumista: {prozent} % hyvitys",
     angebotHausregeln: "Talon säännöt",
+    vorabFrage: "Kysymys majoittajalta",
+    vorabAntwort: "Vastauksesi",
   },
   fr: {
     cookieText: "Ce site utilise des cookies pour fonctionner correctement.",
@@ -2778,6 +2800,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Annulation gratuite jusqu'à l'arrivée.",
     angebotStornoStaffel: "Jusqu'à {tage} jours avant l'arrivée : {prozent} % de remboursement",
     angebotHausregeln: "Règlement intérieur",
+    vorabFrage: "Question de l'hôte",
+    vorabAntwort: "Votre réponse",
   },
   ga: {
     cookieText: "Úsáideann an suíomh seo fianáin chun oibriú i gceart.",
@@ -3000,6 +3024,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Cealú saor in aisce go dtí an dáta teachta.",
     angebotStornoStaffel: "Suas le {tage} lá roimh theacht: Aisíocaíocht {prozent} %",
     angebotHausregeln: "Rialacha Tí",
+    vorabFrage: "Ceist ón óstach",
+    vorabAntwort: "Do fhreagra",
   },
   hr: {
     cookieText: "Ova web-stranica koristi kolačiće kako bi ispravno radila.",
@@ -3222,6 +3248,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Besplatno otkazivanje do dolaska.",
     angebotStornoStaffel: "Do {tage} dana prije dolaska: {prozent} % povrata",
     angebotHausregeln: "Kućni red",
+    vorabFrage: "Pitanje domaćina",
+    vorabAntwort: "Tvoj odgovor",
   },
   hu: {
     cookieText: "Ez a weboldal sütiket használ a helyes működéshez.",
@@ -3444,6 +3472,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Ingyenesen lemondható az érkezésig.",
     angebotStornoStaffel: "Érkezés előtt {tage} nappal: {prozent}% visszatérítés",
     angebotHausregeln: "Házirend",
+    vorabFrage: "A szállásadó kérdése",
+    vorabAntwort: "A válaszod",
   },
   it: {
     cookieText: "Questo sito utilizza i cookie per funzionare correttamente.",
@@ -3666,6 +3696,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Cancellazione gratuita fino all'arrivo.",
     angebotStornoStaffel: "Fino a {tage} giorni prima dell'arrivo: rimborso del {prozent} %",
     angebotHausregeln: "Regole della casa",
+    vorabFrage: "Domanda dell'host",
+    vorabAntwort: "La tua risposta",
   },
   lt: {
     cookieText: "Ši svetainė naudoja slapukus, kad tinkamai veiktų.",
@@ -3888,6 +3920,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Nemokamai atšaukiama iki atvykimo.",
     angebotStornoStaffel: "Iki {tage} dienų prieš atvykimą: {prozent} % grąžinama",
     angebotHausregeln: "Namų taisyklės",
+    vorabFrage: "Šeimininko klausimas",
+    vorabAntwort: "Jūsų atsakymas",
   },
   lv: {
     cookieText: "Šī vietne izmanto sīkfailus, lai darbotos pareizi.",
@@ -4110,6 +4144,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Bezmaksas atcelšana līdz ierašanās brīdim.",
     angebotStornoStaffel: "Līdz {tage} dienām pirms ierašanās: {prozent} % atmaksa",
     angebotHausregeln: "Mājas noteikumi",
+    vorabFrage: "Jautājums no saimnieka",
+    vorabAntwort: "Jūsu atbilde",
   },
   mt: {
     cookieText: "Dan is-sit juża cookies biex jaħdem sew.",
@@ -4332,6 +4368,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Kanċellazzjoni b'xejn sal-wasla.",
     angebotStornoStaffel: "Sa {tage} ijiem qabel il-wasla: {prozent} % rifużjoni",
     angebotHausregeln: "Regoli tad-dar",
+    vorabFrage: "Mistoqsija tal-host",
+    vorabAntwort: "Ir-risposta tiegħek",
   },
   nl: {
     cookieText: "Deze website gebruikt cookies om goed te werken.",
@@ -4554,6 +4592,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Gratis annuleren tot aan de aankomstdatum.",
     angebotStornoStaffel: "Tot {tage} dagen voor aankomst: {prozent} % restitutie",
     angebotHausregeln: "Huisregels",
+    vorabFrage: "Vraag van de host",
+    vorabAntwort: "Jouw antwoord",
   },
   pl: {
     cookieText: "Ta strona używa plików cookie, aby działać poprawnie.",
@@ -4776,6 +4816,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Możliwość bezpłatnego anulowania do dnia przyjazdu.",
     angebotStornoStaffel: "Do {tage} dni przed przyjazdem: {prozent} % zwrotu",
     angebotHausregeln: "Zasady domu",
+    vorabFrage: "Pytanie od gospodarza",
+    vorabAntwort: "Twoja odpowiedź",
   },
   pt: {
     cookieText: "Este site utiliza cookies para funcionar corretamente.",
@@ -4998,6 +5040,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Cancelamento gratuito até a chegada.",
     angebotStornoStaffel: "Até {tage} dias antes da chegada: {prozent} % de reembolso",
     angebotHausregeln: "Regras da casa",
+    vorabFrage: "Pergunta do anfitrião",
+    vorabAntwort: "Sua resposta",
   },
   ro: {
     cookieText: "Acest site folosește cookie-uri pentru a funcționa corect.",
@@ -5220,6 +5264,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Anulare gratuită până la sosire.",
     angebotStornoStaffel: "Până la {tage} zile înainte de sosire: {prozent} % rambursare",
     angebotHausregeln: "Regulile casei",
+    vorabFrage: "Întrebarea gazdei",
+    vorabAntwort: "Răspunsul tău",
   },
   sk: {
     cookieText: "Táto webová stránka používa cookies, aby fungovala správne.",
@@ -5442,6 +5488,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Bezplatné zrušenie do príchodu.",
     angebotStornoStaffel: "Do {tage} dní pred príchodom: {prozent} % vrátenie peňazí",
     angebotHausregeln: "Domový poriadok",
+    vorabFrage: "Otázka hostiteľa",
+    vorabAntwort: "Vaša odpoveď",
   },
   sl: {
     cookieText: "Ta spletna stran uporablja piškotke, da deluje pravilno.",
@@ -5664,6 +5712,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Brezplačna odpoved do prihoda.",
     angebotStornoStaffel: "Do {tage} dni pred prihodom: {prozent} % vračila",
     angebotHausregeln: "Hišni red",
+    vorabFrage: "Vprašanje gostitelja",
+    vorabAntwort: "Tvoj odgovor",
   },
   sv: {
     cookieText: "Den här webbplatsen använder cookies för att fungera korrekt.",
@@ -5886,6 +5936,8 @@ const KATALOG: Record<string, RendererTexte> = {
     angebotStornoKostenlos: "Gratis avbokning fram till ankomst.",
     angebotStornoStaffel: "Upp till {tage} dagar före ankomst: {prozent} % återbetalning",
     angebotHausregeln: "Husregler",
+    vorabFrage: "Värdens fråga",
+    vorabAntwort: "Ditt svar",
   },
 };
 

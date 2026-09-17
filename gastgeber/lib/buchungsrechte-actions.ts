@@ -17,11 +17,12 @@ type Ergebnis =
 export async function setzeBuchungsberechtigung(
   modus: Buchungsmodus,
   zielgruppe: Zielgruppe,
+  vorabFrage: string | null = null,
 ): Promise<Ergebnis> {
   try {
     const stand = await api<Buchungsberechtigung>("/booking-access", {
       method: "PUT",
-      body: { modus, zielgruppe },
+      body: { modus, zielgruppe, vorab_frage: vorabFrage },
     });
     revalidatePath("/konto");
     return { ok: true, stand };

@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Attiecas uz taviem {anzahl} īpašumiem.",
     "brAbweichend": "{anzahl} no tiem ir atsevišķi iestatīti citādi un tiks pielāgoti saglabājot.",
     "brNichtAbrufbar": "Tavas rezervācijas atļaujas pašlaik nav pieejamas. Lūdzu, ielādē lapu vēlreiz vēlāk.",
-    "brFehlgeschlagen": "Darbība neizdevās."
+    "brFehlgeschlagen": "Darbība neizdevās.",
+    "brFrageTitel": "Ziņojums pirms rezervēšanas",
+    "brFrageText": "Uzdodiet jautājumu, uz kuru viesiem jāatbild pirms tūlītējas rezervēšanas. Ja atstāsiet lauku tukšu, nekas netiks jautāts.",
+    "brFragePlatzhalter": "Piemēram: Kas ceļo kopā ar jums un kāds ir jūsu apmeklējuma iemesls?",
+    "brFrageSpeichern": "Saglabāt jautājumu"
   },
   "menu": {
     "titel": "Izvēlne",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Ja viesis atceļ rezervāciju 5 dienu laikā pirms ierašanās vai pēc uzturēšanās sākuma, viņam tiek iekasēta maksa par 1 papildu nakti; 50 % no atlikušajām naktīm tiek atmaksāti.",
     "richtlinie_eingeschraenkt_info": "Viesi, kuri atceļ rezervāciju 7 līdz 14 dienas pirms ierašanās, saņem 50 % atmaksu. Pēc tam rezervācija nav atmaksājama.",
     "richtlinie_lang_moderat_info": "Ja viesis atceļ rezervāciju 30 dienu laikā pirms ierašanās, atmaksa netiek veikta. Ja viņš atceļ rezervāciju uzturēšanās laikā, pirmās 30 naktis tiek ieturētas.",
-    "richtlinie_lang_streng_info": "Ja viesis atceļ rezervāciju 28 dienu laikā pirms ierašanās, atmaksa netiek veikta. Ja viņš atceļ rezervāciju uzturēšanās laikā, pirmās 30 naktis tiek ieturētas."
+    "richtlinie_lang_streng_info": "Ja viesis atceļ rezervāciju 28 dienu laikā pirms ierašanās, atmaksa netiek veikta. Ja viņš atceļ rezervāciju uzturēšanās laikā, pirmās 30 naktis tiek ieturētas.",
+    "vorabTitel": "Viesa atbilde pirms rezervēšanas"
   }
 }

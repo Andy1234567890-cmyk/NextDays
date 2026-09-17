@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "S'applique à tes {anzahl} propriétés.",
     "brAbweichend": "{anzahl} d'entre elles sont configurées différemment individuellement et seront ajustées lors de l'enregistrement.",
     "brNichtAbrufbar": "Tes autorisations de réservation ne sont pas disponibles actuellement. Veuillez recharger la page plus tard.",
-    "brFehlgeschlagen": "Action échouée."
+    "brFehlgeschlagen": "Action échouée.",
+    "brFrageTitel": "Message avant la réservation",
+    "brFrageText": "Posez une question à laquelle les clients doivent répondre avant la réservation instantanée. Si vous laissez le champ vide, aucune question ne sera posée.",
+    "brFragePlatzhalter": "Par exemple : Qui voyage avec vous et qu'est-ce qui vous amène chez nous ?",
+    "brFrageSpeichern": "Enregistrer la question"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Si un client annule dans les 5 jours précédant l'arrivée ou après le début du séjour, 1 nuit supplémentaire lui sera facturée ; 50 % des nuits restantes seront remboursées.",
     "richtlinie_eingeschraenkt_info": "Les clients qui annulent 7 à 14 jours avant l'arrivée reçoivent 50 % de remboursement. Après cela, la réservation n'est plus remboursable.",
     "richtlinie_lang_moderat_info": "Si un client annule dans les 30 jours précédant l'arrivée, il n'y a plus de remboursement. S'il annule pendant le séjour, les 30 premières nuits sont retenues.",
-    "richtlinie_lang_streng_info": "Si un client annule dans les 28 jours précédant l'arrivée, il n'y a plus de remboursement. S'il annule pendant le séjour, les 30 premières nuits sont retenues."
+    "richtlinie_lang_streng_info": "Si un client annule dans les 28 jours précédant l'arrivée, il n'y a plus de remboursement. S'il annule pendant le séjour, les 30 premières nuits sont retenues.",
+    "vorabTitel": "Réponse de l'hôte avant la réservation"
   }
 }

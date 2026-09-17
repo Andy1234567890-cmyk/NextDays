@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Se aplica a tus {anzahl} propiedades.",
     "brAbweichend": "{anzahl} de ellas tienen una configuración diferente y se ajustarán al guardar.",
     "brNichtAbrufbar": "Tus permisos de reserva no están disponibles en este momento. Por favor, recarga la página más tarde.",
-    "brFehlgeschlagen": "Acción fallida."
+    "brFehlgeschlagen": "Acción fallida.",
+    "brFrageTitel": "Mensaje antes de reservar",
+    "brFrageText": "Haz una pregunta que los huéspedes deben responder antes de la reserva inmediata. Si dejas el campo vacío, no se preguntará nada.",
+    "brFragePlatzhalter": "Por ejemplo: ¿Quién viaja contigo y qué te trae a nuestro alojamiento?",
+    "brFrageSpeichern": "Guardar pregunta"
   },
   "menu": {
     "titel": "Menú",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Si un huésped cancela en el plazo de 5 días antes de la llegada o después del inicio de la estancia, se le cobrará 1 noche adicional; se le reembolsará el 50 % de las noches restantes.",
     "richtlinie_eingeschraenkt_info": "Los huéspedes que cancelen entre 7 y 14 días antes de la llegada recibirán el 50 % de reembolso. Después de eso, la reserva no es reembolsable.",
     "richtlinie_lang_moderat_info": "Si un huésped cancela en el plazo de 30 días antes de la llegada, no hay reembolso. Si cancela durante la estancia, se retienen las primeras 30 noches.",
-    "richtlinie_lang_streng_info": "Si un huésped cancela en el plazo de 28 días antes de la llegada, no hay reembolso. Si cancela durante la estancia, se retienen las primeras 30 noches."
+    "richtlinie_lang_streng_info": "Si un huésped cancela en el plazo de 28 días antes de la llegada, no hay reembolso. Si cancela durante la estancia, se retienen las primeras 30 noches.",
+    "vorabTitel": "Respuesta del huésped antes de la reserva"
   }
 }

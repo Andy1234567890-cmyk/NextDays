@@ -372,3 +372,144 @@ def test_unbekannte_zielgruppe_stuft_ebenfalls_herab(
     _stripe_ok(monkeypatch)
 
     assert svc.create_public_booking(_anfrage()).zahlung_erforderlich is False
+
+
+# --- Nachricht vor der Buchung (0719) --------------------------------------
+
+
+def _reservierungs_nutzlast(db: MagicMock) -> dict:
+    """Die p_reservation-Nutzlast aus dem RPC-Aufruf, der die Buchung anlegt.
+
+    Nicht `call_args` (der LETZTE Aufruf): am selben Mock hängen weitere
+    RPCs, und welcher zuletzt kommt, ist keine Eigenschaft, auf die sich ein
+    Test stützen sollte.
+    """
+    for aufruf in db.rpc.call_args_list:
+        if aufruf[0] and isinstance(aufruf[0][-1], dict):
+            nutzlast = aufruf[0][-1].get("p_reservation")
+            if nutzlast:
+                return nutzlast
+    raise AssertionError("Es wurde keine Reservierung angelegt.")
+
+
+def _mit_frage(
+    monkeypatch: pytest.MonkeyPatch,
+    svc: BookingEngineService,
+    frage: str | None,
+    *,
+    modus: str = "instant",
+) -> None:
+    monkeypatch.setattr(
+        svc,
+        "_public_property",
+        lambda *_a: {
+            "tenant_id": "t-1",
+            "status": "active",
+            "max_guests": 6,
+            "booking_mode": modus,
+            "instant_booking_audience": "everyone",
+            "pre_booking_question": frage,
+        },
+    )
+
+
+def _anfrage_mit_antwort(antwort: str | None) -> PublicBookingRequest:
+    basis = _anfrage()
+    return basis.model_copy(update={"vorab_antwort": antwort})
+
+
+def test_ohne_antwort_keine_sofortbuchung(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Airbnb: der Gast muss die Frage lesen UND beantworten.
+
+    422 und KEIN Schreibzugriff — die Prüfung steht vor allem anderen.
+    """
+    db = _db()
+    svc = _service(monkeypatch, db)
+    _mit_frage(monkeypatch, svc, "Wer reist mit?")
+    _stripe_ok(monkeypatch)
+
+    with pytest.raises(BookingEngineError) as exc:
+        svc.create_public_booking(_anfrage_mit_antwort(None))
+    assert exc.value.status_code == 422
+    assert not db.rpc.called
+
+
+def test_leerzeichen_sind_keine_antwort(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Sonst genügte die Leertaste, und die Bedingung wäre eine Attrappe."""
+    db = _db()
+    svc = _service(monkeypatch, db)
+    _mit_frage(monkeypatch, svc, "Wer reist mit?")
+    _stripe_ok(monkeypatch)
+
+    with pytest.raises(BookingEngineError) as exc:
+        svc.create_public_booking(_anfrage_mit_antwort("   "))
+    assert exc.value.status_code == 422
+
+
+def test_mit_antwort_geht_die_sofortbuchung(monkeypatch: pytest.MonkeyPatch) -> None:
+    db = _db()
+    svc = _service(monkeypatch, db)
+    _mit_frage(monkeypatch, svc, "Wer reist mit?")
+    _stripe_ok(monkeypatch)
+
+    antwort = svc.create_public_booking(_anfrage_mit_antwort("Zwei Erwachsene."))
+    assert antwort.zahlung_erforderlich is True
+
+
+def test_ohne_frage_wird_keine_antwort_verlangt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    db = _db()
+    svc = _service(monkeypatch, db)
+    _mit_frage(monkeypatch, svc, None)
+    _stripe_ok(monkeypatch)
+
+    assert svc.create_public_booking(_anfrage_mit_antwort(None)).zahlung_erforderlich
+
+
+def test_bei_anfrage_ist_die_antwort_nicht_pflicht(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bei einer Anfrage entscheidet der Gastgeber ohnehin selbst und schreibt
+    mit dem Gast — eine Pflichtantwort wäre dort eine Hürde ohne Zweck. Airbnb
+    bindet die Bedingung ebenfalls an die eingeschaltete Sofortbuchung."""
+    db = _db()
+    svc = _service(monkeypatch, db)
+    _mit_frage(monkeypatch, svc, "Wer reist mit?", modus="request")
+    _stripe_ok(monkeypatch)
+
+    # Keine Ausnahme, und die Anfrage entsteht.
+    assert svc.create_public_booking(_anfrage_mit_antwort(None)).zahlung_erforderlich is False
+    assert db.rpc.called
+
+
+def test_frage_und_antwort_stehen_an_der_buchung(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Die Frage wandert MIT. Ändert der Gastgeber sie später, stünde sonst
+    eine Antwort ohne ihre Frage da."""
+    db = _db()
+    svc = _service(monkeypatch, db)
+    _mit_frage(monkeypatch, svc, "Wer reist mit?", modus="request")
+    _stripe_ok(monkeypatch)
+
+    svc.create_public_booking(_anfrage_mit_antwort("Zwei Erwachsene."))
+
+    nutzlast = _reservierungs_nutzlast(db)
+    assert nutzlast["pre_booking_question"] == "Wer reist mit?"
+    assert nutzlast["pre_booking_answer"] == "Zwei Erwachsene."
+
+
+def test_antwort_ohne_frage_wird_nicht_verwahrt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Sonst stünde an der Buchung ein Text, den niemand erbeten hat."""
+    db = _db()
+    svc = _service(monkeypatch, db)
+    _mit_frage(monkeypatch, svc, None, modus="request")
+    _stripe_ok(monkeypatch)
+
+    svc.create_public_booking(_anfrage_mit_antwort("Ungefragt geschickt."))
+
+    nutzlast = _reservierungs_nutzlast(db)
+    assert nutzlast["pre_booking_answer"] is None

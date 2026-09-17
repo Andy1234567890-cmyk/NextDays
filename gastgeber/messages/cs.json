@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Platí pro tvé {anzahl} objekty.",
     "brAbweichend": "{anzahl} z nich je individuálně nastaveno jinak a bude upraveno při uložení.",
     "brNichtAbrufbar": "Tvá oprávnění k rezervaci nejsou momentálně k dispozici. Zkus prosím stránku načíst později.",
-    "brFehlgeschlagen": "Akce se nezdařila."
+    "brFehlgeschlagen": "Akce se nezdařila.",
+    "brFrageTitel": "Zpráva před rezervací",
+    "brFrageText": "Položte otázku, na kterou musí hosté odpovědět před okamžitou rezervací. Pokud pole necháte prázdné, nic se nezeptá.",
+    "brFragePlatzhalter": "Například: Kdo s vámi cestuje a co vás k nám přivádí?",
+    "brFrageSpeichern": "Uložit otázku"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Pokud host zruší rezervaci do 5 dnů před příjezdem nebo po začátku pobytu, bude mu účtována 1 další noc; 50 % zbývajících nocí bude vráceno.",
     "richtlinie_eingeschraenkt_info": "Hosté, kteří zruší rezervaci 7 až 14 dní před příjezdem, dostanou zpět 50 %. Poté je rezervace nevratná.",
     "richtlinie_lang_moderat_info": "Pokud host zruší rezervaci do 30 dnů před příjezdem, nebude mu již nic vráceno. Pokud zruší rezervaci během pobytu, prvních 30 nocí zůstane zadrženo.",
-    "richtlinie_lang_streng_info": "Pokud host zruší rezervaci do 28 dnů před příjezdem, nebude mu již nic vráceno. Pokud zruší rezervaci během pobytu, prvních 30 nocí zůstane zadrženo."
+    "richtlinie_lang_streng_info": "Pokud host zruší rezervaci do 28 dnů před příjezdem, nebude mu již nic vráceno. Pokud zruší rezervaci během pobytu, prvních 30 nocí zůstane zadrženo.",
+    "vorabTitel": "Odpověď hosta před rezervací"
   }
 }

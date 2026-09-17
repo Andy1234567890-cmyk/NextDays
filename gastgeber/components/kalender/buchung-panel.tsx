@@ -184,6 +184,24 @@ export function BuchungPanel({
               )}
             </dl>
 
+            {/* Antwort des Gastes auf die Frage vor der Buchung (0719).
+                Sie steht HIER und nicht in den Notizen: die Notiz gehört dem
+                Betrieb, das hier hat der Gast geschrieben. Ohne diese Stelle
+                wäre die Frage eine Frage ins Leere. */}
+            {buchung.pre_booking_answer && (
+              <section className="mt-8 rounded-2xl border border-border p-5">
+                <h3 className="font-medium">{t("vorabTitel")}</h3>
+                {buchung.pre_booking_question && (
+                  <p className="mt-1 whitespace-pre-line text-sm text-muted-foreground">
+                    {buchung.pre_booking_question}
+                  </p>
+                )}
+                <p className="mt-3 whitespace-pre-line text-[0.9375rem]">
+                  {buchung.pre_booking_answer}
+                </p>
+              </section>
+            )}
+
             <section className="mt-8">
               <h3 className="font-medium">{t("notizTitel")}</h3>
               <p className="mt-0.5 text-sm text-muted-foreground">

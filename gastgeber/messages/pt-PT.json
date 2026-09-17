@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Aplica-se às tuas {anzahl} propriedades.",
     "brAbweichend": "{anzahl} delas estão configuradas de forma diferente individualmente e serão ajustadas ao guardar.",
     "brNichtAbrufbar": "As tuas permissões de reserva não estão disponíveis neste momento. Por favor, carrega a página novamente mais tarde.",
-    "brFehlgeschlagen": "Ação falhou."
+    "brFehlgeschlagen": "Ação falhou.",
+    "brFrageTitel": "Mensagem antes da reserva",
+    "brFrageText": "Faz uma pergunta que os hóspedes devem responder antes da reserva instantânea. Se deixares o campo vazio, nada será perguntado.",
+    "brFragePlatzhalter": "Por exemplo: Quem viaja contigo e o que te traz até nós?",
+    "brFrageSpeichern": "Guardar pergunta"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Se um hóspede cancelar até 5 dias antes da chegada ou após o início da estadia, será cobrada 1 noite adicional; 50% das noites restantes serão reembolsadas.",
     "richtlinie_eingeschraenkt_info": "Os hóspedes que cancelarem de 7 a 14 dias antes da chegada receberão 50% de volta. Depois disso, a reserva não é mais reembolsável.",
     "richtlinie_lang_moderat_info": "Se um hóspede cancelar até 30 dias antes da chegada, não haverá reembolso. Se cancelar durante a estadia, as primeiras 30 noites serão retidas.",
-    "richtlinie_lang_streng_info": "Se um hóspede cancelar até 28 dias antes da chegada, não haverá reembolso. Se cancelar durante a estadia, as primeiras 30 noites serão retidas."
+    "richtlinie_lang_streng_info": "Se um hóspede cancelar até 28 dias antes da chegada, não haverá reembolso. Se cancelar durante a estadia, as primeiras 30 noites serão retidas.",
+    "vorabTitel": "Resposta do hóspede antes da reserva"
   }
 }

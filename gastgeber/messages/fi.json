@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Koskee {anzahl} kohdettasi.",
     "brAbweichend": "{anzahl} niistä on asetettu erikseen eri tavalla ja ne mukautetaan tallennettaessa.",
     "brNichtAbrufbar": "Varausoikeuksiasi ei voi tällä hetkellä hakea. Ole hyvä ja lataa sivu uudelleen myöhemmin.",
-    "brFehlgeschlagen": "Toiminto epäonnistui."
+    "brFehlgeschlagen": "Toiminto epäonnistui.",
+    "brFrageTitel": "Viesti ennen varausta",
+    "brFrageText": "Esitä kysymys, johon vieraiden on vastattava ennen pikavarausta. Jos jätät kentän tyhjäksi, kysymystä ei esitetä.",
+    "brFragePlatzhalter": "Esimerkiksi: Kuka matkustaa kanssasi ja mikä tuo sinut luoksemme?",
+    "brFrageSpeichern": "Tallenna kysymys"
   },
   "menu": {
     "titel": "Valikko",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Jos vieras peruuttaa varauksen 5 päivän sisällä ennen saapumista tai oleskelun alkamisen jälkeen, häneltä veloitetaan 1 lisäyö; 50 % jäljellä olevista öistä hyvitetään.",
     "richtlinie_eingeschraenkt_info": "Vieraat, jotka peruuttavat 7–14 päivää ennen saapumista, saavat 50 % takaisin. Sen jälkeen varausta ei hyvitetä.",
     "richtlinie_lang_moderat_info": "Jos vieras peruuttaa varauksen 30 päivän sisällä ennen saapumista, hyvitystä ei enää anneta. Jos hän peruuttaa oleskelun aikana, ensimmäiset 30 yötä pidätetään.",
-    "richtlinie_lang_streng_info": "Jos vieras peruuttaa varauksen 28 päivän sisällä ennen saapumista, hyvitystä ei enää anneta. Jos hän peruuttaa oleskelun aikana, ensimmäiset 30 yötä pidätetään."
+    "richtlinie_lang_streng_info": "Jos vieras peruuttaa varauksen 28 päivän sisällä ennen saapumista, hyvitystä ei enää anneta. Jos hän peruuttaa oleskelun aikana, ensimmäiset 30 yötä pidätetään.",
+    "vorabTitel": "Vieraan vastaus ennen varausta"
   }
 }

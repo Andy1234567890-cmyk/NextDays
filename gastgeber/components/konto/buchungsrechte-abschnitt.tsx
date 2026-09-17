@@ -112,6 +112,54 @@ function Bedingung({
   );
 }
 
+/** Airbnbs „Nachricht vor der Buchung".
+ *
+ *  Eigener Speichern-Knopf und kein Speichern beim Tippen: eine Frage wird
+ *  formuliert, nicht geschaltet — ein PUT je Tastendruck schriebe Dutzende
+ *  halbe Sätze in jede Buchungsstrecke. */
+function FrageFeld({
+  wert,
+  busy,
+  aufSpeichern,
+}: {
+  wert: string | null;
+  busy: boolean;
+  aufSpeichern: (frage: string) => void;
+}) {
+  const t = useTranslations("konto");
+  const [text, setText] = useState(wert ?? "");
+  const geaendert = (text.trim() || null) !== (wert || null);
+
+  return (
+    <div className="mt-8">
+      <h2 className="font-medium">{t("brFrageTitel")}</h2>
+      <p className="mt-1 max-w-lg text-[0.9375rem] text-muted-foreground">
+        {t("brFrageText")}
+      </p>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={3}
+        maxLength={1000}
+        placeholder={t("brFragePlatzhalter")}
+        className="mt-3 w-full max-w-lg rounded-2xl border border-border bg-background px-4 py-3 text-[0.9375rem] outline-none focus:border-foreground"
+      />
+      {geaendert && (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => aufSpeichern(text.trim())}
+            disabled={busy}
+            className="text-sm font-medium underline underline-offset-2 hover:opacity-70 disabled:opacity-50"
+          >
+            {t("brFrageSpeichern")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function BuchungsrechteAbschnitt({
   stand,
 }: {
@@ -122,18 +170,28 @@ export function BuchungsrechteAbschnitt({
   const [busy, setBusy] = useState(false);
   const [fehler, setFehler] = useState<string | null>(null);
 
-  async function speichern(modus: Buchungsmodus, vor: Voraussetzungen) {
+  async function speichern(
+    modus: Buchungsmodus,
+    vor: Voraussetzungen,
+    frage: string | null = werte?.vorab_frage ?? null,
+  ) {
     if (!werte) return;
     const zielgruppe = zuZielgruppe(vor);
-    if (modus === werte.modus && zielgruppe === werte.zielgruppe) return;
+    if (
+      modus === werte.modus &&
+      zielgruppe === werte.zielgruppe &&
+      (frage || null) === (werte.vorab_frage || null)
+    ) {
+      return;
+    }
     setBusy(true);
     setFehler(null);
     // Optimistisch setzen, damit der Schalter sofort reagiert; bei Fehlschlag
     // zurück auf den alten Stand — eine Anzeige, die eine nicht gespeicherte
     // Einstellung behauptet, wäre schlimmer als ein kurzes Zögern.
     const vorher = werte;
-    setWerte({ ...werte, modus, zielgruppe });
-    const res = await setzeBuchungsberechtigung(modus, zielgruppe);
+    setWerte({ ...werte, modus, zielgruppe, vorab_frage: frage || null });
+    const res = await setzeBuchungsberechtigung(modus, zielgruppe, frage || null);
     setBusy(false);
     if (res.ok) {
       setWerte(res.stand);
@@ -222,6 +280,12 @@ export function BuchungsrechteAbschnitt({
             <Icon icon="ph:info" className="mt-0.5 size-4 shrink-0" />
             {t("brHerabstufung")}
           </p>
+
+          <FrageFeld
+            wert={werte.vorab_frage}
+            busy={busy}
+            aufSpeichern={(frage) => void speichern("instant", vor, frage)}
+          />
         </div>
       )}
 

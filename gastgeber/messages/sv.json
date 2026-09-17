@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Gäller för dina {anzahl} objekt.",
     "brAbweichend": "{anzahl} av dem är individuellt inställda på annat sätt och kommer att justeras vid spara.",
     "brNichtAbrufbar": "Dina bokningsbehörigheter är för närvarande inte tillgängliga. Vänligen ladda om sidan senare.",
-    "brFehlgeschlagen": "Åtgärden misslyckades."
+    "brFehlgeschlagen": "Åtgärden misslyckades.",
+    "brFrageTitel": "Meddelande före bokning",
+    "brFrageText": "Ställ en fråga som gäster måste svara på innan de bokar direkt. Om du lämnar fältet tomt ställs ingen fråga.",
+    "brFragePlatzhalter": "Till exempel: Vem reser med dig och vad för dig till oss?",
+    "brFrageSpeichern": "Spara fråga"
   },
   "menu": {
     "titel": "Meny",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Om en gäst avbokar inom 5 dagar före ankomst eller efter att vistelsen har börjat, debiteras 1 ytterligare natt; 50 % av de återstående nätterna återbetalas.",
     "richtlinie_eingeschraenkt_info": "Gäster som avbokar 7 till 14 dagar före ankomst får 50 % tillbaka. Därefter är bokningen inte längre återbetalningsbar.",
     "richtlinie_lang_moderat_info": "Om en gäst avbokar inom 30 dagar före ankomst sker ingen återbetalning. Om gästen avbokar under vistelsen behålls de första 30 nätterna.",
-    "richtlinie_lang_streng_info": "Om en gäst avbokar inom 28 dagar före ankomst sker ingen återbetalning. Om gästen avbokar under vistelsen behålls de första 30 nätterna."
+    "richtlinie_lang_streng_info": "Om en gäst avbokar inom 28 dagar före ankomst sker ingen återbetalning. Om gästen avbokar under vistelsen behålls de första 30 nätterna.",
+    "vorabTitel": "Gästens svar före bokning"
   }
 }

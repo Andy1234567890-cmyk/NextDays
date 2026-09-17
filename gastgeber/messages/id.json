@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Berlaku untuk {anzahl} properti Anda.",
     "brAbweichend": "{anzahl} di antaranya diatur secara berbeda dan akan disesuaikan saat disimpan.",
     "brNichtAbrufbar": "Izin pemesanan Anda saat ini tidak tersedia. Harap muat ulang halaman nanti.",
-    "brFehlgeschlagen": "Tindakan gagal."
+    "brFehlgeschlagen": "Tindakan gagal.",
+    "brFrageTitel": "Pesan pra-pemesanan",
+    "brFrageText": "Ajukan pertanyaan yang harus dijawab tamu sebelum memesan secara instan. Jika Anda membiarkan kolom ini kosong, tidak ada pertanyaan yang akan diajukan.",
+    "brFragePlatzhalter": "Contoh: Siapa yang bepergian dengan Anda, dan apa tujuan Anda datang ke tempat kami?",
+    "brFrageSpeichern": "Simpan pertanyaan"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Jika tamu membatalkan dalam 5 hari sebelum kedatangan atau setelah check-in, 1 malam tambahan akan dikenakan biaya; 50% dari sisa malam akan dikembalikan.",
     "richtlinie_eingeschraenkt_info": "Tamu yang membatalkan 7 hingga 14 hari sebelum kedatangan akan menerima pengembalian dana 50%. Setelah itu, pemesanan tidak dapat dikembalikan.",
     "richtlinie_lang_moderat_info": "Jika tamu membatalkan dalam 30 hari sebelum kedatangan, tidak ada pengembalian dana. Jika tamu membatalkan selama menginap, 30 malam pertama akan ditahan.",
-    "richtlinie_lang_streng_info": "Jika tamu membatalkan dalam 28 hari sebelum kedatangan, tidak ada pengembalian dana. Jika tamu membatalkan selama menginap, 30 malam pertama akan ditahan."
+    "richtlinie_lang_streng_info": "Jika tamu membatalkan dalam 28 hari sebelum kedatangan, tidak ada pengembalian dana. Jika tamu membatalkan selama menginap, 30 malam pertama akan ditahan.",
+    "vorabTitel": "Balasan tamu sebelum pemesanan"
   }
 }

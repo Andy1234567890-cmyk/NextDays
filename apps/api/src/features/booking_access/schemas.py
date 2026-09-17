@@ -41,6 +41,10 @@ class Buchungsberechtigung(BaseModel):
 
     modus: Buchungsmodus
     zielgruppe: Zielgruppe
+    # Airbnb „Nachricht vor der Buchung": None/leer = keine Frage. Kein
+    # zusätzlicher Schalter — zwei Felder für dieselbe Aussage laufen
+    # auseinander.
+    vorab_frage: str | None = None
     objekte_gesamt: int
     objekte_abweichend: int
 
@@ -52,3 +56,7 @@ class BuchungsberechtigungUpdate(BaseModel):
 
     modus: Buchungsmodus
     zielgruppe: Zielgruppe = Field(default=Zielgruppe.everyone)
+    # Obergrenze am Eingang, nicht erst in der DB (Wurzel 8). 1000 Zeichen sind
+    # reichlich für eine Frage und klein genug, dass niemand hier einen Roman
+    # in jede Buchungsstrecke schreibt.
+    vorab_frage: str | None = Field(default=None, max_length=1000)

@@ -100,7 +100,10 @@
     "gesamt": "Total ({waehrung})",
     "kautionHinweis": "A security deposit of {betrag} is also required.",
     "fertigTitel": "Booking confirmed",
-    "fertigText": "We've sent the confirmation to {email}."
+    "fertigText": "We've sent the confirmation to {email}.",
+    "vorabTitel": "Host's question",
+    "vorabPlatzhalter": "Your answer",
+    "fehlerVorabAntwort": "Please answer the host's question"
   },
   "zahlung": {
     "vorbereiten": "Preparing payment …",

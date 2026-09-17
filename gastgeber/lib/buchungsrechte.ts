@@ -19,6 +19,8 @@ export type Zielgruppe =
 export interface Buchungsberechtigung {
   modus: Buchungsmodus;
   zielgruppe: Zielgruppe;
+  /** Airbnb „Nachricht vor der Buchung": null/leer = keine Frage. */
+  vorab_frage: string | null;
   objekte_gesamt: number;
   /** Objekte, die anders eingestellt sind als die Entscheidung des Betriebs —
    *  etwa weil sie im Objekt-Assistenten abweichend angelegt wurden. */

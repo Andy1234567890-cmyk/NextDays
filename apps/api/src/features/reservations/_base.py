@@ -1055,6 +1055,11 @@ class ReservationsBase:
             # er per CHECK keinen Betrag tragen kann.
             is_owner_stay=bool(r.get("is_owner_stay")),
             stay_note=r.get("stay_note"),
+            # Wie Kontaktdaten behandelt (Wurzel 9): die Antwort ist Freitext
+            # des Gastes. Eine Reinigungskraft braucht sie nicht und bekommt
+            # sie deshalb nicht.
+            pre_booking_question=mask.contact_value(r.get("pre_booking_question")),
+            pre_booking_answer=mask.contact_value(r.get("pre_booking_answer")),
             # Buchungszeitpunkt der Quelle + unser Eingang getrennt (Wurzel 5b):
             # die Buchungsliste sortiert und beschriftet nach `booked_at`; fehlt
             # er, zeigt sie `created_at` ausdrücklich als Eingang bei uns.

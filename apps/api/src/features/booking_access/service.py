@@ -89,7 +89,7 @@ class BookingAccessService:
         tenant_id = self._tenant(ctx)
         rows = (
             self._db.table("tenants")
-            .select("booking_mode, instant_booking_audience")
+            .select("booking_mode, instant_booking_audience, pre_booking_question")
             .eq("id", tenant_id)
             .limit(1)
             .execute()
@@ -98,10 +98,12 @@ class BookingAccessService:
             raise BookingAccessError("Betrieb nicht gefunden.", status_code=404)
         modus = Buchungsmodus(rows[0]["booking_mode"])
         zielgruppe = Zielgruppe(rows[0]["instant_booking_audience"])
-        gesamt, abweichend = self._objektstand(tenant_id, modus, zielgruppe)
+        frage = rows[0].get("pre_booking_question")
+        gesamt, abweichend = self._objektstand(tenant_id, modus, zielgruppe, frage)
         return Buchungsberechtigung(
             modus=modus,
             zielgruppe=zielgruppe,
+            vorab_frage=frage,
             objekte_gesamt=gesamt,
             objekte_abweichend=abweichend,
         )
@@ -117,9 +119,13 @@ class BookingAccessService:
         den Bestand oder für alles Künftige nicht gilt (Wurzel 1).
         """
         tenant_id = self._tenant(ctx)
+        # Leerer Text ist „keine Frage", nicht „eine Frage aus Leerzeichen".
+        # Als NULL speichern, damit genau ein Wert für diesen Zustand steht.
+        frage = (req.vorab_frage or "").strip() or None
         werte = {
             "booking_mode": req.modus.value,
             "instant_booking_audience": req.zielgruppe.value,
+            "pre_booking_question": frage,
         }
         # Zuerst der Betrieb: bricht der Objekt-Schreibvorgang ab, steht die
         # Vorgabe wenigstens fest und ein erneuter Aufruf zieht die Objekte nach
@@ -135,10 +141,13 @@ class BookingAccessService:
             modus=req.modus.value,
             zielgruppe=req.zielgruppe.value,
         )
-        gesamt, abweichend = self._objektstand(tenant_id, req.modus, req.zielgruppe)
+        gesamt, abweichend = self._objektstand(
+            tenant_id, req.modus, req.zielgruppe, frage
+        )
         return Buchungsberechtigung(
             modus=req.modus,
             zielgruppe=req.zielgruppe,
+            vorab_frage=frage,
             objekte_gesamt=gesamt,
             objekte_abweichend=abweichend,
         )
@@ -182,12 +191,16 @@ class BookingAccessService:
         return ctx.tenant_id
 
     def _objektstand(
-        self, tenant_id: str, modus: Buchungsmodus, zielgruppe: Zielgruppe
+        self,
+        tenant_id: str,
+        modus: Buchungsmodus,
+        zielgruppe: Zielgruppe,
+        frage: str | None,
     ) -> tuple[int, int]:
         """Wie viele Objekte es gibt und wie viele davon anders eingestellt sind."""
         rows = (
             self._db.table("properties")
-            .select("booking_mode, instant_booking_audience")
+            .select("booking_mode, instant_booking_audience, pre_booking_question")
             .eq("tenant_id", tenant_id)
             .limit(_VERGLEICH_MAX)
             .execute()
@@ -201,7 +214,10 @@ class BookingAccessService:
             # abweichend zu melden, wäre eine Falschmeldung.
             or (
                 modus is Buchungsmodus.instant
-                and r.get("instant_booking_audience") != zielgruppe.value
+                and (
+                    r.get("instant_booking_audience") != zielgruppe.value
+                    or (r.get("pre_booking_question") or None) != frage
+                )
             )
         )
         return len(rows), abweichend

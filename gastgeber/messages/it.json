@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Si applica alle tue {anzahl} proprietà.",
     "brAbweichend": "{anzahl} di esse sono impostate diversamente individualmente e verranno adattate al momento del salvataggio.",
     "brNichtAbrufbar": "Le tue autorizzazioni di prenotazione non sono attualmente disponibili. Ricarica la pagina più tardi.",
-    "brFehlgeschlagen": "Azione fallita."
+    "brFehlgeschlagen": "Azione fallita.",
+    "brFrageTitel": "Messaggio prima della prenotazione",
+    "brFrageText": "Poni una domanda a cui gli ospiti devono rispondere prima della prenotazione immediata. Se lasci il campo vuoto, non verrà posta alcuna domanda.",
+    "brFragePlatzhalter": "Ad esempio: Chi viaggia con te e cosa ti porta da noi?",
+    "brFrageSpeichern": "Salva domanda"
   },
   "menu": {
     "titel": "Menu",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Se un ospite annulla entro 5 giorni prima dell'arrivo o dopo l'inizio del soggiorno, gli verrà addebitata 1 notte aggiuntiva; il 50% delle notti rimanenti verrà rimborsato.",
     "richtlinie_eingeschraenkt_info": "Gli ospiti che annullano da 7 a 14 giorni prima dell'arrivo riceveranno il 50% di rimborso. Successivamente, la prenotazione non è più rimborsabile.",
     "richtlinie_lang_moderat_info": "Se un ospite annulla entro 30 giorni prima dell'arrivo, non è previsto alcun rimborso. Se annulla durante il soggiorno, le prime 30 notti non verranno rimborsate.",
-    "richtlinie_lang_streng_info": "Se un ospite annulla entro 28 giorni prima dell'arrivo, non è previsto alcun rimborso. Se annulla durante il soggiorno, le prime 30 notti non verranno rimborsate."
+    "richtlinie_lang_streng_info": "Se un ospite annulla entro 28 giorni prima dell'arrivo, non è previsto alcun rimborso. Se annulla durante il soggiorno, le prime 30 notti non verranno rimborsate.",
+    "vorabTitel": "Risposta dell'ospite prima della prenotazione"
   }
 }

@@ -60,6 +60,9 @@ export function BuchungsWidget({
   const [vorname, setVorname] = useState("");
   const [nachname, setNachname] = useState("");
   const [email, setEmail] = useState("");
+  // Antwort auf die „Nachricht vor der Buchung" des Gastgebers (0719). Ohne
+  // sie lehnt der Server eine Sofortbuchung mit 422 ab.
+  const [vorabAntwort, setVorabAntwort] = useState("");
   const [zugestimmt, setZugestimmt] = useState(false);
   const [status, setStatus] = useState<{
     kind: "idle" | "loading" | "error" | "done";
@@ -78,6 +81,12 @@ export function BuchungsWidget({
     }
     if (!vorname || !nachname || !email) {
       setStatus({ kind: "error", msg: "Bitte Kontaktdaten ausfüllen." });
+      return;
+    }
+    // Dieselbe Regel wie serverseitig (Wurzel 3) — hier nur, damit der Gast es
+    // vor dem Absenden erfährt.
+    if (listing.vorabFrage && !vorabAntwort.trim()) {
+      setStatus({ kind: "error", msg: txt.vorabFrage });
       return;
     }
     // Die Prüfung steht VOR dem ersten Netzaufruf: sonst wäre die
@@ -104,6 +113,7 @@ export function BuchungsWidget({
       check_out: checkOut,
       contact: { first_name: vorname, last_name: nachname, email },
       total_amount: zwischensumme,
+      vorab_antwort: listing.vorabFrage ? vorabAntwort.trim() : undefined,
     });
     if (res.ok) {
       // Reservierung steht — weiter zum Bezahlschritt (Stripe Payment Element).
@@ -173,6 +183,24 @@ export function BuchungsWidget({
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
           />
+          {/* Die Frage des Gastgebers im Wortlaut — nicht gekürzt und nicht
+              ersetzt. Ohne sie wäre die Pflichtantwort eine Sackgasse. */}
+          {listing.vorabFrage ? (
+            <div className="rounded-lg border border-border p-3">
+              <p className="text-xs font-medium">{txt.vorabFrage}</p>
+              <p className="mt-1 whitespace-pre-line text-sm">
+                {listing.vorabFrage}
+              </p>
+              <textarea
+                placeholder={txt.vorabAntwort}
+                value={vorabAntwort}
+                onChange={(e) => setVorabAntwort(e.target.value)}
+                rows={3}
+                maxLength={2000}
+                className="mt-2 w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
+              />
+            </div>
+          ) : null}
         </div>
       </div>
 

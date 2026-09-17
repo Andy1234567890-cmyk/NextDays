@@ -798,7 +798,11 @@
     "brGiltFuerAlle": "Vrijedi za tvojih {anzahl} objekata.",
     "brAbweichend": "{anzahl} od njih su pojedinačno drugačije postavljeni i bit će usklađeni prilikom spremanja.",
     "brNichtAbrufbar": "Tvoja dopuštenja za rezervacije trenutno nisu dostupna. Molimo, ponovno učitaj stranicu kasnije.",
-    "brFehlgeschlagen": "Radnja neuspješna."
+    "brFehlgeschlagen": "Radnja neuspješna.",
+    "brFrageTitel": "Poruka prije rezervacije",
+    "brFrageText": "Postavi pitanje na koje gosti moraju odgovoriti prije trenutne rezervacije. Ako ostaviš polje prazno, ništa se neće pitati.",
+    "brFragePlatzhalter": "Na primjer: Tko putuje s tobom i zašto si odabrao naš smještaj?",
+    "brFrageSpeichern": "Spremi pitanje"
   },
   "menu": {
     "titel": "Izbornik",
@@ -2142,6 +2146,7 @@
     "richtlinie_moderat_info": "Ako gost otkaže unutar 5 dana prije dolaska ili nakon početka boravka, naplaćuje mu se 1 dodatno noćenje; 50 % preostalih noćenja se vraća.",
     "richtlinie_eingeschraenkt_info": "Gosti koji otkažu 7 do 14 dana prije dolaska dobivaju 50 % povrata. Nakon toga rezervacija više nije povratna.",
     "richtlinie_lang_moderat_info": "Ako gost otkaže unutar 30 dana prije dolaska, nema povrata. Ako otkaže tijekom boravka, prvih 30 noćenja se zadržava.",
-    "richtlinie_lang_streng_info": "Ako gost otkaže unutar 28 dana prije dolaska, nema povrata. Ako otkaže tijekom boravka, prvih 30 noćenja se zadržava."
+    "richtlinie_lang_streng_info": "Ako gost otkaže unutar 28 dana prije dolaska, nema povrata. Ako otkaže tijekom boravka, prvih 30 noćenja se zadržava.",
+    "vorabTitel": "Odgovor gosta prije rezervacije"
   }
 }
