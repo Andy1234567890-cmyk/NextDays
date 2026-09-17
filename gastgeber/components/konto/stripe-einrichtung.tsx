@@ -111,6 +111,39 @@ function lesbar(pfade: string[], t: Uebersetzer): Anforderung[] {
 }
 
 /**
+ * Beanstandungen buendeln: EIN Befund, eine Zeile.
+ *
+ * Stripe meldet dieselbe Ursache je betroffenem Feld erneut. Eine gescheiterte
+ * Identitaetspruefung kam so neunmal wortgleich untereinander an — dreimal
+ * „Adresse", dreimal „Geburtsdatum", zweimal „Name", einmal „Telefonnummer",
+ * jedes Mal mit demselben Satz. Das las sich wie neun Probleme und war eines.
+ * Gebuendelt wird nach Ursache (Code + Begruendung); davor stehen die
+ * betroffenen Felder.
+ */
+function gebuendelt(
+  fehler: { requirement: string; code: string; reason: string }[],
+  t: Uebersetzer,
+): { code: string; reason: string; felder: string }[] {
+  const nach = new Map<string, { code: string; reason: string; felder: string[] }>();
+  for (const f of fehler) {
+    const schluessel = `${f.code}|${f.reason}`;
+    const eintrag = nach.get(schluessel) ?? {
+      code: f.code,
+      reason: f.reason,
+      felder: [],
+    };
+    const label = lesbar([f.requirement], t)[0]?.label ?? f.requirement;
+    if (!eintrag.felder.includes(label)) eintrag.felder.push(label);
+    nach.set(schluessel, eintrag);
+  }
+  return [...nach.values()].map((e) => ({
+    code: e.code,
+    reason: e.reason,
+    felder: e.felder.join(" · "),
+  }));
+}
+
+/**
  * Stripes `disabled_reason` ist ein Enum-Code. Roh hilft er niemandem — hier
  * die Erklärung mit Handlungshinweis. Fehlt NUR die Zustimmung, ist es kein
  * Datenmangel, sondern ein Klick: der alte Text schickte den Nutzer sonst auf
@@ -235,7 +268,16 @@ export function StripeEinrichtung({
   }
 
   const aktiv = !!status?.charges_enabled;
-  const offenePfade = status ? [...status.past_due, ...status.requirements] : [];
+  // Eine BEANSTANDETE Angabe fehlt nicht — sie steht bei Stripe und wurde
+  // geprueft und verworfen. Stripe stellt sie trotzdem wieder in
+  // `currently_due`, weil sie erneut gebraucht wird. Sie unter „Jetzt faellig"
+  // aufzufuehren behauptet, der Gastgeber habe etwas vergessen, und schickt ihn
+  // auf die Suche nach Feldern, die er laengst ausgefuellt hat. Der Befund
+  // steht stattdessen einmal unter „Von Stripe abgelehnt" (17.09.2026).
+  const beanstandet = new Set((status?.errors ?? []).map((e) => e.requirement));
+  const offenePfade = (
+    status ? [...status.past_due, ...status.requirements] : []
+  ).filter((r) => !beanstandet.has(r));
   const nurTos =
     offenePfade.length > 0 && offenePfade.every((r) => r.includes("tos_acceptance"));
   const offen = lesbar(offenePfade, t);
@@ -285,7 +327,13 @@ export function StripeEinrichtung({
           year: "numeric",
         })
       : null;
-  const grundText = status ? grund(status.disabled_reason, nurTos, t) : null;
+  // „Es fehlen noch Pflichtangaben" waere falsch, wenn nichts fehlt und alles
+  // Faellige beanstandet ist: dann ist Stripes eigene Begruendung im Block
+  // darunter die Aussage, und ein zweiter, widersprechender Satz daneben
+  // verwirrt nur.
+  const nurBeanstandet = offen.length === 0 && (status?.errors.length ?? 0) > 0;
+  const grundText =
+    status && !nurBeanstandet ? grund(status.disabled_reason, nurTos, t) : null;
 
   return (
     <section className="border-b border-border py-6">
@@ -406,9 +454,9 @@ export function StripeEinrichtung({
         <div className="mt-4 rounded-2xl border border-rose-200 p-4">
           <p className="text-sm font-medium text-rose-900">{t("seFehlerTitel")}</p>
           <ul className="mt-2 space-y-1.5 text-sm">
-            {status.errors.map((e) => (
-              <li key={`${e.requirement}-${e.code}`}>
-                <span className="font-medium">{lesbar([e.requirement], t)[0]?.label}</span>
+            {gebuendelt(status.errors, t).map((e) => (
+              <li key={`${e.felder}-${e.code}`}>
+                <span className="font-medium">{e.felder}</span>
                 {" — "}
                 <span className="text-muted-foreground">{e.reason}</span>{" "}
                 <code className="text-[0.6875rem] text-muted-foreground/70">{e.code}</code>
