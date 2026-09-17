@@ -38,6 +38,7 @@ import {
 import {
   aktiviereAuszahlungen,
   ladeAuszahlungsStatus,
+  synceStammdaten,
 } from "@/lib/auszahlung-actions";
 import type { AuszahlungsStatus } from "@/lib/payments";
 import type { Unternehmensprofil } from "@/lib/unternehmen";
@@ -185,6 +186,33 @@ export function StripeEinrichtung({
       document.removeEventListener("visibilitychange", tick);
     };
   }, [kontoId, status?.charges_enabled, nachladen]);
+
+  /**
+   * Die gespeicherten Angaben erneut an Stripe senden und den Stand neu lesen.
+   *
+   * Ohne diesen Knopf war die Karte eine Einbahnstrasse: Stripe pruefte einmal,
+   * lehnte ab, und der Gastgeber hatte keinen Weg, eine korrigierte Angabe
+   * erneut einzureichen — die Zustimmung war ja schon erteilt, der Knopf dafuer
+   * damit verschwunden. Uebertragen wird der GESPEICHERTE Stand; es wird nichts
+   * neu erfasst und nichts geraten (17.09.2026).
+   */
+  async function erneutPruefen() {
+    setLaeuft(true);
+    const res = await synceStammdaten();
+    if (!res.ok) {
+      setLaeuft(false);
+      toast.error(res.fehler);
+      return;
+    }
+    setSyncFehler(res.data.stripeSyncError ?? null);
+    await nachladen();
+    setLaeuft(false);
+    // Kein „fertig", solange Stripe nicht freigeschaltet hat — sonst behauptet
+    // der Hinweis einen Zustand, den die Liste darunter widerlegt.
+    if (res.data.stripeSyncError) toast.error(res.data.stripeSyncError);
+    else toast.info(t("seEingereicht"));
+    router.refresh();
+  }
 
   async function aktivieren() {
     if (!kontoId) return;
@@ -349,6 +377,19 @@ export function StripeEinrichtung({
           {grundText}
           {frist && <> {t("seFrist", { datum: frist })}</>}
         </p>
+      )}
+
+      {/* Erneut einreichen — auch dann, wenn die Zustimmung laengst erteilt
+          ist und der Schritt-3-Knopf deshalb weg ist. */}
+      {kontoId && !aktiv && status && status.details_submitted && (
+        <button
+          type="button"
+          onClick={() => void erneutPruefen()}
+          disabled={laeuft}
+          className="mt-4 rounded-full bg-foreground px-7 py-3 text-sm font-medium text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-40"
+        >
+          {laeuft ? t("seAktivierenLaeuft") : t("seAktivieren")}
+        </button>
       )}
 
       {!aktiv && offen.length > 0 && !nurTos && (
