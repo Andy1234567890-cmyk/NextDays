@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Bergregion">
+  <defs>
+    <linearGradient id="bergHimmel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dfeaf3"/>
+      <stop offset="1" stop-color="#f6f8fa"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" fill="url(#bergHimmel)"/>
+  <circle cx="15" cy="15" r="5.5" fill="#f0c05a"/>
+  <path d="M-2 56L20 22l14 20 8-11 24 25z" fill="#7f95a8"/>
+  <path d="M20 22l8 12h-16z" fill="#f2f6f9"/>
+  <path d="M42 31l6 8h-12z" fill="#f2f6f9"/>
+  <path d="M-2 56L20 22l6 9-16 25z" fill="#93a8b9" opacity=".8"/>
+  <path d="M0 56h64v8H0z" fill="#6f8b6a"/>
+  <path d="M0 56q12 4 24 1t20-1 20 1v-1H0z" fill="#7d9a77"/>
+  <path d="M32 56V47" stroke="#b82028" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M32 45l4 5h-8z" fill="#b82028"/>
+</svg>

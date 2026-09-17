@@ -13,10 +13,8 @@ from src.features.booking_engine.reiseziel_motiv import (
     stadt_motiv,
 )
 
-# plattform/public/reiseziele/<motiv>.svg — vom Repo-Wurzelverzeichnis aus.
-_SVG_DIR = (
-    Path(__file__).resolve().parents[6] / "plattform" / "public" / "reiseziele"
-)
+# ../reiseziele/<motiv>.svg — neben dem Modul, das die Motive benennt.
+_SVG_DIR = Path(__file__).resolve().parents[1] / "reiseziele"
 
 
 def test_jedes_motiv_hat_eine_svg_datei() -> None:

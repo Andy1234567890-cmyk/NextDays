@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Flagge Malta">
+  <defs>
+    <clipPath id="flagge">
+      <rect x="6" y="12" width="52" height="39" rx="3"/>
+    </clipPath>
+  </defs>
+  <rect width="64" height="64" fill="#f4f6f9"/>
+  <g clip-path="url(#flagge)">
+    <rect x="6" y="12" width="26" height="39" fill="#fff"/>
+    <rect x="32" y="12" width="26" height="39" fill="#cf142b"/>
+    <rect x="10" y="16" width="9" height="9" rx="1" fill="#fff" stroke="#8b95a3" stroke-width="1"/>
+    <path d="M14.5 17.8v5.4M11.8 20.5h5.4" stroke="#cf142b" stroke-width="2.2"/>
+  </g>
+  <rect x="6" y="12" width="52" height="39" rx="3" fill="none" stroke="#0f172a" stroke-opacity=".16"/>
+</svg>

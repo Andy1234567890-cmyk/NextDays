@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Ländliche Region">
+  <defs>
+    <linearGradient id="landHimmel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6eee4"/>
+      <stop offset="1" stop-color="#f8faf7"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" fill="url(#landHimmel)"/>
+  <circle cx="15" cy="14" r="5" fill="#f0c05a"/>
+  <path d="M0 40q16-6 32 0t32 0v24H0z" fill="#8fa87f"/>
+  <path d="M0 48q16-6 32 0t32 0v16H0z" fill="#7b9a6d"/>
+  <path d="M0 56q16-5 32 0t32 0v8H0z" fill="#6b8a5e"/>
+  <g fill="#5f7d54">
+    <path d="M12 48l3.5 6h-7z"/>
+    <path d="M50 45l4 7h-8z"/>
+    <path d="M57 47l3.5 6h-7z"/>
+  </g>
+  <g>
+    <path d="M26 53V43h11v10z" fill="#efe9dc"/>
+    <path d="M24.5 43L31.5 37l7 6z" fill="#b82028"/>
+    <rect x="29.5" y="46" width="4" height="7" rx=".6" fill="#8a9a86"/>
+  </g>
+</svg>

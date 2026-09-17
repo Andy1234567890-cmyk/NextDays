@@ -123,8 +123,14 @@ _REPO = _PFAD.parents[4] if len(_PFAD.parents) > 4 else None
 
 # Die Logodateien. ACHTUNG, die beiden Marken legen sie UNTERSCHIEDLICH ab —
 # derselbe Pfad für beide anzunehmen wäre falsch (am 08.08.2026 geprüft):
-#   myNextDays → marketing/public/marketing/brand/
-#   myBestDays → plattform/public/  (direkt, ohne Unterordner)
+#   myNextDays → marketing/public/marketing/brand/  (nur im Repo-Checkout)
+#   myBestDays → src/core/assets/  (IM Paket, also auch im Container)
+# Die Asymmetrie ist seit dem 17.09.2026 gewollt. Der Marktplatz ist aus diesem
+# Repo ausgezogen, seine Gast-Mails verschickt aber weiterhin dieses Backend —
+# das Logo muss also mitreisen, statt an einem Pfad zu hängen, den es hier nicht
+# mehr gibt. Nebeneffekt: die Marktplatz-Mail trägt ihr Logo damit ERSTMALS auch
+# produktiv. Vorher lief `_REPO` im Container ins Leere (siehe oben) und der Kopf
+# zeigte für beide Marken nur den Namen als Text.
 # Verwendet wird jeweils die helle/negative Variante: sie sitzt im Layout auf
 # einer schwarzen Kopffläche und ist nur hell lesbar.
 #
@@ -149,7 +155,7 @@ _LOGO_NEXTDAYS = (
     if _REPO is not None
     else None
 )
-_LOGO_BESTDAYS = _REPO / "plattform/public/mybestdays-logo-light.png" if _REPO is not None else None
+_LOGO_BESTDAYS = _PFAD.parent / "assets" / "mybestdays-logo-light.png"
 
 # Anzeigebreite des Logos in der Mail. Die Dateien sind deutlich breiter als
 # das (myNextDays 980 px, myBestDays ~1470 px); bei 180 px Anzeige bleibt also

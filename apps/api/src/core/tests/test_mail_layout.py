@@ -259,8 +259,8 @@ def test_marketing_mail_traegt_den_abmeldelink(sprache: str) -> None:
 def test_marke_bestdays_nutzt_marktplatz_logo_und_name() -> None:
     """Gast-Mails sind myBestDays, nicht myNextDays (Marken-Grenze).
 
-    Die beiden Marken legen ihre Logos UNTERSCHIEDLICH ab (myBestDays direkt in
-    `plattform/public/`, myNextDays unter `marketing/brand/`) — deshalb wird
+    Die beiden Marken legen ihre Logos UNTERSCHIEDLICH ab (myBestDays im Paket
+    unter `src/core/assets/`, myNextDays unter `marketing/brand/`) — deshalb wird
     hier die real angehaengte Datei geprueft, nicht nur der Name.
     """
     s = _settings()

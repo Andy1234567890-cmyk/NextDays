@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Flagge Schweden">
+  <defs>
+    <clipPath id="flagge">
+      <rect x="6" y="12" width="52" height="39" rx="3"/>
+    </clipPath>
+  </defs>
+  <rect width="64" height="64" fill="#f4f6f9"/>
+  <g clip-path="url(#flagge)">
+    <rect x="6" y="12" width="52" height="39" fill="#005293"/>
+    <rect x="21.22" y="12" width="7" height="39" fill="#fecb00"/>
+    <rect x="6" y="28" width="52" height="7" fill="#fecb00"/>
+  </g>
+  <rect x="6" y="12" width="52" height="39" rx="3" fill="none" stroke="#0f172a" stroke-opacity=".16"/>
+</svg>

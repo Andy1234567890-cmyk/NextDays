@@ -15,7 +15,9 @@ eine Illustration, keine Aussage über die Landschaft (Wurzel 4).
 """
 from src.core.countries import known_country_codes
 
-# Die gezeichneten Landschafts-/Neutral-Motive (plattform/public/reiseziele/).
+# Die gezeichneten Landschafts-/Neutral-Motive (src/features/booking_engine/
+# reiseziele/). Sie liegen seit dem 17.09.2026 hier statt im Marktplatz-Frontend:
+# der ist aus dem Repo ausgezogen, die Motivwahl blieb.
 # Neue Motive brauchen NUR hier + eine Datei mit demselben Namen.
 LANDSCHAFTS_MOTIVE = ("kueste", "insel", "berge", "see", "stadt", "land", "welt")
 
