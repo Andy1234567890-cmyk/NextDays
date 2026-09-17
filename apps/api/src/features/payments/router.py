@@ -19,6 +19,7 @@ from src.core.countries import is_iso2_country
 from src.core.logging import get_logger
 from src.core.security import AuthContext, CurrentUser, get_current_user
 from src.core.supabase import get_service_client
+from src.core.uploads import read_upload
 from src.features.auth.dependencies import (
     require_granular_permission,
     require_permission,
@@ -303,6 +304,35 @@ def accept_tos(
         return service.accept_tos(
             ctx.tenant_id, stripe_account_id, ip=ip,
             when=int(datetime.now(UTC).timestamp()),
+        )
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/connect/accounts/{stripe_account_id}/identity-document",
+    response_model=ConnectAccountStatus,
+)
+async def set_identity_document(
+    stripe_account_id: str,
+    request: Request,
+    service: PaymentsServiceDep,
+    ctx: _billing,
+    rueckseite: bool = False,
+) -> ConnectAccountStatus:
+    """Ausweisdokument (multipart) an den verbundenen Account uebergeben.
+
+    Stripe verlangt es, wenn der Abgleich der eingetippten Angaben scheitert
+    (`failed_keyed_identity`) — bis zum 17.09.2026 gab es dafuer keinen Weg in
+    der Oberflaeche, und die Karte verwies auf den Support."""
+    content, content_type = await read_upload(request)
+    try:
+        return service.set_identity_document(
+            ctx.tenant_id,
+            stripe_account_id,
+            content=content,
+            content_type=content_type or "application/octet-stream",
+            rueckseite=rueckseite,
         )
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

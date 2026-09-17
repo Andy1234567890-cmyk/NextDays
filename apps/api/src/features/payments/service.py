@@ -749,6 +749,72 @@ class PaymentsService:
             )
         return ConnectAccountResponse(stripe_account_id=account.id)
 
+    _AUSWEIS_ENDUNG = {"image/jpeg": "jpg", "image/png": "png"}
+
+    def set_identity_document(
+        self,
+        tenant_id: str,
+        stripe_account_id: str,
+        *,
+        content: bytes,
+        content_type: str,
+        rueckseite: bool = False,
+    ) -> ConnectAccountStatus:
+        """Ausweisdokument des Gastgebers an Stripe uebergeben.
+
+        Der fehlende Weg im Onboarding (17.09.2026). Scheitert der Abgleich der
+        eingetippten Angaben (`failed_keyed_identity`), nennt Stripe in seiner
+        eigenen Meldung den Ausweg: „provide additional documentation to
+        verify". Unsere Karte antwortete darauf mit „Kann hier noch nicht
+        hochgeladen werden — bitte an den Support" — eine Sackgasse an genau
+        der Stelle, an der der Gastgeber weiterkommen muss.
+
+        Zwei Schritte, wie Stripe sie vorschreibt: Datei im VERBUNDENEN Konto
+        hochladen, dann die zurueckgegebene Kennung am Konto eintragen. Danach
+        steht `verification.status` auf `pending`; der endgueltige Stand kommt
+        per Webhook, nicht aus dieser Antwort.
+
+        Geprueft wird VOR dem Hochladen (Wurzel 8): Typ und Groesse. Eine
+        abgelehnte Datei soll an unserer Grenze scheitern, mit einem Satz, der
+        sagt was erlaubt ist — nicht als roher Stripe-Fehler.
+        """
+        self._require_own_connect_account(tenant_id, stripe_account_id)
+        endung = self._AUSWEIS_ENDUNG.get(content_type.split(";")[0].strip())
+        if endung is None:
+            raise PaymentsError(
+                "Der Ausweis muss ein Farbbild im Format JPG oder PNG sein.",
+                status_code=422,
+            )
+        if not content:
+            raise PaymentsError("Die Datei ist leer.", status_code=422)
+        if len(content) > sc.AUSWEIS_MAX_BYTES:
+            raise PaymentsError(
+                "Die Datei ist zu groß "
+                f"(max. {sc.AUSWEIS_MAX_BYTES // (1024 * 1024)} MB).",
+                status_code=422,
+            )
+        seite = "back" if rueckseite else "front"
+        with _stripe_errors():
+            datei_id = sc.upload_identity_document(
+                acct=stripe_account_id,
+                content=content,
+                filename=f"ausweis-{seite}.{endung}",
+                client=self._stripe,
+            )
+            self._stripe.v1.accounts.update(
+                stripe_account_id,
+                params={
+                    "individual": {"verification": {"document": {seite: datei_id}}}
+                },
+            )
+        log.info(
+            "ausweis_uebergeben",
+            tenant_id=tenant_id,
+            account=stripe_account_id,
+            seite=seite,
+        )
+        return self.get_connect_account_status(tenant_id, stripe_account_id)
+
     def get_connect_account_status(
         self, tenant_id: str, stripe_account_id: str
     ) -> ConnectAccountStatus:

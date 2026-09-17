@@ -65,7 +65,9 @@ const FELDER: {
   { passt: (r) => r.includes("tos_acceptance"), key: "seFeldTos", href: "" , hinweis: "seFeldTosHinweis" },
   { passt: (r) => r.includes("external_account"), key: "azFeldExternalAccount", href: BANK_HREF },
   { passt: (r) => r.includes("id_number") || r.includes("ssn_last_4"), key: "seFeldKennnummer", href: DATEN_HREF },
-  { passt: (r) => r.includes("verification.document") || r.includes("verification.additional_document"), key: "azFeldAusweis", href: "", hinweis: "seHinweisAusweis" },
+  // Kein Hinweis mehr auf den Support: der Upload steht seit dem 17.09.2026
+  // direkt unter der Liste (siehe AusweisUpload).
+  { passt: (r) => r.includes("verification.document") || r.includes("verification.additional_document"), key: "azFeldAusweis", href: "" },
   { passt: (r) => r.includes("registration_number") || r.includes("company.tax_id"), key: "azFeldRegisternummer", href: DATEN_HREF },
   { passt: (r) => r.includes("company.vat_id"), key: "utFeldUstId", href: DATEN_HREF },
   { passt: (r) => r.includes("company.name"), key: "azFeldFirmenname", href: DATEN_HREF },
@@ -191,6 +193,7 @@ export function StripeEinrichtung({
   );
   const [zustimmungOffen, setZustimmungOffen] = useState(false);
   const [laeuft, setLaeuft] = useState(false);
+  const [ausweisLaeuft, setAusweisLaeuft] = useState(false);
 
   const nachladen = useCallback(async () => {
     if (!kontoId) return;
@@ -245,6 +248,47 @@ export function StripeEinrichtung({
     if (res.data.stripeSyncError) toast.error(res.data.stripeSyncError);
     else toast.info(t("seEingereicht"));
     router.refresh();
+  }
+
+  /**
+   * Ausweisdokument an Stripe geben.
+   *
+   * Multipart, deshalb ueber die BFF-Route und nicht ueber den JSON-DAL; der
+   * Bearer bleibt serverseitig. Welche SEITE gemeint ist, sagt Stripe selbst
+   * ueber seine offenen Anforderungen — der Gastgeber soll das nicht raten
+   * muessen, und wir raten es auch nicht.
+   */
+  async function ausweisSenden(datei: File, rueckseite: boolean) {
+    if (!kontoId) return;
+    setAusweisLaeuft(true);
+    const form = new FormData();
+    form.append("file", datei, datei.name);
+    form.append("konto", kontoId);
+    form.append("seite", rueckseite ? "back" : "front");
+    try {
+      const res = await fetch("/api/zahlungen/ausweis", {
+        method: "POST",
+        body: form,
+      });
+      if (!res.ok) {
+        // Die Meldung des Backends ist fachlich und sagt, was erlaubt ist —
+        // sie wird durchgereicht, nicht durch einen eigenen Satz ersetzt.
+        const text = await res.text().catch(() => "");
+        let meldung = text;
+        try {
+          meldung = (JSON.parse(text) as { detail?: string }).detail ?? text;
+        } catch {
+          // Kein JSON — dann ist der Rohtext die beste Auskunft.
+        }
+        toast.error(meldung || t("seStatusNichtAbrufbar"));
+        return;
+      }
+      await nachladen();
+      toast.info(t("seEingereicht"));
+      router.refresh();
+    } finally {
+      setAusweisLaeuft(false);
+    }
   }
 
   async function aktivieren() {
@@ -332,6 +376,23 @@ export function StripeEinrichtung({
   // darunter die Aussage, und ein zweiter, widersprechender Satz daneben
   // verwirrt nur.
   const nurBeanstandet = offen.length === 0 && (status?.errors.length ?? 0) > 0;
+  // Ausweis: gezeigt, wenn Stripe ein Dokument VERLANGT — oder wenn die
+  // Pruefung der eingetippten Angaben gescheitert ist. Im zweiten Fall steht
+  // das Dokument noch in keiner Anforderung, Stripe nennt es aber in seiner
+  // eigenen Begruendung als Ausweg („provide additional documentation").
+  const dokumentPfade = (
+    status ? [...status.past_due, ...status.requirements] : []
+  ).filter((r) => r.includes("verification.document"));
+  const pruefungGescheitert = (status?.errors ?? []).some((e) =>
+    e.code.startsWith("verification_"),
+  );
+  // Welche Seite: Stripe sagt es. Erst wenn die Vorderseite da ist, bleibt
+  // `.back` als einzige Anforderung stehen — dann und nur dann ist die
+  // Rueckseite gemeint. Nichts geraten (Wurzel 4).
+  const ausweisRueckseite =
+    dokumentPfade.length > 0 && dokumentPfade.every((r) => r.endsWith(".back"));
+  const ausweisZeigen =
+    !!kontoId && !aktiv && (dokumentPfade.length > 0 || pruefungGescheitert);
   const grundText =
     status && !nurBeanstandet ? grund(status.disabled_reason, nurTos, t) : null;
 
@@ -463,6 +524,34 @@ export function StripeEinrichtung({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {ausweisZeigen && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border p-4">
+          <p className="font-medium">{t("azFeldAusweis")}</p>
+          <label
+            className={`shrink-0 cursor-pointer rounded-full bg-foreground px-6 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90 ${
+              ausweisLaeuft ? "pointer-events-none opacity-40" : ""
+            }`}
+          >
+            {ausweisLaeuft ? t("seAktivierenLaeuft") : t("azBankHinzufuegen")}
+            <input
+              type="file"
+              className="hidden"
+              // Stripe nimmt fuer Ausweise ausschliesslich JPG und PNG; der
+              // Dateidialog filtert danach, das Backend prueft es nochmal.
+              accept="image/jpeg,image/png"
+              disabled={ausweisLaeuft}
+              onChange={(e) => {
+                const datei = e.target.files?.[0];
+                // Das Feld leeren, sonst loest dieselbe Datei kein zweites
+                // change-Ereignis aus — ein erneuter Versuch bliebe wirkungslos.
+                e.target.value = "";
+                if (datei) void ausweisSenden(datei, ausweisRueckseite);
+              }}
+            />
+          </label>
         </div>
       )}
 

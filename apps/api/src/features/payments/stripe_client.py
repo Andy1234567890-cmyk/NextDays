@@ -841,6 +841,46 @@ BRANDING_MIME = {"image/png", "image/jpeg"}
 BRANDING_MAX_BYTES = 512 * 1024
 
 
+# Ausweisdokumente: Stripes eigene Grenzen (Doku „Verarbeitung von
+# Verifizierungen mit der API", gelesen am 17.09.2026) — Farbbild, hoechstens
+# 8000x8000 Pixel, hoechstens 10 MB, und fuer AUSWEISE ausdruecklich nur JPG
+# oder PNG (PDF gilt nur fuer Adress- und Firmennachweise). Die Grenzen stehen
+# hier, damit eine zu grosse Datei bei UNS scheitert und nicht erst nach dem
+# Hochladen bei Stripe (Wurzel 8).
+AUSWEIS_MIME = {"image/jpeg", "image/png"}
+AUSWEIS_MAX_BYTES = 10 * 1024 * 1024
+
+
+def upload_identity_document(
+    *,
+    acct: str,
+    content: bytes,
+    filename: str,
+    client: StripeClient | None = None,
+) -> str:
+    """Ausweisdokument hochladen → Stripe-File-ID (``file_…``).
+
+    Anders als das Branding laeuft das MIT ``stripe_account``-Header, also im
+    verbundenen Konto: Stripes Anleitung gibt den Header im Upload-Beispiel
+    ausdruecklich an, und das Dokument gehoert dem Gastgeber, nicht uns. Es
+    landet damit auch nicht in der Dateiliste der Plattform.
+
+    Zweiter Schritt ist das Anhaengen am Konto
+    (``individual.verification.document.front``) — das macht der Aufrufer,
+    weil nur er weiss, welche Seite gemeint ist.
+    """
+    stripe = client or get_stripe()
+    # Wie beim Branding: das SDK baut multipart nur fuer ein DATEI-aehnliches
+    # Objekt, und Stripe leitet den Dateityp aus dem Namen ab.
+    puffer = io.BytesIO(content)
+    puffer.name = filename
+    datei = stripe.v1.files.create(
+        params={"file": puffer, "purpose": "identity_document"},
+        options={"stripe_account": acct},
+    )
+    return str(datei.id)
+
+
 def upload_branding_file(
     *,
     content: bytes,
