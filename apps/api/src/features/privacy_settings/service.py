@@ -8,10 +8,21 @@ Zwei Klassen von Präferenzen:
    Scope IMMER auf user_id (Wurzel 3).
 
 2. „Objekte in Suchmaschinen aufnehmen" (listings_search_engine_indexing): das ist
-   KEINE User-Präferenz, sondern eine Eigenschaft der Objekte (Airbnb: „my
-   listing(s)"). Der Wert wird deshalb aus den Objekten des Tenants ABGELEITET
-   (an = ALLE Objekte indexierbar) und als Bulk auf ALLE Objekte GESCHRIEBEN —
-   nie doppelt in privacy_settings gespeichert (sonst divergiert er, Wurzel 4).
+   KEINE User-Präferenz, sondern die Entscheidung des BETRIEBS (Airbnb: „my
+   listing(s)") — sie steht in `tenants.search_engine_indexing` und wird als
+   Bulk auf ALLE Objekte des Tenants projiziert. In privacy_settings steht sie
+   nie (sonst divergiert sie, Wurzel 4).
+
+   Bis zum 17.09.2026 wurde der Schalter stattdessen aus dem Objektbestand
+   ABGELEITET (an = alle Objekte indexierbar). Das las sich sparsam, hatte aber
+   kein Gedächtnis: `properties.search_engine_indexing` steht per Default auf
+   false, ein NEUES Objekt kam also immer auf noindex herein — und damit sprang
+   der Schalter eines Betriebs, der ihn angeschaltet hatte, beim nächsten
+   angelegten Objekt von selbst auf „aus", während die alten Objekte weiter
+   indexiert blieben. Ein Betrieb ohne Objekte sah „aus", ohne je etwas
+   entschieden zu haben. Beides macht Airbnb nicht. Das Erben regelt seit 0714
+   ein Trigger, damit es auf JEDEM Anlage-Weg gilt (Anlage, Duplizieren,
+   Import, Seed) und nicht nur dort, wo jemand daran gedacht hat (Wurzel 1).
 
 Der Service-Client umgeht RLS; jede Query wird explizit auf ctx.user_id bzw.
 ctx.tenant_id gescopt.
@@ -110,37 +121,38 @@ class PrivacySettingsService:
     # -- Suchmaschinen-Indexierung (objektbezogen, Bulk) -------------------
 
     def _all_listings_indexed(self, ctx: AuthContext) -> bool:
-        """True, wenn der Tenant Objekte hat UND ALLE indexierbar sind. Ohne
-        Objekte false (nichts ist indexierbar → Schalter aus, ehrlich)."""
+        """Die gespeicherte Entscheidung des Betriebs (0714).
+
+        Gelesen wird `tenants.search_engine_indexing`, NICHT der Objektbestand:
+        der Schalter soll zeigen, was der Betrieb entschieden hat, und nicht,
+        was gerade zufällig in den Objekten steht. Ohne Mandant (Nutzer ohne
+        Betrieb) gibt es keine Entscheidung — dann `False`, kein geratener Wert.
+        """
         if not ctx.tenant_id:
             return False
-        # Zwei counts statt Vollabzug: ab 1000 Objekten schnitt PostgREST die
-        # Liste still ab und der Schalter zeigte „an", obwohl nicht alle
-        # Objekte indexierbar waren (Wurzel 8).
-        gesamt = (
-            self._db.table("properties")
-            .select("id", count="exact")
-            .eq("tenant_id", ctx.tenant_id)
+        zeile = (
+            self._db.table("tenants")
+            .select("search_engine_indexing")
+            .eq("id", ctx.tenant_id)
             .limit(1)
             .execute()
-        ).count or 0
-        if not gesamt:
-            return False
-        indexiert = (
-            self._db.table("properties")
-            .select("id", count="exact")
-            .eq("tenant_id", ctx.tenant_id)
-            .eq("search_engine_indexing", True)
-            .limit(1)
-            .execute()
-        ).count or 0
-        return indexiert == gesamt
+        ).data
+        return bool(zeile[0]["search_engine_indexing"]) if zeile else False
 
     def _set_all_listings_indexed(self, ctx: AuthContext, value: bool) -> None:
-        """search_engine_indexing auf ALLEN Objekten des Tenants setzen (Bulk).
-        Scope auf tenant_id (Wurzel 3)."""
+        """Die Entscheidung speichern UND auf alle Objekte projizieren.
+
+        Beides, in dieser Reihenfolge: die Entscheidung ist die Quelle (sie
+        gilt auch für künftige Objekte, siehe Trigger in 0714), die Objektspalte
+        ist das, was Inseratseite und Sitemap lesen. Nur eines von beiden zu
+        schreiben hiesse, dass Anzeige und Wirklichkeit auseinanderlaufen
+        (Wurzel 1). Scope auf tenant_id (Wurzel 3).
+        """
         if not ctx.tenant_id:
             return
+        self._db.table("tenants").update(
+            {"search_engine_indexing": value}
+        ).eq("id", ctx.tenant_id).execute()
         self._db.table("properties").update(
             {"search_engine_indexing": value}
         ).eq("tenant_id", ctx.tenant_id).execute()
