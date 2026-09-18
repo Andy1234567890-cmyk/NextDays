@@ -1152,9 +1152,23 @@ class BookingsSyncMixin:
                 # (`_upsert_booking`), nicht diesen Nachtrag.
                 sync_nach_id(db, tenant_id, str(bekannt[0]["id"]))
             else:
-                db.table("reservations").upsert(
-                    row, on_conflict="source_channex_booking_id"
-                ).execute()
+                # KEIN Upsert: `reservations_source_channex_uidx` ist PARTIELL
+                # (`where source_channex_booking_id is not null`), und einen
+                # partiellen Index kann `ON CONFLICT` nicht ableiten — PostgREST
+                # gibt das dafür nötige Prädikat nicht mit. Der Aufruf warf
+                # 42P10, und weil dieser Block ein breites `except` trägt,
+                # verschwand der Storno still mit einer Warnzeile (Wurzel 5).
+                try:
+                    db.table("reservations").insert(row).execute()
+                except APIError as exc:
+                    # 23505 heisst „war doch schon da", nur unter einem anderen
+                    # `external_ref` als oben gesucht. Dann ist das Nachtragen
+                    # des Stornos genau richtig (Wurzel 2).
+                    if "23505" not in str(exc):
+                        raise
+                    db.table("reservations").update(row).eq(
+                        "source_channex_booking_id", booking_id
+                    ).eq("tenant_id", tenant_id).execute()
         except Exception as exc:  # noqa: BLE001 — Import darf nicht kippen
             log.warning(
                 "import_cancelled_reservation_failed",

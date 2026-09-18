@@ -419,10 +419,23 @@ def _stop_sell(db: Client, ctx: ApiKontext, body: SperrAnfrage) -> int:
             "tenant_id": ctx.tenant_id,
             "property_id": body.property_id,
             "date": tag.isoformat(),
+            # Ausdrücklich NULL statt weggelassen: der Stop gilt dem ganzen
+            # Objekt, und der Konfliktschlüssel unten MUSS die Spalte nennen.
+            "rate_plan_id": None,
             "reason": body.note,
             "source": "manual",
         }
         for tag in tage
     ]
-    db.table("stop_sell").upsert(zeilen, on_conflict="property_id,date").execute()
+    # Der Schlüssel ist DREISPALTIG. Bis zum 18.09.2026 stand hier
+    # `on_conflict="property_id,date"` — darauf liegt nur ein gewöhnlicher
+    # Index (`stop_sell_property_date_idx`), eindeutig ist allein
+    # `stop_sell_property_date_plan_key (property_id, date, rate_plan_id)`.
+    # Der Aufruf warf deshalb bei JEDEM Mal 42P10; dieser Endpunkt konnte nie
+    # einen Stop-Sell setzen. Dass der Preisplan hier NULL ist, stört nicht:
+    # der Index ist `NULLS NOT DISTINCT`, zwei objektweite Stops am selben Tag
+    # kollidieren also wie gewollt.
+    db.table("stop_sell").upsert(
+        zeilen, on_conflict="property_id,date,rate_plan_id"
+    ).execute()
     return len(zeilen)

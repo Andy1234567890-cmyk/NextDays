@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.countries import normalize_country
@@ -345,6 +346,142 @@ class PropertyMappingMixin:
             tenant_id=tenant_id, property_id=property_id,
         )
 
+    def _map_verknuepfen(
+        self,
+        db: Client,
+        *,
+        tenant_id: str,
+        property_id: str,
+        channex_id: str,
+        now: str,
+        map_id: str | None,
+        zuruecknehmen: bool,
+    ) -> None:
+        """Die Map-Zeile eines frisch gespiegelten Objekts schreiben.
+
+        Bewusst KEIN Upsert auf `channex_property_id`: die Spalte ist seit 0158
+        NICHT mehr unique. Ein Hotel ist bei Channex EINE Property mit n
+        Room-Types, also zeigen n Map-Zeilen auf dieselbe ID (dieselbe Begründung
+        steht in `content_sync`). Ein `on_conflict` darauf wirft 42P10 — es gibt
+        schlicht keinen passenden Index mehr.
+
+        Live passiert am 17.09.2026: der Tenant-Reconcile starb an genau dieser
+        Zeile, und zwar NACH dem Anlegen des Objekts. Die Map-Zeile fehlte
+        dadurch, der nächste Versuch fand kein Mapping und legte wieder eines an
+        — zehn Wiederholungen (`_BACKOFF_MINUTES`) ergaben zehn gleichnamige
+        Karteileichen in der Inserate-Liste des Betriebs. Zwei Mandanten
+        gleichzeitig betroffen.
+
+        Geschrieben wird deshalb über den Schlüssel, der WIRKLICH eindeutig ist:
+        die Map-Zeile je Objekt (`channex_property_map_property_uidx`, partiell
+        auf `deleted_at is null`). Ein reaktiviertes Mapping wird per `id`
+        aktualisiert, ein neues eingefügt.
+        """
+        zeile = {
+            "tenant_id": tenant_id,
+            "property_id": property_id,
+            "channex_property_id": channex_id,
+            "sync_enabled": True,
+            "last_sync_status": "ok",
+            "last_sync_at": now,
+            "deleted_at": None,
+        }
+        try:
+            self._map_zeile_schreiben(
+                db, tenant_id, property_id, zeile, map_id=map_id
+            )
+        except APIError:
+            if zuruecknehmen:
+                self._halbes_objekt_zuruecknehmen(
+                    db, tenant_id, property_id, channex_id
+                )
+            raise
+
+    @staticmethod
+    def _map_zeile_schreiben(
+        db: Client,
+        tenant_id: str,
+        property_id: str,
+        zeile: dict[str, Any],
+        *,
+        map_id: str | None,
+    ) -> list[dict[str, Any]]:
+        """Die Map-Zeile EINES Objekts schreiben: vorhandene aktualisieren,
+        sonst anlegen.
+
+        Geschrieben wird nie über `channex_property_id` (nicht eindeutig, s.
+        `_map_verknuepfen`), sondern über die Zeile je Objekt.
+
+        Der parallele Zweitaufruf ist real (Wurzel 2): zwei gleichzeitige
+        Verbinden-Klicks für dasselbe Objekt kommen beide an der
+        Existenzprüfung vorbei. Den zweiten fängt der partielle Unique-Index
+        `channex_property_map_property_uidx` mit 23505 ab. Das ist kein Fehler,
+        sondern „war schon da" — die vorhandene Zeile wird nachgelesen und
+        zurückgegeben, statt dem Aufrufer einen 500 zu zeigen.
+        """
+        if map_id:
+            return (
+                db.table("channex_property_map")
+                .update(zeile)
+                .eq("id", map_id)
+                .eq("tenant_id", tenant_id)
+                .execute()
+            ).data or []
+        try:
+            return (
+                db.table("channex_property_map").insert(zeile).execute()
+            ).data or []
+        except APIError as exc:
+            if "23505" not in str(exc):
+                raise
+            return (
+                db.table("channex_property_map")
+                .select("*")
+                .eq("tenant_id", tenant_id)
+                .eq("property_id", property_id)
+                .is_("deleted_at", "null")
+                .limit(1)
+                .execute()
+            ).data or []
+
+    @staticmethod
+    def _halbes_objekt_zuruecknehmen(
+        db: Client, tenant_id: str, property_id: str, channex_id: str
+    ) -> None:
+        """Ein eben angelegtes, noch unverknüpftes Objekt wieder entfernen.
+
+        Der Gegenzustand zum Anlegen (Wurzel 1). Ohne ihn bleibt bei JEDEM
+        Fehler zwischen Objekt und Mapping ein Entwurf stehen, den kein späterer
+        Lauf wiederfindet: er trägt keine Channex-Kennung, also sieht der
+        nächste Abgleich „kein Mapping" und legt das nächste an.
+
+        Das Entfernen ist eng begrenzt und deshalb ungefährlich: die Zeile ist
+        Sekunden alt, stammt aus DIESEM Lauf, steht auf `draft` und kann noch
+        keine Buchung tragen. Die Einheit fällt per `ON DELETE CASCADE` mit.
+
+        Best-effort: scheitert das Aufräumen, darf es den echten Fehler nicht
+        verdecken (Wurzel 5) — er wird oben weitergereicht, hier bleibt eine
+        laute Spur.
+        """
+        try:
+            db.table("properties").delete().eq("id", property_id).eq(
+                "tenant_id", tenant_id
+            ).execute()
+            log.warning(
+                "reconcile_halbes_objekt_zurueckgenommen",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                channex_property_id=channex_id,
+            )
+        except Exception as exc:  # noqa: BLE001 — verdeckt den echten Fehler nicht
+            log.error(
+                "reconcile_zuruecknehmen_fehlgeschlagen",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                channex_property_id=channex_id,
+                error=str(exc)[:200],
+            )
+
     def reconcile_own_tenant(self, ctx: AuthContext) -> dict[str, int]:
         """Channex→DB-Spiegelung für den Tenant aus dem JWT sofort ausführen
         (On-Demand aus dem Onboarding-Import). Tenant-Scope aus dem Kontext, dann
@@ -531,22 +668,20 @@ class PropertyMappingMixin:
             # also käme eine eingehende Airbnb-Buchung für ein frisch
             # gespiegeltes Objekt nicht an. Genau der Weg, den ein Wechselkunde
             # geht: Listing spiegeln → Buchung kommt rein → nichts passiert.
-            # Der Reconcile ist idempotent, das Anlegen der Einheit muss es auch
-            # sein (Wurzel 2), deshalb Upsert auf (property_id, position).
+            # Der Reconcile ist idempotent, das Anlegen der Einheit muss es
+            # auch sein (Wurzel 2) — per Existenzprüfung, NICHT per Upsert;
+            # warum, steht in `_ensure_default_unit`.
             self._ensure_default_unit(db, tenant_id, property_id, row.get("title"))
 
-            db.table("channex_property_map").upsert(
-                {
-                    "tenant_id": tenant_id,
-                    "property_id": property_id,
-                    "channex_property_id": channex_id,
-                    "sync_enabled": True,
-                    "last_sync_status": "ok",
-                    "last_sync_at": now,
-                    "deleted_at": None,
-                },
-                on_conflict="channex_property_id",
-            ).execute()
+            self._map_verknuepfen(
+                db,
+                tenant_id=tenant_id,
+                property_id=property_id,
+                channex_id=channex_id,
+                now=now,
+                map_id=soft[0]["id"] if reuse_property_id and soft else None,
+                zuruecknehmen=not reuse_property_id,
+            )
             created += 1
             log.info(
                 "reconcile_property_created",
@@ -859,11 +994,12 @@ class PropertyMappingMixin:
                     "Channex lieferte keine Property-ID zurück.", status_code=502
                 )
 
-        # Fremdübernahme verhindern: die channex_property_id ist im upsert der
-        # Konflikt-Schlüssel (on_conflict="channex_property_id"). Ohne diese
-        # Prüfung könnte ein Tenant per client-übergebener external_property_ref
-        # das Mapping eines FREMDEN Tenants überschreiben/übernehmen. Belegt eine
-        # noch nicht gelöschte Zeile eines anderen Tenants diese ID → 409.
+        # Fremdübernahme verhindern: ohne diese Prüfung hängte ein Tenant per
+        # client-übergebener external_property_ref sein Objekt an die
+        # Channex-Property eines FREMDEN Tenants. Belegt eine noch nicht
+        # gelöschte Zeile eines anderen Tenants diese ID → 409. Innerhalb EINES
+        # Tenants ist die Mehrfachnutzung dagegen erlaubt und gewollt (Hotel:
+        # n Zimmertypen unter einer Channex-Property, 0158).
         clash = (
             db.table("channex_property_map")
             .select("tenant_id")
@@ -887,15 +1023,27 @@ class PropertyMappingMixin:
             "sync_enabled": True,
             "last_sync_status": "ok",
         }
-        saved = (
+        # KEIN Upsert auf `channex_property_id` — seit 0158 ohne eindeutigen
+        # Index, ein `on_conflict` darauf wirft 42P10 (Begründung und Vorfall in
+        # `_map_verknuepfen`). Eindeutig ist die Zeile je OBJEKT, also wird
+        # danach gesucht und dann aktualisiert oder eingefügt.
+        vorhanden = (
             db.table("channex_property_map")
-            .upsert(row, on_conflict="channex_property_id")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", req.property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
             .execute()
+        ).data
+        saved = self._map_zeile_schreiben(
+            db, tenant_id, req.property_id, row,
+            map_id=vorhanden[0]["id"] if vorhanden else None,
         )
-        if not saved.data:
+        if not saved:
             raise ChannelManagerError("Mapping konnte nicht gespeichert werden.", status_code=500)
         self._chat_freischalten(channex_id)
-        return self._to_property_map(saved.data[0])
+        return self._to_property_map(saved[0])
 
     def _chat_freischalten(self, channex_property_id: str) -> None:
         """Gäste-Chat der Portale für ein frisch verbundenes Objekt einschalten.
