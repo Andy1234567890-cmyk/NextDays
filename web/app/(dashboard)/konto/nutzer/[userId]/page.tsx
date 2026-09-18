@@ -15,6 +15,7 @@ import {
 } from "@/lib/account";
 import { getOwner, listOwners } from "@/lib/owners";
 import { listProperties } from "@/lib/properties";
+import { getMe } from "@/lib/auth";
 
 export default async function NutzerDetailPage({
   params,
@@ -34,9 +35,10 @@ export default async function NutzerDetailPage({
     user.role === "cleaner" ||
     user.role === "shift_lead";
 
-  const [objekteRes, kontoRes, zuordnungRes] = await Promise.all([
+  const [objekteRes, kontoRes, me, zuordnungRes] = await Promise.all([
     listProperties(),
     getAccount(),
+    getMe(),
     rolleMitObjekten
       ? user.role === "owner"
         ? getOwnerProperties(userId)
@@ -45,6 +47,16 @@ export default async function NutzerDetailPage({
   ]);
 
   const properties = objekteRes.ok ? objekteRes.data.items : [];
+  // Ein `owner` DARF diese Seite lesen (Liste und Detail stehen ihm offen),
+  // hat aber kein MANAGE_STAFF — der Benachrichtigungs-Link liefe für ihn auf
+  // 403. Ein Link, der ins Leere führt, ist schlechter als keiner, also wird er
+  // an derselben Fähigkeit ausgeblendet, die der Server verlangt. Die
+  // Oberfläche ist damit nicht der Schutz (der sitzt im Backend), sondern nur
+  // ehrlich über das, was möglich ist.
+  const darfBenachrichtigungen =
+    me?.role === "admin" ||
+    (me?.capabilities ?? []).includes("manage_staff") ||
+    (me?.permissions ?? []).includes("manage_staff");
   const zugewiesen =
     zuordnungRes && zuordnungRes.ok ? zuordnungRes.data.property_ids : [];
 
@@ -78,6 +90,7 @@ export default async function NutzerDetailPage({
       provisionProObjekt={provisionProObjekt}
       ownerId={ownerId}
       tenantCountry={kontoRes.ok ? kontoRes.data.tenant_country : null}
+      darfBenachrichtigungen={darfBenachrichtigungen}
     />
   );
 }

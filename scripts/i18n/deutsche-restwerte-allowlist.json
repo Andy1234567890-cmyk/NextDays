@@ -5125,6 +5125,53 @@
         "et"
       ],
       "notiz": "Estnisch kürzt „number\" als „nr\" ab — dieselbe Abkürzung wie im Deutschen."
+    },
+    {
+      "schluessel": "account.notifications.channel.push",
+      "grund": "international",
+      "sprachen": [
+        "bg",
+        "cs",
+        "da",
+        "el",
+        "en",
+        "es",
+        "et",
+        "fi",
+        "fr",
+        "ga",
+        "hr",
+        "hu",
+        "it",
+        "lt",
+        "lv",
+        "mt",
+        "nl",
+        "pl",
+        "pt",
+        "ro",
+        "sk",
+        "sl",
+        "sv"
+      ],
+      "notiz": "Der Zustellweg heisst in allen 23 Sprachen „Push“ — das Wort ist aus dem Englischen uebernommen und steht so auch in den Systemeinstellungen von iOS und Android. Je Sprache geprueft, nicht pauschal „alle“: bg und el schreiben es lateinisch, weil die Telefone es dort ebenfalls lateinisch zeigen."
+    },
+    {
+      "schluessel": "account.notifications.channel.phone",
+      "grund": "international",
+      "sprachen": [
+        "cs",
+        "da",
+        "et",
+        "hr",
+        "hu",
+        "mt",
+        "pl",
+        "ro",
+        "sl",
+        "sv"
+      ],
+      "notiz": "„Telefon“ lautet in genau diesen zehn Sprachen wortgleich. Die uebrigen dreizehn stehen bewusst NICHT hier — sie tragen ihr eigenes Wort (nl „Telefoon“, fr „Téléphone“, lt „Telefonas“, el „Τηλέφωνο“)."
     }
   ]
 }

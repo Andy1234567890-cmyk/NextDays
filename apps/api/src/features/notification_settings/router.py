@@ -1,14 +1,25 @@
 """Router für notification_settings. Gemountet unter /api/v1/notification-settings.
 
-Benachrichtigungs-Präferenzen des eingeloggten Kontos (Airbnb „Konto →
-Benachrichtigungen"). Scope über die eigene user_id im Service (Wurzel 3/9) —
-jeder eingeloggte Nutzer sieht/ändert nur die EIGENE Zeile.
+Benachrichtigungs-Präferenzen (Airbnb „Konto → Benachrichtigungen"). ZWEI Wege
+auf dieselbe Ressource, mit unterschiedlichem Schutz:
+
+* `""`/`/raw` — die EIGENE Zeile. Die user_id kommt aus dem Token, ein Client
+  kann sie nicht wählen; es genügt, angemeldet zu sein.
+* `/nutzer/{user_id}` — die Zeile eines Nutzers des eigenen Betriebs. Hier ist
+  die ID Client-Eingabe, also brauchen beide Routen BEIDES: die Autorisierung
+  (MANAGE_STAFF, Rolle frisch aus der DB — Wurzel 7) UND den Tenant-Scope im
+  Service (`_nutzer_im_tenant`, Wurzel 3/9). Ein `get_current_user` allein wäre
+  hier eine IDOR auf die Kommunikationsgewohnheiten jedes fremden Kontos.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
 
-from src.core.security import CurrentUser
+from fastapi import APIRouter, Depends, HTTPException
+
+from src.core.security import AuthContext, CurrentUser
+from src.features.auth.dependencies import require_permission
+from src.features.auth.permissions import Capability
 
 from .dependencies import (
     GlockeServiceDep,
@@ -25,9 +36,18 @@ from .schemas import (
     PushGeraetAbmeldung,
     PushGeraetRegistrierung,
 )
+from .service import NotificationScopeFehler
 
 router = APIRouter(
     prefix="/notification-settings", tags=["notification-settings"]
+)
+
+# Dieselbe Fähigkeit, die die Nutzerverwaltung unter /konto/nutzer schützt —
+# wer dort Rollen und Kontaktdaten pflegt, pflegt auch die Zustellwege. Eine
+# eigene Fähigkeit dafür zu erfinden hieße, zwei Wahrheiten über dieselbe
+# Verwaltungsrolle zu führen (Wurzel 4).
+_MANAGE_STAFF = require_permission(  # noqa: N816  pylint: disable=invalid-name
+    Capability.MANAGE_STAFF
 )
 
 
@@ -56,6 +76,47 @@ def update_settings(
     """Einzelne Präferenzen ändern (nur gesetzte Felder). Pflicht-E-Mails
     bleiben an, das Sammel-Opt-out pflegt die Marketing-Kanäle mit."""
     return service.update(ctx, patch)
+
+
+# --- Verwaltungs-Weg: die Präferenzen eines MITARBEITERS ---------------------
+# Konto → Nutzer → ein Nutzer → „Benachrichtigungen". Der Betrieb stellt ein,
+# was bei seinen Leuten ankommt; ohne diesen Weg müsste sich jemand als sie
+# anmelden, um eine Mailflut zu stoppen.
+
+
+@router.get("/nutzer/{user_id}", response_model=NotificationOverview)
+def get_overview_fuer_nutzer(
+    user_id: str,
+    service: NotificationSettingsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE_STAFF)],
+) -> NotificationOverview:
+    """Kategorien und Kanal-Zustand EINES Nutzers des eigenen Betriebs."""
+    try:
+        return service.overview_fuer_nutzer(ctx, user_id)
+    except NotificationScopeFehler as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc
+
+
+@router.patch("/nutzer/{user_id}", response_model=NotificationSettings)
+def update_settings_fuer_nutzer(
+    user_id: str,
+    patch: NotificationSettingsUpdate,
+    service: NotificationSettingsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE_STAFF)],
+) -> NotificationSettings:
+    """Präferenzen eines Nutzers des eigenen Betriebs ändern.
+
+    Pflicht-E-Mails bleiben auch hier an — der Verwaltungs-Weg ist kein
+    Schlupfloch um `email_pflicht` (die Regel sitzt im gemeinsamen Schreibpfad).
+    """
+    try:
+        return service.update_fuer_nutzer(ctx, user_id, patch)
+    except NotificationScopeFehler as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc
 
 
 # --- Die Glocke (In-App-Benachrichtigungen) ---------------------------------

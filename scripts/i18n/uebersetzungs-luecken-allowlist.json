@@ -11,6 +11,8 @@
  "erlaubt": [
   "account.company.hrbPlaceholder",
   "account.company.ibanPlaceholder",
+  "account.notifications.channel.push",
+  "account.notifications.channel.sms",
   "account.roles.admin",
   "account.subscription.brand",
   "account.subscription.empty",

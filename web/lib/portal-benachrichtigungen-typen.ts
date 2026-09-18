@@ -11,25 +11,16 @@
 // apps/api/src/features/notification_settings/katalog.py: die Spaltennamen
 // folgen strikt `<schluessel>_<kanal>`.
 
-/** Ein Kanal einer Kategorie samt Zustand und ob er änderbar ist. */
-export type KanalInfo = {
-  kanal: string; // email | sms | phone
-  aktiv: boolean;
-  /** false = Schalter ist an und gesperrt (vertraglich nötige Mail). */
-  aenderbar: boolean;
-};
-
-export type KategorieInfo = {
-  schluessel: string;
-  tab: string; // angebote | konto
-  gruppe: string;
-  kanaele: KanalInfo[];
-};
-
-export type NotificationOverview = {
-  kategorien: KategorieInfo[];
-  marketing_unsubscribed_all: boolean;
-};
+// Die Typen leben seit dem 18.09.2026 in `benachrichtigungen-typen.ts` und
+// werden hier nur weitergereicht: dieselbe Antwort des Servers wird jetzt an
+// DREI Stellen gerendert (Eigentümer-Portal, eigene Konto-Seite, Nutzer-Seite
+// des Betriebs). Drei Kopien derselben Form liefen beim nächsten Kanal
+// auseinander (Wurzel 4) — der Katalog hat gerade erst `push` bekommen.
+export type {
+  KanalInfo,
+  KategorieInfo,
+  NotificationOverview,
+} from "@/lib/benachrichtigungen-typen";
 
 /**
  * Die Kategorien, die einen EIGENTÜMER betreffen — in dieser Reihenfolge.

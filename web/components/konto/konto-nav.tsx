@@ -40,6 +40,15 @@ const ITEMS: readonly Item[] = [
     icon: "ph:code",
     requireAny: ["manage_tenant"],
   },
+  // Ohne `requireAny`: jede Rolle bekommt Mails, also darf jede Rolle sie
+  // einstellen. Der Punkt fehlte bis zum 18.09.2026 ganz — die Einstellungen
+  // existierten serverseitig vollständig, waren im PMS aber über keine
+  // Oberfläche erreichbar.
+  {
+    title: "Benachrichtigungen",
+    href: "/konto/benachrichtigungen",
+    icon: "ph:bell",
+  },
   { title: "Sicherheit", href: "/konto/sicherheit", icon: "ph:shield-check" },
 ];
 

@@ -4,7 +4,21 @@ Genau EINE Zeile pro Nutzer in public.notification_settings. Fehlt sie, gelten
 die Spalten-Defaults; ein Update legt sie lazy per Upsert an. Scope IMMER auf
 user_id (Wurzel 3) — der Service-Client umgeht RLS.
 
-Zwei Regeln, die hier (nicht in der UI) durchgesetzt werden:
+ZWEI WEGE auf dieselbe Zeile, und das ist der Grund für den Zuschnitt unten:
+
+* Der eigene Weg (`get`/`overview`/`update`) nimmt die `user_id` aus dem Token.
+  Ein Client kann sie nicht wählen.
+* Der Verwaltungs-Weg (`*_fuer_nutzer`) setzt sie für einen ANDEREN Nutzer —
+  der Betrieb stellt die Benachrichtigungen seiner Mitarbeitenden ein. Hier ist
+  die `user_id` Client-Eingabe und deshalb ein Angriffspunkt: ohne Scope wäre
+  jede fremde `user_id` erreichbar (IDOR, Wurzel 3/9). Der Schutz steht darum
+  UNTRENNBAR vor dem Zugriff in `_nutzer_im_tenant` — nicht als Prüfung, die
+  ein späterer Aufrufer vergessen kann.
+
+Die Autorisierung (MANAGE_STAFF) hängt zusätzlich am Router; sie beantwortet
+„darf diese Rolle überhaupt", der Scope hier „und für WEN".
+
+Drei Regeln, die hier (nicht in der UI) durchgesetzt werden:
 
 1. PFLICHT-E-MAILS: Bei Buchungs-/Kontoaktivität und Richtlinien lässt sich die
    E-Mail nicht abschalten (Katalog: email_pflicht). Ein PATCH, der es versucht,
@@ -15,6 +29,11 @@ Zwei Regeln, die hier (nicht in der UI) durchgesetzt werden:
    Kanäle mit aus (Wurzel 1: der Gegenzustand wird mitgepflegt, sonst behauptet
    das Flag etwas, das die Einzelspalten nicht hergeben). Schaltet der Nutzer
    einen Marketing-Kanal später wieder an, fällt das Flag automatisch.
+
+3. FREMDER NUTZER NUR IM EIGENEN TENANT: `_nutzer_im_tenant` lädt die Zeile per
+   (id, tenant_id) und wirft 404, wenn sie fehlt ODER fremd ist — dieselbe
+   Meldung für beides, damit die Existenz eines fremden Kontos keine Auskunft
+   ist.
 """
 from __future__ import annotations
 
@@ -24,6 +43,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import load_scoped
 
 from .katalog import (
     KATALOG,
@@ -45,18 +65,57 @@ log = get_logger("nextdays.notification_settings")
 _SELECT = ", ".join(SPALTEN)
 
 
+class NotificationScopeFehler(Exception):
+    """Der Ziel-Nutzer gehört nicht zum Tenant des Aufrufers (oder existiert
+    nicht). Bewusst EINE Klasse für beide Fälle — siehe Regel 3 oben."""
+
+    def __init__(self, nachricht: str, status_code: int = 404) -> None:
+        super().__init__(nachricht)
+        self.message = nachricht
+        self.status_code = status_code
+
+
 class NotificationSettingsService:
     def __init__(self, db: Client) -> None:
         self._db = db
+
+    # -- Scope --------------------------------------------------------------
+
+    def _nutzer_im_tenant(self, ctx: AuthContext, ziel_user_id: str) -> str:
+        """Ziel-Nutzer NUR im eigenen Tenant — Load und Scope in EINEM Schritt.
+
+        `load_scoped` filtert direkt per (id, tenant_id); getrennt als
+        Laden-dann-Prüfen ließe sich die Prüfung vergessen (Wurzel 3). Gibt die
+        ID zurück, damit der Aufrufer sie nicht erneut aus der Anfrage nimmt —
+        was hier weitergereicht wird, ist geprüft.
+        """
+        if not ctx.tenant_id:
+            raise NotificationScopeFehler(
+                "Kein Unternehmen zugeordnet.", status_code=403
+            )
+        zeile = load_scoped(
+            self._db,
+            "users",
+            ziel_user_id,
+            ctx.tenant_id,
+            columns="id",
+            not_found=NotificationScopeFehler("Nutzer nicht gefunden."),
+        )
+        return str(zeile["id"])
 
     # -- Lesen --------------------------------------------------------------
 
     def get(self, ctx: AuthContext) -> NotificationSettings:
         """Präferenzen des eingeloggten Nutzers (Defaults, falls keine Zeile)."""
+        return self._laden(ctx.user_id)
+
+    def _laden(self, user_id: str) -> NotificationSettings:
+        """Die Präferenzzeile EINES Nutzers. Die `user_id` ist hier bereits
+        geprüft — entweder aus dem Token oder durch `_nutzer_im_tenant`."""
         row = (
             self._db.table("notification_settings")
             .select(_SELECT)
-            .eq("user_id", ctx.user_id)
+            .eq("user_id", user_id)
             .limit(1)
             .execute()
         ).data
@@ -65,7 +124,21 @@ class NotificationSettingsService:
     def overview(self, ctx: AuthContext) -> NotificationOverview:
         """Die Sicht für den Konto-Tab: jede Kategorie mit ihren Kanälen und der
         Information, welcher Schalter gesperrt ist. Die UI rendert genau das."""
-        settings = self.get(ctx)
+        return self._overview(ctx.user_id)
+
+    def overview_fuer_nutzer(
+        self, ctx: AuthContext, ziel_user_id: str
+    ) -> NotificationOverview:
+        """Dieselbe Sicht für einen Nutzer des eigenen Betriebs (MANAGE_STAFF).
+
+        Der Betrieb sieht damit, was bei dieser Person ankommt — der Anlass für
+        den ganzen Weg: „unsere Leute bekommen zu viele Mails" lässt sich sonst
+        nur beantworten, indem man sich als sie anmeldet.
+        """
+        return self._overview(self._nutzer_im_tenant(ctx, ziel_user_id))
+
+    def _overview(self, user_id: str) -> NotificationOverview:
+        settings = self._laden(user_id)
         kategorien = [
             KategorieInfo(
                 schluessel=k.schluessel,
@@ -93,16 +166,52 @@ class NotificationSettingsService:
         self, ctx: AuthContext, patch: NotificationSettingsUpdate
     ) -> NotificationSettings:
         """Nur gesetzte Felder ändern (PATCH). Legt die Zeile lazy an."""
+        return self._schreiben(ctx.user_id, patch, geaendert_von=ctx.user_id)
+
+    def update_fuer_nutzer(
+        self,
+        ctx: AuthContext,
+        ziel_user_id: str,
+        patch: NotificationSettingsUpdate,
+    ) -> NotificationSettings:
+        """Präferenzen eines Nutzers des eigenen Betriebs ändern (MANAGE_STAFF).
+
+        Die Pflicht-Mails gelten HIER GENAUSO (`_erzwinge_pflicht_mails` liegt
+        im gemeinsamen `_schreiben`): auch ein Admin darf einer Mitarbeiterin
+        die Stornierungsmail nicht abdrehen — das ist eine vertragliche
+        Information, keine Geschmacksfrage. Wer die Regel nur im eigenen Pfad
+        durchsetzte, hätte sie über diesen Weg umgangen.
+        """
+        return self._schreiben(
+            self._nutzer_im_tenant(ctx, ziel_user_id),
+            patch,
+            geaendert_von=ctx.user_id,
+        )
+
+    def _schreiben(
+        self,
+        user_id: str,
+        patch: NotificationSettingsUpdate,
+        *,
+        geaendert_von: str,
+    ) -> NotificationSettings:
+        """Der EINE Schreibpfad — eigener wie fremder Nutzer.
+
+        `geaendert_von` steht nur im Protokoll und ist genau dann interessant,
+        wenn es von `user_id` abweicht: dann hat der Betrieb für jemanden
+        anderen geschaltet. Ohne diese Spur wäre später nicht zu klären, warum
+        jemand eine Mail nicht mehr bekommt.
+        """
         changed: dict[str, bool] = patch.model_dump(exclude_none=True)
         if not changed:
-            return self.get(ctx)
+            return self._laden(user_id)
 
         changed = self._erzwinge_pflicht_mails(changed)
-        changed = self._pflege_sammel_optout(ctx, changed)
+        changed = self._pflege_sammel_optout(user_id, changed)
 
         self._db.table("notification_settings").upsert(
             {
-                "user_id": ctx.user_id,
+                "user_id": user_id,
                 "updated_at": datetime.now(UTC).isoformat(),
                 **changed,
             },
@@ -110,10 +219,11 @@ class NotificationSettingsService:
         ).execute()
         log.info(
             "notification_settings_updated",
-            user_id=ctx.user_id,
+            user_id=user_id,
+            geaendert_von=geaendert_von,
             fields=sorted(changed),
         )
-        return self.get(ctx)
+        return self._laden(user_id)
 
     @staticmethod
     def _erzwinge_pflicht_mails(changed: dict[str, bool]) -> dict[str, bool]:
@@ -132,7 +242,7 @@ class NotificationSettingsService:
         return korrigiert
 
     def _pflege_sammel_optout(
-        self, ctx: AuthContext, changed: dict[str, bool]
+        self, user_id: str, changed: dict[str, bool]
     ) -> dict[str, bool]:
         """Gegenzustand des Sammel-Opt-outs (Wurzel 1).
 
@@ -151,7 +261,11 @@ class NotificationSettingsService:
         marketing_an = any(
             changed.get(spalte) for spalte in MARKETING_SPALTEN
         )
-        if marketing_an and flag is None and self.get(ctx).marketing_unsubscribed_all:
+        if (
+            marketing_an
+            and flag is None
+            and self._laden(user_id).marketing_unsubscribed_all
+        ):
             changed["marketing_unsubscribed_all"] = False
         return changed
 

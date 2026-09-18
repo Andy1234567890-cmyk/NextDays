@@ -73,6 +73,7 @@ export function BenutzerDetail({
   provisionProObjekt,
   ownerId,
   tenantCountry,
+  darfBenachrichtigungen = false,
 }: {
   user: TenantUser;
   /** Alle Objekte des Kontos (Auswahl im Zuweisen-Sheet). */
@@ -86,6 +87,16 @@ export function BenutzerDetail({
   ownerId: string | null;
   /** Land des Betriebs (ISO-2) für die Telefon-Vorwahl. */
   tenantCountry: string | null;
+  /**
+   * Trägt der BETRACHTER die Fähigkeit MANAGE_STAFF? Steuert nur, ob der
+   * Benachrichtigungs-Link erscheint. Ein `owner` darf diese Seite lesen, kann
+   * fremde Zustellwege aber nicht ändern — ihm einen Link zu zeigen, der 403
+   * liefert, wäre ein Versprechen, das die Anwendung nicht hält.
+   *
+   * Standard `false`: fehlt die Angabe, ist der Link weg (fail-closed) — nicht
+   * sichtbar und kaputt.
+   */
+  darfBenachrichtigungen?: boolean;
 }) {
   const t = useTranslations("account");
   const tPermissions = useTranslations("permissions");
@@ -358,6 +369,31 @@ export function BenutzerDetail({
           )}
         </div>
       </Abschnittskarte>
+
+      {/* --- Benachrichtigungen ---------------------------------------------- */}
+      {/* Nur ein Link, kein Sheet: es sind 40 Kategorien in acht Gruppen — als
+          Karte hier stünde die halbe Seite voller Schalter. Der Anlass für den
+          Weg ist die Beschwerde „unsere Leute bekommen zu viele Mails"; ohne
+          ihn müsste sich jemand als die Person anmelden, um das zu ändern. */}
+      {darfBenachrichtigungen && (
+      <Link
+        href={`/konto/nutzer/${user.user_id}/benachrichtigungen`}
+        className="flex items-center justify-between gap-3 rounded-(--radius) border border-border p-4 transition-colors hover:bg-secondary/50"
+      >
+        <span className="flex min-w-0 flex-col">
+          <span className="font-display text-sm font-extrabold">
+            {t("notifications.title")}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            {t("notifications.userDetailHint")}
+          </span>
+        </span>
+        <Icon
+          icon="ph:caret-right"
+          className="size-4 shrink-0 text-muted-foreground"
+        />
+      </Link>
+      )}
 
       {/* --- Zugewiesene Objekte -------------------------------------------- */}
       {rolleMitObjekten && (
