@@ -33,7 +33,20 @@ export type Aufenthalt = {
   /** WARUM kein Betrag ausweisbar ist — ohne den Grund stünde ein stummes „—". */
   grund: string | null;
   currency: string | null;
+  /** Vorname (immer nur das erste Namenstoken). */
   gast: string | null;
+  /** Nachname — nur mit VIEW_GUEST_NAME, sonst null. Getrennt vom Vornamen,
+   *  damit der Chip bei knappem Platz hinten abschneiden kann. */
+  nachname: string | null;
+  nationalitaet: string | null;
+  /** Wohnsitzland — getrennt von der Staatsangehörigkeit. */
+  land: string | null;
+  /** Besetzung und Haustiere. null = nicht erfasst; bei Haustieren ist 0
+   *  ausdrücklich etwas anderes („keins dabei"). */
+  gaeste: number | null;
+  erwachsene: number | null;
+  kinder: number | null;
+  haustiere: number | null;
   quelle: string | null;
   /** Eigennutzung (0241): kein Gast, kein Portal, kein Betrag — und KEINE Lücke. */
   eigennutzung: boolean;
@@ -69,6 +82,15 @@ export function aufenthalteBilden(tage: PortalCalendarDay[]): Aufenthalt[] {
           grund: !b.is_owner_stay && wert == null ? b.payout_unknown_reason : null,
           currency: b.currency,
           gast: b.guest_first_name?.trim() || null,
+          nachname: b.guest_last_name?.trim() || null,
+          nationalitaet: b.guest_nationality?.trim() || null,
+          land: b.guest_country?.trim() || null,
+          // `?? null`, nicht `|| null`: eine 0 ist hier eine echte Aussage
+          // („keine Haustiere") und darf nicht zu „keine Angabe" werden.
+          gaeste: b.num_guests ?? null,
+          erwachsene: b.adults ?? null,
+          kinder: b.children ?? null,
+          haustiere: b.pets ?? null,
           quelle: b.booking_source?.trim() || null,
           eigennutzung: b.is_owner_stay,
         });

@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# unidade adicional} other {# unidades adicionais}}",
       "unitsBooked": "{booked} de {total} unidades ocupadas",
       "bandStart": "Início do período disponível",
-      "bandEnd": "Fim do período disponível"
+      "bandEnd": "Fim do período disponível",
+      "nationality": "Nacionalidade",
+      "guests": "Hóspedes",
+      "pets": "Animais de estimação",
+      "noPets": "Sem animais",
+      "country": "País",
+      "period": "Período",
+      "nightsLabel": "Noites",
+      "booking": "Reserva",
+      "adultsCount": "{count} adultos",
+      "childrenCount": "{count} crianças"
     },
     "services": {
       "title": "Reservar um serviço",

@@ -1,6 +1,7 @@
 // Platzhalter-System für Textvorlagen
 import { documentTranslations } from '@/hooks/pdf/document-translations';
 import { resolveDocumentLanguage } from '@/hooks/pdf/useDocumentTranslation';
+import { isoKalenderwoche, lokalIso } from '@/lib/dates';
 import { formatCurrency } from '@/lib/utils';
 
 interface PlaceholderData {
@@ -680,15 +681,13 @@ export function replacePlaceholders(
     (currentQuarter === 4 ? 1 : currentQuarter + 1).toString(),
   );
 
-  // Kalenderwoche
-  const getWeekNumber = (date: Date) => {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  };
-  result = result.replace(/\[%KALENDERWOCHE%\]/g, getWeekNumber(now).toString());
+  // Kalenderwoche — über den geteilten Helfer, nicht als eigene Kopie: dieselbe
+  // Zählung, die der Eigentümer-Kalender zeigt. Zwei Rechnungen für dieselbe
+  // Woche wären zwei Wahrheiten, sichtbar erst am Jahreswechsel.
+  result = result.replace(
+    /\[%KALENDERWOCHE%\]/g,
+    isoKalenderwoche(lokalIso(now)).toString(),
+  );
 
   // Anzahl Tage im Monat
   const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();

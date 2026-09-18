@@ -1,5 +1,6 @@
 import {
   datumKurz,
+  isoKalenderwoche,
   datumLang,
   naechte,
   prozent,
@@ -69,5 +70,40 @@ describe("Rechnen", () => {
     expect(veraenderungPct(500, 0)).toBeNull();
     expect(veraenderungPct(null, 100)).toBeNull();
     expect(veraenderungPct(100, null)).toBeNull();
+  });
+});
+
+describe("isoKalenderwoche", () => {
+  // Die Fälle, an denen sich ISO-8601 von der US-Zählung unterscheidet — und
+  // zwar ausschliesslich dort. Elf Monate im Jahr liefern beide dasselbe.
+  it("zählt nach ISO-8601, nicht nach der US-Variante", () => {
+    expect(isoKalenderwoche("2026-01-01")).toBe(1); // Do → Woche 1
+    expect(isoKalenderwoche("2026-06-29")).toBe(27); // Montag
+    expect(isoKalenderwoche("2026-07-05")).toBe(27); // Sonntag DERSELBEN Woche
+    expect(isoKalenderwoche("2026-07-06")).toBe(28); // nächster Montag
+  });
+
+  it("legt den Jahreswechsel in die Woche, zu der er gehört", () => {
+    // 2027 beginnt an einem Freitag: der 01.01. gehört noch in die letzte
+    // Woche von 2026, nicht in Woche 1. Genau hier läge die US-Zählung daneben.
+    expect(isoKalenderwoche("2026-12-31")).toBe(53);
+    expect(isoKalenderwoche("2027-01-01")).toBe(53);
+    expect(isoKalenderwoche("2027-01-04")).toBe(1); // erster Montag
+  });
+
+  it("stimmt mit der Rechnung des Webs überein", () => {
+    // Beide Seiten zeigen dieselbe Woche desselben Tages; liefen sie
+    // auseinander, hiesse derselbe Aufenthalt in App und Portal anders.
+    // Die Web-Variante steht in web/lib/dates.ts und rechnet identisch.
+    const web = (iso: string) => {
+      const d = new Date(iso + "T00:00:00Z");
+      const wochentag = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - wochentag);
+      const anfang = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil(((d.getTime() - anfang.getTime()) / 86_400_000 + 1) / 7);
+    };
+    for (const iso of ["2026-01-01", "2026-03-15", "2026-08-02", "2026-12-31"]) {
+      expect(isoKalenderwoche(iso)).toBe(web(iso));
+    }
   });
 });

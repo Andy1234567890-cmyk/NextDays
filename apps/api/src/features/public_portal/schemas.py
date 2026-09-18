@@ -2,6 +2,11 @@
 
 Der eingeloggte Eigentümer (Rolle 'owner') sieht NUR seine zugeordneten Objekte
 (owner_property_assignments), Beträge/Gäste maskiert (guest_masking, §4.2).
+
+Gastname und Nationalität hängen seit dem 18.09.2026 an VIEW_GUEST_NAME, das
+im owner-Standard steht — der Eigentümer sieht sie also, solange der Betrieb
+ihm die Berechtigung nicht entzieht. Kontakt (E-Mail/Telefon) und Ausweisdaten
+bleiben ihm weiterhin verschlossen.
 """
 from datetime import date as date_
 
@@ -41,6 +46,38 @@ class PortalNightBooking(BaseModel):
     currency: str | None = None
     payout_unknown_reason: str | None = None
     guest_first_name: str | None = None
+    # Nachname des Gastes — nur mit VIEW_GUEST_NAME, sonst None (zentrale
+    # GuestMask, keine eigene Kürzung hier). Bewusst ein EIGENES Feld statt
+    # eines zusammengesetzten `guest_name`: ältere App-Stände lesen
+    # `guest_first_name` und zeigen weiter den Vornamen, statt beim Update
+    # plötzlich nichts mehr zu finden. Jedes Feld heißt, was drinsteht.
+    guest_last_name: str | None = None
+    # Staatsangehörigkeit, an derselben Berechtigung wie der Nachname
+    # (`GuestMask.origin_value`). None = nicht erhoben ODER nicht
+    # freigegeben — beides ist „keine Angabe", nie ein erfundenes Land.
+    #
+    # Live selten gefüllt (121 von 661 Gästen, 18.09.2026): die Portale liefern
+    # sie nicht mit. Was sie liefern, steht daneben in `guest_country`.
+    guest_nationality: str | None = None
+    # WOHNSITZLAND der Buchung (`reservations.guest_country`, ISO-Kürzel) —
+    # etwas anderes als die Staatsangehörigkeit und deshalb ein eigenes Feld
+    # mit eigener Beschriftung. Es unter „Nationalität" zu zeigen wäre eine
+    # Falschaussage, die plausibel aussieht: ein dänischer Gast mit Wohnsitz in
+    # Deutschland stünde als Deutscher da (Wurzel 5b — unsere Ableitung ist
+    # nicht die Aussage der Quelle). Praktisch ist DIES das Feld, in dem etwas
+    # steht: 2298 von 2833 Buchungen.
+    guest_country: str | None = None
+    # Wie viele Personen gebucht sind (`reservations.num_guests`), und wie sie
+    # sich aufteilen. Kinder sind eine TEILMENGE von `guests`, kein Zuschlag
+    # (0608) — `adults + children` ergibt deshalb `num_guests`, wo alle drei
+    # gepflegt sind. None heißt: nicht erfasst; die Oberfläche zeigt dann
+    # nichts statt einer erfundenen 1 (Wurzel 4).
+    num_guests: int | None = None
+    adults: int | None = None
+    children: int | None = None
+    # Anzahl mitgebuchter Haustiere (`reservations.pets`). 0 und None sind
+    # NICHT dasselbe: 0 heißt „gefragt, keins dabei", None „nicht erfasst".
+    pets: int | None = None
     booking_source: str | None = None
     # Ist das die EIGENNUTZUNG des Eigentümers (0241, aus einem genehmigten
     # Sperrantrag)? Dann ist die Nacht belegt, bringt aber keinen Umsatz:
@@ -89,6 +126,22 @@ class PortalCalendarDay(BaseModel):
     # Bei mehreren belegten Einheiten der ERSTE (stabil sortiert); die
     # vollständige Aufstellung steht in `bookings`.
     guest_first_name: str | None = None
+    # Nachname und Herkunft derselben ersten Belegung. Alle laufen über
+    # dieselbe Maske wie der Vorname; ob sie ankommen, entscheidet
+    # VIEW_GUEST_NAME, nicht diese Stelle. `guest_nationality` ist die
+    # Staatsangehörigkeit, `guest_country` das Wohnsitzland — zwei Angaben,
+    # nicht zwei Namen für eine.
+    guest_last_name: str | None = None
+    guest_nationality: str | None = None
+    guest_country: str | None = None
+    # Personen und Haustiere DIESER ersten Belegung — nicht die Summe der
+    # Nacht. Bei mehreren belegten Einheiten (0265) wäre eine Summe eine Zahl,
+    # die zu keiner einzelnen Buchung gehört; die vollständige Aufstellung
+    # steht in `bookings`.
+    num_guests: int | None = None
+    adults: int | None = None
+    children: int | None = None
+    pets: int | None = None
     # Buchungsquelle der Nacht (ota_name, sonst channel): woher die Buchung kam
     # und damit, welcher Portal-Abzug im Payout steckt.
     booking_source: str | None = None

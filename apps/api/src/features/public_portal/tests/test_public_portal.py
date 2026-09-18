@@ -446,6 +446,123 @@ def test_calendar_gast_nur_vorname_und_quelle() -> None:
     assert {d.booking_source for d in res.days} == {"myBestDays"}
 
 
+def test_calendar_nachname_und_nationalitaet_nur_mit_berechtigung() -> None:
+    """VIEW_GUEST_NAME entscheidet über Nachname UND Nationalität (18.09.2026).
+
+    Beide hängen an DERSELBEN Berechtigung (`GuestMask.nationality_value`).
+    Liefen sie auseinander, stünde bei entzogenem Recht der Gast als „Erika aus
+    Dänemark" da — anonymisiert ist das nicht.
+
+    Der Vorname bleibt in beiden Fällen im Feld `guest_first_name`: es heißt so
+    und muss auch dann den Vornamen tragen, wenn der volle Name erlaubt ist,
+    sonst zeigen ältere App-Stände plötzlich den ganzen Namen in einem Feld,
+    das sie als Vornamen beschriften.
+    """
+    tables = _tables()
+    tables["guests"][0]["nationality"] = "DK"
+    tables["reservations"][0]["guest_country"] = "DE"
+
+    ohne = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert {d.guest_first_name for d in ohne.days} == {"Erika"}
+    assert all(d.guest_last_name is None for d in ohne.days)
+    assert all(d.guest_nationality is None for d in ohne.days)
+    assert all(d.guest_country is None for d in ohne.days)
+
+    tables["users"][0]["permissions"] = ["view_guest_name"]
+    mit = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert {d.guest_first_name for d in mit.days} == {"Erika"}
+    assert {d.guest_last_name for d in mit.days} == {"Mustermann"}
+    # Zwei GETRENNTE Angaben: Staatsangehörigkeit DK, Wohnsitz DE. Würden sie
+    # zusammengeworfen, stünde dieser Gast als Deutscher da.
+    assert {d.guest_nationality for d in mit.days} == {"DK"}
+    assert {d.guest_country for d in mit.days} == {"DE"}
+    # Auch je Buchung, nicht nur in der Tageszelle — die Detailliste ist das,
+    # was die App aufklappt.
+    assert {b.guest_last_name for d in mit.days for b in d.bookings} == {
+        "Mustermann"
+    }
+
+
+def test_calendar_mehrteiliger_nachname_bleibt_ganz() -> None:
+    """„van der Berg" ist EIN Nachname, kein „van" mit Rest.
+
+    Ein Split auf das letzte Token hätte hier „Berg" geliefert und drei von
+    fünf niederländischen Gästen falsch benannt.
+    """
+    tables = _tables()
+    tables["users"][0]["permissions"] = ["view_guest_name"]
+    tables["guests"][0]["name"] = "Joris van der Berg"
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert {d.guest_first_name for d in res.days} == {"Joris"}
+    assert {d.guest_last_name for d in res.days} == {"van der Berg"}
+
+
+def test_calendar_einnamiger_gast_hat_keinen_nachnamen() -> None:
+    """Ein Gast ohne zweites Token bekommt `None`, nicht den Vornamen doppelt."""
+    tables = _tables()
+    tables["users"][0]["permissions"] = ["view_guest_name"]
+    tables["guests"][0]["name"] = "Erika"
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert {d.guest_first_name for d in res.days} == {"Erika"}
+    assert all(d.guest_last_name is None for d in res.days)
+
+
+def test_calendar_besetzung_haengt_an_keiner_berechtigung() -> None:
+    """Personen und Haustiere beschreiben die BUCHUNG, nicht die Person.
+
+    Sie kommen deshalb auch ohne VIEW_GUEST_NAME an — der Eigentümer braucht
+    sie für Reinigung, Wäsche und die Haustier-Regel seines Objekts.
+    """
+    tables = _tables()
+    tables["reservations"][0].update(
+        {"num_guests": 4, "adults": 2, "children": 2, "pets": 1}
+    )
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert {d.num_guests for d in res.days} == {4}
+    assert {d.adults for d in res.days} == {2}
+    assert {d.children for d in res.days} == {2}
+    assert {d.pets for d in res.days} == {1}
+    assert all(d.guest_last_name is None for d in res.days)  # weiterhin maskiert
+
+
+def test_calendar_keine_haustiere_ist_nicht_dasselbe_wie_keine_angabe() -> None:
+    """0 und None sind zwei Aussagen (Wurzel 4).
+
+    `pets=0` heißt „gefragt, keins dabei" und darf als „keine Haustiere"
+    angezeigt werden; fehlt das Feld, weiß niemand etwas — dann zeigt die
+    Oberfläche nichts, statt Haustierfreiheit zu behaupten.
+    """
+    tables = _tables()
+    tables["reservations"][0]["pets"] = 0
+    null = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert {d.pets for d in null.days} == {0}
+
+    tables["reservations"][0].pop("pets")
+    fehlt = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    assert all(d.pets is None for d in fehlt.days)
+
+
+def test_calendar_eigennutzung_traegt_keine_gastdaten() -> None:
+    """Die eigene Sperre hat keinen Gast — auch keine Besetzung.
+
+    Die Felder stammen dort aus einer Reservierung, die als Sperre angelegt
+    wurde; sie als „2 Gäste, 1 Hund" auszuweisen wäre eine Buchung, die es
+    nicht gibt.
+    """
+    tables = _tables()
+    tables["users"][0]["permissions"] = ["view_guest_name"]
+    tables["reservations"][0]["is_owner_stay"] = True
+    tables["reservations"][0].update({"num_guests": 2, "pets": 1})
+    res = _svc(tables).calendar(_ctx(), "p-1", date(2026, 1, 5), date(2026, 1, 8))
+    belegt = [d for d in res.days if d.bookings]
+    assert belegt, "die Sperre muss die Nacht weiterhin belegen"
+    for tag in belegt:
+        assert tag.bookings[0].is_owner_stay is True
+        assert tag.bookings[0].guest_last_name is None
+        assert tag.bookings[0].num_guests is None
+        assert tag.bookings[0].pets is None
+
+
 def test_calendar_freie_nacht_ohne_payout() -> None:
     """Nächte ohne Buchung tragen keinen Betrag und keinen Gastnamen."""
     res = _svc().calendar(_ctx(), "p-1", date(2026, 1, 10), date(2026, 1, 12))

@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {dar # vienetas} few {dar # vienetai} many {dar # vieneto} other {dar # vienetų}}",
       "unitsBooked": "Užimta {booked} iš {total} vienetų",
       "bandStart": "Galimo laikotarpio pradžia",
-      "bandEnd": "Galimo laikotarpio pabaiga"
+      "bandEnd": "Galimo laikotarpio pabaiga",
+      "nationality": "Pilietybė",
+      "guests": "Svečiai",
+      "pets": "Augintiniai",
+      "noPets": "Be augintinių",
+      "country": "Šalis",
+      "period": "Laikotarpis",
+      "nightsLabel": "Naktys",
+      "booking": "Rezervacija",
+      "adultsCount": "{count} suaugusiųjų",
+      "childrenCount": "{count} vaikų"
     },
     "services": {
       "title": "Užsisakyti paslaugą",

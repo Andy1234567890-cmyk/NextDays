@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# extra eenheid} other {# extra eenheden}}",
       "unitsBooked": "{booked} van {total} eenheden geboekt",
       "bandStart": "Begin van de beschikbare periode",
-      "bandEnd": "Einde van de beschikbare periode"
+      "bandEnd": "Einde van de beschikbare periode",
+      "nationality": "Nationaliteit",
+      "guests": "Gasten",
+      "pets": "Huisdieren",
+      "noPets": "Geen huisdieren",
+      "country": "Land",
+      "period": "Periode",
+      "nightsLabel": "Nachten",
+      "booking": "Boeking",
+      "adultsCount": "{count} volwassenen",
+      "childrenCount": "{count} kinderen"
     },
     "services": {
       "title": "Dienst boeken",

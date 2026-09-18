@@ -282,8 +282,26 @@ export type PortalNightBooking = {
   // provision | provision_ungueltig | provision_zeitraum | betrag | naechte |
   // waehrung_vertrag — WARUM kein Betrag ausweisbar ist.
   payout_unknown_reason: string | null;
-  // Nur der Vorname (§4.2) — der volle Name existiert in dieser Antwort nicht.
+  // Der Vorname — IMMER nur das erste Namenstoken, auch wenn der volle Name
+  // freigegeben ist. Der Nachname steht getrennt daneben.
   guest_first_name: string | null;
+  // Nachname — nur mit VIEW_GUEST_NAME, sonst null. Das Recht steht seit dem
+  // 18.09.2026 im owner-Standard; nimmt der Betrieb es weg, kommt null.
+  guest_last_name: string | null;
+  // Staatsangehörigkeit, an derselben Berechtigung wie der Nachname.
+  // null = nicht erhoben ODER nicht freigegeben — beides „keine Angabe".
+  guest_nationality: string | null;
+  // WOHNSITZLAND der Buchung (ISO-Kürzel) — etwas anderes als die
+  // Staatsangehörigkeit. Praktisch das Feld, in dem etwas steht.
+  guest_country: string | null;
+  // Personen der Buchung. Kinder sind eine TEILMENGE von `num_guests` (0608).
+  // null = nicht erfasst → nichts anzeigen, keine 1 erfinden.
+  num_guests: number | null;
+  adults: number | null;
+  children: number | null;
+  // Haustiere. 0 und null sind ZWEI Aussagen: 0 heißt „gefragt, keins dabei",
+  // null heißt „nicht erfasst" und darf gar nichts behaupten.
+  pets: number | null;
   // `ota_name` (Klarname) oder `channel` (Code) — siehe `kanalAusQuelle`.
   booking_source: string | null;
   // Eigennutzung des Eigentümers (0241): belegt, aber kein Umsatz. Ohne dieses
@@ -305,6 +323,23 @@ export type PortalCalendarDay = {
   currency: string | null;
   owner_payout_unknown_reason: string | null;
   guest_first_name: string | null;
+  // Nachname — nur mit VIEW_GUEST_NAME, sonst null. Das Recht steht seit dem
+  // 18.09.2026 im owner-Standard; nimmt der Betrieb es weg, kommt null.
+  guest_last_name: string | null;
+  // Staatsangehörigkeit, an derselben Berechtigung wie der Nachname.
+  // null = nicht erhoben ODER nicht freigegeben — beides „keine Angabe".
+  guest_nationality: string | null;
+  // WOHNSITZLAND der Buchung (ISO-Kürzel) — etwas anderes als die
+  // Staatsangehörigkeit. Praktisch das Feld, in dem etwas steht.
+  guest_country: string | null;
+  // Personen der Buchung. Kinder sind eine TEILMENGE von `num_guests` (0608).
+  // null = nicht erfasst → nichts anzeigen, keine 1 erfinden.
+  num_guests: number | null;
+  adults: number | null;
+  children: number | null;
+  // Haustiere. 0 und null sind ZWEI Aussagen: 0 heißt „gefragt, keins dabei",
+  // null heißt „nicht erfasst" und darf gar nichts behaupten.
+  pets: number | null;
   booking_source: string | null;
   // Alle Buchungen dieser Nacht, eine je belegter Einheit. Leer = keine.
   bookings: PortalNightBooking[];

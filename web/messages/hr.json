@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# dodatna jedinica} few {# dodatne jedinice} other {# dodatnih jedinica}}",
       "unitsBooked": "Zauzeto {booked} od {total} jedinica",
       "bandStart": "Početak dostupnog razdoblja",
-      "bandEnd": "Kraj dostupnog razdoblja"
+      "bandEnd": "Kraj dostupnog razdoblja",
+      "nationality": "Državljanstvo",
+      "guests": "Gosti",
+      "pets": "Kućni ljubimci",
+      "noPets": "Bez kućnih ljubimaca",
+      "country": "Država",
+      "period": "Razdoblje",
+      "nightsLabel": "Noćenja",
+      "booking": "Rezervacija",
+      "adultsCount": "{count} odraslih",
+      "childrenCount": "{count} djece"
     },
     "services": {
       "title": "Naruči uslugu",

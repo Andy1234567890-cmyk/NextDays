@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# további egység} other {# további egység}}",
       "unitsBooked": "{total} egységből {booked} foglalt",
       "bandStart": "Az elérhető időszak kezdete",
-      "bandEnd": "Az elérhető időszak vége"
+      "bandEnd": "Az elérhető időszak vége",
+      "nationality": "Állampolgárság",
+      "guests": "Vendégek",
+      "pets": "Háziállatok",
+      "noPets": "Nincs háziállat",
+      "country": "Ország",
+      "period": "Időszak",
+      "nightsLabel": "Éjszakák",
+      "booking": "Foglalás",
+      "adultsCount": "{count} felnőtt",
+      "childrenCount": "{count} gyermek"
     },
     "services": {
       "title": "Szolgáltatás megrendelése",

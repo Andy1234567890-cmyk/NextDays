@@ -124,6 +124,37 @@ def _money(value: Decimal) -> float:
 
 
 @dataclass(frozen=True, slots=True)
+class _Anzeige:
+    """Was eine Belegung ÜBER den Payout hinaus zeigt — Gast und Besetzung.
+
+    Gebündelt statt als sechs weitere Einzelparameter durch `_nacht_eintragen`
+    geschleift: die Methode trug schon acht, und jeder zusätzliche Skalar macht
+    die Aufrufstelle unleserlicher als die Sache ist (dieselbe Überlegung wie
+    bei `_GebuehrenKontext`).
+
+    Alle Felder sind bereits MASKIERT bzw. aus der Zeile gelesen — hier wird
+    nichts mehr entschieden, gekürzt oder ergänzt. `None` heißt durchgehend
+    „keine Angabe": nicht erfasst oder nicht freigegeben. Es wird kein Wert
+    erfunden, auch keine 1 als „mindestens ein Gast" (Wurzel 4).
+    """
+
+    gast_vorname: str | None = None
+    gast_nachname: str | None = None
+    nationalitaet: str | None = None
+    land: str | None = None
+    quelle: str | None = None
+    gaeste: int | None = None
+    erwachsene: int | None = None
+    kinder: int | None = None
+    haustiere: int | None = None
+
+
+#: Eine Eigennutzung hat weder Gast noch Besetzung — EIN benanntes Objekt
+#: dafür, damit die beiden Aufrufstellen nicht je eine leere Instanz bauen.
+_OHNE_GAST = _Anzeige()
+
+
+@dataclass(frozen=True, slots=True)
 class _Belegung:
     """EINE Buchung, die diese Nacht belegt — eine je EINHEIT.
 
@@ -149,8 +180,7 @@ class _Belegung:
     betrag: float | None
     currency: str | None
     grund: str | None
-    gast: str | None
-    quelle: str | None
+    anzeige: _Anzeige
     eigennutzung: bool = False
 
 
@@ -225,6 +255,48 @@ class _NachtInfo:
         """Erster Grund, warum ein Betrag fehlt (stabil sortiert)."""
         gruende = sorted({b.grund for b in self.belegungen if b.grund})
         return gruende[0] if gruende else None
+
+
+def _vorname(voller_name: str | None) -> str | None:
+    """Erstes Token — dieselbe Regel wie `guest_masking._first_name_only`.
+
+    Bewusst hier gespiegelt statt den privaten Helfer der Maske zu importieren:
+    dort beschreibt er, was bei FEHLENDER Berechtigung übrig bleibt, hier ist es
+    schlicht der Vorname. Zwei Bedeutungen an einem Namen wären die schlechtere
+    Kopplung — die Regel selbst ist eine Zeile.
+    """
+    if not voller_name:
+        return None
+    return voller_name.strip().split(" ", 1)[0] or None
+
+
+def _nachname(voller_name: str | None) -> str | None:
+    """Alles nach dem ersten Token. None, wenn es nur ein Token gibt.
+
+    Kein Raten bei mehrteiligen Namen: „van der Berg" bleibt als Ganzes stehen,
+    statt einen Namensbestandteil zu verlieren. Der Gast heißt, wie er heißt.
+    """
+    if not voller_name:
+        return None
+    teile = voller_name.strip().split(" ", 1)
+    if len(teile) < 2:
+        return None
+    return teile[1].strip() or None
+
+
+def _als_zahl(wert: object) -> int | None:
+    """Eine Zählangabe der Buchung als int — sonst None.
+
+    Nie auf 0 zurückfallen: „keine Angabe" und „null Haustiere" sind zwei
+    verschiedene Aussagen, und nur eine davon darf die Oberfläche als „keine
+    Haustiere" darstellen (Wurzel 4).
+    """
+    if isinstance(wert, bool) or wert is None:
+        return None
+    try:
+        return int(wert)
+    except (TypeError, ValueError):
+        return None
 
 
 def _als_datum(wert: object) -> date | None:
@@ -733,10 +805,41 @@ class PublicPortalService:
                     # den Gastnamen einer gleichzeitig belegten Schwestereinheit
                     # (0265) mit einem leeren Feld.
                     guest_first_name=(
-                        gast_belegung.gast if gast_belegung else None
+                        gast_belegung.anzeige.gast_vorname
+                        if gast_belegung
+                        else None
+                    ),
+                    guest_last_name=(
+                        gast_belegung.anzeige.gast_nachname
+                        if gast_belegung
+                        else None
+                    ),
+                    guest_nationality=(
+                        gast_belegung.anzeige.nationalitaet
+                        if gast_belegung
+                        else None
+                    ),
+                    guest_country=(
+                        gast_belegung.anzeige.land if gast_belegung else None
+                    ),
+                    num_guests=(
+                        gast_belegung.anzeige.gaeste if gast_belegung else None
+                    ),
+                    adults=(
+                        gast_belegung.anzeige.erwachsene
+                        if gast_belegung
+                        else None
+                    ),
+                    children=(
+                        gast_belegung.anzeige.kinder if gast_belegung else None
+                    ),
+                    pets=(
+                        gast_belegung.anzeige.haustiere
+                        if gast_belegung
+                        else None
                     ),
                     booking_source=(
-                        gast_belegung.quelle if gast_belegung else None
+                        gast_belegung.anzeige.quelle if gast_belegung else None
                     ),
                     bookings=[
                         _buchung(b, zeigt_payout=zeigt_payout)
@@ -828,8 +931,12 @@ class PublicPortalService:
                 # der gemeldete Portal-Abzug, `payment_collect` entscheidet, ob
                 # zusätzlich eine Zahlungsgebühr anfällt (0364).
                 "currency, source_channex_booking_id, external_ref, ota_commission, "
-                # `pets` entscheidet, ob die Haustiergebühr des Objekts anfiel.
-                "payment_collect, pets, "
+                # `pets` entscheidet, ob die Haustiergebühr des Objekts anfiel —
+                # und ist zugleich das, was der Eigentümer sehen will (kommt ein
+                # Hund mit?). `num_guests`/`adults`/`children`: die Besetzung,
+                # die er für Reinigung und Wäsche braucht.
+                "payment_collect, pets, num_guests, adults, children, "
+                "guest_country, "
                 # Eigennutzung des Eigentümers (0241): belegt die Nacht, bringt
                 # aber keinen Umsatz. Muss je ZEILE bekannt sein, weil davon
                 # abhängt, ob überhaupt gerechnet wird.
@@ -863,7 +970,7 @@ class PublicPortalService:
         vertraege = self._vertrag_je_buchung(
             tenant_id, property_id, reservations
         )
-        namen = self._gast_namen(
+        gastdaten = self._gast_daten(
             [str(r["guest_id"]) for r in reservations if r.get("guest_id")]
         )
         # Zusatzleistungen zählen in den Owner-Split (owner_statements
@@ -883,7 +990,7 @@ class PublicPortalService:
                 r,
                 provisionen,
                 vertraege,
-                namen,
+                gastdaten,
                 addons,
                 mask,
                 start,
@@ -1128,7 +1235,7 @@ class PublicPortalService:
         r: dict,
         provisionen: dict[str, Decimal] | None,
         vertraege: dict[str, Vertragsregeln],
-        namen: dict[str, str],
+        gastdaten: dict[str, tuple[str, str | None]],
         addons: dict[str, Decimal],
         mask: GuestMask,
         start: date,
@@ -1141,14 +1248,37 @@ class PublicPortalService:
         """Eine Reservierung auf ihre Nächte im Fenster verteilen."""
         check_in = _als_datum(r.get("check_in"))
         check_out = _als_datum(r.get("check_out"))
-        # Gastname und Quelle laufen durch die BESTEHENDE Maske (Wurzel: keine
-        # eigene Kürzung). Ein Eigentümer hat VIEW_GUEST_LIMITED und darum
-        # weder VIEW_GUEST_NAME noch VIEW_BOOKING_SOURCE — `mask.name` gibt ihm
-        # den Vornamen. Die Quelle liefern wir ihm bewusst dennoch: der Kanal
-        # seiner eigenen Buchung ist Teil des Auszahlungsnachweises (welcher
-        # Portal-Abzug entstand), kein Gast-PII.
-        gast = mask.name(namen.get(str(r.get("guest_id"))))
-        quelle = r.get("ota_name") or r.get("channel")
+        # Gastname und Nationalität laufen durch die BESTEHENDE Maske (Wurzel:
+        # keine eigene Kürzung). Seit dem 18.09.2026 steht VIEW_GUEST_NAME im
+        # owner-Standard, der Eigentümer sieht also beides — nimmt der Betrieb
+        # ihm die Berechtigung, greift hier wieder „nur Vorname", ohne dass an
+        # dieser Stelle etwas zu ändern wäre.
+        #
+        # Besetzung und Haustiere sind KEINE Gastdaten im Sinne der Maske: sie
+        # beschreiben die Buchung, nicht die Person, und der Eigentümer braucht
+        # sie für Reinigung, Wäsche und Haustier-Regeln. Sie hängen deshalb an
+        # keiner Berechtigung — dieselbe Begründung wie beim Kanal, der ihm
+        # als Teil des Auszahlungsnachweises ohnehin zusteht.
+        voller_name, nationalitaet = gastdaten.get(
+            str(r.get("guest_id")), ("", None)
+        )
+        anzeige = _Anzeige(
+            # `mask.name` liefert je nach VIEW_GUEST_NAME den vollen Namen oder
+            # nur das erste Token. Der Vorname wird hier deshalb IMMER aus dem
+            # vollen Namen gezogen und der Nachname separat maskiert — sonst
+            # stünde bei erlaubtem Zugriff der volle Name im Feld
+            # `guest_first_name`, und das Feld hieße, was es nicht ist.
+            gast_vorname=_vorname(voller_name),
+            gast_nachname=_nachname(voller_name) if mask.full_name else None,
+            nationalitaet=mask.origin_value(nationalitaet),
+            # Getrennt von der Staatsangehörigkeit — siehe `origin_value`.
+            land=mask.origin_value((r.get("guest_country") or "").strip() or None),
+            quelle=r.get("ota_name") or r.get("channel"),
+            gaeste=_als_zahl(r.get("num_guests")),
+            erwachsene=_als_zahl(r.get("adults")),
+            kinder=_als_zahl(r.get("children")),
+            haustiere=_als_zahl(r.get("pets")),
+        )
         grund: str | None = None
         betraege: list[Decimal] = []
         currency = (r.get("currency") or "").strip()
@@ -1174,8 +1304,7 @@ class PublicPortalService:
                 betrag_je_nacht=[],
                 currency=None,
                 grund=None,
-                gast=None,
-                quelle=None,
+                anzeige=_OHNE_GAST,
                 eigennutzung=True,
             )
             return
@@ -1241,8 +1370,7 @@ class PublicPortalService:
             betrag_je_nacht=betraege,
             currency=currency or None,
             grund=grund,
-            gast=gast,
-            quelle=quelle,
+            anzeige=anzeige,
             eigennutzung=False,
         )
 
@@ -1256,8 +1384,7 @@ class PublicPortalService:
         betrag_je_nacht: list[Decimal],
         currency: str | None,
         grund: str | None,
-        gast: str | None,
-        quelle: str | None,
+        anzeige: _Anzeige,
         eigennutzung: bool,
     ) -> None:
         """Eine Buchung auf ihre Nächte im Fenster eintragen.
@@ -1295,8 +1422,7 @@ class PublicPortalService:
                         betrag=betrag,
                         currency=currency,
                         grund=grund,
-                        gast=gast,
-                        quelle=quelle,
+                        anzeige=anzeige,
                         eigennutzung=eigennutzung,
                     )
                 )
@@ -1378,17 +1504,31 @@ class PublicPortalService:
                 continue
         return out or None
 
-    def _gast_namen(self, guest_ids: list[str]) -> dict[str, str]:
+    def _gast_daten(self, guest_ids: list[str]) -> dict[str, tuple[str, str | None]]:
+        """Je Gast-ID (Name, Nationalität) — EINE Abfrage für beides.
+
+        Die Nationalität steht an `guests`, nicht an der Reservierung:
+        `reservations.guest_country` ist der WOHNSITZ der Buchung und etwas
+        anderes. Beide zu vermischen wäre eine Falschaussage, die niemand als
+        Fehler erkennt — ein dänischer Gast mit Wohnsitz in Deutschland stünde
+        als Deutscher da.
+        """
         ids = sorted({g for g in guest_ids if g})
         if not ids:
             return {}
         rows = (
             self._db.table("guests")
-            .select("id, name")
+            .select("id, name, nationality")
             .in_("id", ids)
             .execute()
         ).data or []
-        return {str(r["id"]): r.get("name") or "" for r in rows}
+        return {
+            str(r["id"]): (
+                r.get("name") or "",
+                (r.get("nationality") or "").strip() or None,
+            )
+            for r in rows
+        }
 
     # --- Earnings (maskiert) -------------------------------------------------
 
@@ -2726,8 +2866,15 @@ def _buchung(b: _Belegung, *, zeigt_payout: bool = True) -> PortalNightBooking:
         owner_payout_per_night=b.betrag if zeigt_payout else None,
         currency=b.currency if zeigt_payout else None,
         payout_unknown_reason=b.grund if zeigt_payout else None,
-        guest_first_name=b.gast,
-        booking_source=b.quelle,
+        guest_first_name=b.anzeige.gast_vorname,
+        guest_last_name=b.anzeige.gast_nachname,
+        guest_nationality=b.anzeige.nationalitaet,
+        guest_country=b.anzeige.land,
+        num_guests=b.anzeige.gaeste,
+        adults=b.anzeige.erwachsene,
+        children=b.anzeige.kinder,
+        pets=b.anzeige.haustiere,
+        booking_source=b.anzeige.quelle,
         is_owner_stay=b.eigennutzung,
     )
 

@@ -80,7 +80,7 @@ import {
 } from "@/lib/ownerPortal";
 import { portalLogo } from "@/lib/portal-logos";
 import { useRealtime } from "@/lib/realtime";
-import { monatName, prozent, tageDifferenz, tagPlus, wochentagKurz } from "@/lib/zeitraum";
+import { isoKalenderwoche, monatName, prozent, tageDifferenz, tagPlus, wochentagKurz } from "@/lib/zeitraum";
 import { KARTE_ABSTAND } from "@/theme/flaechen";
 import { kanalFarbe } from "@/theme/kanalfarben";
 import { schriftAuf } from "@/theme/tokens";
@@ -88,6 +88,10 @@ import { useTheme } from "@/theme/ThemeProvider";
 
 /** Die Rasterspalten, Montag zuerst — die Zahlen sind die Schlüssel in `wtagKurz.*`. */
 const WOCHENTAGE = [1, 2, 3, 4, 5, 6, 7];
+
+// Breite der Wochennummern-Spalte links (px). Sie liegt AUSSERHALB der
+// gemessenen Zeilenfläche — siehe die Begründung in `Wochenzeile`.
+const WOCHE_SPALTE_B = 22;
 
 // Geometrie der Wochenzeile (px). Der Chip ist so hoch wie eine Zeile Text
 // samt Luft; zwei Bahnen fest, eine dritte nur, wenn eine Woche „+n" trägt.
@@ -629,7 +633,10 @@ export default function Kalender({ navigation }: { navigation: Nav }) {
             ) : null}
 
           <Kachel>
+            {/* Derselbe Versatz wie in der Wochenzeile, sonst stünde „Mo" über
+                der Wochennummer statt über dem Montag. */}
             <View style={{ flexDirection: "row", marginBottom: 8 }}>
+              <View style={{ width: WOCHE_SPALTE_B }} />
               {WOCHENTAGE.map((w) => (
                 <Txt key={w} v="xs" soft style={{ flex: 1, textAlign: "center", fontFamily: t.fonts.medium }}>
                   {wochentagKurz(txt, w === 7 ? 0 : w)}
@@ -831,12 +838,35 @@ function Wochenzeile({
   const bahnen = Math.max(1, ...sichtbar.map((b) => b.bahn + 1), ueberlauf.size > 0 ? MAX_BAHNEN + 1 : 0);
   const hoehe = KOPF_H + bahnen * (CHIP_H + CHIP_ABSTAND) + FUSS_H;
 
+  // Die Wochennummer steht LINKS NEBEN der gemessenen Fläche, nicht darin.
+  // Grund ist die Zieh-Geste: `tagAnPunkt` rechnet den Finger über
+  // `(x - lage.x) / lage.b * 7` in eine Tagesspalte um. Läge die Nummer
+  // innerhalb der gemessenen Zeile, zeigte jeder Griff auf einen Tag zu weit
+  // rechts — und beim Loslassen ginge diese Verschiebung an den Server. Ref
+  // und `onLayout` sitzen deshalb auf der INNEREN Fläche mit genau den sieben
+  // Spalten.
+  //
+  // Die Nummer ist die des ersten belegten Tages der Zeile: am Monatsanfang
+  // sind die führenden Zellen leer.
+  const ersterTag = woche.find(Boolean) ?? null;
+
   return (
     <View
-      ref={zeileRef}
-      onLayout={onLayout}
-      style={{ height: hoehe, borderTopWidth: 1, borderTopColor: t.palette.line }}
+      style={{
+        height: hoehe,
+        borderTopWidth: 1,
+        borderTopColor: t.palette.line,
+        flexDirection: "row",
+      }}
     >
+      <View style={{ width: WOCHE_SPALTE_B, paddingTop: 4, alignItems: "flex-end", paddingRight: 4 }}>
+        {ersterTag ? (
+          <Txt v="xs" soft style={{ opacity: 0.7 }}>
+            {isoKalenderwoche(ersterTag)}
+          </Txt>
+        ) : null}
+      </View>
+      <View ref={zeileRef} onLayout={onLayout} style={{ flex: 1, height: "100%" }}>
       <View style={{ flexDirection: "row", height: "100%" }}>
         {woche.map((datum, i) =>
           datum ? (
@@ -889,6 +919,7 @@ function Wochenzeile({
         {[...ueberlauf.entries()].map(([spalte, rest]) => (
           <SammelChip key={`plus${spalte}`} spalte={spalte} rest={rest} />
         ))}
+      </View>
       </View>
     </View>
   );
@@ -1095,7 +1126,9 @@ function AufenthaltChip({
       // Ohne das nähme dieses Pressable der Pan-Geste die Berührung ab, und
       // der Chip ließe sich greifen, aber nicht bewegen.
       simultaneousWithExternalGesture={ziehGesteRef}
-      accessibilityLabel={`${label}${a.gast ? `, ${a.gast}` : ""}`}
+      accessibilityLabel={`${label}${
+        a.gast ? `, ${[a.gast, a.nachname].filter(Boolean).join(" ")}` : ""
+      }`}
       style={[
         lage,
         { backgroundColor: kanalFarbe(kanal) },
@@ -1121,9 +1154,11 @@ function AufenthaltChip({
         </Txt>
       ) : null}
       {/* Nur der VORNAME (§4.2). Er ist das einzige Element, das nachgeben darf. */}
+      {/* Vor- und Nachname als EIN Text, damit `numberOfLines` hinten
+          abschneidet statt den Nachnamen ganz wegfallen zu lassen. */}
       {a.gast && segment.echterAnfang ? (
         <Txt v="xs" color={schriftAuf(kanalFarbe(kanal))} numberOfLines={1} style={{ flexShrink: 1, fontSize: 11, lineHeight: 14 }}>
-          {a.gast}
+          {[a.gast, a.nachname].filter(Boolean).join(" ")}
         </Txt>
       ) : null}
       {/* Der Betrag steht NUR am echten Ende — sonst läse sich ein Aufenthalt
@@ -1240,7 +1275,12 @@ function Detail({
   if (auswahl.art === "aufenthalt") {
     const a = auswahl.wert;
     const kanal = kanalAusQuelle(a.quelle);
-    titel = a.eigennutzung ? txt("kal.eigennutzung") : (a.gast ?? txt("allg.buchung"));
+    // Voller Name, sofern der Betrieb ihn freigibt (VIEW_GUEST_NAME); sonst
+    // bleibt `nachname` null und es steht wie bisher nur der Vorname da.
+    const vollerName = [a.gast, a.nachname].filter(Boolean).join(" ");
+    titel = a.eigennutzung
+      ? txt("kal.eigennutzung")
+      : (vollerName || txt("allg.buchung"));
     farbe = a.eigennutzung ? gesperrtFarbe : kanalFarbe(kanal);
     zeilen.push({ k: txt("kal.anreiseAbreise"), v: `${kurzDatum(a.von)} – ${kurzDatum(tagPlus(a.bis, 1))}` });
     zeilen.push({ k: txt("kal.naechteLabel"), v: String(a.naechte) });
@@ -1254,6 +1294,40 @@ function Detail({
           : null;
       const betrag = a.proNacht == null ? null : formatCurrency(a.proNacht, a.currency, 0);
       zeilen.push({ k: txt("kal.nettoJeNacht"), v: spanne ?? betrag ?? grundText(txt, a.grund) });
+      if (a.nationalitaet) {
+        zeilen.push({ k: txt("kal.nationalitaet"), v: a.nationalitaet });
+      }
+      if (a.land) {
+        zeilen.push({ k: txt("kal.land"), v: a.land });
+      }
+      if (a.gaeste != null) {
+        // Die Aufteilung nur nennen, wenn sie WIRKLICH vorliegt — „4 (2
+        // Erwachsene, 0 Kinder)" bei ungepflegten Feldern wäre eine Angabe,
+        // die niemand erfasst hat.
+        const teile =
+          a.erwachsene != null || a.kinder != null
+            ? [
+                a.erwachsene != null
+                  ? txt("kal.erwachseneAnzahl", { n: a.erwachsene })
+                  : null,
+                a.kinder != null ? txt("kal.kinderAnzahl", { n: a.kinder }) : null,
+              ]
+                .filter(Boolean)
+                .join(", ")
+            : "";
+        zeilen.push({
+          k: txt("kal.gaeste"),
+          v: teile ? `${a.gaeste} (${teile})` : String(a.gaeste),
+        });
+      }
+      // `!= null`: 0 Haustiere ist eine Aussage („es kommt kein Hund"), die der
+      // Eigentümer sehen will. Fehlt das Feld, steht hier gar nichts.
+      if (a.haustiere != null) {
+        zeilen.push({
+          k: txt("kal.haustiere"),
+          v: a.haustiere > 0 ? String(a.haustiere) : txt("kal.keineHaustiere"),
+        });
+      }
     }
   } else {
     titel = kurzDatum(auswahl.wert);

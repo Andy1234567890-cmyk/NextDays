@@ -307,7 +307,7 @@ export async function getOwnerStatistics(input: {
  *
  * Seit 0265 führt ein Objekt (= ein Einheiten-TYP) n ≥ 1 Einheiten; dieselbe
  * Nacht kann daher mehrere Buchungen tragen. Die verdichteten Felder auf
- * `PortalCalendarDay` (guest_first_name, booking_source) beschreiben nur die
+ * `PortalCalendarDay` (guest_first_name, booking_source, …) beschreiben nur die
  * ERSTE davon — wer sie neben der SUMME `owner_payout_per_night` rendert,
  * ordnet den Gesamtbetrag einem einzelnen Gast zu. Deshalb rendert die UI
  * je Buchung einen eigenen Chip aus dieser Liste.
@@ -326,8 +326,32 @@ export type PortalNightBooking = {
   currency: string | null;
   /** provision | betrag | naechte — warum kein Betrag ausgewiesen wird. */
   payout_unknown_reason: string | null;
-  /** NUR der Vorname (zentrale GuestMask, §4.2). */
+  /** Der Vorname — trägt IMMER nur das erste Namenstoken, auch wenn der volle
+   *  Name freigegeben ist. Der Nachname steht daneben in `guest_last_name`. */
   guest_first_name: string | null;
+  /** Nachname des Gastes — nur mit VIEW_GUEST_NAME, sonst `null`. Seit dem
+   *  18.09.2026 steht das Recht im owner-Standard; nimmt der Betrieb es einem
+   *  Nutzer weg, kommt hier wieder `null` an. */
+  guest_last_name: string | null;
+  /** Staatsangehörigkeit, an derselben Berechtigung wie der Nachname.
+   *  `null` = nicht erhoben ODER nicht freigegeben — beides ist „keine
+   *  Angabe", nie ein geratenes Land (Wurzel 4). */
+  guest_nationality: string | null;
+  /** WOHNSITZLAND der Buchung (ISO-Kürzel) — etwas anderes als die
+   *  Staatsangehörigkeit und deshalb ein eigenes Feld mit eigener
+   *  Beschriftung. Praktisch das Feld, in dem etwas steht: die Portale liefern
+   *  das Land, nicht die Nationalität. */
+  guest_country: string | null;
+  /** Personen der Buchung. Kinder sind eine TEILMENGE von `num_guests`, kein
+   *  Zuschlag (0608). `null` = nicht erfasst → nichts anzeigen, keine 1
+   *  erfinden. */
+  num_guests: number | null;
+  adults: number | null;
+  children: number | null;
+  /** Mitgebuchte Haustiere. `0` und `null` sind ZWEI Aussagen: 0 heißt
+   *  „gefragt, keins dabei" und darf als „keine Haustiere" erscheinen, `null`
+   *  heißt „nicht erfasst" und darf gar nichts behaupten. */
+  pets: number | null;
   /** Buchungsquelle (ota_name, sonst channel) — für Logo und Kanalfarbe. */
   booking_source: string | null;
   /**
@@ -363,10 +387,32 @@ export type PortalCalendarDay = {
   currency: string | null;
   /** provision | betrag | naechte — warum kein Betrag ausgewiesen wird. */
   owner_payout_unknown_reason: string | null;
-  /** NUR der Vorname (zentrale GuestMask). Der volle Name erscheint im
-   *  Eigentümer-Pfad nie (§4.2). Bei mehreren belegten Einheiten der ERSTE —
-   *  die vollständige Aufstellung steht in `bookings`. */
+  /** Der Vorname der ERSTEN belegten Einheit — die vollständige Aufstellung
+   *  steht in `bookings`. Trägt immer nur das erste Namenstoken. */
   guest_first_name: string | null;
+  /** Nachname des Gastes — nur mit VIEW_GUEST_NAME, sonst `null`. Seit dem
+   *  18.09.2026 steht das Recht im owner-Standard; nimmt der Betrieb es einem
+   *  Nutzer weg, kommt hier wieder `null` an. */
+  guest_last_name: string | null;
+  /** Staatsangehörigkeit, an derselben Berechtigung wie der Nachname.
+   *  `null` = nicht erhoben ODER nicht freigegeben — beides ist „keine
+   *  Angabe", nie ein geratenes Land (Wurzel 4). */
+  guest_nationality: string | null;
+  /** WOHNSITZLAND der Buchung (ISO-Kürzel) — etwas anderes als die
+   *  Staatsangehörigkeit und deshalb ein eigenes Feld mit eigener
+   *  Beschriftung. Praktisch das Feld, in dem etwas steht: die Portale liefern
+   *  das Land, nicht die Nationalität. */
+  guest_country: string | null;
+  /** Personen der Buchung. Kinder sind eine TEILMENGE von `num_guests`, kein
+   *  Zuschlag (0608). `null` = nicht erfasst → nichts anzeigen, keine 1
+   *  erfinden. */
+  num_guests: number | null;
+  adults: number | null;
+  children: number | null;
+  /** Mitgebuchte Haustiere. `0` und `null` sind ZWEI Aussagen: 0 heißt
+   *  „gefragt, keins dabei" und darf als „keine Haustiere" erscheinen, `null`
+   *  heißt „nicht erfasst" und darf gar nichts behaupten. */
+  pets: number | null;
   /** Buchungsquelle der Nacht (ota_name, sonst channel) — für das echte
    *  Portal-Logo aus lib/channel-logos.ts. Ebenfalls nur die ERSTE Buchung. */
   booking_source: string | null;

@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# ακόμη μονάδα} other {# ακόμη μονάδες}}",
       "unitsBooked": "{booked} από {total} μονάδες κατειλημμένες",
       "bandStart": "Αρχή της διαθέσιμης περιόδου",
-      "bandEnd": "Τέλος της διαθέσιμης περιόδου"
+      "bandEnd": "Τέλος της διαθέσιμης περιόδου",
+      "nationality": "Εθνικότητα",
+      "guests": "Επισκέπτες",
+      "pets": "Κατοικίδια",
+      "noPets": "Χωρίς κατοικίδια",
+      "country": "Χώρα",
+      "period": "Περίοδος",
+      "nightsLabel": "Διανυκτερεύσεις",
+      "booking": "Κράτηση",
+      "adultsCount": "{count} ενήλικες",
+      "childrenCount": "{count} παιδιά"
     },
     "services": {
       "title": "Κράτηση υπηρεσίας",

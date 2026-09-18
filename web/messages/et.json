@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# üksus veel} other {# üksust veel}}",
       "unitsBooked": "Hõivatud {booked} / {total} üksust",
       "bandStart": "Saadaoleva perioodi algus",
-      "bandEnd": "Saadaoleva perioodi lõpp"
+      "bandEnd": "Saadaoleva perioodi lõpp",
+      "nationality": "Rahvus",
+      "guests": "Külalised",
+      "pets": "Lemmikloomad",
+      "noPets": "Lemmikloomadeta",
+      "country": "Riik",
+      "period": "Periood",
+      "nightsLabel": "Ööd",
+      "booking": "Broneering",
+      "adultsCount": "{count} täiskasvanut",
+      "childrenCount": "{count} last"
     },
     "services": {
       "title": "Telli teenus",

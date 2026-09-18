@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# unità oħra} other {# unitajiet oħra}}",
       "unitsBooked": "{booked} minn {total} unitajiet mibgħuta",
       "bandStart": "Bidu tal-perjodu disponibbli",
-      "bandEnd": "Tmiem tal-perjodu disponibbli"
+      "bandEnd": "Tmiem tal-perjodu disponibbli",
+      "nationality": "Nazzjonalità",
+      "guests": "Mistiedna",
+      "pets": "Annimali domestiċi",
+      "noPets": "Bla annimali",
+      "country": "Pajjiż",
+      "period": "Perjodu",
+      "nightsLabel": "Iljieli",
+      "booking": "Prenotazzjoni",
+      "adultsCount": "{count} adulti",
+      "childrenCount": "{count} tfal"
     },
     "services": {
       "title": "Ibbukkja servizz",

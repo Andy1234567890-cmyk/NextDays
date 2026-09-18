@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# unitate în plus} few {# unități în plus} other {# de unități în plus}}",
       "unitsBooked": "{booked} din {total} unități ocupate",
       "bandStart": "Începutul perioadei disponibile",
-      "bandEnd": "Sfârșitul perioadei disponibile"
+      "bandEnd": "Sfârșitul perioadei disponibile",
+      "nationality": "Naționalitate",
+      "guests": "Oaspeți",
+      "pets": "Animale de companie",
+      "noPets": "Fără animale",
+      "country": "Țara",
+      "period": "Perioadă",
+      "nightsLabel": "Nopți",
+      "booking": "Rezervare",
+      "adultsCount": "{count} adulți",
+      "childrenCount": "{count} copii"
     },
     "services": {
       "title": "Comandă un serviciu",

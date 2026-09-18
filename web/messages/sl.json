@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# dodatna enota} two {# dodatni enoti} few {# dodatne enote} other {# dodatnih enot}}",
       "unitsBooked": "Zasedenih {booked} od {total} enot",
       "bandStart": "Začetek razpoložljivega obdobja",
-      "bandEnd": "Konec razpoložljivega obdobja"
+      "bandEnd": "Konec razpoložljivega obdobja",
+      "nationality": "Državljanstvo",
+      "guests": "Gostje",
+      "pets": "Hišni ljubljenčki",
+      "noPets": "Brez hišnih ljubljenčkov",
+      "country": "Država",
+      "period": "Obdobje",
+      "nightsLabel": "Noči",
+      "booking": "Rezervacija",
+      "adultsCount": "{count} odraslih",
+      "childrenCount": "{count} otrok"
     },
     "services": {
       "title": "Naroči storitev",

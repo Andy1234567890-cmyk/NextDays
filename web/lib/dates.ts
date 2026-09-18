@@ -16,6 +16,32 @@ export function isoWeekday(iso: string): number {
   return (new Date(iso + "T00:00:00Z").getUTCDay() + 6) % 7;
 }
 
+/** ISO-8601-Kalenderwoche (1–53) eines Kalendertags.
+ *
+ *  ISO-8601 und nicht die US-Zählung: Woche 1 ist die Woche mit dem ersten
+ *  Donnerstag des Jahres, die Woche beginnt am Montag. Das ist die Zählung, die
+ *  in Dänemark, Deutschland und dem übrigen EU-Raum auf jedem Kalender steht —
+ *  ein Eigentümer, der „Woche 27" sagt, meint diese. Die US-Variante (Woche 1 =
+ *  die Woche mit dem 1. Januar, Sonntag als Wochenanfang) läge an
+ *  Jahreswechseln um eine Woche daneben, und zwar nur dort: ein Fehler, der elf
+ *  Monate im Jahr unsichtbar ist.
+ *
+ *  Der Donnerstags-Trick ist die übliche Umsetzung: vom gegebenen Tag auf den
+ *  Donnerstag DERSELBEN ISO-Woche springen, dann zählen, der wievielte Sieben-
+ *  Tage-Block seit dem 1. Januar das ist. Damit ist auch der Jahreswechsel
+ *  richtig — der 31.12.2026 liegt in Woche 53, der 01.01.2027 ebenfalls.
+ */
+export function isoKalenderwoche(iso: string): number {
+  const d = new Date(iso + "T00:00:00Z");
+  // `getUTCDay()` gibt Sonntag als 0; ISO braucht ihn als 7.
+  const wochentag = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - wochentag);
+  const jahresanfang = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(
+    ((d.getTime() - jahresanfang.getTime()) / 86_400_000 + 1) / 7,
+  );
+}
+
 /** Lokaler Kalendertag als YYYY-MM-DD — OHNE `toISOString()`.
  *
  *  `new Date(jahr, monat, 1).toISOString()` gibt den Tag in UTC aus: lokale

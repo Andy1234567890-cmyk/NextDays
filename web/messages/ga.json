@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# aonad eile} two {# aonad eile} few {# aonad eile} many {# n-aonad eile} other {# aonad eile}}",
       "unitsBooked": "{booked} as {total} aonad in áirithe",
       "bandStart": "Tús na tréimhse atá ar fáil",
-      "bandEnd": "Deireadh na tréimhse atá ar fáil"
+      "bandEnd": "Deireadh na tréimhse atá ar fáil",
+      "nationality": "Náisiúntacht",
+      "guests": "Aíonna",
+      "pets": "Peataí",
+      "noPets": "Gan pheataí",
+      "country": "Tír",
+      "period": "Tréimhse",
+      "nightsLabel": "Oícheanta",
+      "booking": "Áirithint",
+      "adultsCount": "{count} duine fásta",
+      "childrenCount": "{count} leanbh"
     },
     "services": {
       "title": "Cuir seirbhís in áirithe",

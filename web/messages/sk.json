@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# ďalšia jednotka} few {# ďalšie jednotky} many {# ďalšej jednotky} other {# ďalších jednotiek}}",
       "unitsBooked": "Obsadené {booked} z {total} jednotiek",
       "bandStart": "Začiatok dostupného obdobia",
-      "bandEnd": "Koniec dostupného obdobia"
+      "bandEnd": "Koniec dostupného obdobia",
+      "nationality": "Národnosť",
+      "guests": "Hostia",
+      "pets": "Domáce zvieratá",
+      "noPets": "Bez domácich zvierat",
+      "country": "Krajina",
+      "period": "Obdobie",
+      "nightsLabel": "Noci",
+      "booking": "Rezervácia",
+      "adultsCount": "{count} dospelých",
+      "childrenCount": "{count} detí"
     },
     "services": {
       "title": "Objednať službu",

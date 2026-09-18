@@ -5,6 +5,8 @@ reservations und dashboard. Welche Felder ein Nutzer sieht, hängt an seinen
 feingranularen Berechtigungen (users.permissions), nicht an der Rolle:
 
 - voller Name      ← VIEW_GUEST_NAME (sonst nur Vorname, erstes Token)
+- Herkunft         ← VIEW_GUEST_NAME (Nationalität/Land, dieselbe Frage
+                     wie der volle Name)
 - E-Mail/Telefon   ← VIEW_GUEST_CONTACT (sonst None)
 - Beträge          ← nicht HIDE_PRICES (sonst None)
 - Kanal/OTA-Quelle ← VIEW_BOOKING_SOURCE (sonst None)
@@ -46,6 +48,30 @@ class GuestMask:
 
     def source_value(self, value: str | None) -> str | None:
         return value if self.source else None
+
+    def origin_value(self, value: str | None) -> str | None:
+        """Herkunftsangabe des Gastes (Staatsangehoerigkeit ODER Wohnsitzland)
+        — an derselben Berechtigung wie der volle Name (VIEW_GUEST_NAME).
+
+        Bewusst KEINE eigene Berechtigung: eine Herkunftsangabe identifiziert
+        zusammen mit dem Namen, und wer den vollen Namen sehen darf, sieht den
+        Gast ohnehin als Person. Eine zweite Berechtigung waere eine zweite
+        Wahrheit ueber dieselbe Frage — und die Stelle, an der beide
+        auseinanderlaufen.
+
+        EINE Methode fuer beide Angaben, weil es dieselbe Frage ist. Die
+        Angaben selbst bleiben aber GETRENNT: `guests.nationality` ist die
+        Staatsangehoerigkeit, `reservations.guest_country` das Wohnsitzland der
+        Buchung. Sie zusammenzuwerfen waere eine Falschaussage, die niemand als
+        Fehler erkennt — ein daenischer Gast mit Wohnsitz in Deutschland stuende
+        als Deutscher da. Live gemessen am 18.09.2026: `nationality` ist bei 121
+        von 661 Gaesten gefuellt, `guest_country` bei 2298 von 2833 Buchungen.
+        Die Portale liefern das Land, nicht die Staatsangehoerigkeit.
+
+        Die Regel steht HIER und nicht an der Anzeigestelle, damit ein zweiter
+        Aufrufer sie nicht neu erfindet (dieselbe Wurzel wie `name`).
+        """
+        return value if self.full_name else None
 
     def id_number(self, value: str | None) -> str | None:
         """Ausweisnummer: voll mit Berechtigung, sonst maskiert (••• 1234)."""

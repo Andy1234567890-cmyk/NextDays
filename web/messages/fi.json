@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# yksikkö lisää} other {# yksikköä lisää}}",
       "unitsBooked": "{booked}/{total} yksikköä varattu",
       "bandStart": "Käytettävissä olevan jakson alku",
-      "bandEnd": "Käytettävissä olevan jakson loppu"
+      "bandEnd": "Käytettävissä olevan jakson loppu",
+      "nationality": "Kansalaisuus",
+      "guests": "Vieraat",
+      "pets": "Lemmikit",
+      "noPets": "Ei lemmikkejä",
+      "country": "Maa",
+      "period": "Ajanjakso",
+      "nightsLabel": "Yöt",
+      "booking": "Varaus",
+      "adultsCount": "{count} aikuista",
+      "childrenCount": "{count} lasta"
     },
     "services": {
       "title": "Tilaa palvelu",

@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {още # единица} other {още # единици}}",
       "unitsBooked": "Заети {booked} от {total} единици",
       "bandStart": "Начало на наличния период",
-      "bandEnd": "Край на наличния период"
+      "bandEnd": "Край на наличния период",
+      "nationality": "Националност",
+      "guests": "Гости",
+      "pets": "Домашни любимци",
+      "noPets": "Без домашни любимци",
+      "country": "Държава",
+      "period": "Период",
+      "nightsLabel": "Нощувки",
+      "booking": "Резервация",
+      "adultsCount": "{count} възрастни",
+      "childrenCount": "{count} деца"
     },
     "services": {
       "title": "Заяви услуга",

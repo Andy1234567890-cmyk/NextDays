@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, one {# enhet till} other {# enheter till}}",
       "unitsBooked": "{booked} av {total} enheter bokade",
       "bandStart": "Början på den tillgängliga perioden",
-      "bandEnd": "Slutet på den tillgängliga perioden"
+      "bandEnd": "Slutet på den tillgängliga perioden",
+      "nationality": "Nationalitet",
+      "guests": "Gäster",
+      "pets": "Husdjur",
+      "noPets": "Inga husdjur",
+      "country": "Land",
+      "period": "Period",
+      "nightsLabel": "Nätter",
+      "booking": "Bokning",
+      "adultsCount": "{count} vuxna",
+      "childrenCount": "{count} barn"
     },
     "services": {
       "title": "Boka en tjänst",

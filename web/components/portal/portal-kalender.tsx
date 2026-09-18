@@ -40,9 +40,11 @@ import {
 
 import { PortalRealtime } from "@/components/portal/portal-realtime";
 import { Card, CardContent } from "@nextdays/ui/card";
+import { Dialog, DialogContent, DialogTitle } from "@nextdays/ui/dialog";
 import { NativeSelect } from "@nextdays/ui/native-select";
 import { channelLabelLoose, channelLogoLoose } from "@/lib/channel-logos";
 import { formatCurrency } from "@/lib/currency";
+import { isoKalenderwoche } from "@/lib/dates";
 import {
   type PortalCalendarDay,
   type PortalProperty,
@@ -161,7 +163,21 @@ type Aufenthalt = {
    *  Betrag wurde berechnet, verworfen und nie erklärt. */
   grund: string | null;
   currency: string | null;
+  /** Vorname des Gastes (immer nur das erste Namenstoken). */
   gast: string | null;
+  /** Nachname — nur mit VIEW_GUEST_NAME, sonst null. Steht getrennt, damit der
+   *  Chip bei knappem Platz den Vornamen behalten und den Nachnamen abschneiden
+   *  kann, statt beides zu verlieren. */
+  nachname: string | null;
+  nationalitaet: string | null;
+  /** Wohnsitzland der Buchung — getrennt von der Staatsangehörigkeit. */
+  land: string | null;
+  /** Besetzung und Haustiere der Buchung. `null` = nicht erfasst; bei Haustieren
+   *  ist `0` ausdrücklich etwas anderes („keins dabei"). */
+  gaeste: number | null;
+  erwachsene: number | null;
+  kinder: number | null;
+  haustiere: number | null;
   quelle: string | null;
   /** Eigennutzung des Eigentümers (0241) statt einer Gastbuchung. Sie trägt
    *  weder Gast noch Portal und bringt keinen Umsatz — der Chip zeigt darum
@@ -230,6 +246,16 @@ function aufenthalteBilden(tage: PortalCalendarDay[]): Aufenthalt[] {
             !b.is_owner_stay && wert == null ? b.payout_unknown_reason : null,
           currency: b.currency,
           gast: b.guest_first_name?.trim() || null,
+          nachname: b.guest_last_name?.trim() || null,
+          nationalitaet: b.guest_nationality?.trim() || null,
+          land: b.guest_country?.trim() || null,
+          // Bewusst `?? null` statt `|| null`: eine 0 ist hier eine ECHTE
+          // Aussage („keine Haustiere") und darf nicht zu „keine Angabe"
+          // werden. `||` hätte genau das getan.
+          gaeste: b.num_guests ?? null,
+          erwachsene: b.adults ?? null,
+          kinder: b.children ?? null,
+          haustiere: b.pets ?? null,
           quelle: b.booking_source?.trim() || null,
           eigennutzung: b.is_owner_stay,
         });
@@ -362,10 +388,32 @@ export function PortalKalender({
     [ersterMonat, anzahlMonate],
   );
 
+  // Welche Monate in diesem Anlauf schon ABGERUFEN wurden — erfolgreich oder
+  // nicht. Ein Ref und kein State, denn er darf `laden` nicht neu erzeugen.
+  //
+  // WARUM ES DEN MERKER BRAUCHT (18.09.2026, live beobachtet): `laden` hängt
+  // in seinen Dependencies an `monatsTage`, und der Effekt darunter feuert bei
+  // jeder neuen `laden`-Identität. Schlug ein Monat fehl, kam er bewusst NICHT
+  // in den Cache (ein fehlgeschlagener Monat darf nicht als „geladen, leer"
+  // gelten) — `setMonatsTage` baute aber trotzdem `new Map(vorher)` und damit
+  // eine neue Identität. Ergebnis: Abruf schlägt fehl → neue Map → neues
+  // `laden` → Effekt → Abruf schlägt fehl. Im Serverlog stand daraufhin ein
+  // `POST /portal/kalender` alle 30 ms, dauerhaft, solange die Seite offen war.
+  //
+  // Der Merker hält die Absicht von damals aufrecht — ein Fehlmonat bleibt aus
+  // dem Cache und wird beim nächsten ECHTEN Anlass erneut versucht (Objekt-
+  // wechsel, Realtime-Ereignis, weitergescrolltes Band) — nimmt ihm aber den
+  // sofortigen Wiederholungs-Sturm.
+  const versuchteMonate = useRef<Set<string>>(new Set());
+
+  // Der angetippte Aufenthalt — Quelle des Detailblatts. `null` = zu.
+  const [detail, setDetail] = useState<Aufenthalt | null>(null);
+
   // Ein Objektwechsel verwirft alle geladenen Monate: die Tage des alten
   // Objekts dürfen unter dem neuen Namen nicht stehenbleiben.
   useEffect(() => {
     setMonatsTage(new Map());
+    versuchteMonate.current = new Set();
     setLadeFehler(null);
   }, [propertyId]);
 
@@ -380,10 +428,20 @@ export function PortalKalender({
         setMonatsTage(new Map());
         return;
       }
+      // `neuLaden` (Realtime/Objektwahl) ist ein ECHTER Anlass: der Merker
+      // wird verworfen, damit auch zuvor fehlgeschlagene Monate erneut drankommen.
+      if (neuLaden) versuchteMonate.current = new Set();
       const offen = neuLaden
         ? monate
-        : monate.filter((m) => !monatsTage.has(monatsSchluessel(m)));
+        : monate.filter((m) => {
+            const k = monatsSchluessel(m);
+            return !monatsTage.has(k) && !versuchteMonate.current.has(k);
+          });
       if (offen.length === 0) return;
+      // VOR dem Abruf vormerken, nicht danach: zwei gleichzeitig laufende
+      // Durchgänge (Effekt und Realtime-Ereignis) holten denselben Monat sonst
+      // doppelt.
+      for (const m of offen) versuchteMonate.current.add(monatsSchluessel(m));
 
       setLaedt(true);
       const ergebnisse = await Promise.all(
@@ -403,12 +461,18 @@ export function PortalKalender({
       // verschieden und müssen es auch in der UI bleiben (Wurzel 4/5).
       const fehler = ergebnisse.find((e) => !e.antwort.ok);
       setLadeFehler(fehler && !fehler.antwort.ok ? fehler.antwort.error : null);
+      // Nur erfolgreiche Monate in den Cache — ein fehlgeschlagener Monat darf
+      // nicht als „geladen, leer" gelten, sonst behauptete er dauerhaft
+      // „nichts gebucht".
+      const erfolgreich = ergebnisse.filter((e) => e.antwort.ok);
       setMonatsTage((vorher) => {
+        // Kam NICHTS dazu, bleibt die alte Map — samt ihrer Identität. Ein
+        // `new Map(vorher)` an dieser Stelle war die Ursache der Endlosschleife
+        // (siehe `versuchteMonate`): es sah für React wie ein neuer Zustand aus,
+        // obwohl sich kein einziger Tag geändert hatte.
+        if (erfolgreich.length === 0) return vorher;
         const naechster = new Map(vorher);
-        for (const e of ergebnisse) {
-          // Nur erfolgreiche Monate in den Cache — ein fehlgeschlagener Monat
-          // darf nicht als „geladen, leer" gelten, sonst wird er nie erneut
-          // versucht und behauptet dauerhaft „nichts gebucht".
+        for (const e of erfolgreich) {
           if (e.antwort.ok) naechster.set(e.key, e.antwort.data.days);
         }
         return naechster;
@@ -720,10 +784,15 @@ export function PortalKalender({
               sie für alle Monate gilt und beim Scrollen nicht mitwandern soll. */}
           <Card>
             <CardContent className="py-4">
-              <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
-                {wochentage.map((w) => (
-                  <span key={w}>{w}</span>
-                ))}
+              {/* Derselbe Versatz wie in der Wochenzeile (w-6 + gap-1), sonst
+                  stünde „Mo" über der Wochennummer statt über dem Montag. */}
+              <div className="mb-2 flex items-stretch gap-1">
+                <span aria-hidden className="w-6 shrink-0" />
+                <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
+                  {wochentage.map((w) => (
+                    <span key={w}>{w}</span>
+                  ))}
+                </div>
               </div>
               <div
                 ref={bandRef}
@@ -759,6 +828,7 @@ export function PortalKalender({
                           heute={heute}
                           tagMap={tagMap}
                           locale={locale}
+                          aufOeffnen={setDetail}
                         />
                       ))}
                     </div>
@@ -773,7 +843,20 @@ export function PortalKalender({
             </CardContent>
           </Card>
 
-          {/* Legende */}
+          {/* Detailblatt. Es ersetzt den nativen `title`-Tooltip als WEG zu den
+          Angaben — nicht als Zugabe: ein `title` braucht eine Sekunde Hover
+          und erscheint auf Tablet und Telefon gar nicht. Gemeldet am
+          18.09.2026 mit „tooltip sieht man nicht", und das war zutreffend:
+          Gäste, Haustiere und Herkunft waren dort für jeden Touch-Nutzer
+          unerreichbar. Dieselben Zeilen wie im Detailblatt der Eigentümer-App
+          — eine Fläche, zwei Oberflächen, dieselbe Auskunft. */}
+      <AufenthaltBlatt
+        aufenthalt={detail}
+        locale={locale}
+        schliessen={() => setDetail(null)}
+      />
+
+      {/* Legende */}
           <div className="flex flex-col gap-4 sm:flex-row sm:gap-10">
             <div className="flex flex-col gap-2">
               <span className="text-xs font-medium text-muted-foreground">
@@ -951,12 +1034,14 @@ function Wochenzeile({
   heute,
   tagMap,
   locale,
+  aufOeffnen,
 }: {
   woche: (string | null)[];
   segmente: Segment[];
   heute: string;
   tagMap: Map<string, PortalCalendarDay>;
   locale: string;
+  aufOeffnen: (a: Aufenthalt) => void;
 }) {
   const t = useTranslations("portal");
   const { sichtbar, ueberlauf } = useMemo(
@@ -971,8 +1056,29 @@ function Wochenzeile({
     ? ZEILEN_HOEHE + (CHIP_HOEHE + CHIP_ABSTAND)
     : ZEILEN_HOEHE;
 
+  // Die Wochennummer steht in einer eigenen Spalte NEBEN dem Sieben-Tage-
+  // Gitter, nicht als achte Spalte darin. Grund: die Chip-Ebene positioniert in
+  // Prozent der Gitterbreite (`SPALTE = 100 / 7`). Eine achte Spalte im selben
+  // Gitter hätte jeden Chip um ein Achtel nach rechts versetzt — und zwar
+  // genau so wenig, dass es wie ein Rundungsfehler aussieht statt wie ein
+  // kaputtes Layout.
+  //
+  // Die Nummer der Woche ist die ihres ERSTEN belegten Tages: am Monatsanfang
+  // sind die führenden Zellen leer, `woche[0]` kann also null sein.
+  const ersterTag = woche.find(Boolean) ?? null;
+
   return (
-    <div className="relative" style={{ height: `${hoehe}rem` }}>
+    <div className="flex items-stretch gap-1">
+      <span
+        aria-hidden
+        className="flex w-6 shrink-0 items-start justify-end pt-1 text-[0.625rem] tabular-nums text-muted-foreground/70"
+      >
+        {ersterTag ? isoKalenderwoche(ersterTag) : null}
+      </span>
+      <div
+        className="relative min-w-0 flex-1"
+        style={{ height: `${hoehe}rem` }}
+      >
       <div className="grid h-full grid-cols-7 gap-1">
         {woche.map((datum, i) =>
           datum ? (
@@ -997,6 +1103,7 @@ function Wochenzeile({
             segment={segment}
             bahn={bahn}
             locale={locale}
+            aufOeffnen={aufOeffnen}
           />
         ))}
         {[...ueberlauf.entries()].map(([spalte, rest]) => (
@@ -1013,7 +1120,146 @@ function Wochenzeile({
           />
         ))}
       </div>
+      </div>
     </div>
+  );
+}
+
+type Uebersetzer = ReturnType<typeof useTranslations<"portal">>;
+
+/**
+ * Die Besetzung als EIN Satzstück: „4 (2 Erwachsene, 2 Kinder)" oder „4".
+ *
+ * `null`, wenn die Personenzahl gar nicht erfasst ist — dann steht die Zeile
+ * nicht da, statt eine 1 zu erfinden (Wurzel 4). Die Aufteilung kommt nur
+ * dazu, wenn sie WIRKLICH vorliegt: „4 (2 Erwachsene, 0 Kinder)" bei
+ * ungepflegten Feldern wäre eine Angabe, die niemand erfasst hat.
+ */
+function besetzungText(a: Aufenthalt, t: Uebersetzer): string | null {
+  if (a.gaeste == null) return null;
+  const teile = [
+    a.erwachsene == null ? null : t("calendar.adultsCount", { count: a.erwachsene }),
+    a.kinder == null ? null : t("calendar.childrenCount", { count: a.kinder }),
+  ].filter(Boolean);
+  return teile.length ? `${a.gaeste} (${teile.join(", ")})` : String(a.gaeste);
+}
+
+/**
+ * Haustiere als Text. `0` und `null` sind ZWEI Aussagen: 0 heißt „gefragt,
+ * keins dabei" und wird ausgeschrieben, `null` heißt „nicht erfasst" und
+ * liefert `null` — die Zeile entfällt dann ganz.
+ */
+function haustierText(a: Aufenthalt, t: Uebersetzer): string | null {
+  if (a.haustiere == null) return null;
+  return a.haustiere > 0 ? String(a.haustiere) : t("calendar.noPets");
+}
+
+/**
+ * Was in der Auszahlungszeile steht: Spanne, Einzelwert oder der GRUND.
+ *
+ * EINE Stelle für Chip und Detailblatt. Beide zeigten dieselbe Zahl, und beide
+ * hatten die Ableitung eigenständig stehen — inklusive der Regel, dass ein
+ * fehlender Betrag den Grund nennt statt eines Gedankenstrichs. Zwei Kopien
+ * derselben Regel laufen beim ersten neuen Grund auseinander.
+ *
+ * Kein Durchschnitt bei schwankenden Nächten: den bekäme der Eigentümer in
+ * keiner einzigen Nacht (Wurzel 4).
+ */
+function auszahlungText(
+  a: Aufenthalt,
+  t: Uebersetzer,
+  locale: string,
+  nachkommastellen?: number,
+): string {
+  const geld = (v: number) =>
+    formatCurrency(v, a.currency, locale, nachkommastellen);
+  if (
+    a.minProNacht != null &&
+    a.maxProNacht != null &&
+    a.minProNacht !== a.maxProNacht
+  ) {
+    return `${geld(a.minProNacht)} – ${geld(a.maxProNacht)}`;
+  }
+  if (a.proNacht != null) return geld(a.proNacht);
+  return a.grund && a.grund in GRUND_KEYS
+    ? t(GRUND_KEYS[a.grund])
+    : t("calendar.payoutUnknown.label");
+}
+
+/**
+ * Das Detailblatt EINES Aufenthalts — alles, was der Chip nicht zeigen kann.
+ *
+ * Die Reihenfolge folgt dem Blatt der Eigentümer-App (`mobile-owner`):
+ * Zeitraum, Nächte, Quelle, Auszahlung, dann Herkunft und Besetzung. Zwei
+ * Oberflächen mit derselben Auskunft in derselben Reihenfolge — wer zwischen
+ * App und Portal wechselt, sucht sonst jedes Mal neu.
+ *
+ * Eine Zeile, deren Wert fehlt, wird WEGGELASSEN statt mit „—" gefüllt: eine
+ * leere Zeile „Nationalität" behauptet, wir hätten die Angabe erhoben und sie
+ * sei leer. Für dieses Objekt trifft das Gegenteil zu — die Portale liefern sie
+ * schlicht nicht (gemessen 18.09.2026: Land bei 4 von 79 Buchungen,
+ * Nationalität bei keiner).
+ */
+function AufenthaltBlatt({
+  aufenthalt: a,
+  locale,
+  schliessen,
+}: {
+  aufenthalt: Aufenthalt | null;
+  locale: string;
+  schliessen: () => void;
+}) {
+  const t = useTranslations("portal");
+  if (!a) return null;
+
+  // Eine Zeile mit `null` als Wert wird unten WEGGELASSEN statt mit „—"
+  // gefüllt: eine leere Zeile „Nationalität" behauptet, wir hätten die Angabe
+  // erhoben und sie sei leer. Für dieses Objekt trifft das Gegenteil zu — die
+  // Portale liefern sie nicht mit.
+  //
+  // Eigennutzung trägt NUR Zeitraum und Nächte: kein Gast, kein Kanal, keine
+  // Betragszeile („nicht ausweisbar" wäre dort eine Falschaussage, es gibt
+  // nichts auszuzahlen). Dass es die eigene Sperre ist, sagt der Titel.
+  const zeilen: [string, string | null][] = [
+    [t("calendar.period"), `${a.von} – ${a.bis}`],
+    [t("calendar.nightsLabel"), String(a.naechte)],
+    ...(a.eigennutzung
+      ? []
+      : ([
+          [t("calendar.channel"), channelLabelLoose(a.quelle)],
+          [t("calendar.payoutPerNight"), auszahlungText(a, t, locale)],
+          [t("calendar.nationality"), a.nationalitaet],
+          [t("calendar.country"), a.land],
+          [t("calendar.guests"), besetzungText(a, t)],
+          [t("calendar.pets"), haustierText(a, t)],
+        ] as [string, string | null][])),
+  ];
+
+  const titel = a.eigennutzung
+    ? t("calendar.ownerStay")
+    : [a.gast, a.nachname].filter(Boolean).join(" ") || t("calendar.booking");
+
+  return (
+    <Dialog open onOpenChange={(offen) => !offen && schliessen()}>
+      <DialogContent className="max-w-md gap-3">
+        <DialogTitle className="pr-8 text-base font-semibold">
+          {titel}
+        </DialogTitle>
+        <dl className="divide-y divide-border overflow-hidden rounded-(--radius) border border-border">
+          {zeilen
+            .filter((z): z is [string, string] => z[1] != null)
+            .map(([k, v]) => (
+              <div
+                key={k}
+                className="flex items-center justify-between gap-4 px-3 py-2.5"
+              >
+                <dt className="text-sm text-muted-foreground">{k}</dt>
+                <dd className="text-right text-sm font-semibold">{v}</dd>
+              </div>
+            ))}
+        </dl>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1044,10 +1290,16 @@ function AufenthaltChip({
   segment,
   bahn,
   locale,
+  aufOeffnen,
 }: {
   segment: Segment;
   bahn: number;
   locale: string;
+  /** Klick auf den Chip öffnet das Detailblatt. Der native `title`-Tooltip
+   *  bleibt als Zugabe, ist aber NICHT der Weg: er braucht eine Sekunde Hover
+   *  und erscheint auf Tablet und Telefon überhaupt nicht — dort waren Gäste,
+   *  Haustiere und Herkunft schlicht unerreichbar. */
+  aufOeffnen: (a: Aufenthalt) => void;
 }) {
   const t = useTranslations("portal");
   const a = segment.aufenthalt;
@@ -1063,27 +1315,9 @@ function AufenthaltChip({
     a.proNacht == null ? null : formatCurrency(a.proNacht, a.currency, locale, 0);
 
   // Schwanken die Nachtwerte im Segment (Saisonwechsel), nennt der Tooltip die
-  // Spanne. Der Chip selbst bleibt bei der ersten Nacht — ein Durchschnitt wäre
-  // ein Wert, den der Eigentümer in keiner einzigen Nacht bekommt (Wurzel 4).
-  const spanne =
-    a.minProNacht != null &&
-    a.maxProNacht != null &&
-    a.minProNacht !== a.maxProNacht
-      ? `${formatCurrency(a.minProNacht, a.currency, locale, 0)} – ${formatCurrency(
-          a.maxProNacht,
-          a.currency,
-          locale,
-          0,
-        )}`
-      : null;
-
-  // Kurzform für den Chip und Klartext für den Tooltip. Beide kommen aus
-  // `payoutUnknown` — vorher stand an beiden Stellen ein „—", das nichts sagte.
+  // Kurzform für den Chip selbst — auf der schmalen Fläche ist kein Platz für
+  // den Klartext. Der ganze Satz steht im Tooltip und im Detailblatt.
   const kurz = t("calendar.payoutUnknown.short");
-  const grundText =
-    a.grund && GRUND_KEYS[a.grund]
-      ? t(GRUND_KEYS[a.grund])
-      : t("calendar.payoutUnknown.label");
 
   // Die Eigennutzung bekommt einen eigenen Tooltip: kein Gast, kein Kanal, und
   // vor allem KEINE Betragszeile. „Auszahlung/Nacht: nicht ausweisbar" wäre
@@ -1097,10 +1331,31 @@ function AufenthaltChip({
     : [
         `${a.von} – ${a.bis}`,
         t("calendar.nights", { count: a.naechte }),
-        a.gast ? `${t("calendar.guest")}: ${a.gast}` : null,
+        a.gast
+          ? `${t("calendar.guest")}: ${[a.gast, a.nachname]
+              .filter(Boolean)
+              .join(" ")}`
+          : null,
+        a.nationalitaet
+          ? `${t("calendar.nationality")}: ${a.nationalitaet}`
+          : null,
+        a.land ? `${t("calendar.country")}: ${a.land}` : null,
+        // `!= null` statt truthy: 0 Haustiere ist eine Aussage, die der
+        // Eigentümer sehen will („es kommt kein Hund"). Bei den Personen gibt
+        // es keine sinnvolle 0, dort ist die Prüfung nur der Vollständigkeit
+        // halber gleich geschrieben.
+        a.gaeste != null ? `${t("calendar.guests")}: ${a.gaeste}` : null,
+        a.haustiere != null
+          ? a.haustiere > 0
+            ? `${t("calendar.pets")}: ${a.haustiere}`
+            : t("calendar.noPets")
+          : null,
         kanalLabel ? `${t("calendar.channel")}: ${kanalLabel}` : null,
         // Fehlt der Betrag, nennt der Tooltip den GRUND statt eines Gedankenstrichs.
-        `${t("calendar.payoutPerNight")}: ${spanne ?? betrag ?? grundText}`,
+        // Spanne, Einzelwert oder Grund — über den GETEILTEN Helfer, denselben
+        // wie das Detailblatt. Stünde die Ableitung hier ein zweites Mal,
+        // liefen Tooltip und Blatt beim ersten neuen Grund auseinander.
+        `${t("calendar.payoutPerNight")}: ${auszahlungText(a, t, locale, 0)}`,
       ]
         .filter(Boolean)
         .join(" · ");
@@ -1128,26 +1383,35 @@ function AufenthaltChip({
   // fehlenden Wert behauptete, wo gar keiner vorgesehen ist.
   if (a.eigennutzung) {
     return (
-      <div
+      <button
+        type="button"
+        onClick={() => aufOeffnen(a)}
         title={titel}
-        className={`pointer-events-auto absolute flex -translate-y-1/2 items-center gap-1 px-2 text-[0.6875rem] font-medium text-background ring-1 ring-background ${EIGENNUTZUNG_FARBE} ${kanten}`}
+        className={`pointer-events-auto absolute flex -translate-y-1/2 cursor-pointer items-center gap-1 px-2 text-left text-[0.6875rem] font-medium text-background ring-1 ring-background transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-foreground ${EIGENNUTZUNG_FARBE} ${kanten}`}
         style={lage}
       >
         <Icon icon="ph:lock-simple-fill" className="size-3 shrink-0" />
         <span className="min-w-0 truncate">{t("calendar.ownerStay")}</span>
-      </div>
+        <Icon
+          icon="ph:info"
+          aria-hidden
+          className="ml-auto size-3 shrink-0 opacity-70"
+        />
+      </button>
     );
   }
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => aufOeffnen(a)}
       title={titel}
       // `ring-1 ring-background` trennt den Chip sichtbar von der getönten
       // Zelle darunter — ohne diese Kante verschwimmen Kanalfarbe und
       // Saisonfarbe ineinander.
       // Wie der PMS-Balken: die Bahn gibt die Mitte vor, der Chip sitzt mit
       // `-translate-y-1/2` mittig darin — nicht auf ihrer Oberkante.
-      className={`pointer-events-auto absolute flex -translate-y-1/2 items-center gap-1 px-2 text-[0.6875rem] font-medium text-white ring-1 ring-background ${kanalFarbe(a.quelle)} ${kanten}`}
+      className={`pointer-events-auto absolute flex -translate-y-1/2 cursor-pointer items-center gap-1 px-2 text-left text-[0.6875rem] font-medium text-white ring-1 ring-background transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-foreground ${kanalFarbe(a.quelle)} ${kanten}`}
       style={lage}
     >
       {logo ? (
@@ -1173,7 +1437,14 @@ function AufenthaltChip({
       {/* Nur der VORNAME (§4.2) — der volle Name existiert in dieser Antwort
           gar nicht. Er ist das EINZIGE Element, das nachgeben darf: der Betrag
           bleibt vollständig (`shrink-0`), damit nie wieder „9.389 D…" dasteht. */}
-      {a.gast && <span className="min-w-0 truncate">{a.gast}</span>}
+      {/* Vor- und Nachname als EIN Textknoten, damit `truncate` bei schmalem
+          Chip hinten abschneidet („Erika Muster…") statt den Nachnamen als
+          eigenes Element ganz verschwinden zu lassen. */}
+      {a.gast && (
+        <span className="min-w-0 truncate">
+          {[a.gast, a.nachname].filter(Boolean).join(" ")}
+        </span>
+      )}
       {/* Der Betrag steht NUR auf dem Stück mit dem echten Ende. Ein Aufenthalt
           über mehrere Wochen-/Monatszeilen wiederholte ihn sonst auf jedem
           Stück — vier Segmente lasen sich dann wie vier getrennte Zahlungen
@@ -1200,7 +1471,18 @@ function AufenthaltChip({
           </span>
         </span>
       )}
-    </div>
+        {/* Sichtbares „i": der Chip ist anklickbar, und das muss man SEHEN.
+            Ein reiner Hover-Tooltip war der vorherige Weg — auf Tablet und
+            Telefon gibt es ihn gar nicht, und mit der Maus findet ihn nur, wer
+            zufällig stehen bleibt. Das Icon ist rein dekorativ (`aria-hidden`):
+            anklickbar ist der ganze Chip, es wäre sonst ein zweites Ziel für
+            dieselbe Handlung. */}
+        <Icon
+          icon="ph:info"
+          aria-hidden
+          className={`size-3 shrink-0 opacity-70 ${segment.echtesEnde ? "" : "ml-auto"}`}
+        />
+    </button>
   );
 }
 

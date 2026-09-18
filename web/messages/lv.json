@@ -2144,7 +2144,17 @@
       "moreUnits": "{count, plural, zero {vēl # vienību} one {vēl # vienība} other {vēl # vienības}}",
       "unitsBooked": "Aizņemtas {booked} no {total} vienībām",
       "bandStart": "Pieejamā perioda sākums",
-      "bandEnd": "Pieejamā perioda beigas"
+      "bandEnd": "Pieejamā perioda beigas",
+      "nationality": "Valstspiederība",
+      "guests": "Viesi",
+      "pets": "Mājdzīvnieki",
+      "noPets": "Bez mājdzīvniekiem",
+      "country": "Valsts",
+      "period": "Periods",
+      "nightsLabel": "Naktis",
+      "booking": "Rezervācija",
+      "adultsCount": "{count} pieaugušie",
+      "childrenCount": "{count} bērni"
     },
     "services": {
       "title": "Pasūtīt pakalpojumu",

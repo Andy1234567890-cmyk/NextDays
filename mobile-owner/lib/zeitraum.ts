@@ -166,6 +166,32 @@ export function tageDifferenz(vonIso: string, bisIso: string): number {
 }
 
 /** Tag um n Tage verschoben, als ISO. */
+/** ISO-8601-Kalenderwoche (1–53) eines Kalendertags `YYYY-MM-DD`.
+ *
+ * ISO-8601 und nicht die US-Zählung: Woche 1 ist die Woche mit dem ersten
+ * Donnerstag des Jahres, Wochenanfang ist Montag. Das ist die Zählung, die in
+ * Dänemark, Deutschland und dem übrigen EU-Raum auf jedem Kalender steht — ein
+ * Eigentümer, der „Woche 27" sagt, meint diese. Die US-Variante läge nur an
+ * Jahreswechseln daneben: ein Fehler, der elf Monate im Jahr unsichtbar ist.
+ *
+ * HIER bewusst über `Date.UTC` gerechnet und nicht lokal wie der Rest dieser
+ * Datei: Eingabe ist ein reiner Kalendertag ohne Uhrzeit, und die Rechnung
+ * verschiebt ihn um bis zu drei Tage. Lokal gerechnet fiele das Ergebnis in
+ * einer Sommerzeit-Nacht um eine Stunde und damit um einen Tag daneben. Die
+ * Gegenrechnung in `web/lib/dates.ts` macht es genauso — dieselbe Woche muss
+ * in App und Web dieselbe sein.
+ */
+export function isoKalenderwoche(iso: string): number {
+  const d = new Date(iso + "T00:00:00Z");
+  // `getUTCDay()` gibt Sonntag als 0; ISO braucht ihn als 7.
+  const isoTag = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - isoTag);
+  const jahresanfang = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil(
+    ((d.getTime() - jahresanfang.getTime()) / 86_400_000 + 1) / 7,
+  );
+}
+
 export function tagPlus(iso: string, n: number): string {
   const d = ausIso(iso);
   d.setDate(d.getDate() + n);

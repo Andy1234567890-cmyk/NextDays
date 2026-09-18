@@ -123,6 +123,18 @@ _CO_ADMIN: frozenset[Permission] = frozenset({
 _OWNER: frozenset[Permission] = frozenset({
     Permission.OWNER_REPORTING,
     Permission.VIEW_BOOKING_SOURCE,
+    # Voller Gastname + Nationalitaet im Eigentuemer-Portal (18.09.2026,
+    # Entscheidung des Betreibers auf Wunsch der Eigentuemer). Bis dahin sah
+    # der Eigentuemer nur den Vornamen (§4.2). Die Begruendung der Aenderung:
+    # er haftet fuer sein Objekt, empfaengt Gaeste teils selbst und kann eine
+    # Beschwerde oder einen Schaden ohne Nachnamen keiner Buchung zuordnen.
+    #
+    # Es bleibt eine ENTZIEHBARE Berechtigung, kein fest verdrahtetes Recht:
+    # ein Betrieb, der seinen Eigentuemern weniger zeigen will, nimmt sie dem
+    # Nutzer wieder weg. Die Rolle `owner` traegt weiterhin nur
+    # VIEW_GUEST_LIMITED auf Capability-Ebene — Kontakt (E-Mail/Telefon) und
+    # Ausweisdaten bleiben ihm damit verschlossen.
+    Permission.VIEW_GUEST_NAME,
     Permission.PM_PROPERTY_AREA,
     Permission.PM_PHOTO_ALBUM,
     Permission.PM_VIEW_PROPERTY_IMAGES,
