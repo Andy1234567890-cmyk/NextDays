@@ -68,14 +68,31 @@ PFLICHT=(
   # an. Fail-closed gebaut, damit nichts still im Klartext landet — aber genau
   # deshalb muss sein Fehlen HIER auffallen und nicht erst am toten Chat.
   OWNER_CHAT_SCHLUESSEL
-  # Push (0414) — dieselbe Klasse Drift, nachgetragen am 15.09.2026. Die zwei
-  # Anlässe, die den Betrieb sofort erreichen müssen (neue Nachricht, neue
-  # Buchung), werden im WORKER ausgelöst (Feed-Sync). Fehlt dort das
-  # Dienstkonto, wirft `push.py` einen PushFehler, den der Dispatcher
-  # spezifisch fängt — Mail und SMS laufen weiter, und niemand sieht, dass der
-  # Push-Kanal tot ist. Genau der Fall, für den es dieses Skript gibt.
-  FCM_SERVICE_ACCOUNT_JSON
-  FCM_PROJEKT_ID
+)
+
+# ENTWEDER-ODER: Gruppen, von denen MINDESTENS EINE Variable dasein muss. Je
+# Zeile eine Gruppe, Alternativen durch Leerzeichen getrennt.
+#
+# Warum das eine eigene Liste ist und nicht zwei Einträge in PFLICHT: ein Gate,
+# das etwas fordert, das der Code gar nicht braucht, meldet einen Fehler, den
+# es nicht gibt — und ein Prüfskript, dessen Fehlschlag man wegzudrücken lernt,
+# deckt beim nächsten Mal den echten Mangel mit zu. Genau das stand hier vom
+# 15.09.2026 bis 18.09.2026: beide FCM-Variablen standen in PFLICHT, obwohl
+# `push.py::_firebase_app` sie als ALTERNATIVEN behandelt. Live liefen api und
+# worker mit gesetztem `FCM_SERVICE_ACCOUNT_JSON` und ohne `FCM_PROJEKT_ID` —
+# also vollständig konfiguriert, gemeldet wurden trotzdem zwei Fehlbestände.
+EINES_VON=(
+  # Push (0414) — dieselbe Klasse Drift wie oben. Die zwei Anlässe, die den
+  # Betrieb sofort erreichen müssen (neue Nachricht, neue Buchung), werden im
+  # WORKER ausgelöst (Feed-Sync). Fehlt dort der Firebase-Zugang, wirft
+  # `push.py` einen PushFehler, den der Dispatcher spezifisch fängt — Mail und
+  # SMS laufen weiter, und niemand sieht, dass der Push-Kanal tot ist.
+  #
+  # Zwei Wege, `push.py::_firebase_app` prüft sie in dieser Reihenfolge:
+  #   1. FCM_SERVICE_ACCOUNT_JSON — Dienstkonto-Schlüssel, hat Vorrang.
+  #   2. FCM_PROJEKT_ID + Application Default Credentials aus der Umgebung.
+  # Einer von beiden genügt; beide zu fordern wäre eine erfundene Anforderung.
+  "FCM_SERVICE_ACCOUNT_JSON FCM_PROJEKT_ID"
 )
 
 # Ein Befehl, zwei Wege: lokal direkt, sonst über SSH. Das Kommando wird als
@@ -125,6 +142,16 @@ for name in "${container[@]}"; do
   fehlt=()
   for v in "${PFLICHT[@]}"; do
     grep -qx "$v" "$tmp/$name" || fehlt+=("$v")
+  done
+  # Entweder-oder: erst wenn KEINE Alternative der Gruppe dasteht, ist es ein
+  # Mangel — gemeldet wird dann die ganze Gruppe, damit ablesbar ist, welche
+  # Wahl man hat.
+  for gruppe in "${EINES_VON[@]}"; do
+    getroffen=0
+    for v in $gruppe; do
+      grep -qx "$v" "$tmp/$name" && getroffen=1 && break
+    done
+    [[ $getroffen -eq 1 ]] || fehlt+=("${gruppe// / ODER }")
   done
   if [[ ${#fehlt[@]} -eq 0 ]]; then
     echo "✓ $name — vollständig"
