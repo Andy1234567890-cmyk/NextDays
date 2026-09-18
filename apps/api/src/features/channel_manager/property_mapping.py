@@ -14,6 +14,7 @@ from supabase import Client
 
 from src.core.countries import normalize_country
 from src.core.security import AuthContext
+from src.core.supabase import fetch_all_rows
 
 from .channex_client import ChannexClient, ChannexError
 from .common import ChannelManagerError, ist_demo_mapping, log
@@ -349,11 +350,13 @@ class PropertyMappingMixin:
     @staticmethod
     def _gruppen_nach_mandant(db: Client) -> dict[str, str]:
         """channex_group_id -> tenant_id fuer ALLE Betriebe."""
-        rows = (
+        # Paginiert: der PostgREST-Deckel (1000 Zeilen) machte die Karte ab
+        # Betrieb 1001 lückenhaft — und eine Lücke hier wirkte fail-OPEN.
+        rows = fetch_all_rows(
             db.table("channex_group_map")
             .select("tenant_id, channex_group_id")
-            .execute()
-        ).data or []
+            .order("channex_group_id")
+        )
         return {r["channex_group_id"]: r["tenant_id"] for r in rows}
 
     def _gehoert_dem_betrieb(
@@ -425,11 +428,20 @@ class PropertyMappingMixin:
         gruppen = ((daten.get("relationships") or {}).get("groups") or {}).get(
             "data"
         ) or []
-        betriebe = {
-            gruppe_zu_mandant[g["id"]]
-            for g in gruppen
-            if g.get("id") in gruppe_zu_mandant
-        }
+        # Eine Gruppe, die wir nicht kennen (bei Channex von Hand angelegt,
+        # oder ein Betrieb, den unsere Karte nicht führt), ist FREMD — nicht
+        # „egal". Sie herauszufiltern hieße, die Property trotz zweiter
+        # Zugehörigkeit als eigene zu werten. Fail-closed (Wurzel 5).
+        unbekannt = [g.get("id") for g in gruppen if g.get("id") not in gruppe_zu_mandant]
+        if unbekannt:
+            log.error(
+                "reconcile_property_in_unbekannter_gruppe_uebersprungen",
+                tenant_id=tenant_id,
+                channex_property_id=channex_id,
+                gruppen=unbekannt,
+            )
+            return False
+        betriebe = {gruppe_zu_mandant[g["id"]] for g in gruppen if g.get("id")}
         if betriebe == {tenant_id}:
             return True
         log.error(
@@ -439,57 +451,6 @@ class PropertyMappingMixin:
             betriebe=sorted(betriebe),
         )
         return False
-
-    def _map_verknuepfen(
-        self,
-        db: Client,
-        *,
-        tenant_id: str,
-        property_id: str,
-        channex_id: str,
-        now: str,
-        map_id: str | None,
-        zuruecknehmen: bool,
-    ) -> None:
-        """Die Map-Zeile eines frisch gespiegelten Objekts schreiben.
-
-        Bewusst KEIN Upsert auf `channex_property_id`: die Spalte ist seit 0158
-        NICHT mehr unique. Ein Hotel ist bei Channex EINE Property mit n
-        Room-Types, also zeigen n Map-Zeilen auf dieselbe ID (dieselbe Begründung
-        steht in `content_sync`). Ein `on_conflict` darauf wirft 42P10 — es gibt
-        schlicht keinen passenden Index mehr.
-
-        Live passiert am 17.09.2026: der Tenant-Reconcile starb an genau dieser
-        Zeile, und zwar NACH dem Anlegen des Objekts. Die Map-Zeile fehlte
-        dadurch, der nächste Versuch fand kein Mapping und legte wieder eines an
-        — zehn Wiederholungen (`_BACKOFF_MINUTES`) ergaben zehn gleichnamige
-        Karteileichen in der Inserate-Liste des Betriebs. Zwei Mandanten
-        gleichzeitig betroffen.
-
-        Geschrieben wird deshalb über den Schlüssel, der WIRKLICH eindeutig ist:
-        die Map-Zeile je Objekt (`channex_property_map_property_uidx`, partiell
-        auf `deleted_at is null`). Ein reaktiviertes Mapping wird per `id`
-        aktualisiert, ein neues eingefügt.
-        """
-        zeile = {
-            "tenant_id": tenant_id,
-            "property_id": property_id,
-            "channex_property_id": channex_id,
-            "sync_enabled": True,
-            "last_sync_status": "ok",
-            "last_sync_at": now,
-            "deleted_at": None,
-        }
-        try:
-            self._map_zeile_schreiben(
-                db, tenant_id, property_id, zeile, map_id=map_id
-            )
-        except APIError:
-            if zuruecknehmen:
-                self._halbes_objekt_zuruecknehmen(
-                    db, tenant_id, property_id, channex_id
-                )
-            raise
 
     @staticmethod
     def _map_zeile_schreiben(
@@ -539,42 +500,81 @@ class PropertyMappingMixin:
             ).data or []
 
     @staticmethod
-    def _halbes_objekt_zuruecknehmen(
-        db: Client, tenant_id: str, property_id: str, channex_id: str
-    ) -> None:
-        """Ein eben angelegtes, noch unverknüpftes Objekt wieder entfernen.
+    def _fremd_verknuepft(
+        db: Client, tenant_id: str, channex_ids: list[str]
+    ) -> set[str]:
+        """Channex-Properties aus `channex_ids`, die ein ANDERER Betrieb aktiv
+        verknüpft hat.
 
-        Der Gegenzustand zum Anlegen (Wurzel 1). Ohne ihn bleibt bei JEDEM
-        Fehler zwischen Objekt und Mapping ein Entwurf stehen, den kein späterer
-        Lauf wiederfindet: er trägt keine Channex-Kennung, also sieht der
-        nächste Abgleich „kein Mapping" und legt das nächste an.
-
-        Das Entfernen ist eng begrenzt und deshalb ungefährlich: die Zeile ist
-        Sekunden alt, stammt aus DIESEM Lauf, steht auf `draft` und kann noch
-        keine Buchung tragen. Die Einheit fällt per `ON DELETE CASCADE` mit.
-
-        Best-effort: scheitert das Aufräumen, darf es den echten Fehler nicht
-        verdecken (Wurzel 5) — er wird oben weitergereicht, hier bleibt eine
-        laute Spur.
+        Der Update-Pfad des Abgleichs vertraute bis zum 18.09.2026 jeder
+        eigenen Map-Zeile: hing dieselbe Property zusätzlich bei einem
+        zweiten Betrieb, spiegelte er weiter Inhalte hinein und pushte
+        Preise und Verfügbarkeiten auf die Portale des Fremden. Ein Riegel,
+        der nur beim ANLEGEN greift, lässt Bestandskonflikte für immer stehen.
         """
-        try:
-            db.table("properties").delete().eq("id", property_id).eq(
-                "tenant_id", tenant_id
-            ).execute()
-            log.warning(
-                "reconcile_halbes_objekt_zurueckgenommen",
-                tenant_id=tenant_id,
-                property_id=property_id,
-                channex_property_id=channex_id,
+        if not channex_ids:
+            return set()
+        rows = fetch_all_rows(
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .in_("channex_property_id", channex_ids)
+            .neq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .order("channex_property_id")
+        )
+        return {r["channex_property_id"] for r in rows}
+
+    @staticmethod
+    def _konflikt_vermerken(
+        db: Client, tenant_id: str, mapping: dict[str, Any], channex_id: str
+    ) -> None:
+        """Einen Besitz-Konflikt laut machen und an der Map-Zeile sichtbar
+        hinterlegen — NICHT auflösen. Welcher Betrieb recht hat, ist aus den
+        Daten nicht entscheidbar; das gehört in Menschenhand. Geschrieben wird
+        nur bei Änderung (der Abgleich muss im No-op-Fall schreibfrei bleiben,
+        siehe Realtime-Schleife im Update-Pfad)."""
+        log.error(
+            "reconcile_besitzkonflikt",
+            tenant_id=tenant_id,
+            property_id=mapping.get("property_id"),
+            channex_property_id=channex_id,
+        )
+        if mapping.get("last_sync_status") != "error":
+            db.table("channex_property_map").update(
+                {
+                    "last_sync_status": "error",
+                    "last_sync_error": "Besitzkonflikt: ein anderes Konto hat "
+                    "diese Channex-Property ebenfalls verknüpft.",
+                }
+            ).eq("id", mapping["id"]).eq("tenant_id", tenant_id).execute()
+
+    @staticmethod
+    def _objekt_spiegeln(
+        db: Client, tenant_id: str, channex_id: str, row: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Objekt samt Verknüpfung atomar anlegen oder reaktivieren (0721).
+
+        Ein Aufruf, eine Transaktion, eine Sperre je (Betrieb, Property). Was
+        vorher drei PostgREST-Runden waren — Objekt, Einheit, Verknüpfung —
+        und zwischen denen der Prozess sterben oder ein zweiter Lauf
+        dazwischenkommen konnte, entscheidet jetzt die Datenbank in einem
+        Stück. Die Fälle stehen im Kopf der Migration; hier wird nur der
+        Befund gelesen. Wirft die RPC, ist NICHTS entstanden — genau so soll
+        es sein."""
+        res = db.rpc(
+            "channex_objekt_spiegeln",
+            {
+                "p_tenant_id": tenant_id,
+                "p_channex_property_id": channex_id,
+                "p_zeile": row,
+            },
+        ).execute()
+        daten = res.data or []
+        if not daten:
+            raise ChannelManagerError(
+                "channex_objekt_spiegeln lieferte kein Ergebnis.", status_code=500
             )
-        except Exception as exc:  # noqa: BLE001 — verdeckt den echten Fehler nicht
-            log.error(
-                "reconcile_zuruecknehmen_fehlgeschlagen",
-                tenant_id=tenant_id,
-                property_id=property_id,
-                channex_property_id=channex_id,
-                error=str(exc)[:200],
-            )
+        return daten[0]
 
     def reconcile_own_tenant(self, ctx: AuthContext) -> dict[str, int]:
         """Channex→DB-Spiegelung für den Tenant aus dem JWT sofort ausführen
@@ -629,6 +629,10 @@ class PropertyMappingMixin:
             .execute()
         ).data or []
         active_by_channex = {m["channex_property_id"]: m for m in active}
+        # Besitzkonflikte EINMAL je Lauf: welche der eigenen Properties hält
+        # zusätzlich ein anderer Betrieb aktiv? Die werden weder gespiegelt
+        # noch gepusht (Wurzel 3).
+        konflikte = self._fremd_verknuepft(db, tenant_id, list(active_by_channex))
 
         now = datetime.now(UTC).isoformat()
         created = updated = soft_deleted = skipped = 0
@@ -655,6 +659,10 @@ class PropertyMappingMixin:
                 continue
 
             existing = active_by_channex.get(channex_id)
+            if existing and channex_id in konflikte:
+                self._konflikt_vermerken(db, tenant_id, existing, channex_id)
+                skipped += 1
+                continue
             if existing:
                 # Inhalte spiegeln, ABER nur Felder, die CHANNEX führt. title und
                 # description führt der NUTZER lokal (Wurzel 1) — Channex ist dafür
@@ -694,103 +702,44 @@ class PropertyMappingMixin:
                 updated += 1
                 continue
 
-            # Kein aktives Mapping → evtl. soft-gelöschtes mit lebender Property
-            # reaktivieren, sonst neu anlegen.
-            soft = (
-                db.table("channex_property_map")
-                .select("id, property_id")
-                .eq("tenant_id", tenant_id)
-                .eq("channex_property_id", channex_id)
-                .not_.is_("deleted_at", "null")
-                .limit(1)
-                .execute()
-            ).data
-            reuse_property_id = None
-            if soft:
-                prop = (
-                    db.table("properties")
-                    .select("id, archived_at")
-                    .eq("id", soft[0]["property_id"])
-                    .eq("tenant_id", tenant_id)
-                    .limit(1)
-                    .execute()
-                ).data
-                # ARCHIVIERTE Objekte NICHT reaktivieren (0416).
-                #
-                # Ohne diese Prüfung macht der Abgleich das Archivieren
-                # rückgängig: die Property existiert bei Channex noch (das
-                # Löschen dort kann fehlschlagen oder Channex räumt erst nach
-                # 90 Tagen), der Abgleich findet sie „live", reanimiert das
-                # Mapping und spiegelt die Inhalte zurück — das gekündigte
-                # Objekt wäre wieder verbunden und würde weiter abgerechnet.
-                # Der Betrieb hätte es archiviert und es käme von allein zurück.
-                if prop and not prop[0].get("archived_at"):
-                    reuse_property_id = prop[0]["id"]
-                elif prop:
-                    log.info(
-                        "reconcile_skip_archiviert",
-                        tenant_id=tenant_id,
-                        property_id=prop[0]["id"],
-                        channex_property_id=channex_id,
-                    )
-                    skipped += 1
-                    continue
-
-            if not reuse_property_id and not self._gehoert_dem_betrieb(
+            # Kein aktives Mapping. Der Riegel steht VOR jeder Entscheidung —
+            # auch vor einer Reaktivierung: eine soft-geschlossene Verknüpfung
+            # beweist nur, dass die Property FRÜHER hierher gehörte.
+            if not self._gehoert_dem_betrieb(
                 db, tenant_id, channex_id, gruppe_zu_mandant
             ):
                 skipped += 1
                 continue
 
-            if reuse_property_id:
-                db.table("properties").update(row).eq(
-                    "id", reuse_property_id
-                ).eq("tenant_id", tenant_id).execute()
-                property_id = reuse_property_id
-            else:
-                row["tenant_id"] = tenant_id
-                # Aus Channex reingespiegeltes Objekt: status bleibt DB-Default
-                # 'draft', damit es nicht ungeprüft verkauft wird. Der Marktplatz
-                # ist seit 0527 Pflichtkanal (immer true) — sichtbar wird das
-                # Objekt dort erst über publish() UND die Freigabe des Betreibers
-                # (moderation_status), nicht über dieses Flag.
-                ins = db.table("properties").insert(row).execute()
-                if not ins.data:
-                    log.error(
-                        "reconcile_property_insert_failed",
-                        tenant_id=tenant_id,
-                        channex_property_id=channex_id,
-                    )
-                    skipped += 1
-                    continue
-                property_id = ins.data[0]["id"]
+            # Aus Channex gespiegeltes Objekt: status bleibt DB-Default 'draft',
+            # damit es nicht ungeprüft verkauft wird. Der Marktplatz ist seit
+            # 0527 Pflichtkanal — sichtbar wird das Objekt dort erst über
+            # publish() UND die Freigabe des Betreibers.
+            befund = self._objekt_spiegeln(db, tenant_id, channex_id, row)
+            ergebnis = befund.get("ergebnis")
+            property_id = befund.get("property_id")
+            if ergebnis not in ("neu", "reaktiviert") or not property_id:
+                log.info(
+                    "reconcile_property_nicht_angelegt",
+                    tenant_id=tenant_id,
+                    channex_property_id=channex_id,
+                    ergebnis=ergebnis,
+                )
+                skipped += 1
+                continue
 
             # EINHEIT (0265) — sonst ist das gespiegelte Objekt unverkäuflich.
-            # Eine `properties`-Zeile ist ein Einheiten-TYP; verkauft wird die
-            # EINHEIT. Ohne `property_units`-Zeile lehnt
-            # `create_reservation_atomic` (0275) jede Buchung mit 22023 ab —
-            # also käme eine eingehende Airbnb-Buchung für ein frisch
-            # gespiegeltes Objekt nicht an. Genau der Weg, den ein Wechselkunde
-            # geht: Listing spiegeln → Buchung kommt rein → nichts passiert.
-            # Der Reconcile ist idempotent, das Anlegen der Einheit muss es
-            # auch sein (Wurzel 2) — per Existenzprüfung, NICHT per Upsert;
-            # warum, steht in `_ensure_default_unit`.
+            # Live legt sie der Trigger properties_ersteinheit_anlegen (0571)
+            # schon an; dieser Aufruf ist die idempotente Gegenprobe (Wurzel 2)
+            # und läuft NACH der Transaktion — ein Fehler hier hinterlässt kein
+            # halbes Objekt mehr, weil Objekt und Verknüpfung bereits fest sind.
             self._ensure_default_unit(db, tenant_id, property_id, row.get("title"))
-
-            self._map_verknuepfen(
-                db,
-                tenant_id=tenant_id,
-                property_id=property_id,
-                channex_id=channex_id,
-                now=now,
-                map_id=soft[0]["id"] if reuse_property_id and soft else None,
-                zuruecknehmen=not reuse_property_id,
-            )
             created += 1
             log.info(
                 "reconcile_property_created",
                 tenant_id=tenant_id,
                 channex_property_id=channex_id,
+                ergebnis=ergebnis,
             )
 
         # Channex-Property weg → Map soft-löschen.
@@ -838,6 +787,8 @@ class PropertyMappingMixin:
         for m in active:
             if m["channex_property_id"] not in live_by_id:
                 continue  # gerade soft-gelöscht
+            if m["channex_property_id"] in konflikte:
+                continue  # Besitzkonflikt: keine Pushes auf fremde Portale
             try:
                 self.reconcile_rate_plan_prices(tenant_id, m["property_id"])
             except Exception as exc:  # noqa: BLE001 — ein Objekt darf den Tick nicht kippen
@@ -852,7 +803,12 @@ class PropertyMappingMixin:
         # (oder deren Freischaltung beim Verbinden fehlschlug), bekommen sie hier.
         # Ein GET + höchstens ein POST je fehlendem Objekt — best effort.
         self._chat_nachziehen(
-            [m["channex_property_id"] for m in active if m["channex_property_id"] in live_by_id]
+            [
+                m["channex_property_id"]
+                for m in active
+                if m["channex_property_id"] in live_by_id
+                and m["channex_property_id"] not in konflikte
+            ]
         )
 
         return {
@@ -1097,6 +1053,18 @@ class PropertyMappingMixin:
                 raise ChannelManagerError(
                     "Channex lieferte keine Property-ID zurück.", status_code=502
                 )
+            # In die Gruppe DIESES Betriebs — sonst hängt die Property bei
+            # Channex ohne Zugehörigkeit, und die Gruppenprüfung unten weist
+            # sie zu Recht ab.
+            gruppe = self.ensure_group(tenant_id)
+            if not gruppe:
+                raise ChannelManagerError(
+                    "Keine Channex-Gruppe für dieses Konto.", status_code=409
+                )
+            try:
+                self._channex.assign_property_to_group(gruppe, channex_id)
+            except ChannexError as exc:
+                raise self._wrap_channex(exc) from exc
 
         # Fremdübernahme verhindern: ohne diese Prüfung hängte ein Tenant per
         # client-übergebener external_property_ref sein Objekt an die
@@ -1117,6 +1085,18 @@ class PropertyMappingMixin:
             raise ChannelManagerError(
                 "Diese Channex-Property ist bereits einem anderen Konto "
                 "zugeordnet.",
+                status_code=409,
+            )
+        # Und die Gruppe: `external_property_ref` ist Client-Eingabe. Wer die
+        # Kennung einer fremden Property kennt, deren Mapping gerade
+        # geschlossen ist, käme am Clash-Check vorbei. Dieselbe Prüfung wie
+        # im Abgleich — die Property muss in GENAU der Gruppe dieses Betriebs
+        # hängen (18.09.2026).
+        if not self._gehoert_dem_betrieb(
+            db, tenant_id, channex_id, self._gruppen_nach_mandant(db)
+        ):
+            raise ChannelManagerError(
+                "Diese Channex-Property gehört nicht zur Gruppe dieses Kontos.",
                 status_code=409,
             )
 

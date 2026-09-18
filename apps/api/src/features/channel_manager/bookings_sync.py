@@ -19,6 +19,7 @@ from supabase import Client
 
 from src.core.einheiten import AVAILABILITY_CONFLICT, freie_einheit, je_einheit
 from src.core.security import AuthContext
+from src.core.supabase import fetch_all_rows
 from src.features.auth.guest_masking import GuestMask
 from src.features.guests.identity import (
     contact_from_ota_customer,
@@ -253,17 +254,35 @@ class BookingsSyncMixin:
                     )
 
     def _sync_all_locked(self, db: Client) -> BookingSyncResponse:
-        rows = (
+        # Paginiert (der 1000er-Deckel schnitt die Karte sonst still ab) und
+        # mit Kollisionsprüfung: zeigt EINE Channex-Property auf ZWEI Betriebe,
+        # gewann bis zum 18.09.2026 die Zeile, die PostgREST zufällig zuletzt
+        # lieferte — und die Gastbuchungen samt Namen, Mail und Telefon
+        # landeten beim falschen Betrieb. Nicht entscheidbar → nicht
+        # importieren, laut melden (Wurzel 3/5). Der Tenant-Abgleich markiert
+        # denselben Konflikt an der Map-Zeile.
+        rows = fetch_all_rows(
             db.table("channex_property_map")
             .select("tenant_id, channex_property_id")
             .is_("deleted_at", "null")
-            .execute()
-        ).data or []
-        tenant_by_property = {
-            r["channex_property_id"]: r["tenant_id"]
-            for r in rows
-            if r.get("channex_property_id") and r.get("tenant_id")
-        }
+            .order("channex_property_id")
+        )
+        tenants_je_property: dict[str, set[str]] = {}
+        for r in rows:
+            if r.get("channex_property_id") and r.get("tenant_id"):
+                tenants_je_property.setdefault(r["channex_property_id"], set()).add(
+                    r["tenant_id"]
+                )
+        tenant_by_property: dict[str, str] = {}
+        for chx, tenants in tenants_je_property.items():
+            if len(tenants) == 1:
+                tenant_by_property[chx] = next(iter(tenants))
+            else:
+                log.error(
+                    "feed_besitzkonflikt_property_uebersprungen",
+                    channex_property_id=chx,
+                    tenants=sorted(tenants),
+                )
         return self._sync_feed(db, tenant_by_property)
 
     def _sync_feed(
@@ -1161,14 +1180,34 @@ class BookingsSyncMixin:
                 try:
                     db.table("reservations").insert(row).execute()
                 except APIError as exc:
-                    # 23505 heisst „war doch schon da", nur unter einem anderen
-                    # `external_ref` als oben gesucht. Dann ist das Nachtragen
-                    # des Stornos genau richtig (Wurzel 2).
+                    # 23505 heisst „war doch schon da". Auf `reservations`
+                    # liegen ZWEI partielle Unique-Indizes, die das melden
+                    # können: `source_channex_booking_id` (0031) und
+                    # `(tenant_id, external_ref)` (0300, z. B. paralleler
+                    # Historien-Import). Deshalb über BEIDE Schlüssel nachlesen
+                    # und gezielt per id aktualisieren — ein Update nur über
+                    # den einen Schlüssel träfe im anderen Fall null Zeilen,
+                    # und der Storno verschwände still.
                     if "23505" not in str(exc):
                         raise
+                    filter_ = f"source_channex_booking_id.eq.{booking_id}"
+                    if ota_code:
+                        filter_ += f",external_ref.eq.{ota_code}"
+                    doch_da = (
+                        db.table("reservations")
+                        .select("id")
+                        .eq("tenant_id", tenant_id)
+                        .or_(filter_)
+                        .limit(1)
+                        .execute()
+                    ).data
+                    if not doch_da:
+                        raise
                     db.table("reservations").update(row).eq(
-                        "source_channex_booking_id", booking_id
+                        "id", doch_da[0]["id"]
                     ).eq("tenant_id", tenant_id).execute()
+                    # Aufgaben-Gegenzustand (Wurzel 1) — wie im `bekannt`-Zweig.
+                    sync_nach_id(db, tenant_id, str(doch_da[0]["id"]))
         except Exception as exc:  # noqa: BLE001 — Import darf nicht kippen
             log.warning(
                 "import_cancelled_reservation_failed",

@@ -1088,18 +1088,38 @@ class OAuthChannelsMixin:
         zugeordnet ist, wird nie angefasst (fail-closed, Wurzel 5). Channex-Ausfall
         → None, dann läuft der normale Anlege-Pfad und im schlimmsten Fall
         entsteht wieder eine Zweit-Property; das ist besser, als eine fremde zu
-        kapern."""
+        kapern.
+
+        ZWEI GRENZEN, DIE BIS ZUM 18.09.2026 FEHLTEN — der Docstring oben
+        versprach fail-closed, der Code hielt es nicht:
+        * Gesucht wurde im GANZEN Konto (`list_properties()` ohne Gruppe), also
+          auch unter den Häusern aller anderen Betriebe.
+        * `vergeben` kannte nur die Verknüpfungen DIESES Betriebs. Eine Property,
+          die einem anderen Betrieb gehört, galt damit als „verwaist".
+        Einziges Kriterium war der Titel. Ein Betrieb mit einem Objekt
+        „Studio 1" hätte sich so die Channex-Property eines fremden „Studio 1"
+        geholt, sie per PUT mit seinen Stammdaten überschrieben — und beim
+        Archivieren später über `channex_abraeumen` bei Channex GELÖSCHT.
+
+        Jetzt: nur die eigene Gruppe, und nur, was KEIN Betrieb verknüpft hat.
+        Ohne eigene Gruppe gibt es keine Kandidaten (Wurzel 3, Scope
+        serverseitig)."""
+        gruppe = self._tenant_group_id(db, tenant_id)
+        if not gruppe:
+            return None
         try:
-            live = self._channex.list_properties().get("data") or []
+            live = (
+                self._channex.list_properties(group_id=gruppe).get("data") or []
+            )
         except ChannexError:
             return None
 
+        # ALLER Betriebe, nicht nur dieses — sonst gilt fremder Besitz als frei.
         vergeben = {
             zeile["channex_property_id"]
             for zeile in (
                 db.table("channex_property_map")
                 .select("channex_property_id")
-                .eq("tenant_id", tenant_id)
                 .is_("deleted_at", "null")
                 .execute()
             ).data or []

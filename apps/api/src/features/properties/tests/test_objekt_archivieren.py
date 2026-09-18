@@ -59,6 +59,11 @@ class _Kette:
     def __init__(self, tabelle: str, store: dict[str, Any]) -> None:
         self._tabelle = tabelle
         self._store = store
+        # Nur `neq` filtert wirklich: `channex_abraeumen` fragt seit dem
+        # 18.09.2026 „haengt noch eine ANDERE Verknuepfung an dieser
+        # Channex-Property?" — mit einem Stub, der die eigene Zeile
+        # zurueckgibt, saehe jede Property geteilt aus.
+        self._ausschluss: list[tuple[str, Any]] = []
 
     def select(self, *_a: Any, **_k: Any) -> _Kette:
         return self
@@ -72,6 +77,10 @@ class _Kette:
         return self
 
     def eq(self, *_a: Any, **_k: Any) -> _Kette:
+        return self
+
+    def neq(self, spalte: str, wert: Any) -> _Kette:
+        self._ausschluss.append((spalte, wert))
         return self
 
     def is_(self, *_a: Any, **_k: Any) -> _Kette:
@@ -91,7 +100,10 @@ class _Kette:
         return self
 
     def execute(self) -> Any:
-        zeilen = self._store["rows"].get(self._tabelle, [])
+        zeilen = [
+            z for z in self._store["rows"].get(self._tabelle, [])
+            if all(z.get(s) != w for s, w in self._ausschluss)
+        ]
         return type("R", (), {"data": zeilen, "count": len(zeilen)})()
 
 
@@ -526,3 +538,39 @@ def test_objekt_ohne_zuordnung_wird_trotzdem_geloescht(monkeypatch) -> None:
 
     assert not any(a.startswith("mapping_delete:") for a in stub.ablauf)
     assert "delete_property:chx-99:force=True" in stub.ablauf
+
+
+def test_geteilte_channex_property_wird_nicht_geloescht(monkeypatch) -> None:
+    """Haengt noch eine ANDERE Verknuepfung an der Channex-Property, bleibt
+    sie bestehen — nur die eigene Verknuepfung wird geschlossen.
+
+    Bis zum 18.09.2026 loeschte Schritt 4 blind mit `force`. Zwei Faelle, in
+    denen das das FALSCHE Objekt bei Channex ausradiert haette: ein
+    archivierter Zimmertyp eines Hotels (0158: n Zimmertypen teilen EINE
+    Channex-Property) und eine archivierte Dublette, deren Original weiter
+    verkauft. Ein Reviewer hat den Weg am Code belegt, bevor er live passierte.
+    """
+    db = _db_mit_mapping()
+    db.store["rows"]["channex_property_map"].append({
+        "id": "map-anderes-objekt",
+        "channex_property_id": "chx-99",
+        "channex_hotel_policy_id": None,
+        "deleted_at": None,
+    })
+    stub = _ChannexStub()
+    _mit_channex(monkeypatch, stub)
+    monkeypatch.setattr(
+        "src.features.properties.archiv.vertragsende_durchsetzen",
+        lambda *_a, **_k: 730,
+    )
+    svc = _service(db, monkeypatch)
+
+    svc.archivieren(_ctx(), _PROPERTY, archivieren=True)
+
+    # Die eigene Kanal-Zuordnung geht weg, die Property NICHT.
+    assert "mapping_delete:map-eigen" in stub.ablauf
+    assert not any(a.startswith("delete_property:") for a in stub.ablauf)
+    # Die eigene Verknuepfung ist trotzdem geschlossen (Wurzel 1).
+    schluss = next(p for t, p in db.store["updates"] if t == "channex_property_map")
+    assert schluss["deleted_at"] is not None
+    assert schluss["sync_enabled"] is False

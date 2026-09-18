@@ -178,6 +178,35 @@ def channex_abraeumen(db: Client, tenant_id: str, property_id: str) -> str:
         # 4. Die Property bei Channex loeschen. DAS ist der Schritt, der die
         #    Kosten beendet — ein blosses Trennen liesse sie dort stehen
         #    (Channex raeumt erst nach 90 Tagen ohne Kanal selbst ab).
+        #
+        #    ABER NUR, wenn kein anderes Objekt mehr daran haengt. Seit 0158
+        #    duerfen n Zimmertypen EINE Channex-Property teilen, und ein
+        #    Doppelmapping ueber Betriebe hinweg ist zumindest moeglich. Bis
+        #    zum 18.09.2026 loeschte dieser Schritt blind mit `force` — ein
+        #    archivierter Zimmertyp haette das ganze Hotel bei Channex
+        #    mitgerissen, eine archivierte Dublette das echte Objekt. Steht
+        #    noch eine aktive Verknuepfung (egal welchen Betriebs), wird nur
+        #    die eigene geschlossen.
+        andere = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("channex_property_id", chx)
+            .is_("deleted_at", "null")
+            .neq("id", zeile["id"])
+            .limit(1)
+            .execute()
+        ).data
+        if andere:
+            befunde.append(
+                f"Channex-Property {chx} bleibt bestehen (noch anderweitig verknüpft)"
+            )
+            log.info(
+                "archiv_channex_property_geteilt_nicht_geloescht",
+                tenant_id=tenant_id, property_id=property_id,
+                channex_property_id=chx,
+            )
+            _map_schliessen(db, tenant_id, [zeile["id"]])
+            continue
         try:
             client.delete_property(chx, force=True)
             befunde.append(f"Channex-Property {chx} gelöscht")
