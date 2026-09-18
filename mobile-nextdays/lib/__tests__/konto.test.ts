@@ -61,7 +61,7 @@ describe("Profil-Eingabe", () => {
   });
 
   it("lässt eine Nummer unangetastet", () => {
-    expect(normalisiert(" +45 93903991 ")).toBe("+45 93903991");
+    expect(normalisiert(" +45 43167040 ")).toBe("+45 43167040");
   });
 });
 

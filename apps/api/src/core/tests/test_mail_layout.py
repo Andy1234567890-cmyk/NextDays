@@ -31,7 +31,7 @@ _FIRMA = {
     "company_country": "Dänemark",
     "company_registration_number": "46615182",
     "company_contact_email": "info@mynextdays.dk",
-    "company_contact_phone": "+45 93 90 39 91",
+    "company_contact_phone": "+45 43 16 70 40",
     # Marktplatz = myBestDays und der läuft unter .dk (DanDomain). `.com` gehört
     # uns NICHT (GoDaddy-Fremddomain, am 17.08.2026 nachgemessen).
     "marketing_base_url": "https://www.mynextdays.com",

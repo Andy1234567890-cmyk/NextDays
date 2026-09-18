@@ -37,9 +37,9 @@ export const ANBIETER = {
   ort: "9881 Bindslev",
   land: "Dänemark",
   email: "info@mynextdays.dk",
-  telefon: "+45 93 90 39 91",
+  telefon: "+45 43 16 70 40",
   // E.164 für den tel:-Link — ohne Leerzeichen.
-  telefonE164: "+4593903991",
+  telefonE164: "+4543167040",
   website: "www.mynextdays.com",
   websiteUrl: "https://www.mynextdays.com",
   // CVR-Nummer ist rein 8-stellig; das Präfix „DK" gehört ausschließlich an

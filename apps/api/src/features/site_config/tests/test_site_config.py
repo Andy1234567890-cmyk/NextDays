@@ -1396,7 +1396,7 @@ def _konto_tables() -> dict[str, list[dict]]:
             "legal_name": "AirSmil ApS",
             "company_logo_url": "https://x.dk/logo.jpg",
             "email": "info@airsmil.dk",
-            "phone_number": "+45 93903991",
+            "phone_number": "+45 43167040",
             "company_street": "Hirtshalsvej",
             "company_house_number": "21",
             "company_postal_code": "9881",
@@ -1466,7 +1466,7 @@ def test_neuer_kontakt_abschnitt_ist_vorbefuellt() -> None:
     page = svc.create_page(_ctx(), PageCreate(title="Kontakt", slug="kontakt"))
     block = svc.add_block(_ctx(), page.id, BlockCreate(type=BlockType.contact))
     assert block.content["email"] == "info@airsmil.dk"
-    assert block.content["phone"] == "+45 93903991"
+    assert block.content["phone"] == "+45 43167040"
     assert "Bindslev" in block.content["address"]["de"]
 
 
@@ -1481,7 +1481,7 @@ def test_eigene_kontaktangabe_wird_nicht_ueberschrieben() -> None:
     )
     assert block.content["email"] == "buchung@airsmil.dk"
     # Was er NICHT angegeben hat, kommt weiterhin aus dem Konto.
-    assert block.content["phone"] == "+45 93903991"
+    assert block.content["phone"] == "+45 43167040"
 
 
 def test_vorlage_setzt_echte_kontaktdaten_statt_beispiel() -> None:
@@ -1500,7 +1500,7 @@ def test_vorlage_setzt_echte_kontaktdaten_statt_beispiel() -> None:
     assert kontakt, "die Vorlage bringt Kontakt-Abschnitte mit"
     for b in kontakt:
         assert b.content["email"] == "info@airsmil.dk"
-        assert b.content["phone"] == "+45 93903991"
+        assert b.content["phone"] == "+45 43167040"
         assert "Bindslev" in b.content["address"]["de"]
 
     # Marke ebenfalls aus dem Konto, Design-Tokens aus der Vorlage.

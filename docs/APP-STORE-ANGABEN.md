@@ -307,7 +307,7 @@ Aus `lib/rechtliches.ts` (Basis `https://www.mynextdays.com`), in der App unter
 - Datenschutz: `/datenschutz` · Nutzungsbedingungen: `/agb`
 - Auftragsverarbeitung: `/auftragsverarbeitung` · Cookie-Richtlinie:
   `/cookie-richtlinie` · Impressum: `/impressum`
-- Kontakt: `info@mynextdays.dk`, `+4593903991`
+- Kontakt: `info@mynextdays.dk`, `+4543167040`
 
 ### Nutzergenerierte Inhalte (Googles UGC-Richtlinie) — das schärfere Gate
 Nicht die Alterseinstufung ist hier das Risiko, sondern die UGC-Richtlinie.

@@ -41,9 +41,9 @@ export const ANBIETER = {
   // CONTACT_RECIPIENT_GENERAL / CONTACT_RECIPIENT_TECHNICAL; wer hier etwas
   // ändert, ändert es dort mit.
   emailTechnik: "developer@mynextdays.dk",
-  telefon: "+45 93 90 39 91",
+  telefon: "+45 43 16 70 40",
   // E.164 für den tel:-Link — ohne Leerzeichen.
-  telefonE164: "+4593903991",
+  telefonE164: "+4543167040",
   website: "www.mynextdays.com",
   websiteUrl: "https://www.mynextdays.com",
   // CVR-Nummer ist rein 8-stellig; das Präfix „DK" gehört ausschließlich an

@@ -101,7 +101,7 @@ Stellen nachziehen.
 | `COMPANY_REGISTRATION_NUMBER` | `46615182` (CVR, rein 8-stellig, ohne `DK`) | nein |
 | `COMPANY_VAT_ID` | **bewusst leer** — siehe Hinweis | nein |
 | `COMPANY_CONTACT_EMAIL` | `info@mynextdays.dk` | nein |
-| `COMPANY_CONTACT_PHONE` | `+45 93 90 39 91` | nein |
+| `COMPANY_CONTACT_PHONE` | `+45 43 16 70 40` | nein |
 
 > **`COMPANY_VAT_ID` bleibt leer, bis die Momsregistrierung vorliegt.** VIES
 > meldete `DK46615182` am 08.08.2026 als ungültig (Kontrollabfrage

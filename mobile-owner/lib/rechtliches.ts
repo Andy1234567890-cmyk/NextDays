@@ -37,8 +37,8 @@ export const ANBIETER = {
   land: "Dänemark",
   cvr: "46615182",
   email: "info@mynextdays.dk",
-  telefon: "+45 93 90 39 91",
-  telefonE164: "+4593903991",
+  telefon: "+45 43 16 70 40",
+  telefonE164: "+4543167040",
 } as const;
 
 export type RechtsDokument = {
