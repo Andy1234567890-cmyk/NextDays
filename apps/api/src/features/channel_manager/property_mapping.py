@@ -346,6 +346,100 @@ class PropertyMappingMixin:
             tenant_id=tenant_id, property_id=property_id,
         )
 
+    @staticmethod
+    def _gruppen_nach_mandant(db: Client) -> dict[str, str]:
+        """channex_group_id -> tenant_id fuer ALLE Betriebe."""
+        rows = (
+            db.table("channex_group_map")
+            .select("tenant_id, channex_group_id")
+            .execute()
+        ).data or []
+        return {r["channex_group_id"]: r["tenant_id"] for r in rows}
+
+    def _gehoert_dem_betrieb(
+        self,
+        db: Client,
+        tenant_id: str,
+        channex_id: str,
+        gruppe_zu_mandant: dict[str, str],
+    ) -> bool:
+        """Darf diese Channex-Property als Objekt DIESES Betriebs entstehen?
+
+        Fail-closed (Wurzel 5). Gespiegelt wird nur, was nachweislich hierher
+        gehoert — im Zweifel lieber kein Objekt als das Objekt eines fremden
+        Kunden.
+
+        WARUM ES DEN RIEGEL BRAUCHT (18.09.2026)
+        Wir fahren EIN Channex-Konto fuer die ganze Plattform; die Gruppe ist
+        die einzige Grenze zwischen den Betrieben. Diese Grenze ist weich:
+        Channex erlaubt eine Property in MEHREREN Gruppen, und in der
+        Channex-Oberflaeche kann sie jederzeit von Hand einer zweiten
+        zugeordnet werden. Genau das lag live vor — drei Haeuser eines neuen
+        Kunden hingen zusaetzlich in der Gruppe eines anderen Betriebs. Der
+        Abgleich fragte „gib mir alles aus dieser Gruppe" und haette sie
+        gespiegelt: Titel, Adresse, Koordinaten im Konto des Falschen, samt
+        Preis- und Verfuegbarkeits-Pushes auf fremde Objekte.
+
+        Beim MANUELLEN Verbinden gab es diesen Riegel laengst (409, siehe
+        `connect_property`). Nur der automatische Weg hatte ihn nicht — er
+        vertraute der Gruppe blind. Ein Schutz, den nur der Handgriff kennt,
+        ist keiner.
+
+        Zwei Bedingungen, beide muessen halten:
+        1. Kein ANDERER Betrieb hat diese Property bereits verknuepft.
+        2. Sie liegt in GENAU EINER unserer Betriebs-Gruppen, und das ist
+           diese. Mehrfachzuordnung ist nicht entscheidbar und deshalb ein
+           Konfigurationsfehler, kein Sonderfall, der geraten werden darf.
+        """
+        fremd = (
+            db.table("channex_property_map")
+            .select("tenant_id")
+            .eq("channex_property_id", channex_id)
+            .is_("deleted_at", "null")
+            .neq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if fremd:
+            log.error(
+                "reconcile_fremde_property_uebersprungen",
+                tenant_id=tenant_id,
+                channex_property_id=channex_id,
+                gehoert_zu=fremd[0]["tenant_id"],
+            )
+            return False
+
+        try:
+            daten = self._channex.get_property(channex_id).get("data") or {}
+        except ChannexError as exc:
+            # Kein Urteil ohne Auskunft: bei Channex-Ausfall wird NICHTS
+            # angelegt, statt die Herkunft zu unterstellen.
+            log.warning(
+                "reconcile_gruppenpruefung_fehlgeschlagen",
+                tenant_id=tenant_id,
+                channex_property_id=channex_id,
+                error=exc.message,
+            )
+            return False
+
+        gruppen = ((daten.get("relationships") or {}).get("groups") or {}).get(
+            "data"
+        ) or []
+        betriebe = {
+            gruppe_zu_mandant[g["id"]]
+            for g in gruppen
+            if g.get("id") in gruppe_zu_mandant
+        }
+        if betriebe == {tenant_id}:
+            return True
+        log.error(
+            "reconcile_property_mehrdeutig_uebersprungen",
+            tenant_id=tenant_id,
+            channex_property_id=channex_id,
+            betriebe=sorted(betriebe),
+        )
+        return False
+
     def _map_verknuepfen(
         self,
         db: Client,
@@ -545,6 +639,10 @@ class PropertyMappingMixin:
         # `_channex_attrs_to_property_row`).
         firmenadresse = self._billing_property_attrs(db, tenant_id)
 
+        # Welche Channex-Gruppe gehoert welchem Betrieb? Einmal je Lauf, nicht
+        # je Objekt — gebraucht wird es nur auf dem Anlege-Pfad, der selten ist.
+        gruppe_zu_mandant = self._gruppen_nach_mandant(db)
+
         for channex_id, attrs in live_by_id.items():
             row = self._channex_attrs_to_property_row(attrs, firmenadresse)
             if row is None:
@@ -637,6 +735,12 @@ class PropertyMappingMixin:
                     )
                     skipped += 1
                     continue
+
+            if not reuse_property_id and not self._gehoert_dem_betrieb(
+                db, tenant_id, channex_id, gruppe_zu_mandant
+            ):
+                skipped += 1
+                continue
 
             if reuse_property_id:
                 db.table("properties").update(row).eq(

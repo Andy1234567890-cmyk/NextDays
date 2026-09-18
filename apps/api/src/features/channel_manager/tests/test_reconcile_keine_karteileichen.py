@@ -31,14 +31,29 @@ ist der Grund, warum eine Zeile, die IMMER wirft, durch alle Gates kam.
 Der Store hier ist deshalb streng: er kennt die Unique-Indizes der echten
 Tabelle und wirft 42P10 für ein `on_conflict`, das keiner davon deckt — und
 23505, wenn zwei aktive Map-Zeilen für dasselbe Objekt entstehen sollen.
+
+DIE MANDANTENGRENZE (18.09.2026)
+--------------------------------
+Beim Aufräumen des Obigen kam heraus, dass drei Häuser eines NEUEN Kunden
+zusätzlich in der Channex-Gruppe eines ANDEREN Betriebs hingen. Wir fahren ein
+einziges Channex-Konto für die ganze Plattform; die Gruppe ist die einzige
+Grenze — und Channex erlaubt eine Property in mehreren Gruppen. Der Abgleich
+hätte die fremden Häuser gespiegelt, sobald er wieder durchlief.
+
+Die letzten drei Tests halten den Riegel fest, der das verhindert. Er ist
+fail-closed: kein Objekt ist besser als das Objekt des falschen Kunden.
 """
 from typing import Any
 
 from postgrest.exceptions import APIError
 
+from src.features.channel_manager.channex_client import ChannexError
 from src.features.channel_manager.property_mapping import PropertyMappingMixin
 
 TENANT = "t-1"
+FREMDER_BETRIEB = "t-2"
+GRUPPE = "g-1"
+FREMDE_GRUPPE = "g-2"
 CHANNEX_PROPERTY = "cx-1"
 
 # Was die echte Tabelle wirklich erzwingt (an der Live-DB nachgesehen,
@@ -118,6 +133,10 @@ class _Query:
         self.filter.append((spalte, "eq", wert))
         return self
 
+    def neq(self, spalte: str, wert: Any) -> "_Query":
+        self.filter.append((spalte, "neq", wert))
+        return self
+
     def in_(self, spalte: str, werte: list[Any]) -> "_Query":
         self.filter.append((spalte, "in", list(werte)))
         return self
@@ -138,6 +157,8 @@ class _Query:
         for spalte, art, wert in self.filter:
             ist = zeile.get(spalte)
             if art == "eq" and ist != wert:
+                return False
+            if art == "neq" and ist == wert:
                 return False
             if art == "in" and ist not in wert:
                 return False
@@ -218,19 +239,46 @@ class _Store:
 
 
 class _Channex:
+    """Channex-Auskunft, soweit der Abgleich sie braucht.
+
+    `gruppen` bildet nach, was live der Ausloeser war: eine Property kann bei
+    Channex in MEHREREN Gruppen haengen.
+    """
+
     is_configured = True
+
+    def __init__(self, gruppen: dict[str, list[str]] | None = None) -> None:
+        self.gruppen = gruppen or {CHANNEX_PROPERTY: [GRUPPE]}
+
+    def get_property(self, channex_id: str) -> dict[str, Any]:
+        return {
+            "data": {
+                "relationships": {
+                    "groups": {
+                        "data": [
+                            {"id": g} for g in self.gruppen.get(channex_id, [])
+                        ]
+                    }
+                }
+            }
+        }
 
 
 class _Reconcile(PropertyMappingMixin):
     """Nur das Mapping-Mixin; die Nachbarn sind für diesen Pfad Kulisse."""
 
-    def __init__(self, db: _Store, live: list[dict[str, Any]]) -> None:
+    def __init__(
+        self,
+        db: _Store,
+        live: list[dict[str, Any]],
+        gruppen: dict[str, list[str]] | None = None,
+    ) -> None:
         self._db = db
-        self._channex = _Channex()
+        self._channex = _Channex(gruppen)
         self._live = live
 
     def _tenant_group_id(self, _db: object, _tenant_id: str) -> str:
-        return "g-1"
+        return GRUPPE
 
     def _live_channex_properties_for_group(
         self, _group_id: str
@@ -253,7 +301,14 @@ class _Reconcile(PropertyMappingMixin):
         return None
 
 
-def _dienst(db: _Store) -> _Reconcile:
+def _dienst(
+    db: _Store, gruppen: dict[str, list[str]] | None = None
+) -> _Reconcile:
+    # Wer welche Channex-Gruppe besitzt — die Grenze zwischen den Betrieben.
+    db.tabellen["channex_group_map"] = [
+        {"id": "m-1", "tenant_id": TENANT, "channex_group_id": GRUPPE},
+        {"id": "m-2", "tenant_id": FREMDER_BETRIEB, "channex_group_id": FREMDE_GRUPPE},
+    ]
     return _Reconcile(
         db,
         [
@@ -266,6 +321,7 @@ def _dienst(db: _Store) -> _Reconcile:
                 },
             }
         ],
+        gruppen,
     )
 
 
@@ -374,3 +430,63 @@ def test_der_store_faengt_ein_on_conflict_ohne_index() -> None:
         assert "42P10" in str(exc)
     else:
         raise AssertionError("ein on_conflict ohne Unique-Index muss 42P10 werfen")
+
+
+# -- Die Mandantengrenze ----------------------------------------------------
+
+
+def test_bereits_fremd_verknuepfte_property_wird_nicht_gespiegelt() -> None:
+    """Gehoert die Property schon einem anderen Betrieb, entsteht hier nichts."""
+    db = _Store()
+    dienst = _dienst(db)
+    db.tabellen["channex_property_map"] = [
+        {
+            "id": "fremd-1",
+            "tenant_id": FREMDER_BETRIEB,
+            "property_id": "fremdes-objekt",
+            "channex_property_id": CHANNEX_PROPERTY,
+            "deleted_at": None,
+        }
+    ]
+
+    ergebnis = dienst.reconcile_properties_for_tenant(TENANT)
+
+    assert ergebnis["created"] == 0
+    assert ergebnis["skipped"] == 1
+    assert _objekte(db) == []
+    # Die fremde Zeile bleibt unangetastet.
+    assert len(db.tabellen["channex_property_map"]) == 1
+
+
+def test_property_in_zwei_betriebsgruppen_wird_nicht_gespiegelt() -> None:
+    """Der reale Fall: dasselbe Haus haengt in zwei Betriebs-Gruppen.
+
+    Das ist nicht entscheidbar — also wird NICHT geraten, sondern
+    uebersprungen. Mit dem alten Verhalten waere das Haus im Konto des
+    falschen Kunden gelandet.
+    """
+    db = _Store()
+    dienst = _dienst(db, gruppen={CHANNEX_PROPERTY: [GRUPPE, FREMDE_GRUPPE]})
+
+    ergebnis = dienst.reconcile_properties_for_tenant(TENANT)
+
+    assert ergebnis["created"] == 0
+    assert ergebnis["skipped"] == 1
+    assert _objekte(db) == []
+
+
+def test_ohne_auskunft_von_channex_entsteht_kein_objekt() -> None:
+    """Kein Urteil ohne Auskunft (Wurzel 5): faellt Channex aus, wird nichts
+    angelegt, statt die Herkunft zu unterstellen."""
+    db = _Store()
+    dienst = _dienst(db)
+
+    def _wirft(_channex_id: str) -> dict[str, Any]:
+        raise ChannexError("Channex nicht erreichbar", status_code=502)
+
+    dienst._channex.get_property = _wirft  # noqa: SLF001 — Attrappe
+
+    ergebnis = dienst.reconcile_properties_for_tenant(TENANT)
+
+    assert ergebnis["created"] == 0
+    assert _objekte(db) == []
