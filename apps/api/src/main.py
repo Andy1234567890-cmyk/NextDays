@@ -93,6 +93,7 @@ from .features.personal.router import router as personal_router
 from .features.platform_admin.router import router as platform_admin_router
 from .features.pricing.router import router as pricing_router
 from .features.privacy_settings.router import router as privacy_settings_router
+from .features.pro_tools.router import router as pro_tools_router
 from .features.produktwissen.router import router as produktwissen_router
 from .features.properties.router import router as properties_router
 from .features.property_custom_fields.router import (
@@ -208,6 +209,9 @@ _SLICE_ROUTERS = [
     # Buchungsberechtigungen (Airbnb „Voraussetzungen für Gäste", 0718):
     # Sofortbuchung oder Anfrage, und für wen die Sofortbuchung gilt.
     booking_access_router,
+    # Professionelle Tools (Airbnb 2499) samt Massenbearbeitung
+    # (Booking.com Gruppen-Extranet, 0720).
+    pro_tools_router,
     site_config_manage_router,
     site_config_public_router,
     site_config_ki_router,
