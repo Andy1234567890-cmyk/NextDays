@@ -8775,7 +8775,8 @@
       "rangeDay": "Dia",
       "rangeMonth": "Mês",
       "rangeTwoWeeks": "2 semanas",
-      "rangeWeek": "Semana"
+      "rangeWeek": "Semana",
+      "createBooking": "Criar reserva"
     },
     "board": {
       "moveFailed": "Não é possível mover.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "aprovado",
         "abgelehnt": "recusado"
       }
+    },
+    "blockDialog": {
+      "property": "Alojamento",
+      "from": "De",
+      "to": "Até",
+      "label": "Etiqueta",
+      "labelPlaceholder": "ex. renovação da casa de banho",
+      "labelHint": "Opcional — sem texto o bloqueio chama-se apenas «Bloqueado».",
+      "nights": "{count, plural, one {# noite} other {# noites}}",
+      "cancel": "Cancelar",
+      "saved": "{count, plural, one {# noite bloqueada} other {# noites bloqueadas}}",
+      "bookedConflict": "Não é possível bloquear: {count, plural, one {# noite já está reservada} other {# noites já estão reservadas}} ({days}). Encurte o período."
     }
   },
   "seasons": {

@@ -8775,7 +8775,8 @@
       "rangeDay": "Diena",
       "rangeMonth": "Mėnuo",
       "rangeTwoWeeks": "2 savaitės",
-      "rangeWeek": "Savaitė"
+      "rangeWeek": "Savaitė",
+      "createBooking": "Sukurti rezervaciją"
     },
     "board": {
       "moveFailed": "Perkelti neįmanoma.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "patvirtinta",
         "abgelehnt": "atmesta"
       }
+    },
+    "blockDialog": {
+      "property": "Objektas",
+      "from": "Nuo",
+      "to": "Iki",
+      "label": "Žymė",
+      "labelPlaceholder": "pvz., vonios remontas",
+      "labelHint": "Neprivaloma — be teksto blokavimas vadinamas tik „Užblokuota“.",
+      "nights": "{count, plural, one {# naktis} few {# naktys} other {# nakčių}}",
+      "cancel": "Atšaukti",
+      "saved": "{count, plural, one {# naktis užblokuota} few {# naktys užblokuotos} other {# nakčių užblokuota}}",
+      "bookedConflict": "Blokuoti negalima: {count, plural, one {# naktis jau užsakyta} few {# naktys jau užsakytos} other {# nakčių jau užsakyta}} ({days}). Sutrumpinkite laikotarpį."
     }
   },
   "seasons": {

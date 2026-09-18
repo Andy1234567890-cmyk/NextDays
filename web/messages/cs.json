@@ -8775,7 +8775,8 @@
       "rangeDay": "Den",
       "rangeMonth": "Měsíc",
       "rangeTwoWeeks": "2 týdny",
-      "rangeWeek": "Týden"
+      "rangeWeek": "Týden",
+      "createBooking": "Vytvořit rezervaci"
     },
     "board": {
       "moveFailed": "Přesun není možný.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "schváleno",
         "abgelehnt": "zamítnuto"
       }
+    },
+    "blockDialog": {
+      "property": "Objekt",
+      "from": "Od",
+      "to": "Do",
+      "label": "Označení",
+      "labelPlaceholder": "např. rekonstrukce koupelny",
+      "labelHint": "Nepovinné — bez textu se blokace jmenuje jen „Blokováno“.",
+      "nights": "{count, plural, one {# noc} few {# noci} other {# nocí}}",
+      "cancel": "Zrušit",
+      "saved": "{count, plural, one {# noc blokována} few {# noci blokovány} other {# nocí blokováno}}",
+      "bookedConflict": "Blokace není možná: {count, plural, one {# noc je} few {# noci jsou} other {# nocí je}} již rezervováno ({days}). Zkraťte období."
     }
   },
   "seasons": {

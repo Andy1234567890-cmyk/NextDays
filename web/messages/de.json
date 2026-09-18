@@ -8796,7 +8796,8 @@
       "rangeTwoWeeks": "2 Wochen",
       "rangeMonth": "Monat",
       "propertyDetails": "Objekt-Details",
-      "chooseTimeframe": "Zeitfenster wählen…"
+      "chooseTimeframe": "Zeitfenster wählen…",
+      "createBooking": "Reservierung anlegen"
     },
     "board": {
       "moveFailed": "Verschieben nicht möglich.",
@@ -9068,6 +9069,18 @@
         "genehmigt": "genehmigt",
         "abgelehnt": "abgelehnt"
       }
+    },
+    "blockDialog": {
+      "property": "Objekt",
+      "from": "Von",
+      "to": "Bis",
+      "label": "Beschriftung",
+      "labelPlaceholder": "z. B. Renovierung Bad",
+      "labelHint": "Optional — ohne Text heißt die Sperre nur „Gesperrt“.",
+      "nights": "{count, plural, one {# Nacht} other {# Nächte}}",
+      "cancel": "Abbrechen",
+      "saved": "{count, plural, one {# Nacht gesperrt} other {# Nächte gesperrt}}",
+      "bookedConflict": "Sperren nicht möglich: {count, plural, one {# Nacht ist} other {# Nächte sind}} bereits gebucht ({days}). Kürze den Zeitraum."
     }
   },
   "seasons": {

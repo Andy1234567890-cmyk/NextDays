@@ -83,7 +83,12 @@ export function CalendarHeader({
   onToday: () => void;
   onJump: (isoDate: string) => void;
   jumpValue: string; // YYYY-MM-DD des aktuellen Startdatums
-  onCreate: (kind: "booking" | "blocked") => void;
+  /** `at` ist die Bildschirmlage des angeklickten Eintrags: das Board hängt
+   *  das Aktionsmenü dort auf, genau wie nach dem Ziehen im Raster. Aus der
+   *  Rechteckmitte statt aus `clientX/Y`, damit es auch bei Bedienung per
+   *  Tastatur stimmt — dort sind die Mauskoordinaten 0 und das Menü klebte in
+   *  der linken oberen Ecke. */
+  onCreate: (kind: "booking" | "blocked", at: { x: number; y: number }) => void;
   // Optionales Ansicht-Dropdown (Timeline/Buchungen/…), links neben dem Titel,
   // damit Ansicht + Titel + Navigation in EINER Kopfzeile sitzen.
   viewSwitcher?: ReactNode;
@@ -216,19 +221,29 @@ export function CalendarHeader({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onCreate("booking")}>
+            {/* Beide Beschriftungen standen bis zum 18.09.2026 als deutsche
+                Literale hier — in einer Oberfläche mit 24 Sprachen las ein
+                dänischer Betrieb „Reservierung anlegen". Die Schlüssel gab es
+                längst. */}
+            <DropdownMenuItem onClick={(e) => onCreate("booking", mitte(e))}>
               <Icon icon="ph:note-pencil" className="size-4" />
-              Reservierung anlegen
+              {t("header.createBooking")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onCreate("blocked")}>
+            <DropdownMenuItem onClick={(e) => onCreate("blocked", mitte(e))}>
               <Icon icon="ph:calendar-x" className="size-4" />
-              Sperrzeitraum anlegen
+              {t("calendarActionMenu.createBlockedPeriod")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </div>
   );
+}
+
+/** Bildschirmmitte des angeklickten Eintrags — siehe `onCreate`. */
+function mitte(e: { currentTarget: HTMLElement }): { x: number; y: number } {
+  const r = e.currentTarget.getBoundingClientRect();
+  return { x: r.left, y: r.bottom };
 }
 
 function ToggleRow({

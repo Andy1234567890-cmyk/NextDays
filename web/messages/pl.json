@@ -8775,7 +8775,8 @@
       "rangeDay": "Dzień",
       "rangeMonth": "Miesiąc",
       "rangeTwoWeeks": "2 tygodnie",
-      "rangeWeek": "Tydzień"
+      "rangeWeek": "Tydzień",
+      "createBooking": "Utwórz rezerwację"
     },
     "board": {
       "moveFailed": "Przeniesienie niemożliwe.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "zatwierdzono",
         "abgelehnt": "odrzucono"
       }
+    },
+    "blockDialog": {
+      "property": "Obiekt",
+      "from": "Od",
+      "to": "Do",
+      "label": "Etykieta",
+      "labelPlaceholder": "np. remont łazienki",
+      "labelHint": "Opcjonalne — bez tekstu blokada nazywa się tylko „Zablokowane”.",
+      "nights": "{count, plural, one {# noc} few {# noce} many {# nocy} other {# nocy}}",
+      "cancel": "Anuluj",
+      "saved": "{count, plural, one {# noc zablokowana} few {# noce zablokowane} many {# nocy zablokowanych} other {# nocy zablokowanych}}",
+      "bookedConflict": "Nie można zablokować: {count, plural, one {# noc jest} few {# noce są} many {# nocy jest} other {# nocy jest}} już zarezerwowane ({days}). Skróć okres."
     }
   },
   "seasons": {

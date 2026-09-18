@@ -8775,7 +8775,8 @@
       "rangeDay": "Päev",
       "rangeMonth": "Kuu",
       "rangeTwoWeeks": "2 nädalat",
-      "rangeWeek": "Nädal"
+      "rangeWeek": "Nädal",
+      "createBooking": "Loo broneering"
     },
     "board": {
       "moveFailed": "Teisaldamine pole võimalik.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "kinnitatud",
         "abgelehnt": "keeldutud"
       }
+    },
+    "blockDialog": {
+      "property": "Objekt",
+      "from": "Alates",
+      "to": "Kuni",
+      "label": "Tähis",
+      "labelPlaceholder": "nt vannitoa renoveerimine",
+      "labelHint": "Valikuline — ilma tekstita on blokeering lihtsalt „Blokeeritud“.",
+      "nights": "{count, plural, one {# öö} other {# ööd}}",
+      "cancel": "Loobu",
+      "saved": "{count, plural, one {# öö blokeeritud} other {# ööd blokeeritud}}",
+      "bookedConflict": "Blokeerimine pole võimalik: {count, plural, one {# öö on} other {# ööd on}} juba broneeritud ({days}). Lühenda perioodi."
     }
   },
   "seasons": {

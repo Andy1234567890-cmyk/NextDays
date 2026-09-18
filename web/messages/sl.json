@@ -8775,7 +8775,8 @@
       "rangeDay": "Dan",
       "rangeMonth": "Mesec",
       "rangeTwoWeeks": "2 tedna",
-      "rangeWeek": "Teden"
+      "rangeWeek": "Teden",
+      "createBooking": "Ustvari rezervacijo"
     },
     "board": {
       "moveFailed": "Premik ni mogoč.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "odobreno",
         "abgelehnt": "zavrnjeno"
       }
+    },
+    "blockDialog": {
+      "property": "Objekt",
+      "from": "Od",
+      "to": "Do",
+      "label": "Oznaka",
+      "labelPlaceholder": "npr. prenova kopalnice",
+      "labelHint": "Neobvezno — brez besedila se blokada imenuje le »Blokirano«.",
+      "nights": "{count, plural, one {# noč} two {# noči} few {# noči} other {# noči}}",
+      "cancel": "Prekliči",
+      "saved": "{count, plural, one {# noč blokirana} two {# noči blokirani} few {# noči blokirane} other {# noči blokiranih}}",
+      "bookedConflict": "Blokiranje ni mogoče: {count, plural, one {# noč je} two {# noči sta} few {# noči so} other {# noči je}} že rezervirano ({days}). Skrajšajte obdobje."
     }
   },
   "seasons": {

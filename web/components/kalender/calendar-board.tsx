@@ -20,6 +20,8 @@ import {
   DEFAULT_VIEW,
 } from "@/components/kalender/calendar-header";
 import { CalendarActionMenu } from "@/components/kalender/calendar-action-menu";
+import { SperrzeitraumDialog } from "@/components/kalender/sperrzeitraum-dialog";
+import { isoPlus } from "@/lib/dates";
 import { BulkEditDialog } from "@/components/kalender/bulk-edit-dialog";
 import { ReservationDetailSlider } from "@/components/kalender/reservation-detail-slider";
 import { PropertyLabel } from "@/components/kalender/property-label";
@@ -345,6 +347,9 @@ type Segment = {
   source: AvailabilitySource;
   reservation?: Reservation; // verknüpfte Buchung (falls gefunden)
   stopSell?: StopSellDay; // Stop-Sell-Details (Grund/Adressat) bei status=stop_sell
+  /** Beschriftung einer manuellen Sperre (`availability.label`) — „Renovierung
+   *  Bad" statt nur „Gesperrt". `undefined` = keine gesetzt. */
+  blockLabel?: string;
 };
 
 // Rechtsklick-Kontextmenü auf einem Sperr-/Stop-Sell-Balken: Position am Cursor
@@ -405,6 +410,41 @@ function debugOrigin(seg: Segment): string {
   return parts.join(" · ");
 }
 
+/**
+ * Die Tagesmap EINES Objekts aus einer der Objekt×Tag-Sammlungen.
+ *
+ * Ein Objekt, für das noch nichts geladen ist, hat keinen Eintrag — die leere
+ * Map ist hier kein erfundener Ersatzwert, sondern die zutreffende Aussage
+ * „für dieses Objekt liegt in diesem Fenster nichts vor".
+ *
+ * Als Helfer und nicht neunmal als `x[p.id] ?? {}`: jede dieser Stellen ist ein
+ * Verzweigungspunkt, und die Render-Schleife trug sie alle. Sie hierher zu
+ * ziehen macht die Schleife lesbar UND nimmt ihr neun Punkte Komplexität.
+ */
+function tagesMap<T>(
+  quelle: Record<string, Record<string, T>>,
+  pid: string,
+): Record<string, T> {
+  return quelle[pid] ?? {};
+}
+
+/**
+ * Die Überschrift eines nicht gebuchten Balkens: die BESCHRIFTUNG der Sperre,
+ * sonst das Statuswort.
+ *
+ * „Renovierung Bad" beantwortet die Frage, die „Gesperrt" offenlässt. Ohne
+ * Beschriftung bleibt es beim Status — es wird keine Begründung erfunden
+ * (Wurzel 4).
+ *
+ * Eigene Funktion und kein Zweig in `segmentLabel`: dort wird sie an ZWEI
+ * Stellen gebraucht (reiner Sperrbalken und die Überlagerung mit Stop-Sell),
+ * und beide Male dieselbe Ableitung hinzuschreiben hiesse, dass eine benannte
+ * Sperre unter einem Portal-Stopp ihren Namen verliert.
+ */
+function sperrUeberschrift(seg: Segment, t: (key: string) => string): string {
+  return (hasBlock(seg.status) && seg.blockLabel) || statusLabels(t)[seg.status];
+}
+
 // Kanal-Logo eines Balkens (Iconify-Brand-Icon ODER lokales SVG).
 // Aufeinanderfolgende Tage gleichen (nicht-offenen) Status+Quelle bündeln.
 // resByDay ordnet jedem belegten Tag die zugehörige Buchung zu (für Gastname +
@@ -415,6 +455,7 @@ function toSegments(
   resByDay: Record<string, Reservation>,
   dates: Date[],
   stopSellByDay: Record<string, StopSellDay> = {},
+  labelByDay: Record<string, string | null> = {},
 ): Segment[] {
   const segs: Segment[] = [];
   let cur: Segment | null = null;
@@ -481,6 +522,12 @@ function toSegments(
       cur = null;
       return;
     }
+    // Beschriftung der manuellen Sperre dieses Tages. Sie bricht das Segment
+    // mit: zwei Sperren direkt hintereinander („Renovierung Bad", danach
+    // „Eigennutzung Ostern") sind ZWEI Vorgänge, und ein durchgehender Balken
+    // trüge nur den Text des ersten — die zweite Sperre wäre unsichtbar
+    // benannt. Dieselbe Überlegung wie beim Stop-Sell direkt darunter.
+    const lbl = hasBlock(s) ? (labelByDay[key(d)] ?? undefined) : undefined;
     // Stop-Sell-Segmente nur bündeln, wenn Grund + Adressat gleich bleiben
     // (sonst verschluckt ein Balken die Details des nächsten).
     const sameStop =
@@ -494,6 +541,7 @@ function toSegments(
       cur.source === src &&
       cur.reservation?.id === res?.id &&
       sameStop &&
+      cur.blockLabel === lbl &&
       cur.start + cur.span === i
     ) {
       cur.span += 1;
@@ -505,6 +553,7 @@ function toSegments(
         source: src,
         reservation: res,
         stopSell: stop,
+        blockLabel: lbl,
       };
       segs.push(cur);
     }
@@ -599,11 +648,11 @@ function segmentLabel(
       seg.stopSell?.agency_name || t("calendarBoard.stopSellAllChannels");
     // Liegt zusätzlich eine Sperre darauf, führt das Label mit BEIDEM — sonst
     // liest sich der Balken wie ein reiner Stop-Sell (Tag wäre noch verfügbar).
-    return [statusLabels(t)[seg.status], who, seg.stopSell?.reason]
+    return [sperrUeberschrift(seg, t), who, seg.stopSell?.reason]
       .filter(Boolean)
       .join(" · ");
   }
-  if (seg.status !== "booked") return statusLabels(t)[seg.status];
+  if (seg.status !== "booked") return sperrUeberschrift(seg, t);
   const guest = seg.reservation?.guest_name?.trim();
   // Eigentümer-Aufenthalt: ohne Namen NICHT auf den Kanal zurückfallen — das
   // liest sich sonst wie eine Portalbuchung, obwohl gar keine dahintersteht.
@@ -717,6 +766,10 @@ export function CalendarBoard({
   const [todayKey, setTodayKey] = useState("");
   const [avail, setAvail] = useState<Record<string, Record<string, AvailabilityStatus>>>({});
   const [sources, setSources] = useState<Record<string, Record<string, AvailabilitySource>>>({});
+  // Beschriftung der manuellen Sperren je Objekt × Tag (`availability.label`).
+  // Eigener Zustand neben `sources`, weil sie denselben Weg nimmt: aus dem
+  // Board-Abruf in die Tagesmap und von dort in den Balken.
+  const [blockLabels, setBlockLabels] = useState<Record<string, Record<string, string | null>>>({});
   // Tagespreis + Min-Stay je Objekt/Tag (aus get_availability) für die Anzeige.
   const [prices, setPrices] = useState<Record<string, Record<string, number | null>>>({});
   // Objekt-Währung je property_id (aus dem Board/Rate-Plan) für die Tagespreise.
@@ -796,6 +849,12 @@ export function CalendarBoard({
   const [drag, setDrag] = useState<{ pid: string; from: number; to: number } | null>(null);
   const [sel, setSel] = useState<{ pid: string; from: number; to: number } | null>(null);
   const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
+  // Offener „Sperrzeitraum anlegen"-Dialog. `von`/`bis` sind beide INKLUSIV —
+  // so, wie der Nutzer sie liest; die Umrechnung aufs exklusive API-Ende macht
+  // der Dialog selbst.
+  const [sperre, setSperre] = useState<
+    { pid: string; von: string; bis: string } | null
+  >(null);
   // Reservierungs-Assistent: Zeitraum (YYYY-MM-DD) + Objekt, wenn offen.
   // ownerStay: der Assistent startet dann mit vorbelegter Art „Eigennutzung".
   const [wizard, setWizard] = useState<{
@@ -1462,7 +1521,7 @@ export function CalendarBoard({
     const dayKeys = winDays.map((d) => key(d));
     let bookedNights = 0;
     for (const p of shown) {
-      const statusMap = avail[p.id] ?? {};
+      const statusMap = tagesMap(avail, p.id);
       for (const dk of dayKeys) if (statusMap[dk] === "booked") bookedNights += 1;
     }
     const totalNights = shown.length * dayKeys.length;
@@ -1641,6 +1700,9 @@ export function CalendarBoard({
       );
       setSources((prev: Record<string, Record<string, AvailabilitySource>>) =>
         mergeInto(prev, (d) => [d.date, d.source]),
+      );
+      setBlockLabels((prev: Record<string, Record<string, string | null>>) =>
+        mergeInto(prev, (d) => [d.date, d.label ?? null]),
       );
       setPrices((prev: Record<string, Record<string, number | null>>) =>
         mergeInto(prev, (d) => [d.date, d.price]),
@@ -2071,16 +2133,41 @@ export function CalendarBoard({
   const titleMonth = visibleDay ? monthLabels(t)[visibleDay.getMonth()] : "";
   const titleYear = visibleDay ? `${visibleDay.getFullYear()}` : "";
 
-  // „Erstellen"-Menü im Kopf: Sperren geschieht im Raster per Ziehen;
-  // „Reservierung" öffnet den Assistenten mit dem ersten Objekt ab morgen.
+  // „Erstellen"-Menü im Kopf. Beide Einträge belegen dasselbe vor: erstes
+  // Objekt, zwei Nächte ab morgen.
+  //
+  // „Sperrzeitraum anlegen" tat bis zum 18.09.2026 NICHTS: die Funktion hatte
+  // nur einen `booking`-Zweig, der Eintrag stand trotzdem im Menü und war
+  // anklickbar. Ein Knopf, der still nichts tut, ist schlimmer als keiner —
+  // der Nutzer sucht den Fehler bei sich („Sperrzeitraum Anlegen geht nicht").
+  //
+  // Die Sperre wird hier NICHT sofort geschrieben. Sie setzt die Verfügbarkeit
+  // auf 0 und wirkt über alle Kanäle; sie auf einen Menüklick hin an einem
+  // Objekt und an Tagen auszuführen, die der Nutzer nie gewählt hat, wäre ein
+  // Eingriff in den Verkauf ohne seine Zustimmung. Stattdessen öffnet sich der
+  // Dialog, in dem er Objekt, Zeitraum und Beschriftung setzt.
+  //
+  // Geschrieben wird von dort über `blockRange` — denselben Aufruf, den auch
+  // das Aktionsmenü nach dem Ziehen benutzt. EIN Sperr-Pfad, nicht zwei
+  // (Wurzel 1).
   function onCreate(kind: "booking" | "blocked") {
-    if (kind === "booking" && start && properties[0]) {
+    if (!start || !properties[0]) return;
+    if (kind === "booking") {
       setWizard({
         pid: properties[0].id,
         checkIn: key(addDays(start, 1)),
         checkOut: key(addDays(start, 3)),
       });
+      return;
     }
+    // Der Dialog belegt denselben Zeitraum vor wie der Assistent oben: zwei
+    // Nächte ab morgen. Beide Enden INKLUSIV, wie der Nutzer sie liest — die
+    // Umrechnung auf das exklusive API-Ende macht der Dialog.
+    setSperre({
+      pid: properties[0].id,
+      von: key(addDays(start, 1)),
+      bis: key(addDays(start, 2)),
+    });
   }
 
   return (
@@ -2441,17 +2528,17 @@ export function CalendarBoard({
             <div ref={gridRef}>
               {shown.map((p) => {
                 const statusMap = avail[p.id] ?? {};
-                const sourceMap = sources[p.id] ?? {};
-                const priceMap = prices[p.id] ?? {};
-                const priceSrcMap = priceSources[p.id] ?? {};
-                const factorsMap = priceFactors[p.id] ?? {};
-                const minStayMap = minStays[p.id] ?? {};
-                const restrictMap = restrictions[p.id] ?? {};
+                const sourceMap = tagesMap(sources, p.id);
+                const priceMap = tagesMap(prices, p.id);
+                const priceSrcMap = tagesMap(priceSources, p.id);
+                const factorsMap = tagesMap(priceFactors, p.id);
+                const minStayMap = tagesMap(minStays, p.id);
+                const restrictMap = tagesMap(restrictions, p.id);
                 const resList = resByProp[p.id] ?? [];
                 // Tag→Buchung-Map fürs Segment-Rendering aus der ID-Liste ableiten
                 // (single source of truth = die Liste; Realtime pflegt nur die Liste).
                 const resMap = reservationsByDay(resList);
-                const stopMap = stopSell[p.id] ?? {};
+                const stopMap = tagesMap(stopSell, p.id);
                 // Objekt-Währung aus dem Board (Rate-Plan) — die zuverlässige
                 // Preisquelle; fällt auf die Reservierungs-Währung zurück, falls
                 // (noch) keine Board-Währung vorliegt. Kein €-Hardcode.
@@ -2459,7 +2546,10 @@ export function CalendarBoard({
                   currencyByProp[p.id] ??
                   resList.find((r) => r.currency)?.currency ??
                   null;
-                const segs = toSegments(statusMap, sourceMap, resMap, dates, stopMap);
+                const segs = toSegments(
+                  statusMap, sourceMap, resMap, dates, stopMap,
+                  tagesMap(blockLabels, p.id),
+                );
                 // Diagnose (nur Entwicklung): zeigt je Objekt, welche Tage der
                 // Server als gesperrt liefert und ob daraus ein Balken wurde.
                 // Entfernen, sobald die Sperr-Anzeige belegt funktioniert.
@@ -3071,6 +3161,32 @@ export function CalendarBoard({
       )}
 
       {/* Reservierungs-Assistent (3 Schritte, eigene Komponente) */}
+      {sperre && (
+        <SperrzeitraumDialog
+          properties={properties.map((p) => ({ id: p.id, title: p.title }))}
+          initialPropertyId={sperre.pid}
+          initialStart={sperre.von}
+          initialEnd={sperre.bis}
+          // Die Belegung steht im Board bereits — `avail` wird für jedes Objekt
+          // des Zeitraums geladen und per Realtime nachgeführt. Ein eigener
+          // Abruf im Dialog wäre eine zweite Quelle für dieselbe Frage und
+          // könnte etwas anderes sagen als das Gitter dahinter.
+          belegteNaechte={(zielPid, von, bisInklusiv) => {
+            const tage = avail[zielPid] ?? {};
+            const treffer: string[] = [];
+            for (let d = von; d <= bisInklusiv; d = isoPlus(d, 1)) {
+              if (tage[d] === "booked") treffer.push(d);
+            }
+            return treffer;
+          }}
+          onClose={() => setSperre(null)}
+          // Neu laden statt den Zustand hier von Hand nachzuziehen: der Dialog
+          // kann ein ANDERES Objekt gesperrt haben als das im Raster gewählte,
+          // und eine punktuelle Korrektur träfe dann die falsche Zeile.
+          onSaved={() => load()}
+        />
+      )}
+
       {wizard && (
         <ReservationWizard
           open

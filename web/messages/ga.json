@@ -8775,7 +8775,8 @@
       "rangeDay": "Lá",
       "rangeMonth": "Mí",
       "rangeTwoWeeks": "2 sheachtain",
-      "rangeWeek": "Seachtain"
+      "rangeWeek": "Seachtain",
+      "createBooking": "Cruthaigh áirithint"
     },
     "board": {
       "moveFailed": "Ní féidir bogadh.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "ceadaithe",
         "abgelehnt": "diúltaithe"
       }
+    },
+    "blockDialog": {
+      "property": "Réadmhaoin",
+      "from": "Ó",
+      "to": "Go",
+      "label": "Lipéad",
+      "labelPlaceholder": "m.sh. athchóiriú an tseomra folctha",
+      "labelHint": "Roghnach — gan téacs ní thugtar ar an mbac ach “Bactha”.",
+      "nights": "{count, plural, one {# oíche} two {# oíche} few {# oíche} other {# oíche}}",
+      "cancel": "Cealaigh",
+      "saved": "{count, plural, one {# oíche bactha} two {# oíche bactha} few {# oíche bactha} other {# oíche bactha}}",
+      "bookedConflict": "Ní féidir bac a chur: tá {count, plural, one {# oíche} two {# oíche} few {# oíche} other {# oíche}} curtha in áirithe cheana ({days}). Giorraigh an tréimhse."
     }
   },
   "seasons": {

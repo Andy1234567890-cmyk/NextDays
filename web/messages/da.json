@@ -8775,7 +8775,8 @@
       "rangeDay": "Dag",
       "rangeMonth": "Måned",
       "rangeTwoWeeks": "2 uger",
-      "rangeWeek": "Uge"
+      "rangeWeek": "Uge",
+      "createBooking": "Opret reservation"
     },
     "board": {
       "moveFailed": "Flytning er ikke mulig.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "Godkendt",
         "abgelehnt": "Afvist"
       }
+    },
+    "blockDialog": {
+      "property": "Objekt",
+      "from": "Fra",
+      "to": "Til",
+      "label": "Betegnelse",
+      "labelPlaceholder": "f.eks. renovering af bad",
+      "labelHint": "Valgfrit — uden tekst hedder spærringen blot “Spærret”.",
+      "nights": "{count, plural, one {# nat} other {# nætter}}",
+      "cancel": "Annuller",
+      "saved": "{count, plural, one {# nat spærret} other {# nætter spærret}}",
+      "bookedConflict": "Kan ikke spærre: {count, plural, one {# nat er} other {# nætter er}} allerede booket ({days}). Forkort perioden."
     }
   },
   "seasons": {

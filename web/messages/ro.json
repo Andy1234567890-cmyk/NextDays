@@ -8775,7 +8775,8 @@
       "rangeDay": "Zi",
       "rangeMonth": "Lună",
       "rangeTwoWeeks": "2 săptămâni",
-      "rangeWeek": "Săptămână"
+      "rangeWeek": "Săptămână",
+      "createBooking": "Creează rezervare"
     },
     "board": {
       "moveFailed": "Mutarea nu este posibilă.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "aprobat",
         "abgelehnt": "refuzat"
       }
+    },
+    "blockDialog": {
+      "property": "Proprietate",
+      "from": "De la",
+      "to": "Până la",
+      "label": "Etichetă",
+      "labelPlaceholder": "de ex. renovare baie",
+      "labelHint": "Opțional — fără text blocarea se numește doar „Blocat”.",
+      "nights": "{count, plural, one {# noapte} few {# nopți} other {# de nopți}}",
+      "cancel": "Anulează",
+      "saved": "{count, plural, one {# noapte blocată} few {# nopți blocate} other {# de nopți blocate}}",
+      "bookedConflict": "Blocarea nu este posibilă: {count, plural, one {# noapte este} few {# nopți sunt} other {# de nopți sunt}} deja rezervate ({days}). Scurtați perioada."
     }
   },
   "seasons": {

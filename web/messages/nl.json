@@ -8775,7 +8775,8 @@
       "rangeDay": "Dag",
       "rangeMonth": "Maand",
       "rangeTwoWeeks": "2 weken",
-      "rangeWeek": "Week"
+      "rangeWeek": "Week",
+      "createBooking": "Reservering aanmaken"
     },
     "board": {
       "moveFailed": "Verplaatsen niet mogelijk.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "goedgekeurd",
         "abgelehnt": "afgewezen"
       }
+    },
+    "blockDialog": {
+      "property": "Object",
+      "from": "Van",
+      "to": "Tot",
+      "label": "Omschrijving",
+      "labelPlaceholder": "bijv. renovatie badkamer",
+      "labelHint": "Optioneel — zonder tekst heet de blokkade alleen “Geblokkeerd”.",
+      "nights": "{count, plural, one {# nacht} other {# nachten}}",
+      "cancel": "Annuleren",
+      "saved": "{count, plural, one {# nacht geblokkeerd} other {# nachten geblokkeerd}}",
+      "bookedConflict": "Blokkeren niet mogelijk: {count, plural, one {# nacht is} other {# nachten zijn}} al geboekt ({days}). Kort de periode in."
     }
   },
   "seasons": {

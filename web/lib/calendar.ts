@@ -34,6 +34,9 @@ export type DayAvailability = {
   date: string; // YYYY-MM-DD
   status: AvailabilityStatus;
   source: AvailabilitySource;
+  /** Beschriftung einer manuellen Sperre. `null`/fehlend = keine gesetzt; die
+   *  Oberfläche zeigt dann ihren Vorgabetext, nie eine erfundene Begründung. */
+  label?: string | null;
   price: number | null; // Tagespreis (dynamic bei aktivem DP > Override > weekday > base); null ohne Rate-Plan
   // Herkunft des Preises: override | dynamic | weekday | base | none.
   price_source?: string;
@@ -128,10 +131,14 @@ export async function blockRange(
   propertyId: string,
   start: string,
   end: string,
+  /** Freie Beschriftung („Renovierung Bad"). Landet in `availability.label`
+   *  und steht im Kalenderbalken. Weglassen ist gültig — die Sperre heißt dann
+   *  nur „Gesperrt". Der Server begrenzt auf 80 Zeichen. */
+  label?: string,
 ): Promise<Result<{ blocked_days: number }>> {
   return call("/calendar/block", {
     method: "POST",
-    body: { property_id: propertyId, range: { start, end } },
+    body: { property_id: propertyId, range: { start, end }, label },
   });
 }
 

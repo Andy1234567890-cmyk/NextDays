@@ -8775,7 +8775,8 @@
       "rangeDay": "Jour",
       "rangeMonth": "Mois",
       "rangeTwoWeeks": "2 semaines",
-      "rangeWeek": "Semaine"
+      "rangeWeek": "Semaine",
+      "createBooking": "Créer une réservation"
     },
     "board": {
       "moveFailed": "Déplacement impossible.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "approuvé",
         "abgelehnt": "refusé"
       }
+    },
+    "blockDialog": {
+      "property": "Hébergement",
+      "from": "Du",
+      "to": "Au",
+      "label": "Libellé",
+      "labelPlaceholder": "ex. rénovation salle de bain",
+      "labelHint": "Facultatif — sans texte, le blocage s’appelle simplement « Bloqué ».",
+      "nights": "{count, plural, one {# nuit} other {# nuits}}",
+      "cancel": "Annuler",
+      "saved": "{count, plural, one {# nuit bloquée} other {# nuits bloquées}}",
+      "bookedConflict": "Blocage impossible : {count, plural, one {# nuit est} other {# nuits sont}} déjà réservée(s) ({days}). Raccourcissez la période."
     }
   },
   "seasons": {

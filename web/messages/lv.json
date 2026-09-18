@@ -8775,7 +8775,8 @@
       "rangeDay": "Diena",
       "rangeMonth": "Mēnesis",
       "rangeTwoWeeks": "2 nedēļas",
-      "rangeWeek": "Nedēļa"
+      "rangeWeek": "Nedēļa",
+      "createBooking": "Izveidot rezervāciju"
     },
     "board": {
       "moveFailed": "Pārvietošana nav iespējama.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "apstiprināts",
         "abgelehnt": "atteikts"
       }
+    },
+    "blockDialog": {
+      "property": "Objekts",
+      "from": "No",
+      "to": "Līdz",
+      "label": "Apzīmējums",
+      "labelPlaceholder": "piem., vannasistabas remonts",
+      "labelHint": "Neobligāts — bez teksta bloķējums saucas tikai “Bloķēts”.",
+      "nights": "{count, plural, zero {# nakšu} one {# nakts} other {# naktis}}",
+      "cancel": "Atcelt",
+      "saved": "{count, plural, zero {# nakšu bloķētas} one {# nakts bloķēta} other {# naktis bloķētas}}",
+      "bookedConflict": "Bloķēšana nav iespējama: {count, plural, zero {# nakšu ir} one {# nakts ir} other {# naktis ir}} jau rezervētas ({days}). Saīsiniet periodu."
     }
   },
   "seasons": {

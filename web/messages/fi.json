@@ -8775,7 +8775,8 @@
       "rangeDay": "Päivä",
       "rangeMonth": "Kuukausi",
       "rangeTwoWeeks": "2 viikkoa",
-      "rangeWeek": "Viikko"
+      "rangeWeek": "Viikko",
+      "createBooking": "Luo varaus"
     },
     "board": {
       "moveFailed": "Siirto ei ole mahdollista.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "hyväksytty",
         "abgelehnt": "hylätty"
       }
+    },
+    "blockDialog": {
+      "property": "Kohde",
+      "from": "Alkaen",
+      "to": "Päättyen",
+      "label": "Nimike",
+      "labelPlaceholder": "esim. kylpyhuoneremontti",
+      "labelHint": "Valinnainen — ilman tekstiä esto on vain ”Estetty”.",
+      "nights": "{count, plural, one {# yö} other {# yötä}}",
+      "cancel": "Peruuta",
+      "saved": "{count, plural, one {# yö estetty} other {# yötä estetty}}",
+      "bookedConflict": "Estäminen ei onnistu: {count, plural, one {# yö on} other {# yötä on}} jo varattu ({days}). Lyhennä jaksoa."
     }
   },
   "seasons": {

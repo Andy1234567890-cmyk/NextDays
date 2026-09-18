@@ -8775,7 +8775,8 @@
       "rangeDay": "Ден",
       "rangeMonth": "Месец",
       "rangeTwoWeeks": "2 седмици",
-      "rangeWeek": "Седмица"
+      "rangeWeek": "Седмица",
+      "createBooking": "Създаване на резервация"
     },
     "board": {
       "moveFailed": "Преместването не е възможно.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "одобрено",
         "abgelehnt": "отказано"
       }
+    },
+    "blockDialog": {
+      "property": "Обект",
+      "from": "От",
+      "to": "До",
+      "label": "Означение",
+      "labelPlaceholder": "напр. ремонт на банята",
+      "labelHint": "По избор — без текст блокировката се нарича само „Блокирано“.",
+      "nights": "{count, plural, one {# нощувка} other {# нощувки}}",
+      "cancel": "Отказ",
+      "saved": "{count, plural, one {# блокирана нощувка} other {# блокирани нощувки}}",
+      "bookedConflict": "Блокирането не е възможно: {count, plural, one {# нощувка е} other {# нощувки са}} вече резервирани ({days}). Съкратете периода."
     }
   },
   "seasons": {

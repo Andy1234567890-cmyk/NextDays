@@ -79,6 +79,10 @@ class DayAvailability(BaseModel):
     date: date
     status: AvailabilityStatus
     source: AvailabilitySource
+    # Beschriftung einer manuellen Sperre (`availability.label`). None = keine
+    # gesetzt — die UI zeigt dann ihren Vorgabetext, nie eine erfundene
+    # Begründung.
+    label: str | None = None
     # Tagespreis (Resolver): override > dynamic > weekday > base.
     # None, wenn das Objekt keinen Rate-Plan/Override hat (kein Fallback-Wert).
     price: float | None = None
@@ -174,6 +178,15 @@ class BlockRequest(BaseModel):
     # Mandant serverseitig (Wurzel 3) — der Wert kommt aus dem Request und ist
     # ungeprüft nichts wert.
     unit_id: str | None = None
+    # Freie Beschriftung der Sperre („Renovierung Bad", „Eigennutzung Ostern").
+    # Sie landet in `availability.label` und steht im Kalenderbalken — ohne sie
+    # sehen alle Sperren gleich aus und niemand weiss nach zwei Wochen noch,
+    # warum eine Woche im Mai zu ist.
+    #
+    # Begrenzt (Wurzel 8): der Wert kommt vom Client und wird gerendert. 80
+    # Zeichen sind die Konvention der uebrigen Namensfelder dieses Moduls; mehr
+    # passt ohnehin in keinen Balken.
+    label: str | None = Field(default=None, max_length=80)
 
 
 # Längster Zeitraum, den EIN Preis-Override-Aufruf setzen oder zurücknehmen

@@ -8775,7 +8775,8 @@
       "rangeDay": "Dag",
       "rangeMonth": "Månad",
       "rangeTwoWeeks": "2 veckor",
-      "rangeWeek": "Vecka"
+      "rangeWeek": "Vecka",
+      "createBooking": "Skapa bokning"
     },
     "board": {
       "moveFailed": "Det går inte att flytta.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "godkänd",
         "abgelehnt": "nekad"
       }
+    },
+    "blockDialog": {
+      "property": "Objekt",
+      "from": "Från",
+      "to": "Till",
+      "label": "Benämning",
+      "labelPlaceholder": "t.ex. badrumsrenovering",
+      "labelHint": "Valfritt — utan text heter spärren bara ”Spärrad”.",
+      "nights": "{count, plural, one {# natt} other {# nätter}}",
+      "cancel": "Avbryt",
+      "saved": "{count, plural, one {# natt spärrad} other {# nätter spärrade}}",
+      "bookedConflict": "Kan inte spärra: {count, plural, one {# natt är} other {# nätter är}} redan bokad(e) ({days}). Korta perioden."
     }
   },
   "seasons": {

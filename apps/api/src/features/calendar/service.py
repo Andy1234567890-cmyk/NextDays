@@ -415,6 +415,10 @@ class CalendarService:
                         if row is not None
                         else AvailabilitySource.manual
                     ),
+                    # Beschriftung einer manuellen Sperre. Leerer Text zaehlt
+                    # als „keine" — die UI setzt dann ihren Vorgabetext ein,
+                    # statt einen leeren Balken zu zeichnen.
+                    label=((row.get("label") or "").strip() or None) if row else None,
                     price=eff.price if eff else None,
                     price_source=eff.source if eff else "none",
                     price_factors=eff.factors if eff else None,
@@ -499,7 +503,7 @@ class CalendarService:
             .table("availability")
             .select(
                 "property_id,date,status,source,min_stay,max_stay,"
-                "closed_to_arrival,closed_to_departure"
+                "closed_to_arrival,closed_to_departure,label"
             )
             .in_("property_id", pids)
             .gte("date", start_iso)
@@ -737,6 +741,10 @@ class CalendarService:
                 "status": AvailabilityStatus.blocked.value,
                 "source": AvailabilitySource.manual.value,
                 "block_request_id": block_request_id,
+                # Leerer Text ist KEINE Beschriftung: `""` wanderte sonst in die
+                # Spalte und die UI muesste zwischen „nicht gesetzt" und
+                # „absichtlich leer" raten. Beides heisst hier dasselbe → None.
+                "label": (req.label or "").strip() or None,
             }
             for day in req.range.nights()
             if day.isoformat() not in fremd
@@ -914,7 +922,7 @@ class CalendarService:
             .table("availability")
             .select(
                 "date,status,source,min_stay,max_stay,"
-                "closed_to_arrival,closed_to_departure"
+                "closed_to_arrival,closed_to_departure,label"
             )
             .eq("property_id", property_id)
             .gte("date", rng.start.isoformat())

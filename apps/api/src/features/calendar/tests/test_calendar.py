@@ -328,6 +328,70 @@ def test_block_open_days_upserts() -> None:
     assert all(p["status"] == "blocked" for p in payload)
 
 
+def test_block_schreibt_die_beschriftung_in_jede_nacht() -> None:
+    """Die Beschriftung steht an JEDER gesperrten Nacht, nicht nur an der ersten.
+
+    Der Balken im Kalender entsteht aus den einzelnen Tageszeilen; stünde der
+    Text nur am ersten Tag, verlöre ein Zeitraum seine Beschriftung, sobald der
+    sichtbare Ausschnitt mitten in ihm beginnt.
+    """
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        rate_plans=[{"id": "rp1", "property_id": "p1", "min_stay": 1}],
+    )
+    svc.block(
+        "t1",
+        BlockRequest(
+            property_id="p1",
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 4)),
+            label="Renovierung Bad",
+        ),
+    )
+    payload = [u for u in store.get("_upserts", []) if u[0] == "availability"][0][1]
+    assert [p["label"] for p in payload] == ["Renovierung Bad"] * 3
+
+
+def test_block_ohne_beschriftung_schreibt_none_statt_leerem_text() -> None:
+    """Kein Text und leerer Text sind dasselbe: `None`.
+
+    Ein `""` in der Spalte liesse die Oberfläche zwischen „nicht gesetzt" und
+    „absichtlich leer" raten — beides heisst hier aber, dass es keine
+    Beschriftung gibt (Wurzel 4).
+    """
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        rate_plans=[{"id": "rp1", "property_id": "p1", "min_stay": 1}],
+    )
+    for label in (None, "", "   "):
+        store["_upserts"] = []
+        svc.block(
+            "t1",
+            BlockRequest(
+                property_id="p1",
+                range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+                label=label,
+            ),
+        )
+        payload = [
+            u for u in store.get("_upserts", []) if u[0] == "availability"
+        ][0][1]
+        assert payload[0]["label"] is None, f"label={label!r}"
+
+
+def test_beschriftung_ist_begrenzt() -> None:
+    """81 Zeichen werden abgewiesen — angreiferkontrollierter Text, der
+    gerendert wird, bekommt eine harte Obergrenze (Wurzel 8)."""
+    import pydantic
+    import pytest as _pytest
+
+    with _pytest.raises(pydantic.ValidationError):
+        BlockRequest(
+            property_id="p1",
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+            label="x" * 81,
+        )
+
+
 # --- Verfügbarkeits-Push: die ECHTE Stückzahl, nie eine feste 0/1 (0353) ---
 
 def _ari_jobs(monkeypatch) -> list[dict]:  # noqa: ANN001

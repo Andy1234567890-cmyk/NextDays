@@ -8796,7 +8796,8 @@
       "rangeTwoWeeks": "2 weeks",
       "rangeMonth": "Month",
       "propertyDetails": "Property details",
-      "chooseTimeframe": "Choose time frame…"
+      "chooseTimeframe": "Choose time frame…",
+      "createBooking": "Create reservation"
     },
     "board": {
       "moveFailed": "Moving is not possible.",
@@ -9068,6 +9069,18 @@
         "genehmigt": "approved",
         "abgelehnt": "declined"
       }
+    },
+    "blockDialog": {
+      "property": "Property",
+      "from": "From",
+      "to": "To",
+      "label": "Label",
+      "labelPlaceholder": "e.g. bathroom renovation",
+      "labelHint": "Optional — without a text the block is just called “Blocked”.",
+      "nights": "{count, plural, one {# night} other {# nights}}",
+      "cancel": "Cancel",
+      "saved": "{count, plural, one {# night blocked} other {# nights blocked}}",
+      "bookedConflict": "Cannot block: {count, plural, one {# night is} other {# nights are}} already booked ({days}). Shorten the period."
     }
   },
   "seasons": {

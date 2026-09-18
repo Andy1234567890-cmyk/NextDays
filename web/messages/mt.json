@@ -8775,7 +8775,8 @@
       "rangeDay": "Jum",
       "rangeMonth": "Xahar",
       "rangeTwoWeeks": "ġimagħtejn",
-      "rangeWeek": "Ġimgħa"
+      "rangeWeek": "Ġimgħa",
+      "createBooking": "Oħloq prenotazzjoni"
     },
     "board": {
       "moveFailed": "Il-moviment mhuwiex possibbli.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "approvata",
         "abgelehnt": "miċħuda"
       }
+    },
+    "blockDialog": {
+      "property": "Proprjetà",
+      "from": "Minn",
+      "to": "Sa",
+      "label": "Tikketta",
+      "labelPlaceholder": "eż. rinnovazzjoni tal-kamra tal-banju",
+      "labelHint": "Fakultattiv — mingħajr test l-imblokk jissejjaħ biss “Imblukkat”.",
+      "nights": "{count, plural, one {# lejl} two {# iljieli} few {# iljieli} other {# iljieli}}",
+      "cancel": "Ikkanċella",
+      "saved": "{count, plural, one {# lejl imblukkat} two {# iljieli mblukkati} few {# iljieli mblukkati} other {# iljieli mblukkati}}",
+      "bookedConflict": "Ma jistax jiġi mblukkat: {count, plural, one {# lejl huwa} two {# iljieli huma} few {# iljieli huma} other {# iljieli huma}} diġà bbukkjati ({days}). Qassar il-perjodu."
     }
   },
   "seasons": {

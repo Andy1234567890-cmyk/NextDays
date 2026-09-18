@@ -8775,7 +8775,8 @@
       "rangeDay": "Giorno",
       "rangeMonth": "Mese",
       "rangeTwoWeeks": "2 settimane",
-      "rangeWeek": "Settimana"
+      "rangeWeek": "Settimana",
+      "createBooking": "Crea prenotazione"
     },
     "board": {
       "moveFailed": "Spostamento non possibile.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "approvato",
         "abgelehnt": "rifiutato"
       }
+    },
+    "blockDialog": {
+      "property": "Struttura",
+      "from": "Dal",
+      "to": "Al",
+      "label": "Etichetta",
+      "labelPlaceholder": "es. ristrutturazione bagno",
+      "labelHint": "Facoltativo — senza testo il blocco si chiama solo «Bloccato».",
+      "nights": "{count, plural, one {# notte} other {# notti}}",
+      "cancel": "Annulla",
+      "saved": "{count, plural, one {# notte bloccata} other {# notti bloccate}}",
+      "bookedConflict": "Blocco non possibile: {count, plural, one {# notte è già prenotata} other {# notti sono già prenotate}} ({days}). Accorcia il periodo."
     }
   },
   "seasons": {

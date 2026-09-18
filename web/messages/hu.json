@@ -8775,7 +8775,8 @@
       "rangeDay": "Nap",
       "rangeMonth": "Hónap",
       "rangeTwoWeeks": "2 hét",
-      "rangeWeek": "Hét"
+      "rangeWeek": "Hét",
+      "createBooking": "Foglalás létrehozása"
     },
     "board": {
       "moveFailed": "Az áthelyezés nem lehetséges.",
@@ -9047,6 +9048,18 @@
         "genehmigt": "jóváhagyott",
         "abgelehnt": "elutasított"
       }
+    },
+    "blockDialog": {
+      "property": "Szálláshely",
+      "from": "Ettől",
+      "to": "Eddig",
+      "label": "Megnevezés",
+      "labelPlaceholder": "pl. fürdőszoba-felújítás",
+      "labelHint": "Nem kötelező — szöveg nélkül a zárolás neve csak „Zárolva”.",
+      "nights": "{count, plural, one {# éjszaka} other {# éjszaka}}",
+      "cancel": "Mégse",
+      "saved": "{count, plural, one {# éjszaka zárolva} other {# éjszaka zárolva}}",
+      "bookedConflict": "A zárolás nem lehetséges: {count, plural, one {# éjszaka} other {# éjszaka}} már foglalt ({days}). Rövidítse az időszakot."
     }
   },
   "seasons": {
