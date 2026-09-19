@@ -977,6 +977,10 @@ class AuthService:
             country=tenant_meta.get("country"),
             tenant_name=tenant_meta.get("name"),
             tenant_logo_url=self._tenant_logo_url(ctx.tenant_id),
+            # Leerer String wie None behandeln: beides heisst „keine Sperre
+            # geplant". Ohne das `or None` truege die Antwort ein "" , und das
+            # Band im PMS pruefte auf Wahrheit statt auf Vorhandensein.
+            zugang_gesperrt_ab=tenant_meta.get("zugang_gesperrt_ab") or None,
         )
 
     def _tenant_logo_url(self, tenant_id: str | None) -> str | None:
@@ -1000,9 +1004,10 @@ class AuthService:
 
     def _tenant_meta(self, tenant_id: str | None) -> dict:
         # Mandanten-Metadaten in EINEM Abruf (0090 accommodation_type + 0180
-        # account_type + 0335 default_language + country) — steuert Navigation,
-        # Betriebsmodell/Billing, Mail-Sprachkette und die länderspezifischen
-        # Menüpunkte.
+        # account_type + 0335 default_language + country + 0724
+        # zugang_gesperrt_ab) — steuert Navigation, Betriebsmodell/Billing,
+        # Mail-Sprachkette, die länderspezifischen Menüpunkte und das Band einer
+        # angekündigten Zugangssperre.
         if not tenant_id:
             return {}
         row = (
@@ -1010,7 +1015,7 @@ class AuthService:
             .select(
                 "name, accommodation_type, account_type, default_language, "
                 "country, is_demo, is_internal, ist_vorfuehrbetrieb, "
-                "enabled_modules"
+                "enabled_modules, zugang_gesperrt_ab"
             )
             .eq("id", tenant_id)
             .limit(1)

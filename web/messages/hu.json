@@ -6453,7 +6453,7 @@
       "hostedGuests": "Fogadott vendégek",
       "bookedNights": "Kifoglalt éjszakák",
       "occupancyRate": "Foglaltsági arány",
-      "daysBookedAhead": "Előrefoglalási idő (nap)",
+      "daysBookedAhead": "Átl. foglalási előretartás",
       "avgBookingValue": "Átlagos foglalási érték",
       "avgStayLength": "Átlagos tartózkodási idő",
       "avgPricePerNight": "Átlagár éjszakánként",
@@ -6461,7 +6461,8 @@
       "cancelledReservations": "Lemondott foglalások",
       "cancelledNights": "Lemondott éjszakák",
       "revenuePerChannel": "Bevétel csatornánként",
-      "nightsPerChannel": "Éjszakák csatornánként"
+      "nightsPerChannel": "Éjszakák csatornánként",
+      "daysBookedAheadBasis": "{gesamt} foglalásból {mit} alapján, amelyek foglalási időponttal rendelkeznek."
     },
     "guestModuleForm": {
       "saved": "Vendégmodul elmentve.",
@@ -9293,7 +9294,11 @@
     "fullResyncAirbnbDone": "Átvéve az Airbnb-ről: {fotos} új fotó, {felder} adat. A rendelkezésre állás és az árak most átvitelre kerülnek.",
     "fullResyncQueued": "Teljes szinkronizálás sorba állítva – a rendelkezésre állás, az árak és a korlátozások újra átvitelre kerülnek.",
     "fullResyncFailed": "Teljes szinkronizálás sikertelen: {error}",
-    "toggleFailed": "Átkapcsolás sikertelen: {error}"
+    "toggleFailed": "Átkapcsolás sikertelen: {error}",
+    "categoryOwnSite": "Saját weboldal",
+    "ownSiteLabel": "Saját weboldal",
+    "ownSiteBadge": "Foglalási widget",
+    "ownSiteCta": "Beágyazási kód"
   },
   "calendarSync": {
     "title": "Naptár importálása/exportálása",
@@ -13142,6 +13147,10 @@
         "platform_travel_regulations": "Utazási szabályok",
         "platform_travel_regulationsHint": "Az utazási és beutazási szabályok változásai."
       }
+    },
+    "zugangssperre": {
+      "band": "Hozzáférés letiltása: {datum}.",
+      "bandOhneDatum": "A hozzáférés letiltásra kerül."
     }
   },
   "voice": {

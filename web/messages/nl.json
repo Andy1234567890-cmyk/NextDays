@@ -6453,7 +6453,7 @@
       "hostedGuests": "Gehuisveste gasten",
       "bookedNights": "Uitgeboekte nachten",
       "occupancyRate": "Bezettingsgraad",
-      "daysBookedAhead": "Dagen vooruit geboekt",
+      "daysBookedAhead": "Gem. boekingsvenster",
       "avgBookingValue": "Gemiddelde boekingswaarde",
       "avgStayLength": "Gemiddelde verblijfsduur",
       "avgPricePerNight": "Gemiddelde prijs per nacht",
@@ -6461,7 +6461,8 @@
       "cancelledReservations": "Geannuleerde reserveringen",
       "cancelledNights": "Geannuleerde nachten",
       "revenuePerChannel": "Omzet per kanaal",
-      "nightsPerChannel": "Nachten per kanaal"
+      "nightsPerChannel": "Nachten per kanaal",
+      "daysBookedAheadBasis": "Op basis van {mit} van {gesamt} boekingen met een boekingstijdstip."
     },
     "guestModuleForm": {
       "saved": "Gastmodule opgeslagen.",
@@ -9293,7 +9294,11 @@
     "fullResyncAirbnbDone": "Overgenomen van Airbnb: {fotos} nieuwe foto's, {felder} gegevens. Beschikbaarheid en prijzen worden nu overgedragen.",
     "fullResyncQueued": "Volledige synchronisatie in de wachtrij geplaatst – beschikbaarheid, prijzen en restricties worden opnieuw overgedragen.",
     "fullResyncFailed": "Volledige synchronisatie mislukt: {error}",
-    "toggleFailed": "Schakelen mislukt: {error}"
+    "toggleFailed": "Schakelen mislukt: {error}",
+    "categoryOwnSite": "Eigen website",
+    "ownSiteLabel": "Eigen website",
+    "ownSiteBadge": "Boekingswidget",
+    "ownSiteCta": "Insluitcode ophalen"
   },
   "calendarSync": {
     "title": "Agenda importeren/exporteren",
@@ -13142,6 +13147,10 @@
         "platform_travel_regulations": "Reisvoorschriften",
         "platform_travel_regulationsHint": "Wijzigingen in reis- en inreisregels."
       }
+    },
+    "zugangssperre": {
+      "band": "Toegangsblokkering op {datum}.",
+      "bandOhneDatum": "De toegang wordt geblokkeerd."
     }
   },
   "voice": {

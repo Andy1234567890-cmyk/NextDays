@@ -6453,7 +6453,7 @@
       "hostedGuests": "Ugoszczeni goście",
       "bookedNights": "Wykorzystane noce",
       "occupancyRate": "Wskaźnik obłożenia",
-      "daysBookedAhead": "Dni rezerwacji z wyprzedzeniem",
+      "daysBookedAhead": "Śr. wyprzedzenie rezerwacji",
       "avgBookingValue": "Średnia wartość rezerwacji",
       "avgStayLength": "Średnia długość pobytu",
       "avgPricePerNight": "Średnia cena za noc",
@@ -6461,7 +6461,8 @@
       "cancelledReservations": "Anulowane rezerwacje",
       "cancelledNights": "Anulowane noce",
       "revenuePerChannel": "Przychody wg kanału",
-      "nightsPerChannel": "Noce wg kanału"
+      "nightsPerChannel": "Noce wg kanału",
+      "daysBookedAheadBasis": "Na podstawie {mit} z {gesamt} rezerwacji z czasem rezerwacji."
     },
     "guestModuleForm": {
       "saved": "Moduł gościa zapisany.",
@@ -9293,7 +9294,11 @@
     "fullResyncAirbnbDone": "Zaimportowano z Airbnb: {fotos} nowych zdjęć, {felder} danych. Dostępność i ceny są teraz przesyłane.",
     "fullResyncQueued": "Pełna synchronizacja w kolejce – dostępność, ceny i ograniczenia są ponownie przesyłane.",
     "fullResyncFailed": "Pełna synchronizacja nie powiodła się: {error}",
-    "toggleFailed": "Przełączenie nie powiodło się: {error}"
+    "toggleFailed": "Przełączenie nie powiodło się: {error}",
+    "categoryOwnSite": "Własna strona",
+    "ownSiteLabel": "Własna strona",
+    "ownSiteBadge": "Widget rezerwacji",
+    "ownSiteCta": "Pobierz kod"
   },
   "calendarSync": {
     "title": "Importuj/eksportuj kalendarz",
@@ -13142,6 +13147,10 @@
         "platform_travel_regulations": "Przepisy podróżne",
         "platform_travel_regulationsHint": "Zmiany w przepisach podróżnych i wjazdowych."
       }
+    },
+    "zugangssperre": {
+      "band": "Blokada dostępu w dniu {datum}.",
+      "bandOhneDatum": "Dostęp zostanie zablokowany."
     }
   },
   "voice": {

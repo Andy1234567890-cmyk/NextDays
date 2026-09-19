@@ -6453,7 +6453,7 @@
       "hostedGuests": "Uzņemtie viesi",
       "bookedNights": "Rezervētās naktis",
       "occupancyRate": "Noslogojuma rādītājs",
-      "daysBookedAhead": "Dienas rezervētas iepriekš",
+      "daysBookedAhead": "Vid. rezervācijas laiks",
       "avgBookingValue": "Vidējā rezervācijas summa",
       "avgStayLength": "Vidējais uzturēšanās ilgums",
       "avgPricePerNight": "Vidējā cena par nakti",
@@ -6461,7 +6461,8 @@
       "cancelledReservations": "Atceltās rezervācijas",
       "cancelledNights": "Atceltās naktis",
       "revenuePerChannel": "Ieņēmumi pa kanāliem",
-      "nightsPerChannel": "Naktis pa kanāliem"
+      "nightsPerChannel": "Naktis pa kanāliem",
+      "daysBookedAheadBasis": "Pamatojoties uz {mit} no {gesamt} rezervācijām ar rezervācijas laiku."
     },
     "guestModuleForm": {
       "saved": "Viesu modulis saglabāts.",
@@ -9293,7 +9294,11 @@
     "fullResyncAirbnbDone": "Importēts no Airbnb: {fotos} jauni fotoattēli, {felder} informācija. Pieejamība un cenas tagad tiek pārsūtītas.",
     "fullResyncQueued": "Pilna sinhronizācija ir rindā — pieejamība, cenas un ierobežojumi tiek pārsūtīti no jauna.",
     "fullResyncFailed": "Pilna sinhronizācija neizdevās: {error}",
-    "toggleFailed": "Pārslēgšana neizdevās: {error}"
+    "toggleFailed": "Pārslēgšana neizdevās: {error}",
+    "categoryOwnSite": "Sava tīmekļa vietne",
+    "ownSiteLabel": "Sava tīmekļa vietne",
+    "ownSiteBadge": "Rezervāciju logrīks",
+    "ownSiteCta": "Iegūt kodu"
   },
   "calendarSync": {
     "title": "Kalendāra imports/eksports",
@@ -13142,6 +13147,10 @@
         "platform_travel_regulations": "Ceļošanas noteikumi",
         "platform_travel_regulationsHint": "Izmaiņas ceļošanas un ieceļošanas noteikumos."
       }
+    },
+    "zugangssperre": {
+      "band": "Piekļuve tiks bloķēta {datum}.",
+      "bandOhneDatum": "Piekļuve tiks bloķēta."
     }
   },
   "voice": {

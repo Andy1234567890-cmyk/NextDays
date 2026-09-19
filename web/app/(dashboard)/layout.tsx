@@ -27,6 +27,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { RealtimeDebugPanel } from "@/components/realtime-debug-panel";
 import { DemoBand } from "@/components/demo-band";
 import { TestphaseBand } from "@/components/testphase-band";
+import { ZugangssperreBand } from "@/components/zugangssperre-band";
 import { Topbar } from "@/components/topbar";
 import { SupportChatButton } from "@/components/support/support-chat-button";
 import { SupportChatProvider } from "@/components/support/support-chat";
@@ -177,6 +178,13 @@ export default async function DashboardLayout({
         <SidebarInset>
           {/* Ueber allem, auch ueber der Topbar: der Besucher soll wissen, wo
               er ist, BEVOR er etwas anklickt (0407). */}
+          {/* Zuerst, also ueber Demo- und Testphasen-Band: eine Frist, die den
+              Zugang beendet, wiegt schwerer als beides. Sichtbar, solange
+              `tenants.zugang_gesperrt_ab` gesetzt ist (0724) — geleert
+              verschwindet das Band von selbst, ohne Code-Aenderung. */}
+          {me?.zugang_gesperrt_ab && (
+            <ZugangssperreBand gesperrtAb={me.zugang_gesperrt_ab} />
+          )}
           {me?.is_demo && <DemoBand />}
           {inTestphase && <TestphaseBand endetAm={testphaseEndet} />}
           <Topbar />

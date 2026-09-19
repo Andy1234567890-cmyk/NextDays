@@ -6453,7 +6453,7 @@
       "hostedGuests": "Mistednin ospitati",
       "bookedNights": "Iljieli mibbukkjati",
       "occupancyRate": "Rata ta' okkupazzjoni",
-      "daysBookedAhead": "Ġranet ibbukkjati bil-quddiem",
+      "daysBookedAhead": "Medja tat-tieqa tal-prenotazzjoni",
       "avgBookingValue": "Valur medju tal-prenotazzjoni",
       "avgStayLength": "Tul medju taż-żjara",
       "avgPricePerNight": "Prezz medju kull lejl",
@@ -6461,7 +6461,8 @@
       "cancelledReservations": "Riżervazzjonijiet ikkanċellati",
       "cancelledNights": "Iljieli kkanċellati",
       "revenuePerChannel": "Dħul kull kanal",
-      "nightsPerChannel": "Iljieli kull kanal"
+      "nightsPerChannel": "Iljieli kull kanal",
+      "daysBookedAheadBasis": "Ibbażat fuq {mit} minn {gesamt} prenotazzjonijiet bil-ħin tal-prenotazzjoni."
     },
     "guestModuleForm": {
       "saved": "Il-modulu tal-mistieden ġie ssejvjat.",
@@ -9293,7 +9294,11 @@
     "fullResyncAirbnbDone": "Importat minn Airbnb: {fotos} ritratti ġodda, {felder} dettalji. Id-disponibbiltà u l-prezzijiet issa qed jiġu trasferiti.",
     "fullResyncQueued": "Sinkronizzazzjoni sħiħa fil-kju – id-disponibbiltà, il-prezzijiet u r-restrizzjonijiet qed jiġu trasferiti mill-ġdid.",
     "fullResyncFailed": "Sinkronizzazzjoni sħiħa falliet: {error}",
-    "toggleFailed": "Il-bidla falliet: {error}"
+    "toggleFailed": "Il-bidla falliet: {error}",
+    "categoryOwnSite": "Is-sit tiegħek",
+    "ownSiteLabel": "Is-sit tiegħek",
+    "ownSiteBadge": "Widget tal-prenotazzjoni",
+    "ownSiteCta": "Ġib il-kodiċi"
   },
   "calendarSync": {
     "title": "Importazzjoni/esportazzjoni tal-kalendarju",
@@ -13142,6 +13147,10 @@
         "platform_travel_regulations": "Regolamenti tal-ivvjaġġar",
         "platform_travel_regulationsHint": "Bidliet fir-regoli tal-ivvjaġġar u tad-dħul."
       }
+    },
+    "zugangssperre": {
+      "band": "L-aċċess jiġi mblukkat fl-{datum}.",
+      "bandOhneDatum": "L-aċċess jiġi mblukkat."
     }
   },
   "voice": {

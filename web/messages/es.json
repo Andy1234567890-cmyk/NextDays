@@ -6453,7 +6453,7 @@
       "hostedGuests": "Huéspedes alojados",
       "bookedNights": "Noches reservadas",
       "occupancyRate": "Tasa de ocupación",
-      "daysBookedAhead": "Días de antelación de reserva",
+      "daysBookedAhead": "Antelación media de reserva",
       "avgBookingValue": "Valor medio de reserva",
       "avgStayLength": "Duración media de la estancia",
       "avgPricePerNight": "Precio medio por noche",
@@ -6461,7 +6461,8 @@
       "cancelledReservations": "Reservas canceladas",
       "cancelledNights": "Noches canceladas",
       "revenuePerChannel": "Ingresos por canal",
-      "nightsPerChannel": "Noches por canal"
+      "nightsPerChannel": "Noches por canal",
+      "daysBookedAheadBasis": "Basado en {mit} de {gesamt} reservas con fecha de reserva."
     },
     "guestModuleForm": {
       "saved": "Módulo de huéspedes guardado.",
@@ -9293,7 +9294,11 @@
     "fullResyncAirbnbDone": "Importado de Airbnb: {fotos} fotos nuevas, {felder} detalles. La disponibilidad y los precios se están transfiriendo ahora.",
     "fullResyncQueued": "Sincronización completa en cola – la disponibilidad, los precios y las restricciones se están retransfiriendo.",
     "fullResyncFailed": "Sincronización completa fallida: {error}",
-    "toggleFailed": "Cambio fallido: {error}"
+    "toggleFailed": "Cambio fallido: {error}",
+    "categoryOwnSite": "Tu propia web",
+    "ownSiteLabel": "Tu propia web",
+    "ownSiteBadge": "Widget de reservas",
+    "ownSiteCta": "Obtener el código"
   },
   "calendarSync": {
     "title": "Importar/exportar calendario",
@@ -13142,6 +13147,10 @@
         "platform_travel_regulations": "Normas de viaje",
         "platform_travel_regulationsHint": "Cambios en las normas de viaje y de entrada."
       }
+    },
+    "zugangssperre": {
+      "band": "Bloqueo de acceso el {datum}.",
+      "bandOhneDatum": "El acceso será bloqueado."
     }
   },
   "voice": {

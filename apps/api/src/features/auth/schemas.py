@@ -393,6 +393,19 @@ class MeResponse(BaseModel):
     # Punkte und verschweigt die spezifischen, statt ein Land zu raten
     # (Wurzel 4).
     country: str | None = None
+    # Stichtag einer angekündigten Zugangssperre (`tenants.zugang_gesperrt_ab`,
+    # 0724). Das PMS zeigt darauf ein durchgehendes Band über der Topbar.
+    #
+    # Reine ANKÜNDIGUNG, kein Riegel: dieses Feld sperrt niemanden aus. Eine
+    # echte Sperre gehört serverseitig, weil der direkte GoTrue-Login jede
+    # Frontend-Schranke umgeht (Wurzel 7).
+    #
+    # None = keine Sperre geplant → kein Band. Kein erfundenes Datum (Wurzel 4).
+    #
+    # `str` wie jedes andere Feld dieser Antwort: der Wert wird durchgereicht,
+    # nicht gerechnet. Formatiert wird in der Sprache des Lesers, also dort, wo
+    # die Locale bekannt ist — im Frontend.
+    zugang_gesperrt_ab: str | None = None
 
 
 class AccommodationTypeUpdate(BaseModel):

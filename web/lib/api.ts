@@ -210,4 +210,13 @@ export type MeResponse = {
    *  hochgeladen unter Konto → Profil. null = keins hinterlegt; die Oberfläche
    *  zeigt dann ihr Ersatzzeichen. */
   tenant_logo_url: string | null;
+  /** Stichtag einer angekündigten Zugangssperre (`tenants.zugang_gesperrt_ab`,
+   *  0724), ISO-8601. Ist er gesetzt, zeigt das Dashboard ein durchgehendes
+   *  Band über der Topbar (`ZugangssperreBand`).
+   *
+   *  Reine ANKÜNDIGUNG, kein Riegel — dieses Feld sperrt niemanden aus. Eine
+   *  echte Sperre gehört serverseitig (Wurzel 7).
+   *
+   *  null/fehlend = keine Sperre geplant → kein Band. */
+  zugang_gesperrt_ab?: string | null;
 };

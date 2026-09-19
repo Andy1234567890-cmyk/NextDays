@@ -6453,7 +6453,7 @@
       "hostedGuests": "Hosted guests",
       "bookedNights": "Booked nights",
       "occupancyRate": "Occupancy rate",
-      "daysBookedAhead": "Days booked ahead",
+      "daysBookedAhead": "Avg. booking window",
       "avgBookingValue": "Average booking value",
       "avgStayLength": "Average length of stay",
       "avgPricePerNight": "Average price per night",
@@ -6461,7 +6461,8 @@
       "cancelledReservations": "Cancelled reservations",
       "cancelledNights": "Cancelled nights",
       "revenuePerChannel": "Revenue per channel",
-      "nightsPerChannel": "Nights per channel"
+      "nightsPerChannel": "Nights per channel",
+      "daysBookedAheadBasis": "Based on {mit} of {gesamt} bookings that carry a booking time."
     },
     "guestModuleForm": {
       "saved": "Guest module saved.",
@@ -9314,7 +9315,11 @@
     "fullResyncAirbnbDone": "Imported from Airbnb: {fotos} new photos, {felder} details. Availability and rates are now being imported.",
     "fullResyncQueued": "Full sync queued – availability, rates, and restrictions are being re-imported.",
     "fullResyncFailed": "Full sync failed: {error}",
-    "toggleFailed": "Toggle failed: {error}"
+    "toggleFailed": "Toggle failed: {error}",
+    "categoryOwnSite": "Your own website",
+    "ownSiteLabel": "Your own website",
+    "ownSiteBadge": "Booking widget",
+    "ownSiteCta": "Get embed code"
   },
   "calendarSync": {
     "title": "Import/export calendar",
@@ -13163,6 +13168,10 @@
         "platform_travel_regulations": "Travel regulations",
         "platform_travel_regulationsHint": "Changes to travel and entry rules."
       }
+    },
+    "zugangssperre": {
+      "band": "Access will be blocked on {datum}.",
+      "bandOhneDatum": "Access will be blocked."
     }
   },
   "voice": {
