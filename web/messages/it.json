@@ -2383,6 +2383,10 @@
       "statusOpen": "Aperto",
       "statusInProgress": "In corso",
       "statusDone": "Completato"
+    },
+    "gesperrt": {
+      "titel": "Il portale non è temporaneamente disponibile",
+      "text": "Contatti la sua amministrazione."
     }
   },
   "travelAgencies": {

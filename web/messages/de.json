@@ -2383,6 +2383,10 @@
       "statusOpen": "Offen",
       "statusInProgress": "In Arbeit",
       "statusDone": "Erledigt"
+    },
+    "gesperrt": {
+      "titel": "Das Portal ist vorübergehend nicht verfügbar",
+      "text": "Bitte wenden Sie sich an Ihre Verwaltung."
     }
   },
   "travelAgencies": {

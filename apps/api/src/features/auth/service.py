@@ -25,6 +25,7 @@ from src.core.gotrue_fehler import (
 from src.core.logging import get_logger, mask_email
 from src.core.security import AuthContext
 from src.core.supabase import make_anon_client_with_user_agent
+from src.features.plattform.schalter import eigentuemer_portal_sperre
 
 from .einladung_service import EinladungError, EinladungService
 from .granular_permissions import (
@@ -952,6 +953,7 @@ class AuthService:
             family_access=self._familien_stufe(ctx.user_id),
         )
         tenant_meta = self._tenant_meta(ctx.tenant_id)
+        portal_sperre = eigentuemer_portal_sperre()
         return MeResponse(
             user_id=ctx.user_id,
             email=data.get("email"),
@@ -981,6 +983,12 @@ class AuthService:
             # geplant". Ohne das `or None` truege die Antwort ein "" , und das
             # Band im PMS pruefte auf Wahrheit statt auf Vorhandensein.
             zugang_gesperrt_ab=tenant_meta.get("zugang_gesperrt_ab") or None,
+            # Plattformweit, nicht je Mandant — deshalb NICHT aus `tenant_meta`,
+            # sondern aus dem einen Leser in `features/plattform/schalter`
+            # (0726). `None` heisst offen; ein leerer Text heisst gesperrt ohne
+            # eigenen Hinweis, dann waehlt die Oberflaeche ihren uebersetzten.
+            eigentuemer_portal_gesperrt=portal_sperre is not None,
+            eigentuemer_portal_hinweis=portal_sperre or None,
         )
 
     def _tenant_logo_url(self, tenant_id: str | None) -> str | None:

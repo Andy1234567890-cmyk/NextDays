@@ -2383,6 +2383,10 @@
       "statusOpen": "Odprto",
       "statusInProgress": "V delu",
       "statusDone": "Opravljeno"
+    },
+    "gesperrt": {
+      "titel": "Portal začasno ni na voljo",
+      "text": "Obrnite se na svojo upravo."
     }
   },
   "travelAgencies": {

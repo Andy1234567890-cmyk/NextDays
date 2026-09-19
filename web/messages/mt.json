@@ -2383,6 +2383,10 @@
       "statusOpen": "Miftuħa",
       "statusInProgress": "Qed isir",
       "statusDone": "Magħmula"
+    },
+    "gesperrt": {
+      "titel": "Il-portal mhux disponibbli temporanjament",
+      "text": "Jekk jogħġbok ikkuntattja lill-amministrazzjoni tiegħek."
     }
   },
   "travelAgencies": {

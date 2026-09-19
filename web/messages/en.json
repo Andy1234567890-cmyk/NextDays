@@ -2383,6 +2383,10 @@
       "statusOpen": "Open",
       "statusInProgress": "In progress",
       "statusDone": "Done"
+    },
+    "gesperrt": {
+      "titel": "The portal is temporarily unavailable",
+      "text": "Please contact your property manager."
     }
   },
   "travelAgencies": {

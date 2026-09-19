@@ -2383,6 +2383,10 @@
       "statusOpen": "Nyitott",
       "statusInProgress": "Folyamatban",
       "statusDone": "Elkészült"
+    },
+    "gesperrt": {
+      "titel": "A portál átmenetileg nem érhető el",
+      "text": "Kérjük, forduljon a kezelőjéhez."
     }
   },
   "travelAgencies": {

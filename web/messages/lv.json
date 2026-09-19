@@ -2383,6 +2383,10 @@
       "statusOpen": "Atvērts",
       "statusInProgress": "Izstrādē",
       "statusDone": "Pabeigts"
+    },
+    "gesperrt": {
+      "titel": "Portāls īslaicīgi nav pieejams",
+      "text": "Lūdzu, sazinieties ar savu pārvaldnieku."
     }
   },
   "travelAgencies": {

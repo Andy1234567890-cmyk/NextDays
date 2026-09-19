@@ -10,6 +10,7 @@
 // jedem Render und lässt ausschließlich die Rolle `owner` durch — fail-CLOSED
 // bei fehlender/unbekannter Rolle. Begründung, warum das hier und nicht in der
 // Middleware sitzt: lib/rollen-guard.ts.
+import { PortalGesperrt } from "@/components/portal/portal-gesperrt";
 import { PortalSidebar } from "@/components/portal/portal-sidebar";
 import { PortalTopbar } from "@/components/portal/portal-topbar";
 import { RealtimeDebugPanel } from "@/components/realtime-debug-panel";
@@ -40,6 +41,13 @@ export default async function PortalLayout({
         </div>
       </div>
     );
+  }
+
+  // Plattformweite Sperre (0726): der Eigentümer bleibt angemeldet und sieht
+  // einen Hinweis statt seiner Objekte. Bewusst OHNE Sidebar und Topbar — ein
+  // Menü, dessen Punkte alle ins Leere führen, sieht nach Defekt aus.
+  if (sitzung.art === "gesperrt") {
+    return <PortalGesperrt hinweis={sitzung.hinweis} />;
   }
 
   // Was dieser Zugang darf (0389). Ein Ladefehler räumt die Navigation NICHT

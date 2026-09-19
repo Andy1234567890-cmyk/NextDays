@@ -2383,6 +2383,10 @@
       "statusOpen": "Open",
       "statusInProgress": "Bezig",
       "statusDone": "Voltooid"
+    },
+    "gesperrt": {
+      "titel": "Het portaal is tijdelijk niet beschikbaar",
+      "text": "Neem contact op met uw beheerder."
     }
   },
   "travelAgencies": {

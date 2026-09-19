@@ -2383,6 +2383,10 @@
       "statusOpen": "Avatud",
       "statusInProgress": "Töös",
       "statusDone": "Tehtud"
+    },
+    "gesperrt": {
+      "titel": "Portaal on ajutiselt suletud",
+      "text": "Palun võtke ühendust oma halduriga."
     }
   },
   "travelAgencies": {

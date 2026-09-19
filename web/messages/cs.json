@@ -2383,6 +2383,10 @@
       "statusOpen": "Otevřené",
       "statusInProgress": "Probíhá",
       "statusDone": "Vyřízené"
+    },
+    "gesperrt": {
+      "titel": "Portál je dočasně nedostupný",
+      "text": "Obraťte se prosím na svou správu."
     }
   },
   "travelAgencies": {

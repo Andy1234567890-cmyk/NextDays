@@ -43,7 +43,13 @@ export type PortalSitzung =
   | { art: "ok"; me: MeResponse }
   // Technischer Fehler ≠ abgemeldet (Wurzel 5): die Fläche zeigt einen Hinweis,
   // wirft aber niemanden hinaus.
-  | { art: "fehler"; meldung: string };
+  | { art: "fehler"; meldung: string }
+  // Plattformweite Sperre des Portals (0726). Auch hier: NICHT abmelden und
+  // NICHT auf „/" umleiten — dort landet ein Eigentümer im Rollen-Gate des
+  // Dashboards und wird sofort zurückgeschickt. Das ergäbe eine Schleife
+  // zwischen zwei Guards, die sich gegenseitig wegschieben. Stattdessen bleibt
+  // er hier stehen und liest, warum.
+  | { art: "gesperrt"; hinweis: string | null };
 
 /**
  * Guard für das Eigentümer-Portal (Route-Gruppe `(portal)`).
@@ -67,5 +73,15 @@ export async function portalGuard(): Promise<PortalSitzung> {
   // als Header herein — fehlt er, bleibt es beim nackten `/login`.
   if (!me) redirect(loginMitZiel((await headers()).get(PFAD_HEADER)));
   if (!me.role || !PORTAL_ROLLEN.has(me.role)) redirect("/");
+  // Die Sperre wird NACH der Rollenprüfung ausgewertet: wer gar kein
+  // Eigentümer ist, hat auf dieser Fläche nichts verloren und soll auch nicht
+  // erfahren, dass sie gerade gesperrt ist (Wurzel 9 — kein Recon).
+  //
+  // Das hier ist nur die Anzeige. Die Sperre selbst sitzt im FastAPI-Guard am
+  // `public_portal`-Router; wer direkt bei GoTrue anmeldet, sieht dieses
+  // Layout nie und bekommt dort 403 (Wurzel 7).
+  if (me.eigentuemer_portal_gesperrt) {
+    return { art: "gesperrt", hinweis: me.eigentuemer_portal_hinweis ?? null };
+  }
   return { art: "ok", me };
 }

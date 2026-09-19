@@ -36,6 +36,7 @@ from .dependencies import (
     PortalAufgabenServiceDep,
     PortalChatServiceDep,
     PublicPortalServiceDep,
+    portal_nicht_gesperrt,
     require_portal_faehigkeit,
     require_portal_recht,
 )
@@ -82,7 +83,15 @@ from .schemas_familie import (
 )
 from .service import PortalError
 
-router = APIRouter(prefix="/public-portal", tags=["public_portal"])
+# Die plattformweite Portal-Sperre (0726) haengt AM ROUTER, nicht an den
+# einzelnen Routen: es sind 38, und eine Sperre, die man je Route eintragen
+# muss, fehlt beim naechsten. So gilt sie auch fuer alles, was hier noch
+# dazukommt.
+router = APIRouter(
+    prefix="/public-portal",
+    tags=["public_portal"],
+    dependencies=[Depends(portal_nicht_gesperrt)],
+)
 
 # Wiederverwendete Permission-Dependencies (Callables, kein Konstanten-Naming).
 _VIEW = require_permission(Capability.VIEW_CALENDAR)  # noqa: N816  pylint: disable=invalid-name

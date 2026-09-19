@@ -2383,6 +2383,10 @@
       "statusOpen": "Öppen",
       "statusInProgress": "Pågående",
       "statusDone": "Färdig"
+    },
+    "gesperrt": {
+      "titel": "Portalen är tillfälligt otillgänglig",
+      "text": "Kontakta din förvaltning."
     }
   },
   "travelAgencies": {

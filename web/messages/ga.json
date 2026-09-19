@@ -2383,6 +2383,10 @@
       "statusOpen": "Oscailte",
       "statusInProgress": "Ar Siúl",
       "statusDone": "Críochnaithe"
+    },
+    "gesperrt": {
+      "titel": "Níl an tairseach ar fáil go sealadach",
+      "text": "Déan teagmháil le do bhainisteoir maoine."
     }
   },
   "travelAgencies": {

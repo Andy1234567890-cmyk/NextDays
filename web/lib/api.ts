@@ -219,4 +219,13 @@ export type MeResponse = {
    *
    *  null/fehlend = keine Sperre geplant → kein Band. */
   zugang_gesperrt_ab?: string | null;
+  /** Plattformweite Sperre des Eigentümer-Portals (`plattform_schalter`, 0726).
+   *  true = das Portal zeigt statt seiner Inhalte einen Hinweis.
+   *
+   *  Nur die ANZEIGE hängt hier dran — die Sperre selbst sitzt serverseitig am
+   *  `public_portal`-Router (Wurzel 7). */
+  eigentuemer_portal_gesperrt?: boolean;
+  /** Freier Text des Betreibers zur Sperre. null = die Oberfläche zeigt ihren
+   *  übersetzten Standardtext, statt eine Begründung zu erfinden (Wurzel 4). */
+  eigentuemer_portal_hinweis?: string | null;
 };

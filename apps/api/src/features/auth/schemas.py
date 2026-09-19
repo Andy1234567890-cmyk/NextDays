@@ -406,6 +406,16 @@ class MeResponse(BaseModel):
     # nicht gerechnet. Formatiert wird in der Sprache des Lesers, also dort, wo
     # die Locale bekannt ist — im Frontend.
     zugang_gesperrt_ab: str | None = None
+    # Plattformweite Sperre des Eigentümer-Portals (`plattform_schalter`, 0726).
+    # False = offen. True = das Portal zeigt statt seiner Inhalte einen Hinweis.
+    #
+    # Nur die ANZEIGE hängt hier dran. Die Sperre selbst sitzt serverseitig am
+    # `public_portal`-Router: wer den direkten GoTrue-Login nutzt, umgeht jedes
+    # Frontend (Wurzel 7), bekommt dort aber 403.
+    eigentuemer_portal_gesperrt: bool = False
+    # Freier Text des Betreibers. None = die Oberfläche zeigt ihren übersetzten
+    # Standardtext, statt eine Begründung zu erfinden (Wurzel 4).
+    eigentuemer_portal_hinweis: str | None = None
 
 
 class AccommodationTypeUpdate(BaseModel):

@@ -2383,6 +2383,10 @@
       "statusOpen": "Deschis",
       "statusInProgress": "În lucru",
       "statusDone": "Finalizat"
+    },
+    "gesperrt": {
+      "titel": "Portalul este temporar indisponibil",
+      "text": "Vă rugăm să contactați administrația."
     }
   },
   "travelAgencies": {

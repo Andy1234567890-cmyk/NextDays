@@ -2383,6 +2383,10 @@
       "statusOpen": "Avoinna",
       "statusInProgress": "Työn alla",
       "statusDone": "Valmis"
+    },
+    "gesperrt": {
+      "titel": "Portaali ei ole tilapäisesti käytettävissä",
+      "text": "Ota yhteyttä isännöintiisi."
     }
   },
   "travelAgencies": {

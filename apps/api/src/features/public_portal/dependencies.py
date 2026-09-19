@@ -77,6 +77,49 @@ DienstleistungsServiceDep = Annotated[
 ]
 
 
+def portal_nicht_gesperrt() -> None:
+    """Plattformweite Sperre des Eigentümer-Portals (0726).
+
+    Hängt als ROUTER-Dependency am `public_portal`-Router, nicht an den
+    einzelnen Routen. Grund: es sind 38 Endpunkte, und eine Sperre, die man je
+    Route eintragen muss, fehlt beim 39. — und zwar genau bei dem, den niemand
+    testet. Am Router gilt sie für alles, was dort hängt, auch für das, was
+    morgen dazukommt.
+
+    WARUM SERVERSEITIG und nicht nur im Portal-Layout (Wurzel 7): der direkte
+    GoTrue-Login (`/auth/v1/token` mit dem öffentlichen anon-Key) umgeht jedes
+    Frontend. Ein Eigentümer, dem die Weboberfläche einen Hinweis zeigt, könnte
+    die API weiterhin mit `curl` bedienen. Die Weboberfläche ist die
+    Höflichkeit, dieser Guard ist die Sperre.
+
+    Fail-OPEN ist hier ausnahmsweise richtig: kann die Zeile nicht gelesen
+    werden (DB-Störung), bleibt das Portal offen statt alle Eigentümer
+    auszusperren. Eine Sperre ist eine Verwaltungsentscheidung, kein
+    Schutzmechanismus — sie darf bei einer Störung nicht von selbst zuschnappen.
+    Das ist der Unterschied zu den Rechte-Guards oben, die fail-CLOSED sind.
+    """
+    from src.features.plattform.schalter import (  # noqa: PLC0415 — Zyklus vermeiden
+        eigentuemer_portal_sperre,
+    )
+
+    sperre = eigentuemer_portal_sperre()
+    if sperre is None:
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=sperre or _PORTAL_GESPERRT,
+    )
+
+
+# Der Text, wenn keiner eingetragen ist. Bewusst ohne Datum und ohne Grund: was
+# der Betrieb sagen will, steht in `eigentuemer_portal_hinweis`; hier steht nur,
+# dass es keine Störung ist, damit niemand einen Fehler sucht, den es nicht gibt.
+_PORTAL_GESPERRT = (
+    "Das Eigentümer-Portal ist vorübergehend nicht verfügbar. "
+    "Bitte wenden Sie sich an Ihre Verwaltung."
+)
+
+
 def require_portal_faehigkeit(cap: Capability) -> Callable[..., AuthContext]:
     """Guard für eine Fähigkeit MIT Familien-Deckelung, ohne granulares Recht.
 
