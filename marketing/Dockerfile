@@ -31,6 +31,20 @@ ARG NEXT_PUBLIC_GA_MEASUREMENT_ID
 ENV NEXT_PUBLIC_GA_MEASUREMENT_ID=$NEXT_PUBLIC_GA_MEASUREMENT_ID
 ARG NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
 ENV NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=$NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+
+# Zugangssperre (middleware.ts). Next.js kann `process.env` in der Middleware
+# beim Bauen fest einsetzen — dann kaeme ein nur zur Laufzeit gesetzter Wert
+# NIE an, und die Seite stuende dauerhaft auf 503 (fail-closed). Die Variable
+# wird deshalb ZUSAETZLICH als Build-Argument uebergeben. In Coolify ist sie
+# entsprechend als Build- UND Laufzeitvariable gesetzt.
+#
+# Kein Vorgabewert (Wurzel 4): fehlt sie, bleibt sie leer, und die Middleware
+# sperrt alles mit 503 statt die Seite still zu oeffnen.
+#
+# Folge fuers Aendern des Passworts: es genuegt NICHT, den Wert in Coolify zu
+# tauschen — die App muss danach neu gebaut werden.
+ARG MARKETING_ZUGANG_PASSWORT
+ENV MARKETING_ZUGANG_PASSWORT=$MARKETING_ZUGANG_PASSWORT
 RUN bun run build
 
 # ---------------------------------------------------------------------------
