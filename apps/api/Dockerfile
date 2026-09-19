@@ -4,7 +4,7 @@
 # erfolgt über das `command` in docker-compose.yml, nicht hier — so kann
 # Compose Reload-Mounts setzen, ohne das Image neu bauen zu müssen.
 
-FROM python:3.12-slim AS base
+FROM python:3.12-slim@sha256:2c941e860699f878900b0edc2403613c234d4b32eda3cc9fa7036991a2a63c4a AS base
 
 # uv: schneller, deterministischer Python-Paketmanager.
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/

@@ -481,6 +481,29 @@ jobs:
   db-spalten:
     name: DB-Spalten gegen das Live-Schema
     needs: [betroffen]
+    # NUR auf push, nie auf pull_request. Dieser Job ist der einzige im
+    # Workflow, der SUPABASE_SERVICE_ROLE_KEY in die Umgebung legt UND dabei
+    # ein Skript AUS DEM REPO ausfuehrt (scripts/diagnose/db-spalten-pruefen.py).
+    # Auf einem PR-Lauf koennte derselbe PR dieses Skript um zwei Zeilen
+    # erweitern, die den Schluessel an einen fremden Host schicken — und der
+    # Lauf startet VOR jedem Review. Der Service-Role-Key umgeht die komplette
+    # RLS (Wurzel 6), das waeren alle Mandanten auf einmal.
+    #
+    # Was der Wechsel KOSTET, ehrlich benannt: das Gate meldet einen falschen
+    # Spaltennamen jetzt erst nach dem Merge, nicht mehr im PR. Und es ist
+    # KEIN Deploy-Gate — `deploy` fuehrt diesen Job nicht in seinen `needs`,
+    # er laeuft also neben dem Deploy her, nicht davor. Der Befund kommt damit
+    # zeitgleich mit dem Livegang statt davor.
+    #
+    # Trotzdem richtig so: ein spaeter Befund ist reparierbar, ein
+    # abgeflossener Service-Role-Key nicht. Wer das Gate wieder scharf vor den
+    # Deploy stellen will, traegt `db-spalten` in die `needs` von `deploy` ein
+    # — das ist eine eigene Entscheidung, weil dann jeder rote Schema-Lauf den
+    # Deploy blockiert.
+    #
+    # Sonst haengt niemand an diesem Job (geprueft), ein uebersprungener Lauf
+    # reisst also nichts mit.
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Betroffen?

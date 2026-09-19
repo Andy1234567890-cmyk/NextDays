@@ -9,7 +9,7 @@
 #    in EINEM Stage, s. ADR-0016: bun legt App-.bin unter web/node_modules/.bin
 #    ab, nicht hoisted).
 # ---------------------------------------------------------------------------
-FROM oven/bun:1 AS build
+FROM oven/bun:1@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS build
 WORKDIR /repo
 RUN echo '{"name":"build","private":true,"workspaces":["web","packages/*"]}' > package.json
 COPY web/package.json ./web/
@@ -54,7 +54,7 @@ RUN bun run build
 #    KEIN Chromium-Download im Build (riss den Build mit exit 255 ab); der
 #    Browser liegt im persistenten Volume PLAYWRIGHT_BROWSERS_PATH (Coolify).
 # ---------------------------------------------------------------------------
-FROM node:22.16-slim AS run
+FROM node:22.16-slim@sha256:048ed02c5fd52e86fda6fbd2f6a76cf0d4492fd6c6fee9e2c463ed5108da0e34 AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000

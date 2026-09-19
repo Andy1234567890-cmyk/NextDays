@@ -14,3 +14,33 @@ updates:
     labels: [ci]
     # Ein PR je Action, damit ein Breaking Change einzeln nachvollziehbar ist.
     open-pull-requests-limit: 5
+
+  # Dieselbe Regel, dieselbe Falle, anderer Ort: seit 0725 sind alle 21
+  # FROM-Zeilen der 12 Dockerfiles per Digest gepinnt. Ein Digest-Pin ist noch
+  # starrer als ein SHA-Pin auf eine Action — er friert das Basisimage samt
+  # aller Betriebssystempakete ein. Ohne diesen Eintrag laeuft die Produktion
+  # irgendwann auf einem Debian-Stand von vor einem Jahr, und niemand merkt es,
+  # weil im Repo alles unveraendert aussieht.
+  #
+  # Alle Verzeichnisse einzeln: Dependabot folgt keinem Glob ueber Dockerfiles
+  # in verschiedenen Ordnern, sondern braucht je Ort einen Eintrag.
+  - package-ecosystem: docker
+    directories:
+      - /admin
+      - /apps/api
+      - /apps/dac7-API
+      - /apps/dac7-staging
+      - /apps/public-api
+      - /builder
+      - /deploy/api
+      - /deploy/docs
+      - /marketing
+      - /partner
+      - /storybook
+      - /web
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    labels: [ci]
+    open-pull-requests-limit: 5

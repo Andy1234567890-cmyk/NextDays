@@ -12,11 +12,37 @@ on:
 
 jobs:
   claude:
+    # Zwei Bedingungen, UND-verknuepft: „@claude steht drin" UND „der Schreiber
+    # gehoert dazu".
+    #
+    # Warum die zweite noetig ist: der Ausloeser ist ein KOMMENTAR, kein Push.
+    # Wer im Repo kommentieren darf, startet damit einen Lauf mit
+    # `secrets.CLAUDE_CODE_OAUTH_TOKEN` im Kontext — ohne eine Zeile Code
+    # beizutragen und ohne Spur in der Branch-Historie. Das Repo ist privat,
+    # der Kreis also ohnehin klein; aber genau dieser Kreis hat sich am
+    # 18.09.2026 fuer 13 Stunden um einen externen Mitarbeiter erweitert, und
+    # dieser Weg stand ihm offen. Autorisierung gehoert nicht an die
+    # Zugehoerigkeit zum Repo, sondern an die Rolle (Wurzel 9).
+    #
+    # OWNER/MEMBER/COLLABORATOR — NICHT CONTRIBUTOR: „Contributor" heisst nur,
+    # dass schon einmal ein Commit von dieser Person gemergt wurde, und das
+    # gilt auch nach dem Entzug aller Rechte weiter.
+    #
+    # `author_association` sitzt je Ereignis an einem anderen Ort (comment /
+    # review / issue) — deshalb steht die Pruefung viermal statt einmal.
     if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (github.event_name == 'issue_comment'
+        && contains(github.event.comment.body, '@claude')
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review_comment'
+        && contains(github.event.comment.body, '@claude')
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review'
+        && contains(github.event.review.body, '@claude')
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association)) ||
+      (github.event_name == 'issues'
+        && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))
+        && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association))
     runs-on: ubuntu-latest
     permissions:
       contents: read

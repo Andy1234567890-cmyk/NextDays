@@ -13,7 +13,7 @@
 # Build-Kontext ist apps/api (siehe deploy/docker-compose.prod.yml → build.context).
 
 # --- Stage 1: Dependencies bauen ---------------------------------------------
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim@sha256:2c941e860699f878900b0edc2403613c234d4b32eda3cc9fa7036991a2a63c4a AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -31,7 +31,7 @@ RUN uv venv /opt/venv && \
     VIRTUAL_ENV=/opt/venv uv pip install --no-cache .
 
 # --- Stage 2: schlankes Runtime-Image ----------------------------------------
-FROM python:3.12-slim AS runtime
+FROM python:3.12-slim@sha256:2c941e860699f878900b0edc2403613c234d4b32eda3cc9fa7036991a2a63c4a AS runtime
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \

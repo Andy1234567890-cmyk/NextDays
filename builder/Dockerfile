@@ -22,7 +22,7 @@
 #    install+build in EINEM Stage: bun legt die App-.bin unter
 #    builder/node_modules/.bin ab, nicht hoisted (ADR-0016).
 # ---------------------------------------------------------------------------
-FROM oven/bun:1 AS build
+FROM oven/bun:1@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS build
 WORKDIR /repo
 # Eigene, minimale Workspace-Wurzel statt der echten package.json: so zieht
 # `bun install` nur die zwei Pakete, die dieser Renderer braucht, und nicht die
@@ -71,7 +71,7 @@ RUN bun run build
 # ---------------------------------------------------------------------------
 # 2) Runtime — schlank: nur der standalone-Server unter Node + statische Assets.
 # ---------------------------------------------------------------------------
-FROM node:22.16-slim AS run
+FROM node:22.16-slim@sha256:048ed02c5fd52e86fda6fbd2f6a76cf0d4492fd6c6fee9e2c463ed5108da0e34 AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000

@@ -1,6 +1,6 @@
 # API-Referenz (docs.mynextdays.com) — statische Site auf nginx.
 # Rein statisch: kein Node-Build, kein Backend, keine Secrets im Image.
-FROM nginx:1.27-alpine
+FROM nginx:1.27-alpine@sha256:65645c7bb6a0661892a8b03b89d0743208a18dd2f3f17a54ef4b76fb8e2f2a10
 
 # nginx als non-root: auf Port 8080 lauschen (kein privilegierter Port nötig).
 RUN sed -i 's/user  nginx;/# user nginx;/' /etc/nginx/nginx.conf

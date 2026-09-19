@@ -9,7 +9,7 @@
 #    admin/node_modules/.bin ab (nicht hoisted) — ein getrennter deps-Stage,
 #    der nur /repo/node_modules kopiert, verliert sie (→ "next: not found").
 # ---------------------------------------------------------------------------
-FROM oven/bun:1 AS build
+FROM oven/bun:1@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS build
 WORKDIR /repo
 # Minimale Root-package.json mit NUR den für diese App nötigen Workspace-Membern
 # (die volle Root-package.json listet alle Frontends — die sind im App-Build-
@@ -35,7 +35,7 @@ RUN bun run build
 # ---------------------------------------------------------------------------
 # 2) Runtime — schlank: nur der standalone-Server unter Node + statische Assets.
 # ---------------------------------------------------------------------------
-FROM node:22.16-slim AS run
+FROM node:22.16-slim@sha256:048ed02c5fd52e86fda6fbd2f6a76cf0d4492fd6c6fee9e2c463ed5108da0e34 AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000

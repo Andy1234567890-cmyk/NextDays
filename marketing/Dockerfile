@@ -6,7 +6,7 @@
 # ---------------------------------------------------------------------------
 # 1) Dependencies — reproduzierbar aus dem Lockfile (frozen).
 # ---------------------------------------------------------------------------
-FROM oven/bun:1 AS deps
+FROM oven/bun:1@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
@@ -14,7 +14,7 @@ RUN bun install --frozen-lockfile
 # ---------------------------------------------------------------------------
 # 2) Build — Next.js produziert den standalone-Output.
 # ---------------------------------------------------------------------------
-FROM oven/bun:1 AS build
+FROM oven/bun:1@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -50,7 +50,7 @@ RUN bun run build
 # ---------------------------------------------------------------------------
 # 3) Runtime — schlank: nur der standalone-Server + statische Assets.
 # ---------------------------------------------------------------------------
-FROM node:22.16-slim AS run
+FROM node:22.16-slim@sha256:048ed02c5fd52e86fda6fbd2f6a76cf0d4492fd6c6fee9e2c463ed5108da0e34 AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
