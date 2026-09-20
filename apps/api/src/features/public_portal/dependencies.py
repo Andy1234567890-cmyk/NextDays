@@ -77,7 +77,9 @@ DienstleistungsServiceDep = Annotated[
 ]
 
 
-def portal_nicht_gesperrt() -> None:
+def portal_nicht_gesperrt(
+    _ctx: Annotated[AuthContext, Depends(get_current_user)],
+) -> None:
     """Plattformweite Sperre des Eigentümer-Portals (0726).
 
     Hängt als ROUTER-Dependency am `public_portal`-Router, nicht an den
@@ -97,6 +99,15 @@ def portal_nicht_gesperrt() -> None:
     auszusperren. Eine Sperre ist eine Verwaltungsentscheidung, kein
     Schutzmechanismus — sie darf bei einer Störung nicht von selbst zuschnappen.
     Das ist der Unterschied zu den Rechte-Guards oben, die fail-CLOSED sind.
+
+    WARUM `_ctx` HIER STEHT, obwohl es nicht benutzt wird: Es erzwingt, dass
+    FastAPI ZUERST die Anmeldung auflöst. Ohne diesen Parameter lief die Sperre
+    davor, und ein Aufruf OHNE Token bekam 403 statt 401 — gefunden von
+    `test_ohne_anmeldung_401`. Das ist kein Schönheitsfehler: Clients erkennen
+    an 401, dass sie ihr Token erneuern müssen. Mit 403 hätte ein abgelaufenes
+    Token den Eigentümer in einer Sackgasse stehen lassen, statt ihn zur
+    Anmeldung zu schicken. Nebeneffekt, und ein erwünschter: wer gar nicht
+    angemeldet ist, erfährt nicht, dass gerade eine Sperre läuft (Wurzel 9).
     """
     from src.features.plattform.schalter import (  # noqa: PLC0415 — Zyklus vermeiden
         eigentuemer_portal_sperre,

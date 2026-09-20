@@ -12,6 +12,7 @@ vollständig gesperrt (Wurzel 6), sonst könnte ein Eigentümer seine eigene Spe
 per Direktpfad aufheben.
 """
 import time
+from datetime import datetime
 
 from src.core.logging import get_logger
 from src.core.supabase import get_service_client
@@ -81,9 +82,23 @@ def _sperre(seit_feld: str, hinweis_feld: str) -> str | None:
     NICHT offen; genau hier wuerde ein `if hinweis:` die Sperre still aufheben.
     """
     daten = _zeile()
-    if not daten.get(seit_feld):
+    seit = daten.get(seit_feld)
+    # TYPSTRENG, und das ist kein Test-Zugestaendnis: gesperrt ist nur, wer
+    # einen echten Zeitstempel trägt. Ein beliebiger wahrheitswertiger Wert
+    # genuegt NICHT.
+    #
+    # Gefunden am 20.09.2026: die Fake-DB der Tests liefert fuer eine ihr
+    # unbekannte Tabelle einen MagicMock — der ist wahr, und damit galt in 30
+    # Tests plötzlich alles als gesperrt. Dieselbe Klasse Fehler traefe live
+    # jede Antwortform, die nicht die erwartete ist. Ein Schalter, der bei
+    # unklarer Datenlage zuschnappt, sperrt irgendwann ohne Anlass aus
+    # (Wurzel 4/5).
+    if not isinstance(seit, str | datetime) or (
+        isinstance(seit, str) and not seit.strip()
+    ):
         return None
-    return daten.get(hinweis_feld) or ""
+    hinweis = daten.get(hinweis_feld)
+    return hinweis if isinstance(hinweis, str) and hinweis.strip() else ""
 
 
 def eigentuemer_portal_sperre() -> str | None:

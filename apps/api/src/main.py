@@ -104,6 +104,7 @@ from .features.property_dossier.router import router as property_dossier_router
 from .features.property_portal.router import router as property_portal_router
 from .features.property_taxes.router import router as property_taxes_router
 from .features.public_portal.router import router as public_portal_router
+from .features.public_portal.router import router_offen as public_portal_offen_router
 from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
 from .features.reviews.router import router as reviews_router
@@ -218,6 +219,10 @@ _SLICE_ROUTERS = [
     ocr_router,
     owner_chat_router,
     public_portal_router,
+    # Nur /public-portal/health — ohne die Portal-Sperre und ohne
+    # Anmeldung, damit die Ueberwachung auch waehrend einer Sperre sieht,
+    # dass der Slice laeuft (0726).
+    public_portal_offen_router,
     tasks_router,
     # Personal & Dienstplan (0540/0541, ADR-0023): Akte, Dienstplan,
     # Abwesenheit, Zeiterfassung, Lohnvorbereitung.

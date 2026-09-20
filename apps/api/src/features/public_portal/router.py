@@ -93,6 +93,16 @@ router = APIRouter(
     dependencies=[Depends(portal_nicht_gesperrt)],
 )
 
+# `/health` haengt BEWUSST an einem eigenen Router OHNE die Sperre. Zwei Gruende,
+# beide beim ersten Testlauf aufgefallen:
+#   1. Die Sperre setzt die Anmeldung voraus (damit ein Aufruf ohne Token 401
+#      bekommt statt 403). Ein Health-Endpunkt, der ein Token verlangt, ist
+#      keiner — die Ueberwachung hat keins.
+#   2. Waehrend einer Sperre soll die Ueberwachung weiterhin sehen, dass der
+#      Slice LAEUFT. „Gesperrt" ist eine Verwaltungsentscheidung, kein Ausfall;
+#      sie darf nicht als roter Dienst in Uptime Kuma erscheinen.
+router_offen = APIRouter(prefix="/public-portal", tags=["public_portal"])
+
 # Wiederverwendete Permission-Dependencies (Callables, kein Konstanten-Naming).
 _VIEW = require_permission(Capability.VIEW_CALENDAR)  # noqa: N816  pylint: disable=invalid-name
 _REPORTS = require_permission(Capability.VIEW_OWNER_REPORTS)  # noqa: N816  pylint: disable=invalid-name
@@ -114,7 +124,7 @@ _METER = require_portal_faehigkeit(Capability.ADD_METER_READING)  # noqa: N816  
 _TASKS = require_permission(Capability.VIEW_OWN_TASKS)  # noqa: N816  pylint: disable=invalid-name
 
 
-@router.get("/health", response_model=SliceHealth)
+@router_offen.get("/health", response_model=SliceHealth)
 def health(service: PublicPortalServiceDep) -> SliceHealth:
     return service.health()
 
