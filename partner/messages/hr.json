@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Provjera identiteta",
     "identitaetHinweis": "Na kraju, naš pružatelj usluga plaćanja provjerit će vašu osobnu iskaznicu. To se događa na njihovoj sigurnoj stranici, jer se pritom snima fotografija; nakon toga ćete se vratiti ovamo.",
     "identitaetStarten": "Provjerite identitet"
+  },
+  "gesperrt": {
+    "titel": "Partnerska ploča privremeno nije dostupna",
+    "text": "Obratite se tvrtki myNextDays."
   }
 }

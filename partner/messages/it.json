@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Verifica identità",
     "identitaetHinweis": "Infine, il nostro fornitore di servizi di pagamento verificherà il suo documento d'identità. Questo avviene sulla sua pagina protetta, poiché verrà scattata una foto; dopodiché tornerà qui.",
     "identitaetStarten": "Verifica identità"
+  },
+  "gesperrt": {
+    "titel": "La dashboard partner non è temporaneamente disponibile",
+    "text": "Contatti myNextDays."
   }
 }

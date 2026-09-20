@@ -34,6 +34,7 @@ from src.core.gotrue_fehler import (
 from src.core.logging import get_logger, mask_email
 from src.core.security import AffiliateContext, PlatformContext
 from src.core.supabase import fetch_all_rows
+from src.features.plattform.schalter import partner_portal_sperre
 
 from . import attribution, material_dateien, newsletter_anmeldung, vies
 from .attribution import code_normalisieren, code_vorschlag
@@ -374,6 +375,10 @@ class AffiliatesService(
 
     def _profil(self, row: dict[str, Any]) -> PartnerProfil:
         details = row.get("payout_details") or {}
+        # EINMAL lesen, nicht zweimal: sonst koennten die beiden Felder aus
+        # verschiedenen Staenden stammen — „gesperrt: ja" mit dem Hinweistext
+        # von vorher.
+        sperre = partner_portal_sperre()
         return PartnerProfil(
             affiliate_id=row["id"],
             email=row["email"],
@@ -403,6 +408,12 @@ class AffiliatesService(
             ),
             terms_version=row.get("terms_version"),
             created_at=row["created_at"],
+            # Plattformweite Sperre (0727) — an JEDEM Profilabruf, weil `/me`
+            # die einzige Datenroute ist, die waehrend einer Sperre offen
+            # bleibt. Ohne sie wuesste die Oberflaeche nicht, dass sie den
+            # Hinweis zeigen soll, und liefe in 403 nach 403.
+            portal_gesperrt=sperre is not None,
+            portal_hinweis=sperre or None,
         )
 
     def profil(self, ctx: AffiliateContext) -> PartnerProfil:

@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Tapatybės patvirtinimas",
     "identitaetHinweis": "Galiausiai mūsų mokėjimo paslaugų teikėjas patikrins jūsų asmens tapatybę. Tai atliekama jo saugioje svetainėje, nes bus nufotografuota; po to grįšite čia.",
     "identitaetStarten": "Patvirtinti tapatybę"
+  },
+  "gesperrt": {
+    "titel": "Partnerių skydelis laikinai neprieinamas",
+    "text": "Kreipkitės į myNextDays."
   }
 }

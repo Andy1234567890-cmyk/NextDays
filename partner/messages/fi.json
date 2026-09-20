@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Henkilöllisyyden vahvistaminen",
     "identitaetHinweis": "Lopuksi maksupalveluntarjoajamme tarkistaa henkilöllisyytesi. Tämä tapahtuu heidän suojatulla sivustollaan, koska siinä otetaan kuva; palaat tänne sen jälkeen.",
     "identitaetStarten": "Vahvista henkilöllisyys"
+  },
+  "gesperrt": {
+    "titel": "Kumppanipaneeli ei ole tilapäisesti käytettävissä",
+    "text": "Ota yhteyttä myNextDaysiin."
   }
 }

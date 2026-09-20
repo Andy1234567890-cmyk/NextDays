@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Identitätsprüfung",
     "identitaetHinweis": "Zum Schluss prüft unser Zahlungsdienstleister Ihren Ausweis. Das geschieht auf dessen gesicherter Seite, weil dabei ein Lichtbild aufgenommen wird; danach kehren Sie hierher zurück.",
     "identitaetStarten": "Identität prüfen"
+  },
+  "gesperrt": {
+    "titel": "Das Partner-Dashboard ist vorübergehend nicht verfügbar",
+    "text": "Bitte wenden Sie sich an myNextDays."
   }
 }

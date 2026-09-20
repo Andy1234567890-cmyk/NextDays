@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Verificare identitate",
     "identitaetHinweis": "În cele din urmă, furnizorul nostru de servicii de plată vă va verifica actul de identitate. Acest lucru se va întâmpla pe pagina securizată a acestuia, deoarece va fi făcută o fotografie; după aceea, veți reveni aici.",
     "identitaetStarten": "Verificați identitatea"
+  },
+  "gesperrt": {
+    "titel": "Panoul de parteneri este temporar indisponibil",
+    "text": "Vă rugăm să contactați myNextDays."
   }
 }

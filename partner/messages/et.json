@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Isikutuvastus",
     "identitaetHinweis": "Lõpetuseks kontrollib meie makseteenuse pakkuja teie isikut tõendavat dokumenti. See toimub nende turvalisel lehel, sest seal tehakse foto; pärast seda naasete siia.",
     "identitaetStarten": "Kontrolli isikut"
+  },
+  "gesperrt": {
+    "titel": "Partnerite töölaud on ajutiselt suletud",
+    "text": "Palun võtke ühendust myNextDaysiga."
   }
 }

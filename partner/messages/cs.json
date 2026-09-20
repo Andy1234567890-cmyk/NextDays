@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Ověření totožnosti",
     "identitaetHinweis": "Náš poskytovatel platebních služeb nakonec ověří vaši totožnost. Proběhne to na jeho zabezpečené stránce, protože se pořizuje fotografie; poté se vrátíte sem.",
     "identitaetStarten": "Ověřit totožnost"
+  },
+  "gesperrt": {
+    "titel": "Partnerský portál je dočasně nedostupný",
+    "text": "Obraťte se prosím na myNextDays."
   }
 }

@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Identiteitscontrole",
     "identitaetHinweis": "Tot slot controleert onze betalingsdienstaanbieder uw identiteitsbewijs. Dit gebeurt op hun beveiligde pagina, omdat er een foto wordt gemaakt; daarna keert u hier terug.",
     "identitaetStarten": "Identiteit controleren"
+  },
+  "gesperrt": {
+    "titel": "Het partnerdashboard is tijdelijk niet beschikbaar",
+    "text": "Neem contact op met myNextDays."
   }
 }

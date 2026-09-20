@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Verificación de identidad",
     "identitaetHinweis": "Finalmente, nuestro proveedor de pagos verificará su identificación. Esto se realizará en su página segura, ya que se tomará una foto; luego regresará aquí.",
     "identitaetStarten": "Verificar identidad"
+  },
+  "gesperrt": {
+    "titel": "El panel de socios no está disponible temporalmente",
+    "text": "Póngase en contacto con myNextDays."
   }
 }

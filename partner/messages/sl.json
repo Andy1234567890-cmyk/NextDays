@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Preverjanje identitete",
     "identitaetHinweis": "Na koncu bo naš ponudnik plačil preveril vašo osebno izkaznico. To se bo zgodilo na njegovi varni strani, saj bo posneta fotografija; nato se boste vrnili sem.",
     "identitaetStarten": "Preverite identiteto"
+  },
+  "gesperrt": {
+    "titel": "Partnerska nadzorna plošča začasno ni na voljo",
+    "text": "Obrnite se na myNextDays."
   }
 }

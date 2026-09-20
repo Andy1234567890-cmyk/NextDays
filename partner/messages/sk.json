@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Overenie totožnosti",
     "identitaetHinweis": "Náš poskytovateľ platobných služieb nakoniec skontroluje váš preukaz totožnosti. Deje sa tak na jeho zabezpečenej stránke, pretože sa tam vyhotovuje fotografia; potom sa vrátite sem.",
     "identitaetStarten": "Overiť totožnosť"
+  },
+  "gesperrt": {
+    "titel": "Partnerský panel je dočasne nedostupný",
+    "text": "Obráťte sa prosím na myNextDays."
   }
 }

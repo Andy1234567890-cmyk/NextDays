@@ -491,12 +491,46 @@ def get_current_affiliate(
 CurrentAffiliate = Annotated[AffiliateContext, Depends(get_current_affiliate)]
 
 
+# Der Text, wenn das Partner-Dashboard gesperrt ist und der Betreiber keinen
+# eigenen hinterlegt hat. Ohne Grund und ohne Datum: was er sagen will, steht in
+# `partner_portal_hinweis`; hier steht nur, dass es keine Störung ist.
+_PARTNER_GESPERRT = (
+    "Das Partner-Dashboard ist vorübergehend nicht verfügbar. "
+    "Bitte wenden Sie sich an myNextDays."
+)
+
+
 def require_approved_affiliate(ctx: AffiliateContext) -> None:
     """Guard für alles, was über „eigenen Status ansehen" hinausgeht.
 
     Ein Bewerber (pending_review) darf sein Profil sehen und ergänzen — aber
     keine Links erzeugen, keine Kunden sehen, nichts auszahlen lassen.
+
+    Hier hängt außerdem die plattformweite Sperre des Partner-Dashboards
+    (0727). Diese Funktion ist der EINE Engpass, durch den alle 34 Datenrouten
+    beider Partner-Router gehen — und genau die, die gesperrt werden sollen.
+    Ausdrücklich NICHT betroffen und deshalb nicht hier: `/affiliates/clicks`
+    (die Marketing-Seite meldet darüber jeden Klick auf einen Partner-Link —
+    zu, hieße Abrechnungsdaten still verlieren), `/affiliates/auth/*`, `/me`,
+    `/apply`, `/tiers` und das gesamte Backoffice unter `/platform/affiliates`.
+
+    Reihenfolge mit Bedacht: erst die Sperre, dann die Freigabe-Prüfung. Ein
+    nicht freigegebener Bewerber soll während einer Sperre denselben Text lesen
+    wie alle anderen und nicht erfahren, wie sein Antrag steht (Wurzel 9 — kein
+    Recon über den Umweg unterschiedlicher Fehlermeldungen).
     """
+    # Lokaler Import mit Absicht: `core` darf `features` nicht fest importieren
+    # (Schichtung), und ein Importzyklus entstünde ohnehin.
+    from src.features.plattform.schalter import (  # noqa: PLC0415
+        partner_portal_sperre,
+    )
+
+    sperre = partner_portal_sperre()
+    if sperre is not None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=sperre or _PARTNER_GESPERRT,
+        )
     if not ctx.is_approved:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Identitetskontrol",
     "identitaetHinweis": "Til sidst kontrollerer vores betalingstjenesteudbyder dit ID. Dette sker på deres sikre side, da der tages et billede; derefter vender du tilbage hertil.",
     "identitaetStarten": "Kontroller identitet"
+  },
+  "gesperrt": {
+    "titel": "Partnerpanelet er midlertidigt lukket",
+    "text": "Kontakt venligst myNextDays."
   }
 }

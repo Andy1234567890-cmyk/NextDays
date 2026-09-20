@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Verificação de identidade",
     "identitaetHinweis": "Por fim, nosso provedor de serviços de pagamento verificará sua identidade. Isso será feito em sua página segura, pois uma foto será tirada; depois você retornará aqui.",
     "identitaetStarten": "Verificar identidade"
+  },
+  "gesperrt": {
+    "titel": "O painel de parceiros está temporariamente indisponível",
+    "text": "Contacte a myNextDays."
   }
 }

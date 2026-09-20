@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Verifika tal-Identità",
     "identitaetHinweis": "Fl-aħħar, il-fornitur tas-servizzi tal-ħlas tagħna jivverifika d-dokument tal-identità tiegħek. Dan isir fuq il-paġna sigura tagħhom, peress li tinġibed ritratt; wara dan, terġa' lura hawn.",
     "identitaetStarten": "Ivverifika l-Identità"
+  },
+  "gesperrt": {
+    "titel": "Id-dashboard tas-sħab mhux disponibbli temporanjament",
+    "text": "Jekk jogħġbok ikkuntattja lil myNextDays."
   }
 }

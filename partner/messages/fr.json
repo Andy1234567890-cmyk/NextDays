@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Vérification d'identité",
     "identitaetHinweis": "Enfin, notre prestataire de services de paiement vérifiera votre pièce d'identité. Cela se fait sur sa page sécurisée, car une photo sera prise ; vous reviendrez ensuite ici.",
     "identitaetStarten": "Vérifier l'identité"
+  },
+  "gesperrt": {
+    "titel": "Le tableau de bord partenaire est temporairement indisponible",
+    "text": "Veuillez contacter myNextDays."
   }
 }

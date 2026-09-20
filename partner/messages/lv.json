@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Identitātes pārbaude",
     "identitaetHinweis": "Visbeidzot mūsu maksājumu pakalpojumu sniedzējs pārbaudīs jūsu identitāti. Tas notiks viņu drošajā vietnē, jo tiks uzņemts fotoattēls; pēc tam jūs atgriezīsities šeit.",
     "identitaetStarten": "Pārbaudīt identitāti"
+  },
+  "gesperrt": {
+    "titel": "Partneru panelis īslaicīgi nav pieejams",
+    "text": "Lūdzu, sazinieties ar myNextDays."
   }
 }

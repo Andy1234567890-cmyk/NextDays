@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Fíorú Aitheantais",
     "identitaetHinweis": "Ar deireadh, fíoróidh ár soláthraí seirbhíse íocaíochta do dhoiciméad aitheantais. Déanfar é seo ar a leathanach slán, mar go dtógfar grianghraf; ina dhiaidh sin, fillfidh tú anseo.",
     "identitaetStarten": "Fíoraigh Aitheantas"
+  },
+  "gesperrt": {
+    "titel": "Níl an deais comhpháirtithe ar fáil go sealadach",
+    "text": "Déan teagmháil le myNextDays le do thoil."
   }
 }

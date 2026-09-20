@@ -1,8 +1,9 @@
 """Lesezugriff auf die plattformweiten Schalter (`plattform_schalter`, 0726).
 
 EIN Ort, an dem diese Zeile gelesen wird. Sie wird an zwei Stellen gebraucht —
-im Portal-Guard (`public_portal.dependencies.portal_nicht_gesperrt`) und in
-`/auth/me`, damit die Weboberfläche den Hinweis anzeigen kann. Zwei Abfragen an
+im Portal-Guard (`public_portal.dependencies.portal_nicht_gesperrt`), im
+Partner-Guard (`core.security.require_approved_affiliate`) und in `/auth/me`,
+damit die Weboberfläche den Hinweis anzeigen kann. Zwei Abfragen an
 zwei Stellen wären zwei Gelegenheiten, die Bedeutung von NULL unterschiedlich
 auszulegen.
 
@@ -33,49 +34,78 @@ _PUFFER_SEKUNDEN = 30
 # pylint-Kosmetik — eine umgebundene Variable ist in einem Modul, das aus
 # zwei Slices importiert wird, schwerer nachzuvollziehen als ein Behaelter,
 # der immer derselbe bleibt.
-_stand: dict[str, float | str | None] = {"zeit": 0.0, "wert": None, "gueltig": False}
+_stand: dict[str, object] = {"zeit": 0.0, "zeile": {}, "gueltig": False}
 
 
-def eigentuemer_portal_sperre() -> str | None:
-    """Ist das Eigentümer-Portal gesperrt?
+def _zeile() -> dict:
+    """Die eine Zeile, gepuffert. EIN Leser fuer alle Schalter.
 
-    Rückgabe:
-        ``None`` — offen.
-        ``str``  — gesperrt; der Text ist der Hinweis für den Eigentümer und
-        kann leer sein (dann wählt der Aufrufer seinen Standardtext).
+    Frueher las diese Datei nur den Portal-Schalter. Mit dem zweiten (0727)
+    waere daraus sonst eine zweite Abfrage geworden — zwei Puffer, zwei
+    Gueltigkeiten, und bei einer Sperre haette der eine Schalter schon
+    umgeschaltet, waehrend der andere noch den alten Stand zeigt.
 
-    Kein boolescher Rückgabewert, weil der Aufrufer sonst zweimal fragen müsste
-    („gesperrt?" und „welcher Text?") und dabei zwei verschiedene Stände sehen
-    könnte.
-
-    Fail-OPEN bei einer Störung, ausdrücklich: eine Verwaltungssperre darf nicht
-    von selbst zuschnappen, wenn die Datenbank hustet. Der Fehler wird dabei
-    LAUT geloggt (ERROR) — eine stumm ausgefallene Sperre ist derselbe Fehler
-    wie ein verschluckter Exception (Wurzel 5).
+    Fail-OPEN bei einer Stoerung, ausdruecklich: eine Verwaltungssperre darf
+    nicht von selbst zuschnappen, wenn die Datenbank hustet. Der Fehler wird
+    dabei LAUT geloggt (Wurzel 5).
     """
     jetzt = time.monotonic()
-    if _stand["gueltig"] and jetzt - float(_stand["zeit"] or 0.0) < _PUFFER_SEKUNDEN:
-        wert = _stand["wert"]
-        return str(wert) if isinstance(wert, str) else None
+    alter = jetzt - float(_stand["zeit"] or 0.0)  # type: ignore[arg-type]
+    if _stand["gueltig"] and alter < _PUFFER_SEKUNDEN:
+        return dict(_stand["zeile"])  # type: ignore[arg-type]
     try:
         zeile = (
             get_service_client()
             .table("plattform_schalter")
-            .select("eigentuemer_portal_gesperrt_seit, eigentuemer_portal_hinweis")
+            .select(
+                "eigentuemer_portal_gesperrt_seit, eigentuemer_portal_hinweis, "
+                "partner_portal_gesperrt_seit, partner_portal_hinweis"
+            )
             .limit(1)
             .execute()
         ).data
-    except Exception:  # noqa: BLE001 — Störung sperrt nicht aus, siehe Docstring
+    except Exception:  # noqa: BLE001 — Stoerung sperrt nicht aus, siehe Docstring
         log.exception("plattform_schalter_nicht_lesbar")
+        return {}
+    daten = dict(zeile[0]) if zeile else {}
+    _stand.update({"zeit": jetzt, "zeile": daten, "gueltig": True})
+    return daten
+
+
+def _sperre(seit_feld: str, hinweis_feld: str) -> str | None:
+    """Gemeinsame Auswertung: gesetzt = gesperrt, der Hinweis ist der Text.
+
+    Kein boolescher Rueckgabewert, weil der Aufrufer sonst zweimal fragen
+    muesste („gesperrt?" und „welcher Text?") und dabei zwei verschiedene
+    Staende sehen koennte. Leerer Text heisst „gesperrt ohne eigenen Hinweis" —
+    NICHT offen; genau hier wuerde ein `if hinweis:` die Sperre still aufheben.
+    """
+    daten = _zeile()
+    if not daten.get(seit_feld):
         return None
-    daten = zeile[0] if zeile else {}
-    gesperrt = daten.get("eigentuemer_portal_gesperrt_seit")
-    ergebnis = (daten.get("eigentuemer_portal_hinweis") or "") if gesperrt else None
-    _stand.update({"zeit": jetzt, "wert": ergebnis, "gueltig": True})
-    return ergebnis
+    return daten.get(hinweis_feld) or ""
+
+
+def eigentuemer_portal_sperre() -> str | None:
+    """Ist das Eigentuemer-Portal gesperrt (0726)?
+
+    ``None`` = offen. ``str`` = gesperrt; der Text kann leer sein, dann waehlt
+    der Aufrufer seinen Standardtext.
+    """
+    return _sperre(
+        "eigentuemer_portal_gesperrt_seit", "eigentuemer_portal_hinweis"
+    )
+
+
+def partner_portal_sperre() -> str | None:
+    """Ist das Partner-Dashboard gesperrt (0727)?
+
+    ``None`` = offen. ``str`` = gesperrt; der Text kann leer sein.
+    """
+    return _sperre("partner_portal_gesperrt_seit", "partner_portal_hinweis")
 
 
 def puffer_leeren() -> None:
     """Puffer verwerfen — für Tests und für den Fall, dass eine Sperre SOFORT
     greifen muss, ohne die 30 Sekunden abzuwarten."""
-    _stand.update({"zeit": 0.0, "wert": None, "gueltig": False})
+    _stand.update({"zeit": 0.0, "zeile": {}, "gueltig": False})

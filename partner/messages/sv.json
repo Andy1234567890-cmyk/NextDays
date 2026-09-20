@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Identitetskontroll",
     "identitaetHinweis": "Slutligen kontrollerar vår betaltjänstleverantör din identitet. Detta sker på deras säkra sida, eftersom ett foto tas; därefter återvänder du hit.",
     "identitaetStarten": "Kontrollera identitet"
+  },
+  "gesperrt": {
+    "titel": "Partnerpanelen är tillfälligt otillgänglig",
+    "text": "Kontakta myNextDays."
   }
 }

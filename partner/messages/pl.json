@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Weryfikacja tożsamości",
     "identitaetHinweis": "Na koniec nasz dostawca usług płatniczych zweryfikuje Państwa dowód tożsamości. Odbywa się to na jego zabezpieczonej stronie, ponieważ zostanie zrobione zdjęcie; następnie wrócą Państwo tutaj.",
     "identitaetStarten": "Weryfikuj tożsamość"
+  },
+  "gesperrt": {
+    "titel": "Panel partnera jest tymczasowo niedostępny",
+    "text": "Prosimy o kontakt z myNextDays."
   }
 }

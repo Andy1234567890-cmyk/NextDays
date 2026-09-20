@@ -460,6 +460,20 @@ class PartnerProfil(BaseModel):
     connect: ConnectStand = Field(default_factory=ConnectStand)
     terms_version: str | None = None
     created_at: datetime
+    # Plattformweite Sperre des Partner-Dashboards (`plattform_schalter`, 0727).
+    # False = offen. True = die Oberfläche zeigt statt der Inhalte einen Hinweis.
+    #
+    # Der Weg über `/me` ist bewusst: es ist die EINZIGE Datenroute, die während
+    # einer Sperre offen bleibt (sonst wüsste die Oberfläche nicht, wer klopft,
+    # und könnte den Hinweis gar nicht anzeigen).
+    #
+    # Nur die ANZEIGE hängt hier dran. Die Sperre selbst sitzt in
+    # `core.security.require_approved_affiliate` — wer die API direkt aufruft,
+    # bekommt dort 403 (Wurzel 7).
+    portal_gesperrt: bool = False
+    # Freier Text des Betreibers. None = die Oberfläche zeigt ihren übersetzten
+    # Standardtext, statt eine Begründung zu erfinden (Wurzel 4).
+    portal_hinweis: str | None = None
 
 
 class PartnerBedingungenAnnehmen(BaseModel):

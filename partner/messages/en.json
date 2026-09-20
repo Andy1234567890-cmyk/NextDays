@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Identity verification",
     "identitaetHinweis": "Finally, our payment service provider verifies your identity. This takes place on their secure page, as a photo will be taken; afterwards, you will return here.",
     "identitaetStarten": "Verify identity"
+  },
+  "gesperrt": {
+    "titel": "The partner dashboard is temporarily unavailable",
+    "text": "Please contact myNextDays."
   }
 }

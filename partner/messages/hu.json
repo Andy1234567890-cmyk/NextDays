@@ -535,5 +535,9 @@
     "schrittIdentitaet": "Személyazonosság ellenőrzése",
     "identitaetHinweis": "Végül fizetési szolgáltatónk ellenőrzi az Ön személyazonosító okmányát. Ez a szolgáltató biztonságos oldalán történik, mivel fényképfelvétel készül; ezután visszatér ide.",
     "identitaetStarten": "Személyazonosság ellenőrzése"
+  },
+  "gesperrt": {
+    "titel": "A partner-irányítópult átmenetileg nem érhető el",
+    "text": "Kérjük, forduljon a myNextDayshez."
   }
 }

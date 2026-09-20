@@ -65,6 +65,17 @@ export interface Profil {
   connect: ConnectStand;
   terms_version: string | null;
   created_at: string;
+  /** Plattformweite Sperre des Partner-Dashboards (`plattform_schalter`, 0727).
+   *  true = statt der Inhalte steht ein Hinweis da.
+   *
+   *  Kommt über `/affiliates/me` — die einzige Datenroute, die während einer
+   *  Sperre offen bleibt. Nur die ANZEIGE hängt hier dran; die Sperre selbst
+   *  sitzt in `core.security.require_approved_affiliate` und antwortet jedem
+   *  direkten API-Aufruf mit 403 (Wurzel 7). */
+  portal_gesperrt?: boolean;
+  /** Freier Text des Betreibers. null = die Oberfläche zeigt ihren übersetzten
+   *  Standardtext, statt eine Begründung zu erfinden (Wurzel 4). */
+  portal_hinweis?: string | null;
 }
 
 export interface Code {
