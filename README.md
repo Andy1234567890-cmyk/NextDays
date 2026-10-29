@@ -10,7 +10,7 @@ Ein PMS-Kern, der Channel Manager, Direktbuchung und ein eigenes Buchungsportal 
 [![Frontend](https://img.shields.io/badge/frontend-Next.js-000000?logo=nextdotjs&logoColor=white)](apps/web)
 [![DB](https://img.shields.io/badge/db-Supabase-3FCF8E?logo=supabase&logoColor=white)](supabase)
 [![Python](https://img.shields.io/badge/python-3.12+-3776AB?logo=python&logoColor=white)](apps/api/pyproject.toml)
-[![License](https://img.shields.io/badge/license-Proprietär-red)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 </div>
 
@@ -323,4 +323,4 @@ Repo-Deploy-Dateien (Dev-Setup bleibt unberührt, alles getrennt unter `deploy/`
 
 ## Lizenz
 
-Proprietär — © NextDays. Alle Rechte vorbehalten. Siehe **[LICENSE](LICENSE)**.
+MIT — © 2026 Andy Staudinger. Frei nutzbar, veränderbar und weitergebbar, auch kommerziell; nur der Copyright-Hinweis muss erhalten bleiben. Siehe **[LICENSE](LICENSE)**.
