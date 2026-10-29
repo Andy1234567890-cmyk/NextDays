@@ -34,7 +34,7 @@ RUN bun run build
 # ---------------------------------------------------------------------------
 # 2) Runtime — schlank: nur der standalone-Server unter Node + statische Assets.
 # ---------------------------------------------------------------------------
-FROM node:22.16-slim@sha256:048ed02c5fd52e86fda6fbd2f6a76cf0d4492fd6c6fee9e2c463ed5108da0e34 AS run
+FROM node:26.11-slim@sha256:193fe51b64e77981119c98c2002c9e32a70e2f006fb4d25068ce0558998917f0 AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
